@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+	/* Paleta Primária - Gradiente do Logo */
+	--azul-profundo: #0F1F5B;    /* Início do degradê */
+	--azul-ciano: #3FA9D9;       /* Fim do degradê */
+	--azul-descritivo: #1C355E;  /* Textos descritivos e subtítulos */
+
+	/* Paleta Neutra */
+	--branco-puro: #FFFFFF;
+	--cinza-chumbo: #4A4A4A;
+	--cinza-claro: #F5F5F5;
+
+	/* Mapeamento do tema */
+	--background: var(--branco-puro);
+	--foreground: var(--azul-descritivo);
+	--card: var(--branco-puro);
+	--card-foreground: var(--azul-descritivo);
+	--popover: var(--branco-puro);
+	--popover-foreground: var(--azul-descritivo);
+	--primary: var(--azul-profundo);
+	--primary-foreground: var(--branco-puro);
+	--secondary: var(--azul-ciano);
+	--secondary-foreground: var(--branco-puro);
+	--muted: var(--cinza-claro);
+	--muted-foreground: var(--cinza-chumbo);
+	--accent: var(--cinza-claro);
+	--accent-foreground: var(--azul-profundo);
+	--destructive: oklch(0.577 0.245 27.325);
+	--border: #D9D9D9;
+	--input: #D9D9D9;
+	--ring: var(--azul-profundo);
+	--radius: 0.625rem;
+}
+
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+
+	--font-sans:
+		ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+		'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+		'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground;
+		font-family: var(--font-sans);
+	}
+}
