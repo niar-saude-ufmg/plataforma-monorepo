@@ -22,9 +22,9 @@
 
 		<!-- Coordenação -->
 		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2">
+			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
+				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
 				<h2 class="text-2xl font-bold text-primary">Coordenação</h2>
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" />
 			</summary>
 			<div class="mt-6 grid gap-6 sm:grid-cols-2">
 				{#each [
@@ -46,9 +46,9 @@
 
 		<!-- Pesquisadores -->
 		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2">
+			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
+				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
 				<h2 class="text-2xl font-bold text-primary">Pesquisadores</h2>
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" />
 			</summary>
 			<div class="mt-6 grid gap-6 sm:grid-cols-2">
 				{#each [
@@ -74,9 +74,9 @@
 
 		<!-- Doutorandos -->
 		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2">
+			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
+				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
 				<h2 class="text-2xl font-bold text-primary">Doutorandos</h2>
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" />
 			</summary>
 			<div class="mt-6 grid gap-6 sm:grid-cols-2">
 				{#each [
@@ -100,9 +100,9 @@
 
 		<!-- Mestrandos -->
 		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2">
+			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
+				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
 				<h2 class="text-2xl font-bold text-primary">Mestrandos</h2>
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" />
 			</summary>
 			<div class="mt-6 grid gap-6 sm:grid-cols-2">
 				{#each [
@@ -125,9 +125,9 @@
 
 		<!-- Colaboradores Externos -->
 		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2">
+			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
+				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
 				<h2 class="text-2xl font-bold text-primary">Colaboradores Externos</h2>
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" />
 			</summary>
 			<div class="mt-6 grid gap-6 sm:grid-cols-2">
 				{#each [

@@ -30,7 +30,7 @@
 				{#each navLinks as link (link.href)}
 					<a
 						href={resolve(link.href)}
-						class="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
+						class="text-sm font-bold text-foreground/80 transition-colors hover:text-foreground"
 						class:text-foreground={page.url.pathname === link.href}
 					>
 						{link.label}

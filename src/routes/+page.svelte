@@ -7,16 +7,21 @@
 	import Mail from 'lucide-svelte/icons/mail';
 	import MapPin from 'lucide-svelte/icons/map-pin';
 	import homeImg from '$lib/assets/home-img.jpg';
+	import wagnerImg from '$lib/assets/staff/wagner-meira.jpg';
+	import micheleImg from '$lib/assets/staff/Michele-1.jpg';
+	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
+	import ramonImg from '$lib/assets/staff/ramon.jpeg';
 </script>
 
 <svelte:head>
 	<title>NIAR - Página Inicial</title>
 	<meta name="description" content="NIAR - Site institucional" />
+	<link rel="preload" as="image" href={homeImg} />
 </svelte:head>
 
 <!-- Hero -->
 <section class="relative text-primary-foreground">
-	<img src={homeImg} alt="" class="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
+	<img src={homeImg} alt="" class="absolute inset-0 h-full w-full object-cover object-[center_20%]" fetchpriority="high" loading="eager" />
 	<div class="absolute inset-0 bg-primary/70"></div>
 	<div class="relative mx-auto max-w-6xl px-6 py-32 text-center">
 		<h1 class="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
@@ -50,9 +55,9 @@
 			</p>
 		</div>
 		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-			<Card.Root class="rounded-2xl border-0 px-6 py-8 bg-white ring-1 ring-border shadow-sm">
+			<Card.Root class="rounded-lg border-0 px-6 py-8 bg-white ring-1 ring-border shadow-sm">
 				<Card.Header class="gap-4">
-					<div class="flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
+					<div class="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
 						<BrainCircuit class="h-7 w-7 text-primary-foreground" />
 					</div>
 					<Card.Title class="text-xl font-bold text-foreground">
@@ -65,9 +70,9 @@
 				</Card.Header>
 			</Card.Root>
 
-			<Card.Root class="rounded-2xl border-0 px-6 py-8 bg-white ring-1 ring-border shadow-sm">
+			<Card.Root class="rounded-lg border-0 px-6 py-8 bg-white ring-1 ring-border shadow-sm">
 				<Card.Header class="gap-4">
-					<div class="flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
+					<div class="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
 						<HeartHandshake class="h-7 w-7 text-primary-foreground" />
 					</div>
 					<Card.Title class="text-xl font-bold text-foreground">
@@ -80,9 +85,9 @@
 				</Card.Header>
 			</Card.Root>
 
-			<Card.Root class="rounded-2xl border-0 px-6 py-8 bg-white ring-1 ring-border shadow-sm">
+			<Card.Root class="rounded-lg border-0 px-6 py-8 bg-white ring-1 ring-border shadow-sm">
 				<Card.Header class="gap-4">
-					<div class="flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
+					<div class="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
 						<ShieldCheck class="h-7 w-7 text-primary-foreground" />
 					</div>
 					<Card.Title class="text-xl font-bold text-foreground">
@@ -111,23 +116,26 @@
 			</p>
 		</div>
 
-		<div class="grid gap-6 sm:grid-cols-2">
+		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
 			{#each [
-				{ initials: 'ZQ', name: 'Dra. Zoraide Queiroga', role: 'Coordenadora', area: 'IA & Saúde Pública' },
-				{ initials: 'TF', name: 'Dr. Tancredo Figueira', role: 'Pesquisador', area: 'Aprendizado de Máquina' },
-				{ initials: 'OP', name: 'Dra. Olívia Pitangueira', role: 'Pesquisadora', area: 'Ética em IA' },
-				{ initials: 'BX', name: 'Dr. Belchior Xaxá', role: 'Pesquisador', area: 'Epidemiologia Computacional' },
-				{ initials: 'NV', name: 'Dra. Nereida Vasques', role: 'Pesquisadora', area: 'Visão Computacional Médica' },
+				{ initials: 'WM', name: 'Prof. Wagner Meira Júnior', role: 'Coordenador', area: 'Ciência da Computação', photo: wagnerImg },
+				{ initials: 'MB', name: 'Profa. Michele Brandão', role: 'Pesquisadora', area: 'Ciência da Computação', photo: micheleImg },
+				{ initials: 'DG', name: 'Prof. Dorgival Guedes Neto', role: 'Pesquisador', area: 'Ciência da Computação', photo: dorgivalImg, photoPos: '30% 20%' },
+				{ initials: 'MV', name: 'Dra. Marisa Vasconcelos', role: 'Pesquisadora Sênior', area: 'IA Responsável' },
+				{ initials: 'RG', name: 'Ramon Gonçalves Pereira', role: 'Doutorando', area: 'IA em Saúde', photo: ramonImg },
 				{ initials: 'EZ', name: 'Dr. Epaminondas Zimbra', role: 'Pesquisador', area: 'NLP Clínico' }
 			] as member (member.initials)}
-				<div class="flex items-center gap-5 rounded-2xl bg-white p-6 ring-1 ring-border">
-					<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
-						{member.initials}
-					</div>
-					<div>
-						<p class="font-bold text-primary">{member.name}</p>
-						<p class="text-sm text-muted-foreground">{member.role} · {member.area}</p>
-					</div>
+				<div class="flex flex-col items-center rounded-lg bg-white p-8 text-center ring-1 ring-border shadow-sm transition-shadow hover:shadow-md">
+					{#if member.photo}
+						<img src={member.photo} alt={member.name} class="h-20 w-20 rounded-full object-cover" style="object-position: {member.photoPos ?? 'center 20%'}" />
+					{:else}
+						<div class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-lg font-bold text-white">
+							{member.initials}
+						</div>
+					{/if}
+					<p class="mt-4 text-lg font-bold text-primary">{member.name}</p>
+					<p class="mt-1 text-sm font-semibold text-secondary">{member.role}</p>
+					<p class="mt-1 text-sm text-muted-foreground">{member.area}</p>
 				</div>
 			{/each}
 		</div>
@@ -154,7 +162,7 @@
 		</div>
 
 		<div class="grid gap-6 sm:grid-cols-2">
-			<div class="flex items-center gap-5 rounded-2xl bg-white p-6 ring-1 ring-border">
+			<div class="flex items-center gap-5 rounded-lg bg-white p-6 ring-1 ring-border">
 				<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
 					<Mail class="h-7 w-7 text-primary-foreground" />
 				</div>
@@ -166,7 +174,7 @@
 				</div>
 			</div>
 
-			<div class="flex items-center gap-5 rounded-2xl bg-white p-6 ring-1 ring-border">
+			<div class="flex items-center gap-5 rounded-lg bg-white p-6 ring-1 ring-border">
 				<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
 					<MapPin class="h-7 w-7 text-primary-foreground" />
 				</div>

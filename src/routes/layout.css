@@ -66,6 +66,10 @@
 		'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+summary::-webkit-details-marker {
+	display: none;
+}
+
 @layer base {
 	* {
 		@apply border-border;
