@@ -6,6 +6,7 @@
 	import ShieldCheck from 'lucide-svelte/icons/shield-check';
 	import Mail from 'lucide-svelte/icons/mail';
 	import MapPin from 'lucide-svelte/icons/map-pin';
+	import homeImg from '$lib/assets/home-img.jpg';
 </script>
 
 <svelte:head>
@@ -14,8 +15,10 @@
 </svelte:head>
 
 <!-- Hero -->
-<section class="bg-primary text-primary-foreground">
-	<div class="mx-auto max-w-6xl px-6 py-24 text-center">
+<section class="relative text-primary-foreground">
+	<img src={homeImg} alt="" class="absolute inset-0 h-full w-full object-cover object-[center_20%]" />
+	<div class="absolute inset-0 bg-primary/70"></div>
+	<div class="relative mx-auto max-w-6xl px-6 py-32 text-center">
 		<h1 class="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
 			Bem-vindo ao NIAR-Saúde
 		</h1>
@@ -23,10 +26,10 @@
 			Núcleo de Inteligência Artificial Responsável para a Saúde
 		</p>
 		<div class="mt-10 flex items-center justify-center gap-4">
-			<Button size="lg" class="!bg-white !text-primary hover:!bg-white/90" href="/about">
+			<Button size="lg" class="!bg-white !text-primary !px-8 !py-3 hover:!bg-white/90" href="/about">
 				Saiba mais
 			</Button>
-			<Button size="lg" variant="outline" class="!border-white/40 !bg-transparent !text-white hover:!bg-white/10 hover:!text-white" href="#contato">
+			<Button size="lg" variant="outline" class="!border-white/40 !bg-transparent !px-8 !py-3 !text-white hover:!bg-white/10 hover:!text-white" href="#contato">
 				Entre em contato
 			</Button>
 		</div>
