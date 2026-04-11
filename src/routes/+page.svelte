@@ -11,6 +11,7 @@
 	import micheleImg from '$lib/assets/staff/Michele-1.jpg';
 	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
 	import ramonImg from '$lib/assets/staff/ramon.jpeg';
+	import anaPaulaImg from '$lib/assets/staff/ana-paula.jpeg';
 </script>
 
 <svelte:head>
@@ -27,22 +28,22 @@
 		<h1 class="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
 			Bem-vindo ao NIAR-Saúde
 		</h1>
-		<p class="mx-auto mt-6 max-w-2xl text-lg text-primary-foreground/80">
+		<p class="mx-auto mt-6 max-w-2xl text-lg white">
 			Núcleo de Inteligência Artificial Responsável para a Saúde
 		</p>
 		<div class="mt-10 flex items-center justify-center gap-4">
-			<Button size="lg" class="!bg-white !text-primary !px-8 !py-3 hover:!bg-white/90" href="/about">
-				Saiba mais
-			</Button>
-			<Button size="lg" variant="outline" class="!border-white/40 !bg-transparent !px-8 !py-3 !text-white hover:!bg-white/10 hover:!text-white" href="#contato">
+			<Button size="lg" class="!bg-white !text-primary !px-8 !py-3 hover:!bg-white/90" href="#contato">
 				Entre em contato
 			</Button>
+			<a href="/about" class="inline-flex items-center gap-1 text-base font-medium text-white hover:underline">
+				Saiba mais <span aria-hidden="true">&rarr;</span>
+			</a>
 		</div>
 	</div>
 </section>
 
 <!-- Pilares -->
-<section class="py-20 bg-gradient-to-b from-white to-muted">
+<section class="relative z-10 py-20 bg-gradient-to-b from-white to-muted">
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mx-auto mb-16 max-w-3xl text-center">
 			<p class="text-sm font-semibold uppercase tracking-widest text-secondary">Sobre o NIAR Saúde</p>
@@ -104,7 +105,7 @@
 </section>
 
 <!-- Equipe -->
-<section id="equipe" class="py-20 bg-gradient-to-b from-white to-muted">
+<section id="equipe" class="relative z-10 py-20 bg-gradient-to-b from-white to-muted">
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mx-auto mb-12 max-w-3xl text-center">
 			<p class="text-sm font-semibold uppercase tracking-widest text-secondary">Equipe</p>
@@ -121,9 +122,9 @@
 				{ initials: 'WM', name: 'Prof. Wagner Meira Júnior', role: 'Coordenador', area: 'Ciência da Computação', photo: wagnerImg },
 				{ initials: 'MB', name: 'Profa. Michele Brandão', role: 'Pesquisadora', area: 'Ciência da Computação', photo: micheleImg },
 				{ initials: 'DG', name: 'Prof. Dorgival Guedes Neto', role: 'Pesquisador', area: 'Ciência da Computação', photo: dorgivalImg, photoPos: '30% 20%' },
+				{ initials: 'AP', name: 'Profa. Ana Paula Couto Silva', role: 'Pesquisadora', area: 'Computação Social', photo: anaPaulaImg },
 				{ initials: 'MV', name: 'Dra. Marisa Vasconcelos', role: 'Pesquisadora Sênior', area: 'IA Responsável' },
-				{ initials: 'RG', name: 'Ramon Gonçalves Pereira', role: 'Doutorando', area: 'IA em Saúde', photo: ramonImg },
-				{ initials: 'EZ', name: 'Dr. Epaminondas Zimbra', role: 'Pesquisador', area: 'NLP Clínico' }
+				{ initials: 'RG', name: 'Ramon Gonçalves Pereira', role: 'Doutorando', area: 'IA em Saúde', photo: ramonImg }
 			] as member (member.initials)}
 				<div class="flex flex-col items-center rounded-lg bg-white p-8 text-center ring-1 ring-border shadow-sm transition-shadow hover:shadow-md">
 					{#if member.photo}
@@ -149,7 +150,7 @@
 </section>
 
 <!-- Contato -->
-<section id="contato" class="py-20 bg-gradient-to-b from-white to-muted">
+<section id="contato" class="relative z-10 py-20 bg-gradient-to-b from-white to-muted">
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mx-auto mb-12 max-w-3xl text-center">
 			<p class="text-sm font-semibold uppercase tracking-widest text-secondary">Contato</p>

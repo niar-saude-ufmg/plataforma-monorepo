@@ -1,5 +1,67 @@
 <script lang="ts">
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import wagnerImg from '$lib/assets/staff/wagner-meira.jpg';
+	import micheleImg from '$lib/assets/staff/Michele-1.jpg';
+	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
+	import anaPaulaImg from '$lib/assets/staff/ana-paula.jpeg';
+	import ramonImg from '$lib/assets/staff/ramon.jpeg';
+	import guilhermeImg from '$lib/assets/staff/guilherme.jpg';
+	import karolImg from '$lib/assets/staff/karol.png';
+
+	type Member = {
+		initials: string;
+		name: string;
+		info: string;
+		metas: string[];
+		metasDisplay?: string;
+		group: string;
+		photo?: string;
+		photoPos?: string;
+	};
+
+	const members: Member[] = [
+		{ initials: 'WM', name: 'Prof. Wagner Meira Júnior', info: 'Coordenador · Ciência da Computação', metas: ['3'], group: 'Coordenação', photo: wagnerImg },
+		{ initials: 'CC', name: 'Camila dos Reis Cunha', info: 'Gerente de Projetos · Administração e Gestão da Inovação', metas: ['1', '3', '7'], group: 'Coordenação' },
+		{ initials: 'MB', name: 'Profa. Michele Brandão', info: 'Ciência de Dados e Redes Complexas', metas: ['1'], group: 'Pesquisadores', photo: micheleImg },
+		{ initials: 'DG', name: 'Prof. Dorgival Guedes Neto', info: 'Sistemas Distribuídos', metas: ['3'], group: 'Pesquisadores', photo: dorgivalImg, photoPos: '30% 20%' },
+		{ initials: 'AP', name: 'Profa. Ana Paula Couto Silva', info: 'Computação Social', metas: ['2'], metasDisplay: '2.2', group: 'Pesquisadores', photo: anaPaulaImg },
+		{ initials: 'MV', name: 'Dra. Marisa Vasconcelos', info: 'Pesquisadora Sênior · IA Responsável', metas: ['1', '2'], group: 'Pesquisadores' },
+		{ initials: 'RG', name: 'Ramon Gonçalves Pereira', info: 'Doutorando · IA em Saúde', metas: ['1', '3', '6'], group: 'Doutorandos', photo: ramonImg },
+		{ initials: 'KA', name: 'Karolina Ivete Azevedo', info: 'Mestranda · IA Responsável', metas: ['2'], metasDisplay: '2.2', group: 'Mestrandos', photo: karolImg },
+		{ initials: 'GV', name: 'Guilherme Vezula Mateveli', info: 'Desenvolvedor Sênior · Aplicações Web', metas: ['3'], group: 'Colaboradores Externos', photo: guilhermeImg, photoPos: 'center 15%' }
+	];
+
+	let groupBy: 'titulo' | 'meta' = $state('titulo');
+
+	const groupOrder = ['Coordenação', 'Pesquisadores', 'Doutorandos', 'Mestrandos', 'Colaboradores Externos'];
+
+	function formatMetas(member: Member): string {
+		if (member.metasDisplay) return `Meta ${member.metasDisplay}`;
+		const metas = member.metas;
+		if (metas.length === 1) return `Meta ${metas[0]}`;
+		const last = metas[metas.length - 1];
+		const rest = metas.slice(0, -1);
+		return `Metas ${rest.join(', ')} e ${last}`;
+	}
+
+	let groups = $derived.by(() => {
+		if (groupBy === 'titulo') {
+			return groupOrder
+				.map((name) => ({
+					name,
+					members: members.filter((m) => m.group === name)
+				}))
+				.filter((g) => g.members.length > 0);
+		} else {
+			const metaSet = new Set<string>();
+			members.forEach((m) => m.metas.forEach((meta) => metaSet.add(meta)));
+			const sortedMetas = [...metaSet].sort((a, b) => parseFloat(a) - parseFloat(b));
+			return sortedMetas.map((meta) => ({
+				name: `Meta ${meta}`,
+				members: members.filter((m) => m.metas.includes(meta))
+			}));
+		}
+	});
 </script>
 
 <svelte:head>
@@ -7,7 +69,7 @@
 	<meta name="description" content="Conheça a equipe do NIAR-Saúde" />
 </svelte:head>
 
-<section class="py-16">
+<section class="py-16" style="background-color: rgb(245, 245, 245);">
 	<div class="mx-auto max-w-6xl px-6">
 		<a href="/" class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline">
 			<span aria-hidden="true">&larr;</span> Voltar à página inicial
@@ -20,131 +82,47 @@
 			Conheça todos os pesquisadores, estudantes e colaboradores que fazem parte do NIAR-Saúde.
 		</p>
 
-		<!-- Coordenação -->
-		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
-				<h2 class="text-2xl font-bold text-primary">Coordenação</h2>
-			</summary>
-			<div class="mt-6 grid gap-6 sm:grid-cols-2">
-				{#each [
-					{ initials: 'ZQ', name: 'Dra. Zoraide Queiroga', info: 'Coordenadora Geral · IA & Saúde Pública' },
-					{ initials: 'TF', name: 'Dr. Tancredo Figueira', info: 'Vice-Coordenador · Aprendizado de Máquina' }
-				] as member (member.initials)}
-					<div class="flex items-center gap-5 rounded-2xl bg-white p-6 ring-1 ring-border">
-						<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
-							{member.initials}
-						</div>
-						<div>
-							<p class="font-bold text-primary">{member.name}</p>
-							<p class="text-sm text-muted-foreground">{member.info}</p>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</details>
+		<div class="mt-8 inline-flex rounded-full bg-border/50 p-1">
+			<button
+				class="rounded-full px-5 py-2 text-sm font-medium transition-all {groupBy === 'titulo' ? 'bg-primary text-white shadow-sm' : 'text-muted-foreground'}"
+				onclick={() => groupBy = 'titulo'}
+			>
+				Por Função
+			</button>
+			<button
+				class="rounded-full px-5 py-2 text-sm font-medium transition-all {groupBy === 'meta' ? 'bg-primary text-white shadow-sm' : 'text-muted-foreground'}"
+				onclick={() => groupBy = 'meta'}
+			>
+				Por Meta
+			</button>
+		</div>
 
-		<!-- Pesquisadores -->
-		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
-				<h2 class="text-2xl font-bold text-primary">Pesquisadores</h2>
-			</summary>
-			<div class="mt-6 grid gap-6 sm:grid-cols-2">
-				{#each [
-					{ initials: 'OP', name: 'Dra. Olívia Pitangueira', info: 'Ética em IA' },
-					{ initials: 'BX', name: 'Dr. Belchior Xaxá', info: 'Epidemiologia Computacional' },
-					{ initials: 'NV', name: 'Dra. Nereida Vasques', info: 'Visão Computacional Médica' },
-					{ initials: 'EZ', name: 'Dr. Epaminondas Zimbra', info: 'NLP Clínico' },
-					{ initials: 'CT', name: 'Dra. Camila Torres', info: 'Bioinformática' },
-					{ initials: 'DE', name: 'Dr. Daniel Esteves', info: 'Sistemas de Apoio à Decisão' }
-				] as member (member.initials)}
-					<div class="flex items-center gap-5 rounded-2xl bg-white p-6 ring-1 ring-border">
-						<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
-							{member.initials}
+		{#each groups as group (group.name)}
+			<details class="group mt-16" open>
+				<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-[rgba(74,74,74,0.1)]">
+					<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
+					<h2 class="text-2xl font-bold text-primary">{group.name}</h2>
+				</summary>
+				<div class="mt-6 grid gap-6 sm:grid-cols-2">
+					{#each group.members as member (member.initials)}
+						<div class="flex items-center gap-5 rounded-lg bg-white p-6 ring-1 ring-border">
+							{#if member.photo}
+								<img src={member.photo} alt={member.name} class="h-14 w-14 shrink-0 rounded-full object-cover" style="object-position: {member.photoPos ?? 'center 20%'}" />
+							{:else}
+								<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
+									{member.initials}
+								</div>
+							{/if}
+							<div>
+								<p class="font-bold text-primary">{member.name}</p>
+								<p class="text-sm text-muted-foreground">{member.info}</p>
+								<p class="text-sm text-secondary">{formatMetas(member)}</p>
+							</div>
 						</div>
-						<div>
-							<p class="font-bold text-primary">{member.name}</p>
-							<p class="text-sm text-muted-foreground">{member.info}</p>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</details>
+					{/each}
+				</div>
+			</details>
+		{/each}
 
-		<!-- Doutorandos -->
-		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
-				<h2 class="text-2xl font-bold text-primary">Doutorandos</h2>
-			</summary>
-			<div class="mt-6 grid gap-6 sm:grid-cols-2">
-				{#each [
-					{ initials: 'JO', name: 'Juliana Oliveira', info: 'Modelos Preditivos em Oncologia' },
-					{ initials: 'MA', name: 'Marcos Almeida', info: 'IA para Diagnóstico por Imagem' },
-					{ initials: 'FS', name: 'Fernanda Silva', info: 'Equidade Algorítmica em Saúde' },
-					{ initials: 'TP', name: 'Thiago Pereira', info: 'Processamento de Dados Clínicos' }
-				] as member (member.initials)}
-					<div class="flex items-center gap-5 rounded-2xl bg-white p-6 ring-1 ring-border">
-						<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
-							{member.initials}
-						</div>
-						<div>
-							<p class="font-bold text-primary">{member.name}</p>
-							<p class="text-sm text-muted-foreground">{member.info}</p>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</details>
-
-		<!-- Mestrandos -->
-		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
-				<h2 class="text-2xl font-bold text-primary">Mestrandos</h2>
-			</summary>
-			<div class="mt-6 grid gap-6 sm:grid-cols-2">
-				{#each [
-					{ initials: 'BL', name: 'Beatriz Lima', info: 'Chatbots para Triagem Médica' },
-					{ initials: 'RA', name: 'Rodrigo Araújo', info: 'Wearables e Monitoramento Remoto' },
-					{ initials: 'IS', name: 'Isabela Santos', info: 'Análise de Sentimento em Prontuários' }
-				] as member (member.initials)}
-					<div class="flex items-center gap-5 rounded-2xl bg-white p-6 ring-1 ring-border">
-						<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
-							{member.initials}
-						</div>
-						<div>
-							<p class="font-bold text-primary">{member.name}</p>
-							<p class="text-sm text-muted-foreground">{member.info}</p>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</details>
-
-		<!-- Colaboradores Externos -->
-		<details class="group mt-16" open>
-			<summary class="flex cursor-pointer list-none items-center gap-2 rounded-lg px-4 py-3 transition-colors hover:bg-muted">
-				<ChevronDown class="h-5 w-5 text-primary transition-transform group-open:rotate-180" stroke-width="4" />
-				<h2 class="text-2xl font-bold text-primary">Colaboradores Externos</h2>
-			</summary>
-			<div class="mt-6 grid gap-6 sm:grid-cols-2">
-				{#each [
-					{ initials: 'VN', name: 'Dra. Valéria Nascimento', info: 'Hospital Universitário · Cardiologia' },
-					{ initials: 'EC', name: 'Dr. Eduardo Campos', info: 'Fiocruz · Vigilância Epidemiológica' }
-				] as member (member.initials)}
-					<div class="flex items-center gap-5 rounded-2xl bg-white p-6 ring-1 ring-border">
-						<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
-							{member.initials}
-						</div>
-						<div>
-							<p class="font-bold text-primary">{member.name}</p>
-							<p class="text-sm text-muted-foreground">{member.info}</p>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</details>
 	</div>
 </section>

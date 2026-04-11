@@ -14,6 +14,7 @@
 		{ href: '/about' as const, label: 'Sobre' },
 		{ href: '/team' as const, label: 'Equipe' }
 	];
+
 </script>
 
 <svelte:head>
@@ -30,7 +31,7 @@
 				{#each navLinks as link (link.href)}
 					<a
 						href={resolve(link.href)}
-						class="text-sm font-bold text-foreground/80 transition-colors hover:text-foreground"
+						class="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
 						class:text-foreground={page.url.pathname === link.href}
 					>
 						{link.label}
@@ -41,11 +42,11 @@
 		<Separator />
 	</header>
 
-	<main class="flex-1">
+	<main class="relative z-10 flex-1">
 		{@render children()}
 	</main>
 
-	<footer class="bg-white text-foreground">
+	<footer class="relative z-10 bg-white text-foreground">
 		<Separator />
 		<div class="mx-auto max-w-6xl px-6 py-8">
 			<div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
