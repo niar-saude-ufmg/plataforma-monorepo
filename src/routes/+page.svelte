@@ -130,7 +130,7 @@
 				{ year: '2025', metas: ['4'], title: 'Artificial intelligence in the electrocardiogram: automatic diagnosis of the normal ECG in a Tele-electrocardiogram service', authors: 'Paixão, G., Abreu, P.E., Gomes, P.G., Schön, T.B., Ribeiro, A.H., Ribeiro, A.L.P.', journal: 'European Heart Journal, Volume 46, Issue Supplement_1, November 2025, ehaf784.4407', doi: 'https://doi.org/10.1093/eurheartj/ehaf784.4407' },
 				{ year: '2025', metas: ['5'], title: 'Use of Machine Learning to Predict the Consumption of Fruits and Vegetables in Small Areas', authors: 'Gomes, C.S., Araújo, L.F., Faria, T.M.T.R., Bernal, R.T.I., Souza, J.B., Alves, S.N., Barbosa, B.R.G., Cardoso, L.S.M., Gonçalves, M.A., Almeida, J.M., Malta, D.C.', journal: 'Ciência e Saúde Coletiva, 2025', doi: 'http://cienciaesaudecoletiva.com.br/artigos/uso-de-machine-learning-para-predizer-o-consumo-de-frutas-e-hortalicas-em-pequenas-areas/19858?id=19858' }
 			] as pub (pub.title)}
-				<a href={pub.doi} class="flex flex-col rounded-lg bg-white p-6 ring-1 ring-border shadow-sm transition-shadow hover:shadow-md">
+				<div class="flex flex-col rounded-lg bg-white p-6 ring-1 ring-border shadow-sm">
 					<div class="flex items-center gap-2">
 						<span class="text-sm font-bold text-secondary">{pub.year}</span>
 						{#each pub.metas as meta}
@@ -140,10 +140,10 @@
 					<p class="mt-3 text-base font-bold text-primary leading-snug">{pub.title}</p>
 					<p class="mt-2 text-sm text-muted-foreground">{pub.authors}</p>
 					<p class="mt-1 text-sm italic text-muted-foreground">{pub.journal}</p>
-					<span class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary">
+					<a href={pub.doi} class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline">
 						DOI <span aria-hidden="true">&nearr;</span>
-					</span>
-				</a>
+					</a>
+				</div>
 			{/each}
 		</div>
 	</div>

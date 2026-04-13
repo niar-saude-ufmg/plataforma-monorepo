@@ -65,10 +65,10 @@
 				/>
 			</div>
 			<Select.Root type="single" bind:value={selectedMeta}>
-				<Select.Trigger class="min-w-[160px] h-10 rounded-full bg-primary px-5 border-none [&_svg]:text-white">
-					<span class="text-sm text-white">{metaLabel}</span>
+				<Select.Trigger class="min-w-[160px] !h-auto py-3 rounded-full bg-primary px-7 border-none [&_svg]:text-white">
+					<span class="text-base font-normal text-white">{metaLabel}</span>
 				</Select.Trigger>
-				<Select.Content>
+				<Select.Content class="[&_*]:text-base">
 					<Select.Item value="all" label="Todas as metas" />
 					{#each allMetas as meta}
 						<Select.Item value={meta} label="Meta {meta}" />
@@ -76,10 +76,10 @@
 				</Select.Content>
 			</Select.Root>
 			<Select.Root type="single" bind:value={selectedYear}>
-				<Select.Trigger class="min-w-[160px] h-10 rounded-full bg-primary px-5 border-none [&_svg]:text-white">
-					<span class="text-sm text-white">{yearLabel}</span>
+				<Select.Trigger class="min-w-[160px] !h-auto py-3 rounded-full bg-primary px-7 border-none [&_svg]:text-white">
+					<span class="text-base font-normal text-white">{yearLabel}</span>
 				</Select.Trigger>
-				<Select.Content>
+				<Select.Content class="[&_*]:text-base">
 					<Select.Item value="all" label="Todos os anos" />
 					{#each allYears as year}
 						<Select.Item value={year} label={year} />
