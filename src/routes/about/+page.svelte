@@ -45,7 +45,7 @@
 	<div class="mx-auto max-w-6xl px-6">
 		<p class="text-sm font-semibold uppercase tracking-widest text-secondary">Linhas de Pesquisa</p>
 		<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-			Áreas de atuação
+			Projetos Pilotos
 		</h2>
 
 		<div class="mt-12 grid gap-8 sm:grid-cols-2">

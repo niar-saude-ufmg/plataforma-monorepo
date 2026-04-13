@@ -48,25 +48,42 @@
 		<div class="mx-auto mb-16 max-w-3xl text-center">
 			<p class="text-sm font-semibold uppercase tracking-widest text-secondary">Sobre o NIAR Saúde</p>
 			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-				Pesquisa que transforma o futuro da saúde
+				Inovação em dados e inteligência artificial responsável para a saúde
 			</h2>
 			<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
-				O NIAR-Saúde é um núcleo interdisciplinar que une pesquisadores da computação e da saúde
-				para desenvolver soluções de IA confiáveis, seguras e centradas no paciente.
+				O NIAR-Saúde é um núcleo interdisciplinar que reúne pesquisadores de computação e saúde
+				para desenvolver soluções voltadas ao uso responsável de dados e inteligência artificial.
+				Atuamos na criação e validação de tecnologias que promovem transparência, segurança e
+				confiabilidade, além de fomentar a capacitação e a transferência de conhecimento.
 			</p>
 		</div>
 		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
 			<Card.Root class="rounded-lg border-0 px-6 py-8 bg-white ring-1 ring-border shadow-sm">
 				<Card.Header class="gap-4">
 					<div class="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
+						<ShieldCheck class="h-7 w-7 text-primary-foreground" />
+					</div>
+					<Card.Title class="text-xl font-bold text-foreground">
+						Governança
+					</Card.Title>
+					<Card.Description class="text-base leading-relaxed">
+						Estruturação de processos e práticas voltadas ao uso responsável da inteligência artificial, 
+						com foco em qualidade, gestão de riscos, transparência e governança contínua.
+					</Card.Description>
+				</Card.Header>
+			</Card.Root>
+
+			<Card.Root class="rounded-lg border-0 px-6 py-8 bg-white ring-1 ring-border shadow-sm">
+				<Card.Header class="gap-4">
+					<div class="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
 						<BrainCircuit class="h-7 w-7 text-primary-foreground" />
 					</div>
 					<Card.Title class="text-xl font-bold text-foreground">
-						Inteligência Artificial
+						Dados e Modelos
 					</Card.Title>
 					<Card.Description class="text-base leading-relaxed">
-						Modelos avançados de aprendizado de máquina aplicados a diagnóstico, prognóstico
-						e suporte à decisão clínica.
+						Desenvolvimento e operação de dados e modelos de inteligência artificial, 
+						abrangendo engenharia de dados, construção, avaliação e monitoramento contínuo de soluções.
 					</Card.Description>
 				</Card.Header>
 			</Card.Root>
@@ -77,26 +94,11 @@
 						<HeartHandshake class="h-7 w-7 text-primary-foreground" />
 					</div>
 					<Card.Title class="text-xl font-bold text-foreground">
-						Saúde Baseada em Evidências
+						Aplicações
 					</Card.Title>
 					<Card.Description class="text-base leading-relaxed">
-						Integração de dados clínicos e epidemiológicos para soluções que impactam o
-						cuidado ao paciente.
-					</Card.Description>
-				</Card.Header>
-			</Card.Root>
-
-			<Card.Root class="rounded-lg border-0 px-6 py-8 bg-white ring-1 ring-border shadow-sm">
-				<Card.Header class="gap-4">
-					<div class="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary">
-						<ShieldCheck class="h-7 w-7 text-primary-foreground" />
-					</div>
-					<Card.Title class="text-xl font-bold text-foreground">
-						Ética & Responsabilidade
-					</Card.Title>
-					<Card.Description class="text-base leading-relaxed">
-						Transparência, equidade e governança como pilares indissociáveis de cada projeto
-						de pesquisa.
+						Aplicação de dados e modelos em contextos da saúde, com foco em impacto, 
+						custo-efetividade e suporte à tomada de decisão em diferentes cenários.
 					</Card.Description>
 				</Card.Header>
 			</Card.Root>
@@ -104,17 +106,65 @@
 	</div>
 </section>
 
+<!-- Publicações -->
+<section class="relative z-10 py-20 bg-gradient-to-b from-white to-muted">
+	<div class="mx-auto max-w-6xl px-6">
+		<div class="mb-12 flex items-end justify-between">
+			<div>
+				<p class="text-sm font-semibold uppercase tracking-widest text-secondary">Publicações</p>
+				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+					Trabalhos recentes
+				</h2>
+				<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
+					Artigos e produções científicas recentes do grupo.
+				</p>
+			</div>
+			<a href="/publications" class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline">
+				Ver todas as publicações <span aria-hidden="true">&rarr;</span>
+			</a>
+		</div>
+
+		<div class="grid gap-6 sm:grid-cols-2">
+			{#each [
+				{ year: '2025', metas: ['4'], title: 'High-precision automatic classification of normal electrocardiograms: An AI-based model for the telehealth system', authors: 'Abreu, P.E.O.G.B., Ribeiro, A.H., Paixão, G.M.M., Schön, T.B., Gomes, P.R., Ribeiro, A.L.P.', journal: 'Journal of Electrocardiology, Volume 91, July–August 2025, 153988', doi: 'https://doi.org/10.1016/j.jelectrocard.2025.153988' },
+				{ year: '2025', metas: ['4'], title: 'Artificial intelligence in the electrocardiogram: automatic diagnosis of the normal ECG in a Tele-electrocardiogram service', authors: 'Paixão, G., Abreu, P.E., Gomes, P.G., Schön, T.B., Ribeiro, A.H., Ribeiro, A.L.P.', journal: 'European Heart Journal, Volume 46, Issue Supplement_1, November 2025, ehaf784.4407', doi: 'https://doi.org/10.1093/eurheartj/ehaf784.4407' },
+				{ year: '2025', metas: ['5'], title: 'Use of Machine Learning to Predict the Consumption of Fruits and Vegetables in Small Areas', authors: 'Gomes, C.S., Araújo, L.F., Faria, T.M.T.R., Bernal, R.T.I., Souza, J.B., Alves, S.N., Barbosa, B.R.G., Cardoso, L.S.M., Gonçalves, M.A., Almeida, J.M., Malta, D.C.', journal: 'Ciência e Saúde Coletiva, 2025', doi: 'http://cienciaesaudecoletiva.com.br/artigos/uso-de-machine-learning-para-predizer-o-consumo-de-frutas-e-hortalicas-em-pequenas-areas/19858?id=19858' }
+			] as pub (pub.title)}
+				<a href={pub.doi} class="flex flex-col rounded-lg bg-white p-6 ring-1 ring-border shadow-sm transition-shadow hover:shadow-md">
+					<div class="flex items-center gap-2">
+						<span class="text-sm font-bold text-secondary">{pub.year}</span>
+						{#each pub.metas as meta}
+							<span class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary">Meta {meta}</span>
+						{/each}
+					</div>
+					<p class="mt-3 text-base font-bold text-primary leading-snug">{pub.title}</p>
+					<p class="mt-2 text-sm text-muted-foreground">{pub.authors}</p>
+					<p class="mt-1 text-sm italic text-muted-foreground">{pub.journal}</p>
+					<span class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary">
+						DOI <span aria-hidden="true">&nearr;</span>
+					</span>
+				</a>
+			{/each}
+		</div>
+	</div>
+</section>
+
 <!-- Equipe -->
 <section id="equipe" class="relative z-10 py-20 bg-gradient-to-b from-white to-muted">
 	<div class="mx-auto max-w-6xl px-6">
-		<div class="mx-auto mb-12 max-w-3xl text-center">
-			<p class="text-sm font-semibold uppercase tracking-widest text-secondary">Equipe</p>
-			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-				Pesquisadores
-			</h2>
-			<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
-				Um time multidisciplinar unindo computação, medicina, bioética e saúde pública.
-			</p>
+		<div class="mb-12 flex items-end justify-between">
+			<div>
+				<p class="text-sm font-semibold uppercase tracking-widest text-secondary">Equipe</p>
+				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+					Pesquisadores
+				</h2>
+				<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
+					Um time multidisciplinar unindo computação, medicina, bioética e saúde pública.
+				</p>
+			</div>
+			<a href="/team" class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline">
+				Ver equipe completa <span aria-hidden="true">&rarr;</span>
+			</a>
 		</div>
 
 		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -141,18 +191,13 @@
 			{/each}
 		</div>
 
-		<div class="mt-10 text-center">
-			<a href="/team" class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline">
-				Ver equipe completa <span aria-hidden="true">&rarr;</span>
-			</a>
-		</div>
 	</div>
 </section>
 
 <!-- Contato -->
 <section id="contato" class="relative z-10 py-20 bg-gradient-to-b from-white to-muted">
 	<div class="mx-auto max-w-6xl px-6">
-		<div class="mx-auto mb-12 max-w-3xl text-center">
+		<div class="mb-12">
 			<p class="text-sm font-semibold uppercase tracking-widest text-secondary">Contato</p>
 			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
 				Fale conosco

@@ -116,7 +116,11 @@
 							<div>
 								<p class="font-bold text-primary">{member.name}</p>
 								<p class="text-sm text-muted-foreground">{member.info}</p>
-								<p class="text-sm text-secondary">{formatMetas(member)}</p>
+								<div class="mt-1 flex flex-wrap gap-1">
+									{#each member.metas as meta}
+										<span class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary">Meta {member.metasDisplay && member.metas.length === 1 ? member.metasDisplay : meta}</span>
+									{/each}
+								</div>
 							</div>
 						</div>
 					{/each}

@@ -12,6 +12,7 @@
 	const navLinks = [
 		{ href: '/' as const, label: 'Home' },
 		{ href: '/about' as const, label: 'Sobre' },
+		{ href: '/publications' as const, label: 'Publicações' },
 		{ href: '/team' as const, label: 'Equipe' }
 	];
 
@@ -31,8 +32,8 @@
 				{#each navLinks as link (link.href)}
 					<a
 						href={resolve(link.href)}
-						class="text-sm font-medium text-foreground/80 transition-colors hover:text-foreground"
-						class:text-foreground={page.url.pathname === link.href}
+						class="text-base font-bold text-primary/80 transition-colors hover:text-primary"
+						class:text-primary={page.url.pathname === link.href}
 					>
 						{link.label}
 					</a>
@@ -42,7 +43,7 @@
 		<Separator />
 	</header>
 
-	<main class="relative z-10 flex-1">
+	<main class="relative z-10 flex-1 flex flex-col">
 		{@render children()}
 	</main>
 
