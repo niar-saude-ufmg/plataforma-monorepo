@@ -51,8 +51,11 @@
 				/>
 			</div>
 			<Select.Root type="single" bind:value={selectedMeta}>
-				<Select.Trigger class="min-w-[160px] !h-auto py-3 rounded-full bg-primary px-7 border-none [&_svg]:text-white">
-					<span class="text-base font-normal text-white">{metaLabel}</span>
+				<Select.Trigger class="!h-auto py-3 rounded-full bg-primary px-7 border-none [&_svg]:text-white">
+					<span class="grid text-base font-normal text-white">
+						<span class="col-start-1 row-start-1 invisible" aria-hidden="true">Todas as metas</span>
+						<span class="col-start-1 row-start-1">{metaLabel}</span>
+					</span>
 				</Select.Trigger>
 				<Select.Content class="[&_*]:text-base">
 					<Select.Item value="all" label="Todas as metas" />
@@ -62,8 +65,11 @@
 				</Select.Content>
 			</Select.Root>
 			<Select.Root type="single" bind:value={selectedYear}>
-				<Select.Trigger class="min-w-[160px] !h-auto py-3 rounded-full bg-primary px-7 border-none [&_svg]:text-white">
-					<span class="text-base font-normal text-white">{yearLabel}</span>
+				<Select.Trigger class="!h-auto py-3 rounded-full bg-primary px-7 border-none [&_svg]:text-white">
+					<span class="grid text-base font-normal text-white">
+						<span class="col-start-1 row-start-1 invisible" aria-hidden="true">Todos os anos</span>
+						<span class="col-start-1 row-start-1">{yearLabel}</span>
+					</span>
 				</Select.Trigger>
 				<Select.Content class="[&_*]:text-base">
 					<Select.Item value="all" label="Todos os anos" />

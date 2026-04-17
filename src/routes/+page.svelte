@@ -24,8 +24,10 @@
 </svelte:head>
 
 <!-- Hero -->
-<section class="relative text-primary-foreground">
-	<img src={homeImg} alt="" class="absolute inset-0 h-full w-full object-cover object-[center_20%]" fetchpriority="high" loading="eager" />
+<section
+	class="relative bg-cover bg-fixed text-primary-foreground"
+	style="background-image: url({homeImg}); background-position: center 20%;"
+>
 	<div class="absolute inset-0 bg-primary/70"></div>
 	<div class="relative mx-auto max-w-6xl px-6 py-32 text-center">
 		<h1 class="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
