@@ -13,7 +13,6 @@
 		name: string;
 		info: string;
 		metas: string[];
-		metasDisplay?: string;
 		group: string;
 		photo?: string;
 		photoPos?: string;
@@ -22,12 +21,12 @@
 	const members: Member[] = [
 		{ initials: 'WM', name: 'Prof. Wagner Meira Júnior', info: 'Coordenador · Ciência da Computação', metas: ['3'], group: 'Coordenação', photo: wagnerImg },
 		{ initials: 'CC', name: 'Camila dos Reis Cunha', info: 'Gerente de Projetos · Administração e Gestão da Inovação', metas: ['1', '3', '7'], group: 'Coordenação' },
-		{ initials: 'MB', name: 'Profa. Michele Brandão', info: 'Ciência de Dados e Redes Complexas', metas: ['1'], group: 'Pesquisadores', photo: micheleImg },
+		{ initials: 'MB', name: 'Profa. Michele Brandão', info: 'Ciência de Dados e Redes Complexas', metas: ['1', '2', '3'], group: 'Pesquisadores', photo: micheleImg },
 		{ initials: 'DG', name: 'Prof. Dorgival Guedes Neto', info: 'Sistemas Distribuídos', metas: ['3'], group: 'Pesquisadores', photo: dorgivalImg, photoPos: '30% 20%' },
-		{ initials: 'AP', name: 'Profa. Ana Paula Couto Silva', info: 'Computação Social', metas: ['2'], metasDisplay: '2.2', group: 'Pesquisadores', photo: anaPaulaImg },
+		{ initials: 'AP', name: 'Profa. Ana Paula Couto Silva', info: 'Computação Social', metas: ['2'], group: 'Pesquisadores', photo: anaPaulaImg },
 		{ initials: 'MV', name: 'Dra. Marisa Vasconcelos', info: 'Pesquisadora Sênior · IA Responsável', metas: ['1', '2'], group: 'Pesquisadores' },
 		{ initials: 'RG', name: 'Ramon Gonçalves Pereira', info: 'Doutorando · IA em Saúde', metas: ['1', '3', '6'], group: 'Doutorandos', photo: ramonImg },
-		{ initials: 'KA', name: 'Karolina Ivete Azevedo', info: 'Mestranda · IA Responsável', metas: ['2'], metasDisplay: '2.2', group: 'Mestrandos', photo: karolImg },
+		{ initials: 'KA', name: 'Karolina Ivete Azevedo', info: 'Mestranda · IA Responsável', metas: ['1', '2'], group: 'Mestrandos', photo: karolImg },
 		{ initials: 'GV', name: 'Guilherme Vezula Mateveli', info: 'Desenvolvedor Sênior · Aplicações Web', metas: ['3'], group: 'Colaboradores Externos', photo: guilhermeImg, photoPos: 'center 15%' }
 	];
 
@@ -36,7 +35,6 @@
 	const groupOrder = ['Coordenação', 'Pesquisadores', 'Doutorandos', 'Mestrandos', 'Colaboradores Externos'];
 
 	function formatMetas(member: Member): string {
-		if (member.metasDisplay) return `Meta ${member.metasDisplay}`;
 		const metas = member.metas;
 		if (metas.length === 1) return `Meta ${metas[0]}`;
 		const last = metas[metas.length - 1];
@@ -118,7 +116,7 @@
 								<p class="text-sm text-muted-foreground">{member.info}</p>
 								<div class="mt-1 flex flex-wrap gap-1">
 									{#each member.metas as meta}
-										<span class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary">Meta {member.metasDisplay && member.metas.length === 1 ? member.metasDisplay : meta}</span>
+										<span class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary">Meta {meta}</span>
 									{/each}
 								</div>
 							</div>
