@@ -238,8 +238,8 @@
 				</div>
 				<div>
 					<p class="font-bold text-primary">E-mail</p>
-					<a href="mailto:contato@niarsaude.org" class="text-sm text-secondary hover:underline">
-						contato@niarsaude.org
+					<a href="mailto:niar@dcc.ufmg.br" class="text-sm text-secondary hover:underline">
+						niar@dcc.ufmg.br
 					</a>
 				</div>
 			</div>
