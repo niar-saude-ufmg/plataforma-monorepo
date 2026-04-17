@@ -7,6 +7,8 @@
 	import ramonImg from '$lib/assets/staff/ramon.jpeg';
 	import guilhermeImg from '$lib/assets/staff/guilherme.jpg';
 	import karolImg from '$lib/assets/staff/karol.png';
+	import helenImg from '$lib/assets/staff/helen_pefil2.jpg';
+	import italoImg from '$lib/assets/staff/Italo.jpg';
 
 	type Member = {
 		initials: string;
@@ -25,14 +27,19 @@
 		{ initials: 'DG', name: 'Prof. Dorgival Guedes Neto', info: 'Sistemas Distribuídos', metas: ['3'], group: 'Pesquisadores', photo: dorgivalImg, photoPos: '30% 20%' },
 		{ initials: 'AP', name: 'Profa. Ana Paula Couto Silva', info: 'Computação Social', metas: ['2'], group: 'Pesquisadores', photo: anaPaulaImg },
 		{ initials: 'MV', name: 'Dra. Marisa Vasconcelos', info: 'Pesquisadora Sênior · IA Responsável', metas: ['1', '2'], group: 'Pesquisadores' },
+		{ initials: 'HL', name: 'Dra. Helen de Cássia Sousa da Costa Lima', info: 'Pós-doutoranda · IA Responsável e IA em Saúde', metas: ['1'], group: 'Pesquisadores', photo: helenImg },
 		{ initials: 'RG', name: 'Ramon Gonçalves Pereira', info: 'Doutorando · IA em Saúde', metas: ['1', '3', '6'], group: 'Doutorandos', photo: ramonImg },
 		{ initials: 'KA', name: 'Karolina Ivete Azevedo', info: 'Mestranda · IA Responsável', metas: ['1', '2'], group: 'Mestrandos', photo: karolImg },
+		{ initials: 'IA', name: 'Italo Rodrigues de Matos Avelar', info: 'Graduando em Sistemas de Informação · IA Responsável', metas: ['1'], group: 'Alunos de Iniciação Científica', photo: italoImg },
+		{ initials: 'LR', name: 'Lucas Martins Rocha', info: 'Graduando em Engenharia de Controle e Automação · Sistemas Embarcados', metas: ['1', '2'], group: 'Alunos de Iniciação Científica' },
+		{ initials: 'LB', name: 'Luís Eduardo Limas Brito', info: 'Graduando em Ciência da Computação · Ciência de Dados', metas: ['2'], group: 'Alunos de Iniciação Científica' },
+		{ initials: 'MC', name: 'Matheus Araujo Pinto Carvalho', info: 'Graduando em Sistemas de Informação · IA Responsável', metas: ['1'], group: 'Alunos de Iniciação Científica' },
 		{ initials: 'GV', name: 'Guilherme Vezula Mateveli', info: 'Desenvolvedor Sênior · Aplicações Web', metas: ['3'], group: 'Colaboradores Externos', photo: guilhermeImg, photoPos: 'center 15%' }
 	];
 
 	let groupBy: 'titulo' | 'meta' = $state('titulo');
 
-	const groupOrder = ['Coordenação', 'Pesquisadores', 'Doutorandos', 'Mestrandos', 'Colaboradores Externos'];
+	const groupOrder = ['Coordenação', 'Pesquisadores', 'Doutorandos', 'Mestrandos', 'Alunos de Iniciação Científica', 'Colaboradores Externos'];
 
 	function formatMetas(member: Member): string {
 		const metas = member.metas;
