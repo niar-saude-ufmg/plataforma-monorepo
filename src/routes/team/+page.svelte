@@ -34,12 +34,13 @@
 		{ initials: 'LR', name: 'Lucas Martins Rocha', info: 'Graduando em Engenharia de Controle e Automação · Sistemas Embarcados', metas: ['1', '2'], group: 'Alunos de Iniciação Científica' },
 		{ initials: 'LB', name: 'Luís Eduardo Limas Brito', info: 'Graduando em Ciência da Computação · Ciência de Dados', metas: ['2'], group: 'Alunos de Iniciação Científica' },
 		{ initials: 'MC', name: 'Matheus Araujo Pinto Carvalho', info: 'Graduando em Sistemas de Informação · IA Responsável', metas: ['1'], group: 'Alunos de Iniciação Científica' },
-		{ initials: 'GV', name: 'Guilherme Vezula Mateveli', info: 'Desenvolvedor Sênior · Aplicações Web', metas: ['3'], group: 'Colaboradores Externos', photo: guilhermeImg, photoPos: 'center 15%' }
+		{ initials: 'GV', name: 'Guilherme Vezula Mateveli', info: 'Desenvolvedor Sênior · Aplicações Web', metas: ['3'], group: 'Colaboradores Externos', photo: guilhermeImg, photoPos: 'center 15%' },
+		{ initials: 'WC', name: 'Wesley Santos Costa', info: 'Mestre em Ciência da Computação · Sistemas de Informação', metas: ['6'], group: 'Alumni' }
 	];
 
 	let groupBy: 'titulo' | 'meta' = $state('titulo');
 
-	const groupOrder = ['Coordenação', 'Pesquisadores', 'Doutorandos', 'Mestrandos', 'Alunos de Iniciação Científica', 'Colaboradores Externos'];
+	const groupOrder = ['Coordenação', 'Pesquisadores', 'Doutorandos', 'Mestrandos', 'Alunos de Iniciação Científica', 'Colaboradores Externos', 'Alumni'];
 
 	function formatMetas(member: Member): string {
 		const metas = member.metas;
