@@ -1,14 +1,12 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(npx:*)",
-      "Bash(npm run:*)",
-      "mcp__svelte__get-documentation",
-      "mcp__svelte__svelte-autofixer"
-    ]
-  },
-  "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "svelte"
-  ]
+	"permissions": {
+		"allow": [
+			"Bash(npx:*)",
+			"Bash(npm run:*)",
+			"mcp__svelte__get-documentation",
+			"mcp__svelte__svelte-autofixer"
+		]
+	},
+	"enableAllProjectMcpServers": true,
+	"enabledMcpjsonServers": ["svelte"]
 }

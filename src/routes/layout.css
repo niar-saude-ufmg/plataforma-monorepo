@@ -5,14 +5,14 @@
 
 :root {
 	/* Paleta Primária - Gradiente do Logo */
-	--azul-profundo: #0F1F5B;    /* Início do degradê */
-	--azul-ciano: #3FA9D9;       /* Fim do degradê */
-	--azul-descritivo: #1C355E;  /* Textos descritivos e subtítulos */
+	--azul-profundo: #0f1f5b; /* Início do degradê */
+	--azul-ciano: #3fa9d9; /* Fim do degradê */
+	--azul-descritivo: #1c355e; /* Textos descritivos e subtítulos */
 
 	/* Paleta Neutra */
-	--branco-puro: #FFFFFF;
-	--cinza-chumbo: #4A4A4A;
-	--cinza-claro: #F5F5F5;
+	--branco-puro: #ffffff;
+	--cinza-chumbo: #4a4a4a;
+	--cinza-claro: #f5f5f5;
 
 	/* Mapeamento do tema */
 	--background: var(--branco-puro);
@@ -30,8 +30,8 @@
 	--accent: var(--cinza-claro);
 	--accent-foreground: var(--azul-profundo);
 	--destructive: oklch(0.577 0.245 27.325);
-	--border: #D9D9D9;
-	--input: #D9D9D9;
+	--border: #d9d9d9;
+	--input: #d9d9d9;
 	--ring: var(--azul-profundo);
 	--radius: 0.625rem;
 }

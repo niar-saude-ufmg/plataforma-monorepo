@@ -15,7 +15,6 @@
 		{ href: '/publications' as const, label: 'Publicações' },
 		{ href: '/team' as const, label: 'Equipe' }
 	];
-
 </script>
 
 <svelte:head>
@@ -23,10 +22,12 @@
 </svelte:head>
 
 <div class="flex min-h-screen flex-col">
-	<header class="sticky top-0 z-50 bg-background/80 backdrop-blur-sm text-foreground overflow-visible">
+	<header
+		class="sticky top-0 z-50 overflow-visible bg-background/80 text-foreground backdrop-blur-sm"
+	>
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
 			<a href={resolve('/')} class="relative z-10">
-				<img src={logo} alt="NIAR" class="h-36 -my-13" />
+				<img src={logo} alt="NIAR" class="-my-13 h-36" />
 			</a>
 			<nav class="flex items-center gap-6">
 				{#each navLinks as link (link.href)}
@@ -43,7 +44,7 @@
 		<Separator />
 	</header>
 
-	<main class="relative z-10 flex-1 flex flex-col">
+	<main class="relative z-10 flex flex-1 flex-col">
 		{@render children()}
 	</main>
 
@@ -52,7 +53,7 @@
 		<div class="mx-auto max-w-6xl px-6 py-8">
 			<div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
 				<div class="flex items-center gap-4">
-					<img src={logo} alt="NIAR" class="h-34 -my-13" />
+					<img src={logo} alt="NIAR" class="-my-13 h-34" />
 					<span class="text-border">|</span>
 					<img src={financiadores} alt="Financiadores" class="max-h-12 object-contain" />
 				</div>
