@@ -2,15 +2,6 @@
 
 Site institucional do **NIAR-Saúde** (Núcleo de Inteligência Artificial Responsável para a Saúde), um núcleo interdisciplinar que reúne pesquisadores de computação e saúde para desenvolver soluções voltadas ao uso responsável de dados e inteligência artificial.
 
-## Stack
-
-- [SvelteKit](https://svelte.dev/docs/kit) 2 com [Svelte 5](https://svelte.dev) (runes)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/) v4
-- [shadcn-svelte](https://www.shadcn-svelte.com/) / [bits-ui](https://bits-ui.com/) para componentes
-- [lucide-svelte](https://lucide.dev/) para ícones
-- [Vite](https://vite.dev/) como bundler
-
 ## Estrutura do projeto
 
 ```
@@ -31,7 +22,7 @@ src/
 
 ## Fonte dos dados
 
-As informações exibidas no site — membros da equipe (página `/team`), artigos publicados (página `/publications`) e conteúdo da página "Sobre" — são provenientes de uma planilha interna do grupo e mantidas manualmente nos arquivos de dados e nos componentes Svelte.
+As informações exibidas no site — membros da equipe (página `/team`), artigos publicados (página `/publications`) e conteúdo da página "Sobre" — são em grande parte provenientes de uma [planilha interna](https://docs.google.com/spreadsheets/d/1EmYRtFD77KmTbtb34yPHnVO-BeSld9ws5sgHQ2-TtXI/edit?usp=sharing) do grupo e mantidas manualmente nos arquivos de dados e nos componentes Svelte.
 
 ## Pré-requisitos
 
@@ -73,11 +64,3 @@ npm run preview
 ```
 
 > O deploy depende do [adapter](https://svelte.dev/docs/kit/adapters) configurado para o ambiente alvo.
-
-## Outros comandos
-
-| Comando          | Descrição                          |
-| ---------------- | ---------------------------------- |
-| `npm run check`  | Verifica tipos TypeScript e Svelte |
-| `npm run lint`   | Roda Prettier (check) e ESLint     |
-| `npm run format` | Formata o código com Prettier      |
