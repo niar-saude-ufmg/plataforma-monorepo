@@ -252,7 +252,14 @@
 				</div>
 				<div>
 					<p class="font-bold text-primary">Localização</p>
-					<p class="text-sm text-muted-foreground">Universidade Federal — Campus Saúde</p>
+					<a
+						href="https://www.google.com/maps/place/Universidade+Federal+de+Minas+Gerais/@-19.8669704,-43.9620077,17z/data=!3m1!4b1!4m6!3m5!1s0xa690ee806be67d:0xbb1391cea62811dd!8m2!3d-19.8669704!4d-43.9620077!16zL20vMDIxejJr"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-sm text-secondary hover:underline"
+					>
+						Universidade Federal de Minas Gerais
+					</a>
 				</div>
 			</div>
 		</div>
