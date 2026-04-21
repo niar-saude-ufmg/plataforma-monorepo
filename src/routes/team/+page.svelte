@@ -189,7 +189,7 @@
 </script>
 
 <svelte:head>
-	<title>Equipe - NIAR</title>
+	<title>Equipe</title>
 	<meta name="description" content="Conheça a equipe do NIAR-Saúde" />
 </svelte:head>
 

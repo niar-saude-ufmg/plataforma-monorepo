@@ -30,7 +30,7 @@
 </script>
 
 <svelte:head>
-	<title>Publicações - NIAR</title>
+	<title>Publicações</title>
 	<meta name="description" content="Publicações e produções científicas do NIAR-Saúde" />
 </svelte:head>
 

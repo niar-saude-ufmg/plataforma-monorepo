@@ -18,7 +18,7 @@
 </script>
 
 <svelte:head>
-	<title>NIAR - Página Inicial</title>
+	<title>Página Inicial</title>
 	<meta name="description" content="NIAR - Site institucional" />
 	<link rel="preload" as="image" href={homeImg} />
 </svelte:head>
