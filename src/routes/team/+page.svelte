@@ -9,6 +9,7 @@
 	import karolImg from '$lib/assets/staff/karol.png';
 	import helenImg from '$lib/assets/staff/helen_pefil2.jpg';
 	import italoImg from '$lib/assets/staff/Italo.jpg';
+	import isadoraImg from '$lib/assets/staff/isadora.jpeg';
 
 	type Member = {
 		initials: string;
@@ -129,6 +130,14 @@
 			group: 'Colaboradores Externos',
 			photo: guilhermeImg,
 			photoPos: 'center 15%'
+		},
+		{
+			initials: 'IR',
+			name: 'Isadora Cristina de Matos Rodrigues',
+			info: 'Desenvolvedora · Aplicações web e dados públicos',
+			metas: ['3'],
+			group: 'Colaboradores Externos',
+			photo: isadoraImg
 		},
 		{
 			initials: 'WC',
