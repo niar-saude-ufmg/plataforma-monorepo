@@ -10,7 +10,7 @@
 	import wagnerImg from '$lib/assets/staff/wagner-meira.jpg';
 	import micheleImg from '$lib/assets/staff/michele.jpeg';
 	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
-	import ramonImg from '$lib/assets/staff/ramon.jpeg';
+	import virgilioImg from '$lib/assets/staff/virgilio.jpeg';
 	import anaPaulaImg from '$lib/assets/staff/ana-paula.jpeg';
 	import { publications } from '$lib/data/publications';
 	import { resolve } from '$app/paths';
@@ -196,7 +196,7 @@
 		</div>
 
 		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-			{#each [{ initials: 'WM', name: 'Prof. Wagner Meira Júnior', role: 'Coordenador', area: 'Ciência da Computação', photo: wagnerImg }, { initials: 'MB', name: 'Profa. Michele Brandão', role: 'Pesquisadora', area: 'Ciência da Computação', photo: micheleImg }, { initials: 'DG', name: 'Prof. Dorgival Guedes Neto', role: 'Pesquisador', area: 'Ciência da Computação', photo: dorgivalImg, photoPos: '30% 20%' }, { initials: 'AP', name: 'Profa. Ana Paula Couto Silva', role: 'Pesquisadora', area: 'Computação Social', photo: anaPaulaImg }, { initials: 'MV', name: 'Dra. Marisa Vasconcelos', role: 'Pesquisadora Sênior', area: 'IA Responsável' }, { initials: 'RG', name: 'Ramon Gonçalves Pereira', role: 'Doutorando', area: 'IA em Saúde', photo: ramonImg }] as member (member.initials)}
+			{#each [{ initials: 'WM', name: 'Prof. Wagner Meira Júnior', role: 'Coordenador', area: 'Ciência da Computação', photo: wagnerImg }, { initials: 'MB', name: 'Profa. Michele Brandão', role: 'Coordenadora', area: 'Ciência da Computação', photo: micheleImg }, { initials: 'DG', name: 'Prof. Dorgival Guedes Neto', role: 'Coordenador', area: 'Ciência da Computação', photo: dorgivalImg, photoPos: '30% 20%' }, { initials: 'AP', name: 'Profa. Ana Paula Couto Silva', role: 'Coordenadora', area: 'Computação Social', photo: anaPaulaImg }, { initials: 'VA', name: 'Prof. Virgílio Augusto Fernandes Almeida', role: 'Pesquisador', area: 'Ciência da Computação e IA Responsável', photo: virgilioImg }, { initials: 'ML', name: 'Profa. Mariangela Leal Cherchiglia', role: 'Coordenadora', area: 'Saúde Pública' }] as member (member.initials)}
 				<div
 					class="flex flex-col items-center rounded-lg bg-white p-8 text-center shadow-sm ring-1 ring-border transition-shadow hover:shadow-md"
 				>
