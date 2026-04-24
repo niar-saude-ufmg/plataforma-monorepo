@@ -2,6 +2,7 @@
 	import Search from 'lucide-svelte/icons/search';
 	import * as Select from '$lib/components/ui/select';
 	import { publications } from '$lib/data/publications';
+	import { resolve } from '$app/paths';
 
 	let search = $state('');
 	let selectedMeta = $state('all');
@@ -37,7 +38,7 @@
 <section class="flex-1 py-16" style="background-color: rgb(245, 245, 245);">
 	<div class="mx-auto max-w-6xl px-6">
 		<a
-			href="/"
+			href={resolve('/')}
 			class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 		>
 			<span aria-hidden="true">&larr;</span> Voltar à página inicial
@@ -69,7 +70,7 @@
 				</Select.Trigger>
 				<Select.Content class="[&_*]:text-base">
 					<Select.Item value="all" label="Todas as metas" />
-					{#each allMetas as meta}
+					{#each allMetas as meta (meta)}
 						<Select.Item value={meta} label="Meta {meta}" />
 					{/each}
 				</Select.Content>
@@ -85,7 +86,7 @@
 				</Select.Trigger>
 				<Select.Content class="[&_*]:text-base">
 					<Select.Item value="all" label="Todos os anos" />
-					{#each allYears as year}
+					{#each allYears as year (year)}
 						<Select.Item value={year} label={year} />
 					{/each}
 				</Select.Content>
@@ -99,7 +100,7 @@
 				<div class="rounded-lg bg-white p-6 ring-1 ring-border">
 					<div class="flex items-center gap-2">
 						<span class="text-sm font-bold text-secondary">{pub.year}</span>
-						{#each pub.metas as meta}
+						{#each pub.metas as meta (meta)}
 							<span
 								class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary"
 								>Meta {meta}</span
@@ -109,12 +110,16 @@
 					<p class="mt-3 text-lg leading-snug font-bold text-primary">{pub.title}</p>
 					<p class="mt-2 text-sm text-muted-foreground">{pub.authors}</p>
 					<p class="mt-1 text-sm text-muted-foreground italic">{pub.journal}</p>
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={pub.doi}
+						target="_blank"
+						rel="noopener noreferrer"
 						class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 					>
 						Acessar via DOI <span aria-hidden="true">&nearr;</span>
 					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				</div>
 			{/each}
 		</div>

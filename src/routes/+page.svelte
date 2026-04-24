@@ -8,11 +8,12 @@
 	import MapPin from 'lucide-svelte/icons/map-pin';
 	import homeImg from '$lib/assets/home-img.jpg';
 	import wagnerImg from '$lib/assets/staff/wagner-meira.jpg';
-	import micheleImg from '$lib/assets/staff/Michele-1.jpg';
+	import micheleImg from '$lib/assets/staff/michele.jpeg';
 	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
 	import ramonImg from '$lib/assets/staff/ramon.jpeg';
 	import anaPaulaImg from '$lib/assets/staff/ana-paula.jpeg';
 	import { publications } from '$lib/data/publications';
+	import { resolve } from '$app/paths';
 
 	const recentPublications = publications.slice(0, 4);
 </script>
@@ -45,7 +46,7 @@
 				Entre em contato
 			</Button>
 			<a
-				href="/about"
+				href={resolve('/about')}
 				class="inline-flex items-center gap-1 text-base font-medium text-white hover:underline"
 			>
 				Saiba mais <span aria-hidden="true">&rarr;</span>
@@ -135,7 +136,7 @@
 				</p>
 			</div>
 			<a
-				href="/publications"
+				href={resolve('/publications')}
 				class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline"
 			>
 				Ver todas as publicações <span aria-hidden="true">&rarr;</span>
@@ -147,7 +148,7 @@
 				<div class="flex flex-col rounded-lg bg-white p-6 shadow-sm ring-1 ring-border">
 					<div class="flex items-center gap-2">
 						<span class="text-sm font-bold text-secondary">{pub.year}</span>
-						{#each pub.metas as meta}
+						{#each pub.metas as meta (meta)}
 							<span
 								class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary"
 								>Meta {meta}</span
@@ -157,12 +158,16 @@
 					<p class="mt-3 text-base leading-snug font-bold text-primary">{pub.title}</p>
 					<p class="mt-2 text-sm text-muted-foreground">{pub.authors}</p>
 					<p class="mt-1 text-sm text-muted-foreground italic">{pub.journal}</p>
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={pub.doi}
+						target="_blank"
+						rel="noopener noreferrer"
 						class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 					>
 						DOI <span aria-hidden="true">&nearr;</span>
 					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				</div>
 			{/each}
 		</div>
@@ -183,7 +188,7 @@
 				</p>
 			</div>
 			<a
-				href="/team"
+				href={resolve('/team')}
 				class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline"
 			>
 				Ver equipe completa <span aria-hidden="true">&rarr;</span>
