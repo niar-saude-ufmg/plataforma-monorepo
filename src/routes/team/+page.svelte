@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import wagnerImg from '$lib/assets/staff/wagner-meira.jpg';
-	import micheleImg from '$lib/assets/staff/Michele-1.jpg';
+	import micheleImg from '$lib/assets/staff/michele.jpeg';
 	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
 	import anaPaulaImg from '$lib/assets/staff/ana-paula.jpeg';
 	import ramonImg from '$lib/assets/staff/ramon.jpeg';
@@ -10,6 +10,9 @@
 	import helenImg from '$lib/assets/staff/helen_pefil2.jpg';
 	import italoImg from '$lib/assets/staff/Italo.jpg';
 	import isadoraImg from '$lib/assets/staff/isadora.jpeg';
+	import adrianoCesarImg from '$lib/assets/staff/adriano-cesar.jpeg'
+	import camilaImg from '$lib/assets/staff/camila.jpeg'
+	import { resolve } from '$app/paths';
 
 	type Member = {
 		initials: string;
@@ -35,7 +38,8 @@
 			name: 'Camila dos Reis Cunha',
 			info: 'Gerente de Projetos · Administração e Gestão da Inovação',
 			metas: ['1', '3', '7'],
-			group: 'Coordenação'
+			group: 'Coordenação',
+			photo: camilaImg
 		},
 		{
 			initials: 'MB',
@@ -61,6 +65,14 @@
 			metas: ['2'],
 			group: 'Pesquisadores',
 			photo: anaPaulaImg
+		},
+		{
+			initials: 'AC',
+			name: 'Prof. Adriano César Machado Pereira',
+			info: 'Pesquisador · Ciência da Computação',
+			metas: ['3'],
+			group: 'Pesquisadores',
+			photo: adrianoCesarImg
 		},
 		{
 			initials: 'MV',
@@ -196,7 +208,7 @@
 <section class="py-16" style="background-color: rgb(245, 245, 245);">
 	<div class="mx-auto max-w-6xl px-6">
 		<a
-			href="/"
+			href={resolve('/')}
 			class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 		>
 			<span aria-hidden="true">&larr;</span> Voltar à página inicial
