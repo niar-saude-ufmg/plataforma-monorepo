@@ -10,8 +10,36 @@
 	import helenImg from '$lib/assets/staff/helen_pefil2.jpg';
 	import italoImg from '$lib/assets/staff/Italo.jpg';
 	import isadoraImg from '$lib/assets/staff/isadora.jpeg';
-	import adrianoCesarImg from '$lib/assets/staff/adriano-cesar.jpeg'
-	import camilaImg from '$lib/assets/staff/camila.jpeg'
+	import adrianoCesarImg from '$lib/assets/staff/adriano-cesar.jpeg';
+	import camilaImg from '$lib/assets/staff/camila.jpeg';
+	import alineSantosImg from '$lib/assets/staff/aline-santos.jpeg';
+	import anaLuizaImg from '$lib/assets/staff/ana-luiza.jpeg';
+	import antonioImg from '$lib/assets/staff/antonio.jpeg';
+	import deborahImg from '$lib/assets/staff/deborah.jpeg';
+	import eduardoImg from '$lib/assets/staff/eduardo.jpeg';
+	import ernestoImg from '$lib/assets/staff/ernesto.jpeg';
+	import flaviaImg from '$lib/assets/staff/flavia.jpeg';
+	import gabrielaImg from '$lib/assets/staff/gabriela.jpeg';
+	import hugoImg from '$lib/assets/staff/hugo.jpeg';
+	import ilkaImg from '$lib/assets/staff/ilka.jpeg';
+	import jorgeImg from '$lib/assets/staff/jorge.jpeg';
+	import julioImg from '$lib/assets/staff/julio.jpeg';
+	import jussaraImg from '$lib/assets/staff/jussara.jpeg';
+	import marcoImg from '$lib/assets/staff/marco.jpeg';
+	import marcosAndreImg from '$lib/assets/staff/Marcos-Andre-4.jpg';
+	import marcosPratesImg from '$lib/assets/staff/marcos.jpeg';
+	import marianaAlmeidaImg from '$lib/assets/staff/mariana-almeida.jpeg';
+	import marianaOliveiraImg from '$lib/assets/staff/mariana-de-oliveira.jpeg';
+	import marianaMiskImg from '$lib/assets/staff/mariana-misk.jpeg';
+	import marisaImg from '$lib/assets/staff/marisa.jpeg';
+	import petrusImg from '$lib/assets/staff/petrus.jpeg';
+	import reginaImg from '$lib/assets/staff/regina.jpeg';
+	import saraImg from '$lib/assets/staff/sara.jpeg';
+	import sofiaImg from '$lib/assets/staff/sofia.jpeg';
+	import virgilioImg from '$lib/assets/staff/virgilio.jpeg';
+	import wesleyImg from '$lib/assets/staff/wesley.jpeg';
+	import zilmaImg from '$lib/assets/staff/zilma.jpeg';
+	import elieteImg from '$lib/assets/staff/eliete.png';
 	import { resolve } from '$app/paths';
 
 	type Member = {
@@ -28,42 +56,34 @@
 		{
 			initials: 'WM',
 			name: 'Prof. Wagner Meira Júnior',
-			info: 'Coordenador · Ciência da Computação',
-			metas: ['3'],
+			info: 'Coordenador Metas 3 e 7 · Ciência da Computação',
+			metas: ['3', '7'],
 			group: 'Coordenação',
 			photo: wagnerImg
 		},
 		{
-			initials: 'CC',
-			name: 'Camila dos Reis Cunha',
-			info: 'Gerente de Projetos · Administração e Gestão da Inovação',
-			metas: ['1', '3', '7'],
-			group: 'Coordenação',
-			photo: camilaImg
-		},
-		{
 			initials: 'MB',
-			name: 'Profa. Michele Brandão',
-			info: 'Ciência de Dados e Redes Complexas',
+			name: 'Profa. Michele Amaral Brandão',
+			info: 'Coordenadora Meta 1 · Ciência da Computação e IA Responsável',
 			metas: ['1', '2', '3'],
-			group: 'Pesquisadores',
+			group: 'Coordenação',
 			photo: micheleImg
 		},
 		{
 			initials: 'DG',
 			name: 'Prof. Dorgival Guedes Neto',
-			info: 'Sistemas Distribuídos',
+			info: 'Coordenador Meta 3 · Sistemas Distribuídos',
 			metas: ['3'],
-			group: 'Pesquisadores',
+			group: 'Coordenação',
 			photo: dorgivalImg,
 			photoPos: '30% 20%'
 		},
 		{
 			initials: 'AP',
 			name: 'Profa. Ana Paula Couto Silva',
-			info: 'Computação Social',
+			info: 'Coordenadora Meta 2 · Computação Social',
 			metas: ['2'],
-			group: 'Pesquisadores',
+			group: 'Coordenação',
 			photo: anaPaulaImg
 		},
 		{
@@ -75,19 +95,253 @@
 			photo: adrianoCesarImg
 		},
 		{
-			initials: 'MV',
-			name: 'Dra. Marisa Vasconcelos',
-			info: 'Pesquisadora Sênior · IA Responsável',
-			metas: ['1', '2'],
+			initials: 'AR',
+			name: 'Prof. Antonio Luiz Pinho Ribeiro',
+			info: 'Coordenador Meta 4 · Infectologia e Medicina Tropical',
+			metas: ['4'],
+			group: 'Coordenação',
+			photo: antonioImg
+		},
+		{
+			initials: 'CO',
+			name: 'Profa. Clara Rodrigues Alves de Oliveira',
+			info: 'Pesquisadora · Infectologia e Medicina Tropical',
+			metas: ['4'],
 			group: 'Pesquisadores'
 		},
 		{
+			initials: 'DM',
+			name: 'Profa. Deborah Carvalho Malta',
+			info: 'Coordenadora Meta 5 · Saúde Coletiva e Saúde Pública',
+			metas: ['5'],
+			group: 'Coordenação',
+			photo: deborahImg
+		},
+		{
+			initials: 'EP',
+			name: 'Prof. Ernesto Perini Frizzera da Mota Santos',
+			info: 'Pesquisador · Filosofia',
+			metas: ['2'],
+			group: 'Pesquisadores',
+			photo: ernestoImg
+		},
+		{
+			initials: 'FP',
+			name: 'Profa. Flávia Bulegon Pilecco',
+			info: 'Pesquisadora · Epidemiologia',
+			metas: ['6'],
+			group: 'Pesquisadores',
+			photo: flaviaImg
+		},
+		{
+			initials: 'GA',
+			name: 'Prof. Gabriel Oliveira Assunção',
+			info: 'Pesquisador · Estatística',
+			metas: ['3'],
+			group: 'Pesquisadores'
+		},
+		{
+			initials: 'GP',
+			name: 'Profa. Gabriela Miana de Mattos Paixão',
+			info: 'Pesquisadora · Infectologia e Medicina Tropical',
+			metas: ['4'],
+			group: 'Pesquisadores',
+			photo: gabrielaImg
+		},
+		{
 			initials: 'HL',
-			name: 'Dra. Helen de Cássia Sousa da Costa Lima',
+			name: 'Profa. Helen de Cássia Sousa da Costa Lima',
 			info: 'Pós-doutoranda · IA Responsável e IA em Saúde',
 			metas: ['1'],
 			group: 'Pesquisadores',
 			photo: helenImg
+		},
+		{
+			initials: 'HR',
+			name: 'Prof. Hugo André da Rocha',
+			info: 'Pesquisador · Saúde Pública',
+			metas: ['6'],
+			group: 'Pesquisadores',
+			photo: hugoImg
+		},
+		{
+			initials: 'IR',
+			name: 'Profa. Ilka Afonso Reis',
+			info: 'Pesquisadora · Estatística',
+			metas: ['6'],
+			group: 'Pesquisadores',
+			photo: ilkaImg
+		},
+		{
+			initials: 'JM',
+			name: 'Prof. Jorge Gustavo Velasquez Melendez',
+			info: 'Pesquisador · Epidemiologia Nutricional',
+			metas: ['5'],
+			group: 'Pesquisadores',
+			photo: jorgeImg
+		},
+		{
+			initials: 'JR',
+			name: 'Prof. Júlio Soares dos Reis',
+			info: 'Pesquisador · Sistemas de Informação e Ciência da Computação',
+			metas: ['1'],
+			group: 'Pesquisadores',
+			photo: julioImg
+		},
+		{
+			initials: 'JG',
+			name: 'Profa. Jussara Marques de Almeida Gonçalves',
+			info: 'Pesquisadora · Ciência da Computação',
+			metas: ['5'],
+			group: 'Pesquisadores',
+			photo: jussaraImg
+		},
+		{
+			initials: 'LA',
+			name: 'Profa. Larissa Fortunato Araújo',
+			info: 'Pesquisadora · Saúde Pública',
+			metas: ['5'],
+			group: 'Pesquisadores'
+		},
+		{
+			initials: 'MA',
+			name: 'Prof. Marco Antônio Sousa Alves',
+			info: 'Pesquisador · Filosofia',
+			metas: ['2'],
+			group: 'Pesquisadores',
+			photo: marcoImg
+		},
+		{
+			initials: 'MG',
+			name: 'Prof. Marcos André Gonçalves',
+			info: 'Pesquisador · Ciência da Computação',
+			metas: ['5'],
+			group: 'Pesquisadores',
+			photo: marcosAndreImg
+		},
+		{
+			initials: 'MP',
+			name: 'Prof. Marcos Oliveira Prates',
+			info: 'Pesquisador · Estatística',
+			metas: ['3'],
+			group: 'Pesquisadores',
+			photo: marcosPratesImg
+		},
+		{
+			initials: 'ML',
+			name: 'Profa. Mariangela Leal Cherchiglia',
+			info: 'Coordenadora Meta 6 · Saúde Pública',
+			metas: ['6'],
+			group: 'Coordenação'
+		},
+		{
+			initials: 'RS',
+			name: 'Profa. Regina Helena Alves da Silva',
+			info: 'Pesquisadora · História Social e Ciências Sociais',
+			metas: ['2'],
+			group: 'Pesquisadores'
+		},
+		{
+			initials: 'VA',
+			name: 'Prof. Virgílio Augusto Fernandes Almeida',
+			info: 'Pesquisador · Ciência da Computação e IA Responsável',
+			metas: ['3', '7'],
+			group: 'Pesquisadores',
+			photo: virgilioImg
+		},
+		{
+			initials: 'ZR',
+			name: 'Profa. Zilma Silveira Nogueira Reis',
+			info: 'Coordenadora Meta 2 · Ginecologia e Obstetrícia',
+			metas: ['2'],
+			group: 'Coordenação',
+			photo: zilmaImg
+		},
+		{
+			initials: 'CC',
+			name: 'Camila dos Reis Cunha',
+			info: 'Gerente de Projetos · Administração e Gestão da Inovação',
+			metas: ['1', '3', '7'],
+			group: 'Coordenação',
+			photo: camilaImg
+		},
+		{
+			initials: 'MV',
+			name: 'Dra. Marisa Vasconcelos',
+			info: 'Pesquisadora · IA Responsável',
+			metas: ['1', '2'],
+			group: 'Pesquisadores',
+			photo: marisaImg
+		},
+		{
+			initials: 'AS',
+			name: 'Dra. Aline Cristina dos Santos',
+			info: 'Analista Finalística · Saúde pública',
+			metas: ['6'],
+			group: 'Pesquisadores',
+			photo: alineSantosImg
+		},
+		{
+			initials: 'CG',
+			name: 'Dra. Crizian Saar Gomes',
+			info: 'Pós-doutoranda · Saúde Pública',
+			metas: ['5'],
+			group: 'Pesquisadores'
+		},
+		{
+			initials: 'ES',
+			name: 'Dr. Eduardo Campos dos Santos',
+			info: 'Analista Finalístico · Mineração de Dados',
+			metas: ['3'],
+			group: 'Pesquisadores',
+			photo: eduardoImg
+		},
+		{
+			initials: 'JS',
+			name: 'Joabe Dias Salgueiro',
+			info: 'Pesquisador · Sistemas de Informação',
+			metas: ['2'],
+			group: 'Pesquisadores'
+		},
+		{
+			initials: 'MC',
+			name: 'Mariana Almeida Carneiro',
+			info: 'Analista Finalística · Engenharia',
+			metas: ['6'],
+			group: 'Pesquisadores',
+			photo: marianaAlmeidaImg
+		},
+		{
+			initials: 'MS',
+			name: 'Dra. Mariana de Oliveira Santos Silva',
+			info: 'Analista Finalística · Ciência da Computação',
+			metas: ['2'],
+			group: 'Pesquisadores',
+			photo: marianaOliveiraImg
+		},
+		{
+			initials: 'PA',
+			name: 'Dr. Petrus Emmanuel Oliveira Gomes Brant Abreu',
+			info: 'Analista de Modelos de IA · Engenharia Elétrica',
+			metas: ['4'],
+			group: 'Pesquisadores',
+			photo: petrusImg
+		},
+		{
+			initials: 'RB',
+			name: 'Dra. Regina Tomie Ivata Bernal',
+			info: 'Pós-doutoranda · Estatística e Saúde Pública',
+			metas: ['5'],
+			group: 'Pesquisadores',
+			photo: reginaImg
+		},
+		{
+			initials: 'MM',
+			name: 'Mariana Misk Moysés',
+			info: 'Pesquisadora · Design Industrial',
+			metas: ['2'],
+			group: 'Pesquisadores',
+			photo: marianaMiskImg
 		},
 		{
 			initials: 'RG',
@@ -96,6 +350,14 @@
 			metas: ['1', '3', '6'],
 			group: 'Doutorandos',
 			photo: ramonImg
+		},
+		{
+			initials: 'SR',
+			name: 'Sofia Maria Amorim Falco Rodrigues',
+			info: 'Doutoranda · Engenharia Elétrica',
+			metas: ['4'],
+			group: 'Doutorandos',
+			photo: sofiaImg
 		},
 		{
 			initials: 'KA',
@@ -135,6 +397,29 @@
 			group: 'Alunos de Iniciação Científica'
 		},
 		{
+			initials: 'AL',
+			name: 'Ana Luiza Coimbra Carvalho Gallo',
+			info: 'Graduanda em Design Gráfico · Desenho de Produto',
+			metas: ['2'],
+			group: 'Alunos de Iniciação Científica',
+			photo: anaLuizaImg
+		},
+		{
+			initials: 'FC',
+			name: 'Fabíola Siomara Liboreiro Chicata',
+			info: 'Graduanda em Medicina',
+			metas: ['6'],
+			group: 'Alunos de Iniciação Científica'
+		},
+		{
+			initials: 'SG',
+			name: 'Sara Ribeiro Guimarães',
+			info: 'Graduanda em Design Gráfico',
+			metas: ['2'],
+			group: 'Alunos de Iniciação Científica',
+			photo: saraImg
+		},
+		{
 			initials: 'GV',
 			name: 'Guilherme Vezula Mateveli',
 			info: 'Desenvolvedor Sênior · Aplicações Web',
@@ -146,17 +431,26 @@
 		{
 			initials: 'IR',
 			name: 'Isadora Cristina de Matos Rodrigues',
-			info: 'Desenvolvedora · Aplicações web e dados públicos',
+			info: 'Desenvolvedora · Aplicações Web e Dados Públicos',
 			metas: ['3'],
 			group: 'Colaboradores Externos',
 			photo: isadoraImg
 		},
 		{
+			initials: 'EC',
+			name: 'Eliete Guizilini Moreira de Carvalho',
+			info: 'Desenvolvedora Júnior · Ciência da Informação',
+			metas: ['6'],
+			group: 'Colaboradores Externos',
+			photo: elieteImg
+		},
+		{
 			initials: 'WC',
 			name: 'Wesley Santos Costa',
-			info: 'Mestre em Ciência da Computação · Sistemas de Informação',
+			info: 'Analista Finalístico · Sistema de Informação e Ciência da Computação',
 			metas: ['6'],
-			group: 'Alumni'
+			group: 'Alumni',
+			photo: wesleyImg
 		}
 	];
 
@@ -171,14 +465,6 @@
 		'Colaboradores Externos',
 		'Alumni'
 	];
-
-	function formatMetas(member: Member): string {
-		const metas = member.metas;
-		if (metas.length === 1) return `Meta ${metas[0]}`;
-		const last = metas[metas.length - 1];
-		const rest = metas.slice(0, -1);
-		return `Metas ${rest.join(', ')} e ${last}`;
-	}
 
 	let groups = $derived.by(() => {
 		if (groupBy === 'titulo') {
@@ -250,7 +536,7 @@
 					<h2 class="text-2xl font-bold text-primary">{group.name}</h2>
 				</summary>
 				<div class="mt-6 grid gap-6 sm:grid-cols-2">
-					{#each group.members as member (member.initials)}
+					{#each group.members as member (member.name)}
 						<div class="flex items-center gap-5 rounded-lg bg-white p-6 ring-1 ring-border">
 							{#if member.photo}
 								<img
@@ -270,7 +556,7 @@
 								<p class="font-bold text-primary">{member.name}</p>
 								<p class="text-sm text-muted-foreground">{member.info}</p>
 								<div class="mt-1 flex flex-wrap gap-1">
-									{#each member.metas as meta}
+									{#each member.metas as meta (meta)}
 										<span
 											class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary"
 											>Meta {meta}</span

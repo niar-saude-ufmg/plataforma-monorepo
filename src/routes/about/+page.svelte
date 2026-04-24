@@ -73,7 +73,7 @@
 			title: 'IA para eletrocardiograma (IA-ECG)',
 			description:
 				'Desenvolvimento de algoritmo para diagnóstico automatizado de ECG, ampliando acesso e apoiando o laudo médico.',
-			coordenacao: 'Tom'
+			coordenacao: 'Antonio'
 		},
 		{
 			num: '05',
