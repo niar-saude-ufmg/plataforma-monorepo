@@ -5,6 +5,13 @@
 	import Server from 'lucide-svelte/icons/server';
 	import Microscope from 'lucide-svelte/icons/microscope';
 	import Share2 from 'lucide-svelte/icons/share-2';
+	import micheleImg from '$lib/assets/staff/michele.jpeg';
+	import anaPaulaImg from '$lib/assets/staff/ana-paula.jpeg';
+	import zilmaImg from '$lib/assets/staff/zilma.jpeg';
+	import wagnerImg from '$lib/assets/staff/wagner-meira.jpg';
+	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
+	import antonioImg from '$lib/assets/staff/antonio.jpeg';
+	import deborahImg from '$lib/assets/staff/deborah.jpeg';
 
 	const objetivos = [
 		{
@@ -46,55 +53,68 @@
 		{ titulo: 'Inauguração da sala segura', data: 'Mar 2026' }
 	];
 
-	const metas = [
+	type Coord = { name: string; initials: string; photo?: string };
+
+	const metas: Array<{
+		num: string;
+		title: string;
+		description: string;
+		coords: Coord[];
+	}> = [
 		{
-			num: '01',
+			num: '1',
 			title: 'Serviço de acesso responsável',
 			description:
 				'Especificação, implementação e operação de um serviço experimental para acesso responsável a dados e modelos em saúde.',
-			coordenacao: 'Michele'
+			coords: [{ name: 'Michele Brandão', initials: 'MB', photo: micheleImg }]
 		},
 		{
-			num: '02',
+			num: '2',
 			title: 'Capacitação e formação',
 			description:
 				'Disseminação de conhecimento e oferta de cursos em ética e uso do ambiente NIAR para formação em IA responsável.',
-			coordenacao: 'Ana Paula e Zilma'
+			coords: [
+				{ name: 'Ana Paula Silva', initials: 'AP', photo: anaPaulaImg },
+				{ name: 'Zilma Reis', initials: 'ZR', photo: zilmaImg }
+			]
 		},
 		{
-			num: '03',
+			num: '3',
 			title: 'Plataforma computacional',
 			description:
 				'Desenvolvimento e validação de uma plataforma computacional para suporte à IA responsável em saúde.',
-			coordenacao: 'Wagner Meira'
+			coords: [
+				{ name: 'Wagner Meira', initials: 'WM', photo: wagnerImg },
+				{ name: 'Dorgival Guedes', initials: 'DG', photo: dorgivalImg }
+			]
 		},
 		{
-			num: '04',
+			num: '4',
 			title: 'IA para eletrocardiograma (IA-ECG)',
 			description:
 				'Desenvolvimento de algoritmo para diagnóstico automatizado de ECG, ampliando acesso e apoiando o laudo médico.',
-			coordenacao: 'Antonio'
+			coords: [{ name: 'Antonio Ribeiro', initials: 'AR', photo: antonioImg }]
 		},
 		{
-			num: '05',
+			num: '5',
 			title: 'Modelos preditivos em DCNT',
 			description:
 				'Predição de doenças crônicas e fatores de risco com base em dados epidemiológicos e sociodemográficos.',
-			coordenacao: 'Deborah'
+			coords: [{ name: 'Deborah Malta', initials: 'DM', photo: deborahImg }]
 		},
 		{
-			num: '06',
+			num: '6',
 			title: 'IA em dados oncológicos do SUS',
 			description:
 				'Integração e análise preditiva de dados de pacientes oncológicos do SUS em Belo Horizonte.',
-			coordenacao: 'Mariângela'
+			coords: [{ name: 'Mariangela Cherchiglia', initials: 'ML' }]
 		},
 		{
-			num: '07',
+			num: '7',
 			title: 'Transferência de tecnologia',
 			description:
 				'Disseminação e transferência de conhecimento e tecnologias desenvolvidas no projeto.',
-			coordenacao: 'Wagner Meira'
+			coords: [{ name: 'Wagner Meira', initials: 'WM', photo: wagnerImg }]
 		}
 	];
 </script>
@@ -172,20 +192,46 @@
 			</p>
 		</div>
 
-		<div class="flex flex-wrap justify-center gap-8">
-			{#each metas as meta (meta.num)}
+		<div class="grid auto-rows-fr grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+			{#each metas as meta, i (meta.num)}
 				<div
-					class="relative flex w-full flex-col overflow-hidden rounded-2xl bg-white p-8 ring-1 ring-border sm:w-[calc(50%_-_1rem)] lg:w-[calc(33.333%_-_1.334rem)]"
+					class="flex flex-col rounded-2xl bg-white p-8 ring-1 ring-border {i ===
+					metas.length - 1
+						? 'sm:col-span-2 sm:w-[calc(50%-1rem)] sm:justify-self-center lg:col-span-1 lg:col-start-2 lg:w-auto'
+						: ''}"
 				>
-					<span class="absolute top-6 right-6 text-6xl font-bold text-muted-foreground/20">
-						{meta.num}
-					</span>
-					<h3 class="text-xl font-bold text-primary">{meta.title}</h3>
-					<p class="mt-4 leading-relaxed text-muted-foreground">{meta.description}</p>
-					<p class="mt-auto pt-4 text-sm text-muted-foreground">
-						<span class="font-semibold text-primary">Coordenação:</span>
-						{meta.coordenacao}
+					<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+						Meta {meta.num}
 					</p>
+					<h3 class="mt-2 text-xl font-bold text-primary">{meta.title}</h3>
+					<p class="mt-4 mb-4 leading-relaxed text-muted-foreground">{meta.description}</p>
+					<div class="mt-auto flex items-center gap-3 border-t border-border pt-4">
+						<div class="flex shrink-0">
+							{#each meta.coords as coord, i (coord.name)}
+								{#if coord.photo}
+									<img
+										src={coord.photo}
+										alt={coord.name}
+										class="h-9 w-9 rounded-full object-cover ring-2 ring-white"
+										style="object-position: center 20%; margin-left: {i > 0 ? '-10px' : '0'}"
+									/>
+								{:else}
+									<div
+										class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-xs font-bold text-white ring-2 ring-white"
+										style="margin-left: {i > 0 ? '-10px' : '0'}"
+									>
+										{coord.initials}
+									</div>
+								{/if}
+							{/each}
+						</div>
+						<div class="text-sm">
+							<p class="text-sm font-semibold text-primary">Coordenação</p>
+							<p class="text-muted-foreground">
+								{meta.coords.map((c) => c.name).join(' e ')}
+							</p>
+						</div>
+					</div>
 				</div>
 			{/each}
 		</div>

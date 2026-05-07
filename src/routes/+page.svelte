@@ -26,11 +26,11 @@
 
 <!-- Hero -->
 <section
-	class="relative bg-cover bg-fixed text-primary-foreground"
+	class="relative flex min-h-[70vh] items-center bg-cover bg-fixed text-primary-foreground"
 	style="background-image: url({homeImg}); background-position: center 20%;"
 >
 	<div class="absolute inset-0 bg-primary/70"></div>
-	<div class="relative mx-auto max-w-6xl px-6 py-32 text-center">
+	<div class="relative mx-auto w-full max-w-6xl px-6 py-16 text-center">
 		<h1 class="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
 			Bem-vindo ao NIAR-Saúde
 		</h1>
@@ -41,15 +41,15 @@
 			<Button
 				size="lg"
 				class="!bg-white !px-8 !py-3 !text-primary hover:!bg-white/90"
-				href="#contato"
+				href={resolve('/about')}
 			>
-				Entre em contato
+				Conheça o projeto
 			</Button>
 			<a
-				href={resolve('/about')}
+				href={resolve('/publications')}
 				class="inline-flex items-center gap-1 text-base font-medium text-white hover:underline"
 			>
-				Saiba mais <span aria-hidden="true">&rarr;</span>
+				Ver publicações <span aria-hidden="true">&rarr;</span>
 			</a>
 		</div>
 	</div>
@@ -196,7 +196,7 @@
 		</div>
 
 		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-			{#each [{ initials: 'WM', name: 'Prof. Wagner Meira Júnior', role: 'Coordenador', area: 'Ciência da Computação', photo: wagnerImg }, { initials: 'MB', name: 'Profa. Michele Brandão', role: 'Coordenadora', area: 'Ciência da Computação', photo: micheleImg }, { initials: 'DG', name: 'Prof. Dorgival Guedes Neto', role: 'Coordenador', area: 'Ciência da Computação', photo: dorgivalImg, photoPos: '30% 20%' }, { initials: 'AP', name: 'Profa. Ana Paula Couto Silva', role: 'Coordenadora', area: 'Computação Social', photo: anaPaulaImg }, { initials: 'VA', name: 'Prof. Virgílio Augusto Fernandes Almeida', role: 'Pesquisador', area: 'Ciência da Computação e IA Responsável', photo: virgilioImg }, { initials: 'ML', name: 'Profa. Mariangela Leal Cherchiglia', role: 'Coordenadora', area: 'Saúde Pública' }] as member (member.initials)}
+			{#each [{ initials: 'WM', name: 'Prof. Wagner Meira Júnior', role: 'Coordenador Metas 3 e 7', area: 'Ciência da Computação', photo: wagnerImg }, { initials: 'MB', name: 'Profa. Michele Amaral Brandão', role: 'Coordenadora Meta 1', area: 'Ciência da Computação e IA Responsável', photo: micheleImg }, { initials: 'DG', name: 'Prof. Dorgival Guedes Neto', role: 'Coordenador Meta 3', area: 'Sistemas Distribuídos', photo: dorgivalImg, photoPos: '30% 20%' }, { initials: 'AP', name: 'Profa. Ana Paula Couto Silva', role: 'Coordenadora Meta 2', area: 'Computação Social', photo: anaPaulaImg }, { initials: 'VA', name: 'Prof. Virgílio Augusto Fernandes Almeida', role: 'Pesquisador', area: 'Ciência da Computação e IA Responsável', photo: virgilioImg }, { initials: 'ML', name: 'Profa. Mariangela Leal Cherchiglia', role: 'Coordenadora Meta 6', area: 'Saúde Pública' }] as member (member.initials)}
 				<div
 					class="flex flex-col items-center rounded-lg bg-white p-8 text-center shadow-sm ring-1 ring-border transition-shadow hover:shadow-md"
 				>
