@@ -40,6 +40,19 @@
 	import wesleyImg from '$lib/assets/staff/wesley.jpeg';
 	import zilmaImg from '$lib/assets/staff/zilma.jpeg';
 	import elieteImg from '$lib/assets/staff/eliete.png';
+	import barbaraImg from '$lib/assets/staff/barbara.jpeg';
+	import bernardoImg from '$lib/assets/staff/bernardo.jpeg';
+	import eduardoLuizImg from '$lib/assets/staff/eduardo-luiz.jpeg';
+	import eloyImg from '$lib/assets/staff/eloy.jpeg';
+	import erikaImg from '$lib/assets/staff/erika.jpeg';
+	import fabianaImg from '$lib/assets/staff/fabiana.jpeg';
+	import gregorioImg from '$lib/assets/staff/gregorio.jpeg';
+	import isadoraHortaImg from '$lib/assets/staff/isadora-horta.jpeg';
+	import joaoMarcosImg from '$lib/assets/staff/joao-marcos.jpeg';
+	import leonardoImg from '$lib/assets/staff/leonardo.jpeg';
+	import leticiaImg from '$lib/assets/staff/leticia.jpg';
+	import mariaCarvalhidoImg from '$lib/assets/staff/maria-carvalhido.jpeg';
+	import yasminImg from '$lib/assets/staff/yasmin.jpeg';
 	import { resolve } from '$app/paths';
 
 	type Member = {
@@ -266,8 +279,24 @@
 			photo: camilaImg
 		},
 		{
+			initials: 'FP',
+			name: 'Fabiana Costa Pereira Peixoto',
+			info: 'Gerente de Projetos · Ciência da Computação',
+			metas: ['1', '2', '3', '4', '5', '6', '7'],
+			group: 'Coordenação',
+			photo: fabianaImg
+		},
+		{
+			initials: 'LN',
+			name: 'Letícia Santos Neto',
+			info: 'Gerente de Projetos · Ciência da Computação',
+			metas: ['1', '2', '3', '4', '5', '6', '7'],
+			group: 'Coordenação',
+			photo: leticiaImg
+		},
+		{
 			initials: 'MV',
-			name: 'Dra. Marisa Vasconcelos',
+			name: 'Dra. Marisa Affonso Vasconcelos',
 			info: 'Pesquisadora · IA Responsável',
 			metas: ['1', '2'],
 			group: 'Pesquisadores',
@@ -284,7 +313,7 @@
 		{
 			initials: 'CG',
 			name: 'Dra. Crizian Saar Gomes',
-			info: 'Pós-doutoranda · Saúde Pública',
+			info: 'Desenvolvedora Plena · Saúde Pública',
 			metas: ['5'],
 			group: 'Pesquisadores'
 		},
@@ -344,6 +373,29 @@
 			photo: marianaMiskImg
 		},
 		{
+			initials: 'ER',
+			name: 'Prof. Eduardo Luiz Gonçalves Rios Neto',
+			info: 'Pesquisador · Economia',
+			metas: ['3'],
+			group: 'Pesquisadores',
+			photo: eduardoLuizImg
+		},
+		{
+			initials: 'EA',
+			name: 'Dra. Érika Carvalho de Aquino',
+			info: 'Pesquisadora · Medicina Tropical e Saúde Pública',
+			metas: ['5'],
+			group: 'Pesquisadores',
+			photo: erikaImg
+		},
+		{
+			initials: 'IB',
+			name: 'Profa. Isabela Nascimento Borges',
+			info: 'Pesquisadora · Infectologia e Medicina Tropical',
+			metas: ['4'],
+			group: 'Pesquisadores'
+		},
+		{
 			initials: 'RG',
 			name: 'Ramon Gonçalves Pereira',
 			info: 'Doutorando · IA em Saúde',
@@ -360,12 +412,36 @@
 			photo: sofiaImg
 		},
 		{
+			initials: 'GR',
+			name: 'Gregório Victor Rodrigues',
+			info: 'Doutorando · Medicina e Ciência de Dados',
+			metas: ['5'],
+			group: 'Doutorandos',
+			photo: gregorioImg
+		},
+		{
 			initials: 'KA',
 			name: 'Karolina Ivete Azevedo',
 			info: 'Mestranda · IA Responsável',
 			metas: ['1', '2'],
 			group: 'Mestrandos',
 			photo: karolImg
+		},
+		{
+			initials: 'BC',
+			name: 'Barbara Aguiar Carrato',
+			info: 'Mestranda · Enfermagem e Epidemiologia',
+			metas: ['5'],
+			group: 'Mestrandos',
+			photo: barbaraImg
+		},
+		{
+			initials: 'LP',
+			name: 'Leonardo Lemos Pena',
+			info: 'Mestrando · Enfermagem',
+			metas: ['5'],
+			group: 'Mestrandos',
+			photo: leonardoImg
 		},
 		{
 			initials: 'IA',
@@ -391,7 +467,7 @@
 		},
 		{
 			initials: 'MC',
-			name: 'Matheus Araujo Pinto Carvalho',
+			name: 'Matheus Araújo Pinto Carvalho',
 			info: 'Graduando em Sistemas de Informação · IA Responsável',
 			metas: ['1'],
 			group: 'Alunos de Iniciação Científica'
@@ -418,6 +494,54 @@
 			metas: ['2'],
 			group: 'Alunos de Iniciação Científica',
 			photo: saraImg
+		},
+		{
+			initials: 'BA',
+			name: 'Bernardo Loeser Amaral',
+			info: 'Graduando em Engenharia de Controle e Automação',
+			metas: ['3'],
+			group: 'Alunos de Iniciação Científica',
+			photo: bernardoImg
+		},
+		{
+			initials: 'EM',
+			name: 'Eloy Ribeiro Pereira Maciel',
+			info: 'Graduando em Ciência da Computação',
+			metas: ['3'],
+			group: 'Alunos de Iniciação Científica',
+			photo: eloyImg
+		},
+		{
+			initials: 'IH',
+			name: 'Isadora Horta Rates',
+			info: 'Graduanda em Sistemas de Informação',
+			metas: ['3'],
+			group: 'Alunos de Iniciação Científica',
+			photo: isadoraHortaImg
+		},
+		{
+			initials: 'JC',
+			name: 'João Marcos Tomáz Silva Campos',
+			info: 'Graduando em Ciência da Computação',
+			metas: ['3'],
+			group: 'Alunos de Iniciação Científica',
+			photo: joaoMarcosImg
+		},
+		{
+			initials: 'MB',
+			name: 'Maria Carvalhido Izabel Barreto',
+			info: 'Graduanda em Ciência da Computação',
+			metas: ['2'],
+			group: 'Alunos de Iniciação Científica',
+			photo: mariaCarvalhidoImg
+		},
+		{
+			initials: 'YS',
+			name: 'Yasmin Lourdes e Silva',
+			info: 'Graduanda em Ciência da Computação · Computação Quântica',
+			metas: ['3'],
+			group: 'Alunos de Iniciação Científica',
+			photo: yasminImg
 		},
 		{
 			initials: 'GV',
