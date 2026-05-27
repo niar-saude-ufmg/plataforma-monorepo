@@ -11,7 +11,12 @@ const config = {
 			fallback: undefined,
 			precompress: false,
 			strict: true
-		})
+		}),
+		paths: {
+			// Required by Paraglide's URL strategy so locale-prefixed routes
+			// (/en/...) resolve assets correctly when prerendered.
+			relative: false
+		}
 	},
 	vitePlugin: {
 		dynamicCompileOptions: ({ filename }) =>

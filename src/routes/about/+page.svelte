@@ -12,67 +12,87 @@
 	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
 	import antonioImg from '$lib/assets/staff/antonio.jpeg';
 	import deborahImg from '$lib/assets/staff/deborah.jpeg';
+	import { m } from '$lib/paraglide/messages';
+	import { localizeHref } from '$lib/paraglide/runtime';
+	import { t, type Localized } from '$lib/i18n';
 
-	const objetivos = [
+	const objetivos: Array<{ icon: typeof Lock; title: Localized; description: Localized }> = [
 		{
 			icon: Lock,
-			title: 'Acesso responsável a dados',
-			description:
-				'Projetar, implementar e operar um serviço que viabilize o acesso responsável a dados e modelos em saúde, assegurando ética, segurança e conformidade legal.'
+			title: { pt: 'Acesso responsável a dados', en: 'Responsible data access' },
+			description: {
+				pt: 'Projetar, implementar e operar um serviço que viabilize o acesso responsável a dados e modelos em saúde, assegurando ética, segurança e conformidade legal.',
+				en: 'Design, implement, and operate a service that enables responsible access to health data and models, ensuring ethics, security, and legal compliance.'
+			}
 		},
 		{
 			icon: GraduationCap,
-			title: 'Capacitação e formação',
-			description:
-				'Disseminar conhecimento e promover a capacitação em inteligência artificial responsável aplicada à saúde, formando profissionais qualificados na área.'
+			title: { pt: 'Capacitação e formação', en: 'Training and education' },
+			description: {
+				pt: 'Disseminar conhecimento e promover a capacitação em inteligência artificial responsável aplicada à saúde, formando profissionais qualificados na área.',
+				en: 'Disseminate knowledge and promote training in responsible artificial intelligence applied to healthcare, qualifying professionals in the field.'
+			}
 		},
 		{
 			icon: Server,
-			title: 'Plataforma computacional',
-			description:
-				'Projetar, implementar e validar uma plataforma computacional voltada ao desenvolvimento e uso de soluções em IA responsável, com foco em transparência e rastreabilidade.'
+			title: { pt: 'Plataforma computacional', en: 'Computational platform' },
+			description: {
+				pt: 'Projetar, implementar e validar uma plataforma computacional voltada ao desenvolvimento e uso de soluções em IA responsável, com foco em transparência e rastreabilidade.',
+				en: 'Design, implement, and validate a computational platform for developing and using responsible AI solutions, focused on transparency and traceability.'
+			}
 		},
 		{
 			icon: Microscope,
-			title: 'Estudos de caso aplicados',
-			description:
-				'Planejar, executar e avaliar estudos de caso que demonstrem, na prática, a aplicação de IA responsável em saúde.'
+			title: { pt: 'Estudos de caso aplicados', en: 'Applied case studies' },
+			description: {
+				pt: 'Planejar, executar e avaliar estudos de caso que demonstrem, na prática, a aplicação de IA responsável em saúde.',
+				en: 'Plan, conduct, and evaluate case studies that demonstrate, in practice, the application of responsible AI in healthcare.'
+			}
 		},
 		{
 			icon: Share2,
-			title: 'Transferência de tecnologia',
-			description:
-				'Promover a transferência de tecnologia e conhecimento relacionados à implantação e operação do NIAR-Saúde, ampliando o impacto das soluções desenvolvidas.'
+			title: { pt: 'Transferência de tecnologia', en: 'Technology transfer' },
+			description: {
+				pt: 'Promover a transferência de tecnologia e conhecimento relacionados à implantação e operação do NIAR-Saúde, ampliando o impacto das soluções desenvolvidas.',
+				en: 'Promote the transfer of technology and knowledge related to the deployment and operation of NIAR-Saúde, expanding the impact of the solutions developed.'
+			}
 		}
 	];
 
-	const trajetoria = [
-		{ titulo: 'Assinatura do TED', data: null },
-		{ titulo: 'Início do projeto', data: 'Set 2025' },
-		{ titulo: 'Framework NIAR', data: null },
-		{ titulo: 'Inauguração da sala segura', data: 'Mar 2026' }
+	const trajetoria: Array<{ titulo: Localized; data: Localized | null }> = [
+		{ titulo: { pt: 'Assinatura do TED', en: 'Signing of the TED' }, data: null },
+		{ titulo: { pt: 'Início do projeto', en: 'Project kickoff' }, data: { pt: 'Set 2025', en: 'Sep 2025' } },
+		{ titulo: { pt: 'Framework NIAR', en: 'NIAR Framework' }, data: null },
+		{
+			titulo: { pt: 'Inauguração da sala segura', en: 'Secure room inauguration' },
+			data: { pt: 'Mar 2026', en: 'Mar 2026' }
+		}
 	];
 
 	type Coord = { name: string; initials: string; photo?: string };
 
 	const metas: Array<{
 		num: string;
-		title: string;
-		description: string;
+		title: Localized;
+		description: Localized;
 		coords: Coord[];
 	}> = [
 		{
 			num: '1',
-			title: 'Serviço de acesso responsável',
-			description:
-				'Especificação, implementação e operação de um serviço experimental para acesso responsável a dados e modelos em saúde.',
+			title: { pt: 'Serviço de acesso responsável', en: 'Responsible access service' },
+			description: {
+				pt: 'Especificação, implementação e operação de um serviço experimental para acesso responsável a dados e modelos em saúde.',
+				en: 'Specification, implementation, and operation of an experimental service for responsible access to health data and models.'
+			},
 			coords: [{ name: 'Michele Brandão', initials: 'MB', photo: micheleImg }]
 		},
 		{
 			num: '2',
-			title: 'Capacitação e formação',
-			description:
-				'Disseminação de conhecimento e oferta de cursos em ética e uso do ambiente NIAR para formação em IA responsável.',
+			title: { pt: 'Capacitação e formação', en: 'Training and education' },
+			description: {
+				pt: 'Disseminação de conhecimento e oferta de cursos em ética e uso do ambiente NIAR para formação em IA responsável.',
+				en: 'Knowledge dissemination and courses on ethics and use of the NIAR environment for training in responsible AI.'
+			},
 			coords: [
 				{ name: 'Ana Paula Silva', initials: 'AP', photo: anaPaulaImg },
 				{ name: 'Zilma Reis', initials: 'ZR', photo: zilmaImg }
@@ -80,9 +100,11 @@
 		},
 		{
 			num: '3',
-			title: 'Plataforma computacional',
-			description:
-				'Desenvolvimento e validação de uma plataforma computacional para suporte à IA responsável em saúde.',
+			title: { pt: 'Plataforma computacional', en: 'Computational platform' },
+			description: {
+				pt: 'Desenvolvimento e validação de uma plataforma computacional para suporte à IA responsável em saúde.',
+				en: 'Development and validation of a computational platform to support responsible AI in healthcare.'
+			},
 			coords: [
 				{ name: 'Wagner Meira', initials: 'WM', photo: wagnerImg },
 				{ name: 'Dorgival Guedes', initials: 'DG', photo: dorgivalImg }
@@ -90,54 +112,66 @@
 		},
 		{
 			num: '4',
-			title: 'IA para eletrocardiograma (IA-ECG)',
-			description:
-				'Desenvolvimento de algoritmo para diagnóstico automatizado de ECG, ampliando acesso e apoiando o laudo médico.',
+			title: { pt: 'IA para eletrocardiograma (IA-ECG)', en: 'AI for electrocardiogram (AI-ECG)' },
+			description: {
+				pt: 'Desenvolvimento de algoritmo para diagnóstico automatizado de ECG, ampliando acesso e apoiando o laudo médico.',
+				en: 'Development of an algorithm for automated ECG diagnosis, expanding access and supporting medical reporting.'
+			},
 			coords: [{ name: 'Antonio Ribeiro', initials: 'AR', photo: antonioImg }]
 		},
 		{
 			num: '5',
-			title: 'Modelos preditivos em DCNT',
-			description:
-				'Predição de doenças crônicas e fatores de risco com base em dados epidemiológicos e sociodemográficos.',
+			title: { pt: 'Modelos preditivos em DCNT', en: 'Predictive models for NCDs' },
+			description: {
+				pt: 'Predição de doenças crônicas e fatores de risco com base em dados epidemiológicos e sociodemográficos.',
+				en: 'Prediction of chronic diseases and risk factors based on epidemiological and sociodemographic data.'
+			},
 			coords: [{ name: 'Deborah Malta', initials: 'DM', photo: deborahImg }]
 		},
 		{
 			num: '6',
-			title: 'IA em dados oncológicos do SUS',
-			description:
-				'Integração e análise preditiva de dados de pacientes oncológicos do SUS em Belo Horizonte.',
+			title: { pt: 'IA em dados oncológicos do SUS', en: 'AI on SUS oncology data' },
+			description: {
+				pt: 'Integração e análise preditiva de dados de pacientes oncológicos do SUS em Belo Horizonte.',
+				en: 'Integration and predictive analysis of oncology patient data from SUS in Belo Horizonte.'
+			},
 			coords: [{ name: 'Mariangela Cherchiglia', initials: 'ML' }]
 		},
 		{
 			num: '7',
-			title: 'Transferência de tecnologia',
-			description:
-				'Disseminação e transferência de conhecimento e tecnologias desenvolvidas no projeto.',
+			title: { pt: 'Transferência de tecnologia', en: 'Technology transfer' },
+			description: {
+				pt: 'Disseminação e transferência de conhecimento e tecnologias desenvolvidas no projeto.',
+				en: 'Dissemination and transfer of knowledge and technologies developed in the project.'
+			},
 			coords: [{ name: 'Wagner Meira', initials: 'WM', photo: wagnerImg }]
 		}
 	];
+
+	// Coordinator label and name connector for the meta cards.
+	const coordLabel: Localized = { pt: 'Coordenação', en: 'Coordination' };
+	const andConnector: Localized = { pt: ' e ', en: ' and ' };
 </script>
 
 <svelte:head>
-	<title>Sobre</title>
-	<meta name="description" content="Conheça a NIAR e nossa missão" />
+	<title>{m.about_title()}</title>
+	<meta name="description" content={m.about_meta_desc()} />
 </svelte:head>
 
 <section class="py-16" style="background-color: rgb(245, 245, 245);">
 	<div class="mx-auto max-w-6xl px-6">
 		<a
-			href={resolve('/')}
+			href={localizeHref(resolve('/'))}
 			class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 		>
-			<span aria-hidden="true">&larr;</span> Voltar à página inicial
+			<span aria-hidden="true">&larr;</span> {m.back_home()}
 		</a>
 
 		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">
-			Sobre o NIAR-Saúde
+			{m.about_heading()}
 		</h1>
 		<p class="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-			Núcleo de Inteligência Artificial Responsável para Saúde da UFMG.
+			{m.about_subtitle()}
 		</p>
 	</div>
 </section>
@@ -146,20 +180,19 @@
 <section class="py-20">
 	<div class="mx-auto max-w-6xl space-y-20 px-6">
 		<div class="mx-auto max-w-3xl text-center">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">Missão</p>
+			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.about_mission_eyebrow()}</p>
 			<p class="mt-4 text-2xl leading-relaxed font-medium text-primary sm:text-3xl">
-				Transformar o uso de dados em saúde por meio de uma inteligência artificial ética, segura e
-				responsável.
+				{m.about_mission_text()}
 			</p>
 		</div>
 
 		<div>
 			<div class="text-center">
 				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
-					Objetivos específicos
+					{m.about_objectives_eyebrow()}
 				</p>
 				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-					Como atuamos
+					{m.about_objectives_heading()}
 				</h2>
 			</div>
 			<div class="mt-12 flex flex-wrap justify-center gap-8">
@@ -168,8 +201,8 @@
 						class="w-full rounded-2xl bg-white p-8 ring-1 ring-border sm:w-[calc(50%_-_1rem)] lg:w-[calc(33.333%_-_1.334rem)]"
 					>
 						<item.icon class="h-12 w-12 text-secondary" />
-						<h3 class="mt-4 text-xl font-bold text-primary">{item.title}</h3>
-						<p class="mt-3 leading-relaxed text-muted-foreground">{item.description}</p>
+						<h3 class="mt-4 text-xl font-bold text-primary">{t(item.title)}</h3>
+						<p class="mt-3 leading-relaxed text-muted-foreground">{t(item.description)}</p>
 					</div>
 				{/each}
 			</div>
@@ -181,15 +214,12 @@
 <section class="bg-muted py-20">
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mx-auto mb-12 max-w-3xl text-center">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">Metas</p>
+			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.about_metas_eyebrow()}</p>
 			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-				Áreas de atuação
+				{m.about_metas_heading()}
 			</h2>
-			<p class="mt-6 text-lg leading-relaxed text-muted-foreground">
-				O projeto se organiza em <span class="font-semibold text-primary">sete metas</span>
-				concomitantes, distribuídas em quatro tipos de atividade: processos e boas práticas, plataforma
-				computacional, projetos piloto e disseminação.
-			</p>
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			<p class="mt-6 text-lg leading-relaxed text-muted-foreground">{@html m.about_metas_text()}</p>
 		</div>
 
 		<div class="grid auto-rows-fr grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -201,10 +231,10 @@
 						: ''}"
 				>
 					<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
-						Meta {meta.num}
+						{m.meta_label({ meta: meta.num })}
 					</p>
-					<h3 class="mt-2 text-xl font-bold text-primary">{meta.title}</h3>
-					<p class="mt-4 mb-4 leading-relaxed text-muted-foreground">{meta.description}</p>
+					<h3 class="mt-2 text-xl font-bold text-primary">{t(meta.title)}</h3>
+					<p class="mt-4 mb-4 leading-relaxed text-muted-foreground">{t(meta.description)}</p>
 					<div class="mt-auto flex items-center gap-3 border-t border-border pt-4">
 						<div class="flex shrink-0">
 							{#each meta.coords as coord, i (coord.name)}
@@ -226,9 +256,9 @@
 							{/each}
 						</div>
 						<div class="text-sm">
-							<p class="text-sm font-semibold text-primary">Coordenação</p>
+							<p class="text-sm font-semibold text-primary">{t(coordLabel)}</p>
 							<p class="text-muted-foreground">
-								{meta.coords.map((c) => c.name).join(' e ')}
+								{meta.coords.map((c) => c.name).join(t(andConnector))}
 							</p>
 						</div>
 					</div>
@@ -242,9 +272,9 @@
 <section class="py-20">
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mx-auto mb-16 max-w-3xl text-center">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">Nossa trajetória</p>
+			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.about_trajectory_eyebrow()}</p>
 			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-				História & Marcos
+				{m.about_trajectory_heading()}
 			</h2>
 		</div>
 
@@ -271,10 +301,10 @@
 								<span
 									class="inline-block rounded-full bg-secondary/10 px-3 py-1 text-sm font-semibold text-secondary"
 								>
-									{marco.data}
+									{t(marco.data)}
 								</span>
 							{/if}
-							<h3 class="mt-2 text-lg font-bold text-primary">{marco.titulo}</h3>
+							<h3 class="mt-2 text-lg font-bold text-primary">{t(marco.titulo)}</h3>
 						</div>
 					</li>
 				{/each}

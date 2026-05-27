@@ -10,20 +10,48 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { Separator } from '$lib/components/ui/separator';
+	import { m } from '$lib/paraglide/messages';
+	import { locales, localizeHref, deLocalizeHref, getLocale, baseLocale } from '$lib/paraglide/runtime';
 
 	let { children } = $props();
 
 	const navLinks = [
-		{ href: '/' as const, label: 'Home' },
-		{ href: '/about' as const, label: 'Sobre' },
-		{ href: '/publications' as const, label: 'Publicações' },
-		{ href: '/team' as const, label: 'Equipe' },
-		{ href: '/' as const, hash: '#contato', label: 'Contato' }
+		{ href: '/' as const, hash: '', label: () => m.nav_home() },
+		{ href: '/about' as const, hash: '', label: () => m.nav_about() },
+		{ href: '/publications' as const, hash: '', label: () => m.nav_publications() },
+		{ href: '/team' as const, hash: '', label: () => m.nav_team() },
+		{ href: '/' as const, hash: '#contato', label: () => m.nav_contact() }
 	];
+
+	const localeLabels: Record<string, string> = { pt: 'PT', en: 'EN' };
+
+	// Production origin — used to build absolute canonical/hreflang URLs, which
+	// Google requires to be fully qualified. Update here if the domain changes.
+	const SITE_URL = 'https://www.niar.dcc.ufmg.br';
+
+	// trailingSlash is 'always', so every canonical/hreflang URL must end with a slash.
+	const ensureSlash = (path: string) => (path.endsWith('/') ? path : `${path}/`);
+
+	// Path with any locale prefix stripped — used for active-link checks and to
+	// build the language-switcher targets for the page the user is currently on.
+	let currentPath = $derived(deLocalizeHref(page.url.pathname));
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<link rel="canonical" href="{SITE_URL}{ensureSlash(page.url.pathname)}" />
+	{#each locales as locale (locale)}
+		<link
+			rel="alternate"
+			hreflang={locale}
+			href="{SITE_URL}{ensureSlash(localizeHref(currentPath, { locale }))}"
+		/>
+	{/each}
+	<link
+		rel="alternate"
+		hreflang="x-default"
+		href="{SITE_URL}{ensureSlash(localizeHref(currentPath, { locale: baseLocale }))}"
+	/>
 </svelte:head>
 
 <div class="flex min-h-screen flex-col">
@@ -35,16 +63,31 @@
 				<img src={logo} alt="NIAR" class="h-10" />
 			</a>
 			<nav class="flex items-center gap-6">
-				{#each navLinks as link (link.label)}
+				{#each navLinks as link (link.href + link.hash)}
 					<a
-						href="{resolve(link.href)}{link.hash ?? ''}"
+						href="{localizeHref(resolve(link.href))}{link.hash}"
 						class="text-base font-semibold text-primary/80 transition-colors hover:text-primary"
-						class:text-primary={page.url.pathname === link.href &&
+						class:text-primary={currentPath === link.href &&
 							(link.hash ? page.url.hash === link.hash : !page.url.hash)}
 					>
-						{link.label}
+						{link.label()}
 					</a>
 				{/each}
+				<div class="ml-8 flex items-center gap-2 text-sm font-semibold">
+					{#each locales as locale, i (locale)}
+						{#if i > 0}<span class="text-border">|</span>{/if}
+						<a
+							href={localizeHref(currentPath, { locale })}
+							data-sveltekit-reload
+							aria-current={getLocale() === locale ? 'true' : undefined}
+							class="transition-colors hover:text-primary {getLocale() === locale
+								? 'text-primary'
+								: 'text-primary/40'}"
+						>
+							{localeLabels[locale]}
+						</a>
+					{/each}
+				</div>
 			</nav>
 		</div>
 		<Separator />
@@ -81,7 +124,7 @@
 						rel="noopener noreferrer"
 						class="text-muted-foreground hover:underline"
 					>
-						UFMG, Belo Horizonte
+						{m.footer_address()}
 					</a>
 				</div>
 			</div>

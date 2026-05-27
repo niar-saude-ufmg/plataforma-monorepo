@@ -54,11 +54,14 @@
 	import mariaCarvalhidoImg from '$lib/assets/staff/maria-carvalhido.jpeg';
 	import yasminImg from '$lib/assets/staff/yasmin.jpeg';
 	import { resolve } from '$app/paths';
+	import { m } from '$lib/paraglide/messages';
+	import { localizeHref } from '$lib/paraglide/runtime';
+	import { t, type Localized } from '$lib/i18n';
 
 	type Member = {
 		initials: string;
 		name: string;
-		info: string;
+		info: Localized;
 		metas: string[];
 		group: string;
 		photo?: string;
@@ -66,222 +69,67 @@
 	};
 
 	const members: Member[] = [
+		// Coordenação
 		{
-			initials: 'WM',
-			name: 'Prof. Wagner Meira Júnior',
-			info: 'Coordenador Metas 3 e 7 · Ciência da Computação',
-			metas: ['3', '7'],
+			initials: 'AP',
+			name: 'Profa. Ana Paula Couto Silva',
+			info: { pt: 'Coordenadora Meta 2 · Computação Social', en: 'Goal 2 Coordinator · Social Computing' },
+			metas: ['2'],
 			group: 'Coordenação',
-			photo: wagnerImg
+			photo: anaPaulaImg
 		},
 		{
-			initials: 'MB',
-			name: 'Profa. Michele Amaral Brandão',
-			info: 'Coordenadora Meta 1 · Ciência da Computação e IA Responsável',
-			metas: ['1', '2', '3'],
+			initials: 'AR',
+			name: 'Prof. Antonio Luiz Pinho Ribeiro',
+			info: {
+				pt: 'Coordenador Meta 4 · Infectologia e Medicina Tropical',
+				en: 'Goal 4 Coordinator · Infectious Diseases and Tropical Medicine'
+			},
+			metas: ['4'],
 			group: 'Coordenação',
-			photo: micheleImg
+			photo: antonioImg
+		},
+		{
+			initials: 'CC',
+			name: 'Camila dos Reis Cunha',
+			info: {
+				pt: 'Gerente de Projetos · Administração e Gestão da Inovação',
+				en: 'Project Manager · Administration and Innovation Management'
+			},
+			metas: ['1', '3', '7'],
+			group: 'Coordenação',
+			photo: camilaImg
+		},
+		{
+			initials: 'DM',
+			name: 'Profa. Deborah Carvalho Malta',
+			info: {
+				pt: 'Coordenadora Meta 5 · Saúde Coletiva e Saúde Pública',
+				en: 'Goal 5 Coordinator · Collective Health and Public Health'
+			},
+			metas: ['5'],
+			group: 'Coordenação',
+			photo: deborahImg
 		},
 		{
 			initials: 'DG',
 			name: 'Prof. Dorgival Guedes Neto',
-			info: 'Coordenador Meta 3 · Sistemas Distribuídos',
+			info: {
+				pt: 'Coordenador Meta 3 · Sistemas Distribuídos',
+				en: 'Goal 3 Coordinator · Distributed Systems'
+			},
 			metas: ['3'],
 			group: 'Coordenação',
 			photo: dorgivalImg,
 			photoPos: '30% 20%'
 		},
 		{
-			initials: 'AP',
-			name: 'Profa. Ana Paula Couto Silva',
-			info: 'Coordenadora Meta 2 · Computação Social',
-			metas: ['2'],
-			group: 'Coordenação',
-			photo: anaPaulaImg
-		},
-		{
-			initials: 'AC',
-			name: 'Prof. Adriano César Machado Pereira',
-			info: 'Pesquisador · Ciência da Computação',
-			metas: ['3'],
-			group: 'Pesquisadores',
-			photo: adrianoCesarImg
-		},
-		{
-			initials: 'AR',
-			name: 'Prof. Antonio Luiz Pinho Ribeiro',
-			info: 'Coordenador Meta 4 · Infectologia e Medicina Tropical',
-			metas: ['4'],
-			group: 'Coordenação',
-			photo: antonioImg
-		},
-		{
-			initials: 'CO',
-			name: 'Profa. Clara Rodrigues Alves de Oliveira',
-			info: 'Pesquisadora · Infectologia e Medicina Tropical',
-			metas: ['4'],
-			group: 'Pesquisadores'
-		},
-		{
-			initials: 'DM',
-			name: 'Profa. Deborah Carvalho Malta',
-			info: 'Coordenadora Meta 5 · Saúde Coletiva e Saúde Pública',
-			metas: ['5'],
-			group: 'Coordenação',
-			photo: deborahImg
-		},
-		{
-			initials: 'EP',
-			name: 'Prof. Ernesto Perini Frizzera da Mota Santos',
-			info: 'Pesquisador · Filosofia',
-			metas: ['2'],
-			group: 'Pesquisadores',
-			photo: ernestoImg
-		},
-		{
-			initials: 'FP',
-			name: 'Profa. Flávia Bulegon Pilecco',
-			info: 'Pesquisadora · Epidemiologia',
-			metas: ['6'],
-			group: 'Pesquisadores',
-			photo: flaviaImg
-		},
-		{
-			initials: 'GA',
-			name: 'Prof. Gabriel Oliveira Assunção',
-			info: 'Pesquisador · Estatística',
-			metas: ['3'],
-			group: 'Pesquisadores'
-		},
-		{
-			initials: 'GP',
-			name: 'Profa. Gabriela Miana de Mattos Paixão',
-			info: 'Pesquisadora · Infectologia e Medicina Tropical',
-			metas: ['4'],
-			group: 'Pesquisadores',
-			photo: gabrielaImg
-		},
-		{
-			initials: 'HL',
-			name: 'Profa. Helen de Cássia Sousa da Costa Lima',
-			info: 'Pós-doutoranda · IA Responsável e IA em Saúde',
-			metas: ['1'],
-			group: 'Pesquisadores',
-			photo: helenImg
-		},
-		{
-			initials: 'HR',
-			name: 'Prof. Hugo André da Rocha',
-			info: 'Pesquisador · Saúde Pública',
-			metas: ['6'],
-			group: 'Pesquisadores',
-			photo: hugoImg
-		},
-		{
-			initials: 'IR',
-			name: 'Profa. Ilka Afonso Reis',
-			info: 'Pesquisadora · Estatística',
-			metas: ['6'],
-			group: 'Pesquisadores',
-			photo: ilkaImg
-		},
-		{
-			initials: 'JM',
-			name: 'Prof. Jorge Gustavo Velasquez Melendez',
-			info: 'Pesquisador · Epidemiologia Nutricional',
-			metas: ['5'],
-			group: 'Pesquisadores',
-			photo: jorgeImg
-		},
-		{
-			initials: 'JR',
-			name: 'Prof. Júlio Soares dos Reis',
-			info: 'Pesquisador · Sistemas de Informação e Ciência da Computação',
-			metas: ['1'],
-			group: 'Pesquisadores',
-			photo: julioImg
-		},
-		{
-			initials: 'JG',
-			name: 'Profa. Jussara Marques de Almeida Gonçalves',
-			info: 'Pesquisadora · Ciência da Computação',
-			metas: ['5'],
-			group: 'Pesquisadores',
-			photo: jussaraImg
-		},
-		{
-			initials: 'LA',
-			name: 'Profa. Larissa Fortunato Araújo',
-			info: 'Pesquisadora · Saúde Pública',
-			metas: ['5'],
-			group: 'Pesquisadores'
-		},
-		{
-			initials: 'MA',
-			name: 'Prof. Marco Antônio Sousa Alves',
-			info: 'Pesquisador · Filosofia',
-			metas: ['2'],
-			group: 'Pesquisadores',
-			photo: marcoImg
-		},
-		{
-			initials: 'MG',
-			name: 'Prof. Marcos André Gonçalves',
-			info: 'Pesquisador · Ciência da Computação',
-			metas: ['5'],
-			group: 'Pesquisadores',
-			photo: marcosAndreImg
-		},
-		{
-			initials: 'MP',
-			name: 'Prof. Marcos Oliveira Prates',
-			info: 'Pesquisador · Estatística',
-			metas: ['3'],
-			group: 'Pesquisadores',
-			photo: marcosPratesImg
-		},
-		{
-			initials: 'ML',
-			name: 'Profa. Mariangela Leal Cherchiglia',
-			info: 'Coordenadora Meta 6 · Saúde Pública',
-			metas: ['6'],
-			group: 'Coordenação'
-		},
-		{
-			initials: 'RS',
-			name: 'Profa. Regina Helena Alves da Silva',
-			info: 'Pesquisadora · História Social e Ciências Sociais',
-			metas: ['2'],
-			group: 'Pesquisadores'
-		},
-		{
-			initials: 'VA',
-			name: 'Prof. Virgílio Augusto Fernandes Almeida',
-			info: 'Pesquisador · Ciência da Computação e IA Responsável',
-			metas: ['3', '7'],
-			group: 'Pesquisadores',
-			photo: virgilioImg
-		},
-		{
-			initials: 'ZR',
-			name: 'Profa. Zilma Silveira Nogueira Reis',
-			info: 'Coordenadora Meta 2 · Ginecologia e Obstetrícia',
-			metas: ['2'],
-			group: 'Coordenação',
-			photo: zilmaImg
-		},
-		{
-			initials: 'CC',
-			name: 'Camila dos Reis Cunha',
-			info: 'Gerente de Projetos · Administração e Gestão da Inovação',
-			metas: ['1', '3', '7'],
-			group: 'Coordenação',
-			photo: camilaImg
-		},
-		{
 			initials: 'FP',
 			name: 'Fabiana Costa Pereira Peixoto',
-			info: 'Gerente de Projetos · Ciência da Computação',
+			info: {
+				pt: 'Gerente de Projetos · Ciência da Computação',
+				en: 'Project Manager · Computer Science'
+			},
 			metas: ['1', '2', '3', '4', '5', '6', '7'],
 			group: 'Coordenação',
 			photo: fabianaImg
@@ -289,93 +137,100 @@
 		{
 			initials: 'LN',
 			name: 'Letícia Santos Neto',
-			info: 'Gerente de Projetos · Ciência da Computação',
+			info: {
+				pt: 'Gerente de Projetos · Ciência da Computação',
+				en: 'Project Manager · Computer Science'
+			},
 			metas: ['1', '2', '3', '4', '5', '6', '7'],
 			group: 'Coordenação',
 			photo: leticiaImg
 		},
 		{
-			initials: 'MV',
-			name: 'Dra. Marisa Affonso Vasconcelos',
-			info: 'Pesquisadora · IA Responsável',
-			metas: ['1', '2'],
+			initials: 'ML',
+			name: 'Profa. Mariangela Leal Cherchiglia',
+			info: { pt: 'Coordenadora Meta 6 · Saúde Pública', en: 'Goal 6 Coordinator · Public Health' },
+			metas: ['6'],
+			group: 'Coordenação'
+		},
+		{
+			initials: 'MB',
+			name: 'Profa. Michele Amaral Brandão',
+			info: {
+				pt: 'Coordenadora Meta 1 · Ciência da Computação e IA Responsável',
+				en: 'Goal 1 Coordinator · Computer Science and Responsible AI'
+			},
+			metas: ['1', '2', '3'],
+			group: 'Coordenação',
+			photo: micheleImg
+		},
+		{
+			initials: 'WM',
+			name: 'Prof. Wagner Meira Júnior',
+			info: {
+				pt: 'Coordenador Metas 3 e 7 · Ciência da Computação',
+				en: 'Goals 3 and 7 Coordinator · Computer Science'
+			},
+			metas: ['3', '7'],
+			group: 'Coordenação',
+			photo: wagnerImg
+		},
+		{
+			initials: 'ZR',
+			name: 'Profa. Zilma Silveira Nogueira Reis',
+			info: {
+				pt: 'Coordenadora Meta 2 · Ginecologia e Obstetrícia',
+				en: 'Goal 2 Coordinator · Gynecology and Obstetrics'
+			},
+			metas: ['2'],
+			group: 'Coordenação',
+			photo: zilmaImg
+		},
+		// Pesquisadores
+		{
+			initials: 'AC',
+			name: 'Prof. Adriano César Machado Pereira',
+			info: { pt: 'Pesquisador · Ciência da Computação', en: 'Researcher · Computer Science' },
+			metas: ['3'],
 			group: 'Pesquisadores',
-			photo: marisaImg
+			photo: adrianoCesarImg
 		},
 		{
 			initials: 'AS',
 			name: 'Dra. Aline Cristina dos Santos',
-			info: 'Analista Finalística · Saúde pública',
+			info: { pt: 'Analista Finalística · Saúde pública', en: 'Technical Analyst · Public Health' },
 			metas: ['6'],
 			group: 'Pesquisadores',
 			photo: alineSantosImg
 		},
 		{
+			initials: 'CO',
+			name: 'Profa. Clara Rodrigues Alves de Oliveira',
+			info: {
+				pt: 'Pesquisadora · Infectologia e Medicina Tropical',
+				en: 'Researcher · Infectious Diseases and Tropical Medicine'
+			},
+			metas: ['4'],
+			group: 'Pesquisadores'
+		},
+		{
 			initials: 'CG',
 			name: 'Dra. Crizian Saar Gomes',
-			info: 'Desenvolvedora Plena · Saúde Pública',
+			info: { pt: 'Desenvolvedora Plena · Saúde Pública', en: 'Mid-level Developer · Public Health' },
 			metas: ['5'],
 			group: 'Pesquisadores'
 		},
 		{
 			initials: 'ES',
 			name: 'Dr. Eduardo Campos dos Santos',
-			info: 'Analista Finalístico · Mineração de Dados',
+			info: { pt: 'Analista Finalístico · Mineração de Dados', en: 'Technical Analyst · Data Mining' },
 			metas: ['3'],
 			group: 'Pesquisadores',
 			photo: eduardoImg
 		},
 		{
-			initials: 'JS',
-			name: 'Joabe Dias Salgueiro',
-			info: 'Pesquisador · Sistemas de Informação',
-			metas: ['2'],
-			group: 'Pesquisadores'
-		},
-		{
-			initials: 'MC',
-			name: 'Mariana Almeida Carneiro',
-			info: 'Analista Finalística · Engenharia',
-			metas: ['6'],
-			group: 'Pesquisadores',
-			photo: marianaAlmeidaImg
-		},
-		{
-			initials: 'MS',
-			name: 'Dra. Mariana de Oliveira Santos Silva',
-			info: 'Analista Finalística · Ciência da Computação',
-			metas: ['2'],
-			group: 'Pesquisadores',
-			photo: marianaOliveiraImg
-		},
-		{
-			initials: 'PA',
-			name: 'Dr. Petrus Emmanuel Oliveira Gomes Brant Abreu',
-			info: 'Analista de Modelos de IA · Engenharia Elétrica',
-			metas: ['4'],
-			group: 'Pesquisadores',
-			photo: petrusImg
-		},
-		{
-			initials: 'RB',
-			name: 'Dra. Regina Tomie Ivata Bernal',
-			info: 'Pós-doutoranda · Estatística e Saúde Pública',
-			metas: ['5'],
-			group: 'Pesquisadores',
-			photo: reginaImg
-		},
-		{
-			initials: 'MM',
-			name: 'Mariana Misk Moysés',
-			info: 'Pesquisadora · Design Industrial',
-			metas: ['2'],
-			group: 'Pesquisadores',
-			photo: marianaMiskImg
-		},
-		{
 			initials: 'ER',
 			name: 'Prof. Eduardo Luiz Gonçalves Rios Neto',
-			info: 'Pesquisador · Economia',
+			info: { pt: 'Pesquisador · Economia', en: 'Researcher · Economics' },
 			metas: ['3'],
 			group: 'Pesquisadores',
 			photo: eduardoLuizImg
@@ -383,22 +238,241 @@
 		{
 			initials: 'EA',
 			name: 'Dra. Érika Carvalho de Aquino',
-			info: 'Pesquisadora · Medicina Tropical e Saúde Pública',
+			info: {
+				pt: 'Pesquisadora · Medicina Tropical e Saúde Pública',
+				en: 'Researcher · Tropical Medicine and Public Health'
+			},
 			metas: ['5'],
 			group: 'Pesquisadores',
 			photo: erikaImg
 		},
 		{
+			initials: 'EP',
+			name: 'Prof. Ernesto Perini Frizzera da Mota Santos',
+			info: { pt: 'Pesquisador · Filosofia', en: 'Researcher · Philosophy' },
+			metas: ['2'],
+			group: 'Pesquisadores',
+			photo: ernestoImg
+		},
+		{
+			initials: 'FP',
+			name: 'Profa. Flávia Bulegon Pilecco',
+			info: { pt: 'Pesquisadora · Epidemiologia', en: 'Researcher · Epidemiology' },
+			metas: ['6'],
+			group: 'Pesquisadores',
+			photo: flaviaImg
+		},
+		{
+			initials: 'GA',
+			name: 'Prof. Gabriel Oliveira Assunção',
+			info: { pt: 'Pesquisador · Estatística', en: 'Researcher · Statistics' },
+			metas: ['3'],
+			group: 'Pesquisadores'
+		},
+		{
+			initials: 'GP',
+			name: 'Profa. Gabriela Miana de Mattos Paixão',
+			info: {
+				pt: 'Pesquisadora · Infectologia e Medicina Tropical',
+				en: 'Researcher · Infectious Diseases and Tropical Medicine'
+			},
+			metas: ['4'],
+			group: 'Pesquisadores',
+			photo: gabrielaImg
+		},
+		{
+			initials: 'HL',
+			name: 'Profa. Helen de Cássia Sousa da Costa Lima',
+			info: {
+				pt: 'Pós-doutoranda · IA Responsável e IA em Saúde',
+				en: 'Postdoctoral Researcher · Responsible AI and AI in Healthcare'
+			},
+			metas: ['1'],
+			group: 'Pesquisadores',
+			photo: helenImg
+		},
+		{
+			initials: 'HR',
+			name: 'Prof. Hugo André da Rocha',
+			info: { pt: 'Pesquisador · Saúde Pública', en: 'Researcher · Public Health' },
+			metas: ['6'],
+			group: 'Pesquisadores',
+			photo: hugoImg
+		},
+		{
+			initials: 'IR',
+			name: 'Profa. Ilka Afonso Reis',
+			info: { pt: 'Pesquisadora · Estatística', en: 'Researcher · Statistics' },
+			metas: ['6'],
+			group: 'Pesquisadores',
+			photo: ilkaImg
+		},
+		{
 			initials: 'IB',
 			name: 'Profa. Isabela Nascimento Borges',
-			info: 'Pesquisadora · Infectologia e Medicina Tropical',
+			info: {
+				pt: 'Pesquisadora · Infectologia e Medicina Tropical',
+				en: 'Researcher · Infectious Diseases and Tropical Medicine'
+			},
 			metas: ['4'],
 			group: 'Pesquisadores'
 		},
 		{
+			initials: 'JS',
+			name: 'Joabe Dias Salgueiro',
+			info: { pt: 'Pesquisador · Sistemas de Informação', en: 'Researcher · Information Systems' },
+			metas: ['2'],
+			group: 'Pesquisadores'
+		},
+		{
+			initials: 'JM',
+			name: 'Prof. Jorge Gustavo Velasquez Melendez',
+			info: { pt: 'Pesquisador · Epidemiologia Nutricional', en: 'Researcher · Nutritional Epidemiology' },
+			metas: ['5'],
+			group: 'Pesquisadores',
+			photo: jorgeImg
+		},
+		{
+			initials: 'JR',
+			name: 'Prof. Júlio Soares dos Reis',
+			info: {
+				pt: 'Pesquisador · Sistemas de Informação e Ciência da Computação',
+				en: 'Researcher · Information Systems and Computer Science'
+			},
+			metas: ['1'],
+			group: 'Pesquisadores',
+			photo: julioImg
+		},
+		{
+			initials: 'JG',
+			name: 'Profa. Jussara Marques de Almeida Gonçalves',
+			info: { pt: 'Pesquisadora · Ciência da Computação', en: 'Researcher · Computer Science' },
+			metas: ['5'],
+			group: 'Pesquisadores',
+			photo: jussaraImg
+		},
+		{
+			initials: 'LA',
+			name: 'Profa. Larissa Fortunato Araújo',
+			info: { pt: 'Pesquisadora · Saúde Pública', en: 'Researcher · Public Health' },
+			metas: ['5'],
+			group: 'Pesquisadores'
+		},
+		{
+			initials: 'MA',
+			name: 'Prof. Marco Antônio Sousa Alves',
+			info: { pt: 'Pesquisador · Filosofia', en: 'Researcher · Philosophy' },
+			metas: ['2'],
+			group: 'Pesquisadores',
+			photo: marcoImg
+		},
+		{
+			initials: 'MG',
+			name: 'Prof. Marcos André Gonçalves',
+			info: { pt: 'Pesquisador · Ciência da Computação', en: 'Researcher · Computer Science' },
+			metas: ['5'],
+			group: 'Pesquisadores',
+			photo: marcosAndreImg
+		},
+		{
+			initials: 'MP',
+			name: 'Prof. Marcos Oliveira Prates',
+			info: { pt: 'Pesquisador · Estatística', en: 'Researcher · Statistics' },
+			metas: ['3'],
+			group: 'Pesquisadores',
+			photo: marcosPratesImg
+		},
+		{
+			initials: 'MC',
+			name: 'Mariana Almeida Carneiro',
+			info: { pt: 'Analista Finalística · Engenharia', en: 'Technical Analyst · Engineering' },
+			metas: ['6'],
+			group: 'Pesquisadores',
+			photo: marianaAlmeidaImg
+		},
+		{
+			initials: 'MS',
+			name: 'Dra. Mariana de Oliveira Santos Silva',
+			info: {
+				pt: 'Analista Finalística · Ciência da Computação',
+				en: 'Technical Analyst · Computer Science'
+			},
+			metas: ['2'],
+			group: 'Pesquisadores',
+			photo: marianaOliveiraImg
+		},
+		{
+			initials: 'MM',
+			name: 'Mariana Misk Moysés',
+			info: { pt: 'Pesquisadora · Design Industrial', en: 'Researcher · Industrial Design' },
+			metas: ['2'],
+			group: 'Pesquisadores',
+			photo: marianaMiskImg
+		},
+		{
+			initials: 'MV',
+			name: 'Dra. Marisa Affonso Vasconcelos',
+			info: { pt: 'Pesquisadora · IA Responsável', en: 'Researcher · Responsible AI' },
+			metas: ['1', '2'],
+			group: 'Pesquisadores',
+			photo: marisaImg
+		},
+		{
+			initials: 'PA',
+			name: 'Dr. Petrus Emmanuel Oliveira Gomes Brant Abreu',
+			info: {
+				pt: 'Analista de Modelos de IA · Engenharia Elétrica',
+				en: 'AI Models Analyst · Electrical Engineering'
+			},
+			metas: ['4'],
+			group: 'Pesquisadores',
+			photo: petrusImg
+		},
+		{
+			initials: 'RS',
+			name: 'Profa. Regina Helena Alves da Silva',
+			info: {
+				pt: 'Pesquisadora · História Social e Ciências Sociais',
+				en: 'Researcher · Social History and Social Sciences'
+			},
+			metas: ['2'],
+			group: 'Pesquisadores'
+		},
+		{
+			initials: 'RB',
+			name: 'Dra. Regina Tomie Ivata Bernal',
+			info: {
+				pt: 'Pós-doutoranda · Estatística e Saúde Pública',
+				en: 'Postdoctoral Researcher · Statistics and Public Health'
+			},
+			metas: ['5'],
+			group: 'Pesquisadores',
+			photo: reginaImg
+		},
+		{
+			initials: 'VA',
+			name: 'Prof. Virgílio Augusto Fernandes Almeida',
+			info: {
+				pt: 'Pesquisador · Ciência da Computação e IA Responsável',
+				en: 'Researcher · Computer Science and Responsible AI'
+			},
+			metas: ['3', '7'],
+			group: 'Pesquisadores',
+			photo: virgilioImg
+		},
+		// Doutorandos
+		{
+			initials: 'GR',
+			name: 'Gregório Victor Rodrigues',
+			info: { pt: 'Doutorando · Medicina e Ciência de Dados', en: 'PhD Student · Medicine and Data Science' },
+			metas: ['5'],
+			group: 'Doutorandos',
+			photo: gregorioImg
+		},
+		{
 			initials: 'RG',
 			name: 'Ramon Gonçalves Pereira',
-			info: 'Doutorando · IA em Saúde',
+			info: { pt: 'Doutorando · IA em Saúde', en: 'PhD Student · AI in Healthcare' },
 			metas: ['1', '3', '6'],
 			group: 'Doutorandos',
 			photo: ramonImg
@@ -406,99 +480,55 @@
 		{
 			initials: 'SR',
 			name: 'Sofia Maria Amorim Falco Rodrigues',
-			info: 'Doutoranda · Engenharia Elétrica',
+			info: { pt: 'Doutoranda · Engenharia Elétrica', en: 'PhD Student · Electrical Engineering' },
 			metas: ['4'],
 			group: 'Doutorandos',
 			photo: sofiaImg
 		},
-		{
-			initials: 'GR',
-			name: 'Gregório Victor Rodrigues',
-			info: 'Doutorando · Medicina e Ciência de Dados',
-			metas: ['5'],
-			group: 'Doutorandos',
-			photo: gregorioImg
-		},
-		{
-			initials: 'KA',
-			name: 'Karolina Ivete Azevedo',
-			info: 'Mestranda · IA Responsável',
-			metas: ['1', '2'],
-			group: 'Mestrandos',
-			photo: karolImg
-		},
+		// Mestrandos
 		{
 			initials: 'BC',
 			name: 'Barbara Aguiar Carrato',
-			info: 'Mestranda · Enfermagem e Epidemiologia',
+			info: { pt: 'Mestranda · Enfermagem e Epidemiologia', en: "Master's Student · Nursing and Epidemiology" },
 			metas: ['5'],
 			group: 'Mestrandos',
 			photo: barbaraImg
 		},
 		{
+			initials: 'KA',
+			name: 'Karolina Ivete Azevedo',
+			info: { pt: 'Mestranda · IA Responsável', en: "Master's Student · Responsible AI" },
+			metas: ['1', '2'],
+			group: 'Mestrandos',
+			photo: karolImg
+		},
+		{
 			initials: 'LP',
 			name: 'Leonardo Lemos Pena',
-			info: 'Mestrando · Enfermagem',
+			info: { pt: 'Mestrando · Enfermagem', en: "Master's Student · Nursing" },
 			metas: ['5'],
 			group: 'Mestrandos',
 			photo: leonardoImg
 		},
-		{
-			initials: 'IA',
-			name: 'Italo Rodrigues de Matos Avelar',
-			info: 'Graduando em Sistemas de Informação · IA Responsável',
-			metas: ['1'],
-			group: 'Alunos de Iniciação Científica',
-			photo: italoImg
-		},
-		{
-			initials: 'LR',
-			name: 'Lucas Martins Rocha',
-			info: 'Graduando em Engenharia de Controle e Automação · Sistemas Embarcados',
-			metas: ['1', '2'],
-			group: 'Alunos de Iniciação Científica'
-		},
-		{
-			initials: 'LB',
-			name: 'Luís Eduardo Limas Brito',
-			info: 'Graduando em Ciência da Computação · Ciência de Dados',
-			metas: ['2'],
-			group: 'Alunos de Iniciação Científica'
-		},
-		{
-			initials: 'MC',
-			name: 'Matheus Araújo Pinto Carvalho',
-			info: 'Graduando em Sistemas de Informação · IA Responsável',
-			metas: ['1'],
-			group: 'Alunos de Iniciação Científica'
-		},
+		// Alunos de Iniciação Científica
 		{
 			initials: 'AL',
 			name: 'Ana Luiza Coimbra Carvalho Gallo',
-			info: 'Graduanda em Design Gráfico · Desenho de Produto',
+			info: {
+				pt: 'Graduanda em Design Gráfico · Desenho de Produto',
+				en: 'Undergraduate in Graphic Design · Product Design'
+			},
 			metas: ['2'],
 			group: 'Alunos de Iniciação Científica',
 			photo: anaLuizaImg
 		},
 		{
-			initials: 'FC',
-			name: 'Fabíola Siomara Liboreiro Chicata',
-			info: 'Graduanda em Medicina',
-			metas: ['6'],
-			group: 'Alunos de Iniciação Científica'
-		},
-		{
-			initials: 'SG',
-			name: 'Sara Ribeiro Guimarães',
-			info: 'Graduanda em Design Gráfico',
-			metas: ['2'],
-			group: 'Alunos de Iniciação Científica',
-			photo: saraImg
-		},
-		{
 			initials: 'BA',
 			name: 'Bernardo Loeser Amaral',
-			info: 'Graduando em Engenharia de Controle e Automação',
+			info: {
+				pt: 'Graduando em Engenharia de Controle e Automação',
+				en: 'Undergraduate in Control and Automation Engineering'
+			},
 			metas: ['3'],
 			group: 'Alunos de Iniciação Científica',
 			photo: bernardoImg
@@ -506,47 +536,115 @@
 		{
 			initials: 'EM',
 			name: 'Eloy Ribeiro Pereira Maciel',
-			info: 'Graduando em Ciência da Computação',
+			info: { pt: 'Graduando em Ciência da Computação', en: 'Undergraduate in Computer Science' },
 			metas: ['3'],
 			group: 'Alunos de Iniciação Científica',
 			photo: eloyImg
 		},
 		{
+			initials: 'FC',
+			name: 'Fabíola Siomara Liboreiro Chicata',
+			info: { pt: 'Graduanda em Medicina', en: 'Undergraduate in Medicine' },
+			metas: ['6'],
+			group: 'Alunos de Iniciação Científica'
+		},
+		{
 			initials: 'IH',
 			name: 'Isadora Horta Rates',
-			info: 'Graduanda em Sistemas de Informação',
+			info: { pt: 'Graduanda em Sistemas de Informação', en: 'Undergraduate in Information Systems' },
 			metas: ['3'],
 			group: 'Alunos de Iniciação Científica',
 			photo: isadoraHortaImg
 		},
 		{
+			initials: 'IA',
+			name: 'Italo Rodrigues de Matos Avelar',
+			info: {
+				pt: 'Graduando em Sistemas de Informação · IA Responsável',
+				en: 'Undergraduate in Information Systems · Responsible AI'
+			},
+			metas: ['1'],
+			group: 'Alunos de Iniciação Científica',
+			photo: italoImg
+		},
+		{
 			initials: 'JC',
 			name: 'João Marcos Tomáz Silva Campos',
-			info: 'Graduando em Ciência da Computação',
+			info: { pt: 'Graduando em Ciência da Computação', en: 'Undergraduate in Computer Science' },
 			metas: ['3'],
 			group: 'Alunos de Iniciação Científica',
 			photo: joaoMarcosImg
 		},
 		{
+			initials: 'LR',
+			name: 'Lucas Martins Rocha',
+			info: {
+				pt: 'Graduando em Engenharia de Controle e Automação · Sistemas Embarcados',
+				en: 'Undergraduate in Control and Automation Engineering · Embedded Systems'
+			},
+			metas: ['1', '2'],
+			group: 'Alunos de Iniciação Científica'
+		},
+		{
+			initials: 'LB',
+			name: 'Luís Eduardo Limas Brito',
+			info: {
+				pt: 'Graduando em Ciência da Computação · Ciência de Dados',
+				en: 'Undergraduate in Computer Science · Data Science'
+			},
+			metas: ['2'],
+			group: 'Alunos de Iniciação Científica'
+		},
+		{
 			initials: 'MB',
 			name: 'Maria Carvalhido Izabel Barreto',
-			info: 'Graduanda em Ciência da Computação',
+			info: { pt: 'Graduanda em Ciência da Computação', en: 'Undergraduate in Computer Science' },
 			metas: ['2'],
 			group: 'Alunos de Iniciação Científica',
 			photo: mariaCarvalhidoImg
 		},
 		{
+			initials: 'MC',
+			name: 'Matheus Araújo Pinto Carvalho',
+			info: {
+				pt: 'Graduando em Sistemas de Informação · IA Responsável',
+				en: 'Undergraduate in Information Systems · Responsible AI'
+			},
+			metas: ['1'],
+			group: 'Alunos de Iniciação Científica'
+		},
+		{
+			initials: 'SG',
+			name: 'Sara Ribeiro Guimarães',
+			info: { pt: 'Graduanda em Design Gráfico', en: 'Undergraduate in Graphic Design' },
+			metas: ['2'],
+			group: 'Alunos de Iniciação Científica',
+			photo: saraImg
+		},
+		{
 			initials: 'YS',
 			name: 'Yasmin Lourdes e Silva',
-			info: 'Graduanda em Ciência da Computação · Computação Quântica',
+			info: {
+				pt: 'Graduanda em Ciência da Computação · Computação Quântica',
+				en: 'Undergraduate in Computer Science · Quantum Computing'
+			},
 			metas: ['3'],
 			group: 'Alunos de Iniciação Científica',
 			photo: yasminImg
 		},
+		// Colaboradores Externos
+		{
+			initials: 'EC',
+			name: 'Eliete Guizilini Moreira de Carvalho',
+			info: { pt: 'Desenvolvedora Júnior · Ciência da Informação', en: 'Junior Developer · Information Science' },
+			metas: ['6'],
+			group: 'Colaboradores Externos',
+			photo: elieteImg
+		},
 		{
 			initials: 'GV',
 			name: 'Guilherme Vezula Mateveli',
-			info: 'Desenvolvedor Sênior · Aplicações Web',
+			info: { pt: 'Desenvolvedor Sênior · Aplicações Web', en: 'Senior Developer · Web Applications' },
 			metas: ['3'],
 			group: 'Colaboradores Externos',
 			photo: guilhermeImg,
@@ -555,23 +653,22 @@
 		{
 			initials: 'IR',
 			name: 'Isadora Cristina de Matos Rodrigues',
-			info: 'Desenvolvedora · Aplicações Web e Dados Públicos',
+			info: {
+				pt: 'Desenvolvedora · Aplicações Web e Dados Públicos',
+				en: 'Developer · Web Applications and Public Data'
+			},
 			metas: ['3'],
 			group: 'Colaboradores Externos',
 			photo: isadoraImg
 		},
-		{
-			initials: 'EC',
-			name: 'Eliete Guizilini Moreira de Carvalho',
-			info: 'Desenvolvedora Júnior · Ciência da Informação',
-			metas: ['6'],
-			group: 'Colaboradores Externos',
-			photo: elieteImg
-		},
+		// Alumni
 		{
 			initials: 'WC',
 			name: 'Wesley Santos Costa',
-			info: 'Analista Finalístico · Sistema de Informação e Ciência da Computação',
+			info: {
+				pt: 'Analista Finalístico · Sistema de Informação e Ciência da Computação',
+				en: 'Technical Analyst · Information Systems and Computer Science'
+			},
 			metas: ['6'],
 			group: 'Alumni',
 			photo: wesleyImg
@@ -590,43 +687,58 @@
 		'Alumni'
 	];
 
+	// The keys above stay in PT (used for grouping/filtering); these are the
+	// labels shown in the headings.
+	const groupLabels: Record<string, Localized> = {
+		Coordenação: { pt: 'Coordenação', en: 'Coordination' },
+		Pesquisadores: { pt: 'Pesquisadores', en: 'Researchers' },
+		Doutorandos: { pt: 'Doutorandos', en: 'PhD Students' },
+		Mestrandos: { pt: 'Mestrandos', en: "Master's Students" },
+		'Alunos de Iniciação Científica': {
+			pt: 'Alunos de Iniciação Científica',
+			en: 'Undergraduate Research Students'
+		},
+		'Colaboradores Externos': { pt: 'Colaboradores Externos', en: 'External Collaborators' },
+		Alumni: { pt: 'Alumni', en: 'Alumni' }
+	};
+
 	let groups = $derived.by(() => {
 		if (groupBy === 'titulo') {
 			return groupOrder
-				.map((name) => ({
-					name,
-					members: members.filter((m) => m.group === name)
+				.map((key) => ({
+					name: t(groupLabels[key]),
+					members: members.filter((mem) => mem.group === key)
 				}))
 				.filter((g) => g.members.length > 0);
 		} else {
 			const metaSet = new Set<string>();
-			members.forEach((m) => m.metas.forEach((meta) => metaSet.add(meta)));
+			members.forEach((mem) => mem.metas.forEach((meta) => metaSet.add(meta)));
 			const sortedMetas = [...metaSet].sort((a, b) => parseFloat(a) - parseFloat(b));
 			return sortedMetas.map((meta) => ({
-				name: `Meta ${meta}`,
-				members: members.filter((m) => m.metas.includes(meta))
+				name: m.meta_label({ meta }),
+				members: members.filter((mem) => mem.metas.includes(meta))
 			}));
 		}
 	});
 </script>
 
 <svelte:head>
-	<title>Equipe</title>
-	<meta name="description" content="Conheça a equipe do NIAR-Saúde" />
+	<title>{m.team_title()}</title>
+	<meta name="description" content={m.team_meta_desc()} />
 </svelte:head>
 
 <section class="py-16" style="background-color: rgb(245, 245, 245);">
 	<div class="mx-auto max-w-6xl px-6">
 		<a
-			href={resolve('/')}
+			href={localizeHref(resolve('/'))}
 			class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 		>
-			<span aria-hidden="true">&larr;</span> Voltar à página inicial
+			<span aria-hidden="true">&larr;</span> {m.back_home()}
 		</a>
 
-		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">Nossa Equipe</h1>
+		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">{m.team_heading()}</h1>
 		<p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-			Conheça todos os pesquisadores, estudantes e colaboradores que fazem parte do NIAR-Saúde.
+			{m.team_subtitle()}
 		</p>
 
 		<div class="mt-8 inline-flex rounded-full bg-border/50 p-1">
@@ -636,7 +748,7 @@
 					: 'text-muted-foreground'}"
 				onclick={() => (groupBy = 'titulo')}
 			>
-				Por Função
+				{m.team_toggle_role()}
 			</button>
 			<button
 				class="rounded-full px-5 py-2 text-sm font-medium transition-all {groupBy === 'meta'
@@ -644,7 +756,7 @@
 					: 'text-muted-foreground'}"
 				onclick={() => (groupBy = 'meta')}
 			>
-				Por Meta
+				{m.team_toggle_meta()}
 			</button>
 		</div>
 
@@ -678,12 +790,12 @@
 							{/if}
 							<div>
 								<p class="font-bold text-primary">{member.name}</p>
-								<p class="text-sm text-muted-foreground">{member.info}</p>
+								<p class="text-sm text-muted-foreground">{t(member.info)}</p>
 								<div class="mt-1 flex flex-wrap gap-1">
 									{#each member.metas as meta (meta)}
 										<span
 											class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary"
-											>Meta {meta}</span
+											>{m.meta_label({ meta })}</span
 										>
 									{/each}
 								</div>

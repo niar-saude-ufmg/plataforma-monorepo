@@ -14,13 +14,61 @@
 	import anaPaulaImg from '$lib/assets/staff/ana-paula.jpeg';
 	import { publications } from '$lib/data/publications';
 	import { resolve } from '$app/paths';
+	import { m } from '$lib/paraglide/messages';
+	import { localizeHref } from '$lib/paraglide/runtime';
+	import { t } from '$lib/i18n';
 
 	const recentPublications = publications.slice(0, 4);
+
+	const featuredMembers = [
+		{
+			initials: 'WM',
+			name: 'Wagner Meira',
+			role: { pt: 'Coordenador Metas 3 e 7', en: 'Goals 3 and 7 Coordinator' },
+			area: { pt: 'Ciência da Computação', en: 'Computer Science' },
+			photo: wagnerImg
+		},
+		{
+			initials: 'MB',
+			name: 'Michele Brandão',
+			role: { pt: 'Coordenadora Meta 1', en: 'Goal 1 Coordinator' },
+			area: { pt: 'Ciência da Computação e IA Responsável', en: 'Computer Science and Responsible AI' },
+			photo: micheleImg
+		},
+		{
+			initials: 'DG',
+			name: 'Dorgival Guedes',
+			role: { pt: 'Coordenador Meta 3', en: 'Goal 3 Coordinator' },
+			area: { pt: 'Sistemas Distribuídos', en: 'Distributed Systems' },
+			photo: dorgivalImg,
+			photoPos: '30% 20%'
+		},
+		{
+			initials: 'AP',
+			name: 'Ana Paula Silva',
+			role: { pt: 'Coordenadora Meta 2', en: 'Goal 2 Coordinator' },
+			area: { pt: 'Computação Social', en: 'Social Computing' },
+			photo: anaPaulaImg
+		},
+		{
+			initials: 'VA',
+			name: 'Virgílio Almeida',
+			role: { pt: 'Pesquisador', en: 'Researcher' },
+			area: { pt: 'Ciência da Computação e IA Responsável', en: 'Computer Science and Responsible AI' },
+			photo: virgilioImg
+		},
+		{
+			initials: 'ML',
+			name: 'Mariangela Cherchiglia',
+			role: { pt: 'Coordenadora Meta 6', en: 'Goal 6 Coordinator' },
+			area: { pt: 'Saúde Pública', en: 'Public Health' }
+		}
+	];
 </script>
 
 <svelte:head>
-	<title>Página Inicial</title>
-	<meta name="description" content="NIAR - Site institucional" />
+	<title>{m.home_title()}</title>
+	<meta name="description" content={m.home_meta_desc()} />
 	<link rel="preload" as="image" href={homeImg} />
 </svelte:head>
 
@@ -32,24 +80,24 @@
 	<div class="absolute inset-0 bg-primary/70"></div>
 	<div class="relative mx-auto w-full max-w-6xl px-6 py-16 text-center">
 		<h1 class="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-			Bem-vindo ao NIAR-Saúde
+			{m.hero_title()}
 		</h1>
 		<p class="white mx-auto mt-6 max-w-2xl text-lg">
-			Núcleo de Inteligência Artificial Responsável para a Saúde
+			{m.hero_subtitle()}
 		</p>
 		<div class="mt-10 flex items-center justify-center gap-4">
 			<Button
 				size="lg"
 				class="!bg-white !px-8 !py-3 !text-primary hover:!bg-white/90"
-				href={resolve('/about')}
+				href={localizeHref(resolve('/about'))}
 			>
-				Conheça o projeto
+				{m.hero_cta_project()}
 			</Button>
 			<a
-				href={resolve('/publications')}
+				href={localizeHref(resolve('/publications'))}
 				class="inline-flex items-center gap-1 text-base font-medium text-white hover:underline"
 			>
-				Ver publicações <span aria-hidden="true">&rarr;</span>
+				{m.hero_cta_publications()} <span aria-hidden="true">&rarr;</span>
 			</a>
 		</div>
 	</div>
@@ -60,16 +108,13 @@
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mx-auto mb-16 max-w-3xl text-center">
 			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
-				Sobre o NIAR Saúde
+				{m.home_about_eyebrow()}
 			</p>
 			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-				Inovação em dados e inteligência artificial responsável para a saúde
+				{m.home_about_heading()}
 			</h2>
 			<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
-				O NIAR-Saúde é um núcleo interdisciplinar que reúne pesquisadores de computação e saúde para
-				desenvolver soluções voltadas ao uso responsável de dados e inteligência artificial. Atuamos
-				na criação e validação de tecnologias que promovem transparência, segurança e
-				confiabilidade, além de fomentar a capacitação e a transferência de conhecimento.
+				{m.home_about_text()}
 			</p>
 		</div>
 		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -80,11 +125,9 @@
 					>
 						<ShieldCheck class="h-7 w-7 text-primary-foreground" />
 					</div>
-					<Card.Title class="text-xl font-bold text-foreground">Governança</Card.Title>
+					<Card.Title class="text-xl font-bold text-foreground">{m.pillar_governance_title()}</Card.Title>
 					<Card.Description class="text-base leading-relaxed">
-						Estruturação de processos e práticas voltadas ao uso responsável da inteligência
-						artificial, com foco em qualidade, gestão de riscos, transparência e governança
-						contínua.
+						{m.pillar_governance_desc()}
 					</Card.Description>
 				</Card.Header>
 			</Card.Root>
@@ -96,10 +139,9 @@
 					>
 						<BrainCircuit class="h-7 w-7 text-primary-foreground" />
 					</div>
-					<Card.Title class="text-xl font-bold text-foreground">Dados e Modelos</Card.Title>
+					<Card.Title class="text-xl font-bold text-foreground">{m.pillar_data_title()}</Card.Title>
 					<Card.Description class="text-base leading-relaxed">
-						Desenvolvimento e operação de dados e modelos de inteligência artificial, abrangendo
-						engenharia de dados, construção, avaliação e monitoramento contínuo de soluções.
+						{m.pillar_data_desc()}
 					</Card.Description>
 				</Card.Header>
 			</Card.Root>
@@ -111,10 +153,9 @@
 					>
 						<HeartHandshake class="h-7 w-7 text-primary-foreground" />
 					</div>
-					<Card.Title class="text-xl font-bold text-foreground">Aplicações</Card.Title>
+					<Card.Title class="text-xl font-bold text-foreground">{m.pillar_apps_title()}</Card.Title>
 					<Card.Description class="text-base leading-relaxed">
-						Aplicação de dados e modelos em contextos da saúde, com foco em impacto,
-						custo-efetividade e suporte à tomada de decisão em diferentes cenários.
+						{m.pillar_apps_desc()}
 					</Card.Description>
 				</Card.Header>
 			</Card.Root>
@@ -127,19 +168,19 @@
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mb-12 flex items-end justify-between">
 			<div>
-				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">Publicações</p>
+				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.home_pub_eyebrow()}</p>
 				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-					Trabalhos recentes
+					{m.home_pub_heading()}
 				</h2>
 				<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
-					Artigos e produções científicas recentes do grupo.
+					{m.home_pub_text()}
 				</p>
 			</div>
 			<a
-				href={resolve('/publications')}
+				href={localizeHref(resolve('/publications'))}
 				class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline"
 			>
-				Ver todas as publicações <span aria-hidden="true">&rarr;</span>
+				{m.home_pub_link()} <span aria-hidden="true">&rarr;</span>
 			</a>
 		</div>
 
@@ -151,7 +192,7 @@
 						{#each pub.metas as meta (meta)}
 							<span
 								class="rounded-full bg-secondary/10 px-2.5 py-0.5 text-xs font-semibold text-secondary"
-								>Meta {meta}</span
+								>{m.meta_label({ meta })}</span
 							>
 						{/each}
 					</div>
@@ -165,7 +206,7 @@
 						rel="noopener noreferrer"
 						class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 					>
-						DOI <span aria-hidden="true">&nearr;</span>
+						{m.pub_doi_short()} <span aria-hidden="true">&nearr;</span>
 					</a>
 					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				</div>
@@ -179,24 +220,24 @@
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mb-12 flex items-end justify-between">
 			<div>
-				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">Equipe</p>
+				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.home_team_eyebrow()}</p>
 				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-					Pesquisadores
+					{m.home_team_heading()}
 				</h2>
 				<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
-					Um time multidisciplinar unindo computação, medicina, bioética e saúde pública.
+					{m.home_team_text()}
 				</p>
 			</div>
 			<a
-				href={resolve('/team')}
+				href={localizeHref(resolve('/team'))}
 				class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline"
 			>
-				Ver equipe completa <span aria-hidden="true">&rarr;</span>
+				{m.home_team_link()} <span aria-hidden="true">&rarr;</span>
 			</a>
 		</div>
 
 		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-			{#each [{ initials: 'WM', name: 'Wagner Meira', role: 'Coordenador Metas 3 e 7', area: 'Ciência da Computação', photo: wagnerImg }, { initials: 'MB', name: 'Michele Brandão', role: 'Coordenadora Meta 1', area: 'Ciência da Computação e IA Responsável', photo: micheleImg }, { initials: 'DG', name: 'Dorgival Guedes', role: 'Coordenador Meta 3', area: 'Sistemas Distribuídos', photo: dorgivalImg, photoPos: '30% 20%' }, { initials: 'AP', name: 'Ana Paula Silva', role: 'Coordenadora Meta 2', area: 'Computação Social', photo: anaPaulaImg }, { initials: 'VA', name: 'Virgílio Almeida', role: 'Pesquisador', area: 'Ciência da Computação e IA Responsável', photo: virgilioImg }, { initials: 'ML', name: 'Mariangela Cherchiglia', role: 'Coordenadora Meta 6', area: 'Saúde Pública' }] as member (member.initials)}
+			{#each featuredMembers as member (member.initials)}
 				<div
 					class="flex flex-col items-center rounded-lg bg-white p-8 text-center shadow-sm ring-1 ring-border transition-shadow hover:shadow-md"
 				>
@@ -215,8 +256,8 @@
 						</div>
 					{/if}
 					<p class="mt-4 text-lg font-bold text-primary">{member.name}</p>
-					<p class="mt-1 text-sm font-semibold text-secondary">{member.role}</p>
-					<p class="mt-1 text-sm text-muted-foreground">{member.area}</p>
+					<p class="mt-1 text-sm font-semibold text-secondary">{t(member.role)}</p>
+					<p class="mt-1 text-sm text-muted-foreground">{t(member.area)}</p>
 				</div>
 			{/each}
 		</div>
@@ -227,10 +268,10 @@
 <section id="contato" class="relative z-10 bg-gradient-to-b from-white to-muted py-20">
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mb-12">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">Contato</p>
-			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">Fale conosco</h2>
+			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.home_contact_eyebrow()}</p>
+			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">{m.home_contact_heading()}</h2>
 			<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
-				Interessado em colaborar ou saber mais sobre nossas pesquisas?
+				{m.home_contact_text()}
 			</p>
 		</div>
 
@@ -242,7 +283,7 @@
 					<Mail class="h-7 w-7 text-primary-foreground" />
 				</div>
 				<div>
-					<p class="font-bold text-primary">E-mail</p>
+					<p class="font-bold text-primary">{m.contact_email_label()}</p>
 					<a href="mailto:niar@dcc.ufmg.br" class="text-sm text-secondary hover:underline">
 						niar@dcc.ufmg.br
 					</a>
@@ -256,14 +297,14 @@
 					<MapPin class="h-7 w-7 text-primary-foreground" />
 				</div>
 				<div>
-					<p class="font-bold text-primary">Localização</p>
+					<p class="font-bold text-primary">{m.contact_location_label()}</p>
 					<a
 						href="https://www.google.com/maps/place/Universidade+Federal+de+Minas+Gerais/@-19.8669704,-43.9620077,17z/data=!3m1!4b1!4m6!3m5!1s0xa690ee806be67d:0xbb1391cea62811dd!8m2!3d-19.8669704!4d-43.9620077!16zL20vMDIxejJr"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="text-sm text-secondary hover:underline"
 					>
-						Universidade Federal de Minas Gerais
+						{m.contact_location_value()}
 					</a>
 				</div>
 			</div>
