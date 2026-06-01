@@ -13,6 +13,8 @@
 	import virgilioImg from '$lib/assets/staff/virgilio.jpeg';
 	import anaPaulaImg from '$lib/assets/staff/ana-paula.jpeg';
 	import { publications } from '$lib/data/publications';
+	import { news } from '$lib/data/news';
+	import HomeNewsCarousel from '$lib/components/HomeNewsCarousel.svelte';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import { localizeHref } from '$lib/paraglide/runtime';
@@ -102,6 +104,9 @@
 		</div>
 	</div>
 </section>
+
+<!-- Notícias -->
+<HomeNewsCarousel {news} />
 
 <!-- Pilares -->
 <section class="relative z-10 bg-gradient-to-b from-white to-muted py-20">
