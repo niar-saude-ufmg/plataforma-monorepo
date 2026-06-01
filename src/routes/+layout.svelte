@@ -75,7 +75,7 @@
 				{/each}
 				<div class="ml-8 flex items-center gap-2 text-sm font-semibold">
 					{#each locales as locale, i (locale)}
-						{#if i > 0}<span class="text-border">|</span>{/if}
+						{#if i > 0}<span class="text-primary/30">|</span>{/if}
 						<a
 							href={localizeHref(currentPath, { locale })}
 							data-sveltekit-reload
