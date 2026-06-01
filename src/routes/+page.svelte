@@ -81,11 +81,14 @@
 >
 	<div class="absolute inset-0 bg-primary/70"></div>
 	<div class="relative mx-auto w-full max-w-6xl px-6 py-16 text-center">
-		<h1 class="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+		<p class="text-sm font-semibold tracking-widest text-white uppercase">
+			{m.hero_eyebrow()}
+		</p>
+		<h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
 			{m.hero_title()}
 		</h1>
-		<p class="white mx-auto mt-6 max-w-2xl text-lg">
-			{m.hero_subtitle()}
+		<p class="mx-auto mt-6 max-w-2xl text-lg text-white/90">
+			{m.hero_about()}
 		</p>
 		<div class="mt-10 flex items-center justify-center gap-4">
 			<Button
@@ -119,7 +122,7 @@
 				{m.home_about_heading()}
 			</h2>
 			<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
-				{m.home_about_text()}
+				{@html m.home_about_text()}
 			</p>
 		</div>
 		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">

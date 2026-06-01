@@ -16,14 +16,15 @@
 
 	"home_title": "Página Inicial",
 	"home_meta_desc": "NIAR - Site institucional",
-	"hero_title": "Bem-vindo ao NIAR-Saúde",
-	"hero_subtitle": "Núcleo de Inteligência Artificial Responsável para a Saúde",
+	"hero_eyebrow": "NIAR-Saúde",
+	"hero_title": "Núcleo de Inteligência Artificial Responsável para a Saúde",
+	"hero_about": "Pesquisa interdisciplinar que une computação e saúde, transformando dados em soluções confiáveis.",
 	"hero_cta_project": "Conheça o projeto",
 	"hero_cta_publications": "Ver publicações",
 
-	"home_about_eyebrow": "Sobre o NIAR Saúde",
+	"home_about_eyebrow": "Nossos pilares",
 	"home_about_heading": "Inovação em dados e inteligência artificial responsável para a saúde",
-	"home_about_text": "O NIAR-Saúde é um núcleo interdisciplinar que reúne pesquisadores de computação e saúde para desenvolver soluções voltadas ao uso responsável de dados e inteligência artificial. Atuamos na criação e validação de tecnologias que promovem transparência, segurança e confiabilidade, além de fomentar a capacitação e a transferência de conhecimento.",
+	"home_about_text": "O trabalho do NIAR-Saúde se sustenta em três pilares que unem computação e saúde: a <span class=\"font-semibold text-primary\">governança</span> para o uso responsável da inteligência artificial, os <span class=\"font-semibold text-primary\">dados e modelos</span> que dão confiabilidade às soluções, e as <span class=\"font-semibold text-primary\">aplicações</span> que levam tudo isso à prática em saúde.",
 
 	"pillar_governance_title": "Governança",
 	"pillar_governance_desc": "Estruturação de processos e práticas voltadas ao uso responsável da inteligência artificial, com foco em qualidade, gestão de riscos, transparência e governança contínua.",

@@ -16,14 +16,15 @@
 
 	"home_title": "Home",
 	"home_meta_desc": "NIAR - Institutional website",
-	"hero_title": "Welcome to NIAR-Saúde",
-	"hero_subtitle": "Center for Responsible Artificial Intelligence in Health",
+	"hero_eyebrow": "NIAR-Saúde",
+	"hero_title": "Center for Responsible Artificial Intelligence in Health",
+	"hero_about": "Interdisciplinary research bringing computing and health together, turning data into reliable solutions.",
 	"hero_cta_project": "Discover the project",
 	"hero_cta_publications": "View publications",
 
-	"home_about_eyebrow": "About NIAR Saúde",
+	"home_about_eyebrow": "Our pillars",
 	"home_about_heading": "Innovation in responsible data and artificial intelligence for health",
-	"home_about_text": "NIAR-Saúde is an interdisciplinary center that brings together computing and health researchers to develop solutions for the responsible use of data and artificial intelligence. We work on creating and validating technologies that promote transparency, safety and reliability, while fostering training and knowledge transfer.",
+	"home_about_text": "NIAR-Saúde's work rests on three pillars that bring computing and health together: <span class=\"font-semibold text-primary\">governance</span> for the responsible use of artificial intelligence, the <span class=\"font-semibold text-primary\">data and models</span> that make solutions reliable, and the <span class=\"font-semibold text-primary\">applications</span> that take all of this into real-world health practice.",
 
 	"pillar_governance_title": "Governance",
 	"pillar_governance_desc": "Structuring processes and practices for the responsible use of artificial intelligence, focusing on quality, risk management, transparency and continuous governance.",
