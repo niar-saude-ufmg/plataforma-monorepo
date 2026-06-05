@@ -12,6 +12,16 @@ export const publications: Publication[] = [
 		year: '2026',
 		metas: ['1'],
 		title:
+			'Responsible AI for Public Health: A Methodological Illustration with a Forecasting Model applied to Respiratory Hospitalizations on SUS Data',
+		authors:
+			'Pereira, R.G., Brito, L.E.L., Avelar, I., Carvalho, M., Vasconcelos, M., Brandão, M.A., Meira Jr, W.',
+		journal: 'Anais do Simpósio Brasileiro de Computação Aplicada à Saúde (SBCAS), 2026',
+		doi: 'https://doi.org/10.5753/sbcas.2026.20414'
+	},
+	{
+		year: '2026',
+		metas: ['1'],
+		title:
 			'Quem controla os dados? Governança e Responsabilidade na Era da Inteligência Artificial',
 		authors: 'Carvalho, M., Azevedo, K., Rocha, L., Vasconcelos, M., Brandão, M., Meira, W.',
 		journal: 'SBC Horizontes, ISSN 2175-9235, April 2026',
