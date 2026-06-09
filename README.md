@@ -5,19 +5,33 @@ Site institucional do **NIAR-Saúde** (Núcleo de Inteligência Artificial Respo
 ## Estrutura do projeto
 
 ```
-src/
-├── routes/
-│   ├── +layout.svelte       # layout global (header, footer)
-│   ├── +page.svelte         # página inicial
-│   ├── about/               # página "Sobre"
-│   ├── team/                # página da equipe (inclui Alumni)
-│   └── publications/        # página de publicações
-├── lib/
-│   ├── assets/              # imagens (home, fotos da equipe)
-│   ├── components/ui/       # componentes de interface
-│   └── data/
-│       └── publications.ts  # lista de publicações do grupo
-└── app.html
+.
+├── messages/                    # textos PT/EN (pt.json, en.json) — fonte do i18n
+├── project.inlang/              # configuração do i18n (Paraglide)
+└── src/
+    ├── routes/
+    │   ├── +layout.svelte       # layout global (header com navegação, footer)
+    │   ├── +layout.ts           # prerender + i18n (trailingSlash)
+    │   ├── layout.css           # estilos globais
+    │   ├── +page.svelte         # página inicial
+    │   ├── about/               # página "Sobre"
+    │   ├── team/                # página da equipe (inclui Alumni)
+    │   ├── publications/        # página de publicações
+    │   └── news/                # notícias
+    │       ├── +page.svelte     #   lista de notícias
+    │       └── [slug]/          #   artigo interno (notícia própria do NIAR)
+    ├── lib/
+    │   ├── assets/              # imagens (home, equipe, notícias, logos)
+    │   ├── components/
+    │   │   ├── HomeNewsCarousel.svelte  # carrossel de notícias da home
+    │   │   └── ui/              # componentes de interface
+    │   ├── data/
+    │   │   ├── publications.ts  # lista de publicações do grupo
+    │   │   └── news.ts          # notícias (links externos e artigos internos)
+    │   ├── i18n.ts              # utilitário de conteúdo bilíngue (PT/EN)
+    │   ├── date.ts              # formatação de datas por idioma
+    │   └── paraglide/           # mensagens i18n geradas (não editar à mão)
+    └── app.html
 ```
 
 ## Fonte dos dados
