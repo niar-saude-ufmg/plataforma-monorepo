@@ -1,6 +1,7 @@
 import type { Localized } from '$lib/i18n';
 import salaSeguraPais from '$lib/assets/news/sala-segura-primeira-do-pais.jpg';
 import salaSeguraInaugurada from '$lib/assets/news/sala-segura-inaugurada.jpg';
+import ramonSbcas from '$lib/assets/news/ramon_sbcas.jpeg';
 
 export type NewsCategory =
 	| 'event'
@@ -18,8 +19,26 @@ export type NewsItem = {
 	excerpt: Localized;
 	image: string;
 	imageAlt: Localized;
+	/**
+	 * CSS `object-position` for the image (e.g. 'left', '15% center').
+	 * Use to keep the subject in frame when the card crops a wide photo.
+	 * Defaults to centered.
+	 */
+	imagePosition?: string;
+	/** External URL, opened in a new tab. Ignored when `body` is present. */
 	link?: string;
+	/**
+	 * Full article content, as paragraphs, for news we publish ourselves.
+	 * When present, the "read more" link points to the internal page
+	 * `/news/<id>` instead of to an external site.
+	 */
+	body?: Localized[];
 };
+
+/** Whether the item links to an internally-hosted article page (`/news/<id>`). */
+export function isInternalArticle(item: NewsItem): boolean {
+	return Array.isArray(item.body) && item.body.length > 0;
+}
 
 const items: NewsItem[] = [
 	{
@@ -59,7 +78,49 @@ const items: NewsItem[] = [
 			en: 'Inauguration of NIAR-Saúde’s Secure Room at UFMG’s Medical School'
 		},
 		link: 'https://dcc.ufmg.br/sala-segura-do-niar-saude-e-inaugurada-para-ampliar-pesquisas-com-ia-e-dados-de-saude/'
+	},
+	{
+		id: 'niar-no-sbcas-2026',
+		date: '2026-06-04',
+		category: 'event',
+		title: {
+			pt: 'NIAR-Saúde apresenta artigo sobre IA responsável no SBCAS 2026',
+			en: 'NIAR-Saúde presents paper on responsible AI at SBCAS 2026'
+		},
+		excerpt: {
+			pt: 'O grupo levou ao Simpósio Brasileiro de Computação Aplicada à Saúde um trabalho sobre previsão de internações respiratórias com dados do SUS e uso responsável de inteligência artificial.',
+			en: 'The group brought to the Brazilian Symposium on Computing Applied to Health a study on forecasting respiratory hospitalizations with SUS data and the responsible use of artificial intelligence.'
+		},
+		image: ramonSbcas,
+		imagePosition: '15% center',
+		imageAlt: {
+			pt: 'Ramon Pereira apresenta o artigo do NIAR-Saúde no SBCAS 2026, em Ouro Preto',
+			en: 'Ramon Pereira presents NIAR-Saúde’s paper at SBCAS 2026 in Ouro Preto'
+		},
+		body: [
+			{
+				pt: 'O NIAR-Saúde marcou presença no XXVI Simpósio Brasileiro de Computação Aplicada à Saúde (SBCAS 2026), realizado de 1º a 4 de junho de 2026 em Ouro Preto (MG), no Centro de Artes e Convenções da UFOP. O SBCAS é um dos principais fóruns de encontro entre pesquisadores das áreas de computação e saúde no país.',
+				en: 'NIAR-Saúde took part in the 26th Brazilian Symposium on Computing Applied to Health (SBCAS 2026), held from June 1–4, 2026, in Ouro Preto (MG), at UFOP’s Arts and Conventions Center. SBCAS is one of the country’s leading forums bringing together researchers from the computing and health fields.'
+			},
+			{
+				pt: 'Na ocasião, o grupo apresentou o artigo “Responsible AI for Public Health: A Methodological Illustration with a Forecasting Model applied to Respiratory Hospitalizations on SUS Data”, publicado nos anais do simpósio. O trabalho usa dados do Sistema Único de Saúde (SUS) para ilustrar, na prática, como construir modelos de previsão de internações por causas respiratórias de forma metodologicamente cuidadosa.',
+				en: 'On the occasion, the group presented the paper “Responsible AI for Public Health: A Methodological Illustration with a Forecasting Model applied to Respiratory Hospitalizations on SUS Data”, published in the symposium proceedings. The work uses data from Brazil’s Unified Health System (SUS) to illustrate, in practice, how to build forecasting models for respiratory hospitalizations in a methodologically careful way.'
+			},
+			{
+				pt: 'Mais do que o desempenho preditivo, o estudo enfatiza princípios de inteligência artificial responsável — transparência, reprodutibilidade e atenção aos vieses dos dados — alinhados à missão do NIAR-Saúde de desenvolver soluções de IA confiáveis para apoiar a saúde pública. O artigo é assinado por Ramon G. Pereira, Luís Eduardo Limas Brito, Italo Avelar, Matheus Carvalho, Marisa Vasconcelos, Michele A. Brandão e Wagner Meira Jr.',
+				en: 'Beyond predictive performance, the study emphasizes responsible artificial intelligence principles — transparency, reproducibility, and attention to data biases — in line with NIAR-Saúde’s mission to develop trustworthy AI solutions to support public health. The paper is authored by Ramon G. Pereira, Luís Eduardo Limas Brito, Italo Avelar, Matheus Carvalho, Marisa Vasconcelos, Michele A. Brandão, and Wagner Meira Jr.'
+			},
+			{
+				pt: 'A versão completa do trabalho está disponível nos anais do SBCAS 2026 e pode ser acessada na página de publicações.',
+				en: 'The full version of the work is available in the SBCAS 2026 proceedings and can be accessed on the publications page.'
+			}
+		]
 	}
 ];
 
 export const news: NewsItem[] = items.sort((a, b) => b.date.localeCompare(a.date));
+
+/** Looks up a news item by its id (used by the internal article route). */
+export function getNewsItem(id: string): NewsItem | undefined {
+	return items.find((item) => item.id === id);
+}

@@ -3,6 +3,7 @@
 
 	"nav_home": "Home",
 	"nav_about": "About",
+	"nav_news": "News",
 	"nav_publications": "Publications",
 	"nav_team": "Team",
 	"nav_contact": "Contact",
@@ -51,7 +52,8 @@
 	"home_pub_heading": "Recent work",
 	"home_pub_text": "Recent articles and scientific output from the group.",
 	"home_pub_link": "View all publications",
-	"pub_doi_short": "DOI",
+	"home_news_link": "View all news",
+	"pub_doi_short": "Access",
 
 	"home_team_eyebrow": "Team",
 	"home_team_heading": "Researchers",
@@ -76,6 +78,14 @@
 	"about_trajectory_eyebrow": "Our journey",
 	"about_trajectory_heading": "History & Milestones",
 
+	"news_title": "News",
+	"news_meta_desc": "News, events and updates from NIAR-Saúde",
+	"news_heading": "News",
+	"news_subtitle": "Follow the latest news, events and updates from NIAR-Saúde.",
+	"news_empty": "News coming soon.",
+	"news_filter_all": "All",
+	"news_back_to_list": "Back to news",
+
 	"pub_title": "Publications",
 	"pub_meta_desc": "Publications and scientific output of NIAR-Saúde",
 	"pub_heading": "Publications",
@@ -84,7 +94,7 @@
 	"pub_filter_all_metas": "All goals",
 	"pub_filter_all_years": "All years",
 	"pub_results_count": "{count} articles found",
-	"pub_doi_link": "Access via DOI",
+	"pub_doi_link": "Access",
 
 	"team_title": "Team",
 	"team_meta_desc": "Meet the NIAR-Saúde team",

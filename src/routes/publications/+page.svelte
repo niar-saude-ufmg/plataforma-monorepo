@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Search from 'lucide-svelte/icons/search';
+	import ExternalLink from 'lucide-svelte/icons/external-link';
 	import * as Select from '$lib/components/ui/select';
 	import { publications } from '$lib/data/publications';
 	import { resolve } from '$app/paths';
@@ -114,16 +115,18 @@
 					<p class="mt-3 text-lg leading-snug font-bold text-primary">{pub.title}</p>
 					<p class="mt-2 text-sm text-muted-foreground">{pub.authors}</p>
 					<p class="mt-1 text-sm text-muted-foreground italic">{pub.journal}</p>
-					<!-- eslint-disable svelte/no-navigation-without-resolve -->
-					<a
-						href={pub.doi}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
-					>
-						{m.pub_doi_link()} <span aria-hidden="true">&nearr;</span>
-					</a>
-					<!-- eslint-enable svelte/no-navigation-without-resolve -->
+					{#if pub.doi}
+						<!-- eslint-disable svelte/no-navigation-without-resolve -->
+						<a
+							href={pub.doi}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
+						>
+							{m.pub_doi_link()} <ExternalLink class="h-4 w-4" aria-hidden="true" />
+						</a>
+						<!-- eslint-enable svelte/no-navigation-without-resolve -->
+					{/if}
 				</div>
 			{/each}
 		</div>

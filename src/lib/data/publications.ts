@@ -4,7 +4,8 @@ export type Publication = {
 	title: string;
 	authors: string;
 	journal: string;
-	doi: string;
+	/** Link de acesso ao artigo (DOI ou outra URL). Nem todo artigo possui. */
+	doi?: string;
 };
 
 export const publications: Publication[] = [

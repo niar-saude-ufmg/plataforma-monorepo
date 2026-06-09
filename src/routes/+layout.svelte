@@ -18,6 +18,7 @@
 	const navLinks = [
 		{ href: '/' as const, hash: '', label: () => m.nav_home() },
 		{ href: '/about' as const, hash: '', label: () => m.nav_about() },
+		{ href: '/news' as const, hash: '', label: () => m.nav_news() },
 		{ href: '/publications' as const, hash: '', label: () => m.nav_publications() },
 		{ href: '/team' as const, hash: '', label: () => m.nav_team() },
 		{ href: '/' as const, hash: '#contato', label: () => m.nav_contact() }
@@ -35,6 +36,17 @@
 	// Path with any locale prefix stripped — used for active-link checks and to
 	// build the language-switcher targets for the page the user is currently on.
 	let currentPath = $derived(deLocalizeHref(page.url.pathname));
+
+	// Highlights the nav item for the current page. Home and Contact share the '/'
+	// route, so they are disambiguated by hash; the other items also match their
+	// subpages (e.g. an article at /news/<slug> keeps "Notícias" active).
+	function isActive(link: { href: string; hash: string }): boolean {
+		if (link.href === '/') {
+			if (currentPath !== '/') return false;
+			return link.hash ? page.url.hash === link.hash : !page.url.hash;
+		}
+		return currentPath === link.href || currentPath.startsWith(`${link.href}/`);
+	}
 </script>
 
 <svelte:head>
@@ -64,11 +76,13 @@
 			</a>
 			<nav class="flex items-center gap-6">
 				{#each navLinks as link (link.href + link.hash)}
+					{@const active = isActive(link)}
 					<a
 						href="{localizeHref(resolve(link.href))}{link.hash}"
-						class="text-base font-semibold text-primary/80 transition-colors hover:text-primary"
-						class:text-primary={currentPath === link.href &&
-							(link.hash ? page.url.hash === link.hash : !page.url.hash)}
+						aria-current={active ? 'page' : undefined}
+						class="relative text-base font-semibold transition-colors after:absolute after:inset-x-0 after:-bottom-1.5 after:h-0.5 after:origin-left after:rounded-full after:bg-gradient-to-r after:from-primary after:to-secondary after:transition-transform after:duration-200 {active
+							? 'text-primary after:scale-x-100'
+							: 'text-primary/80 hover:text-primary after:scale-x-0'}"
 					>
 						{link.label()}
 					</a>

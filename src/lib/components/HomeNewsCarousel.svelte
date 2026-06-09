@@ -7,10 +7,13 @@
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import Calendar from 'lucide-svelte/icons/calendar';
+	import ExternalLink from 'lucide-svelte/icons/external-link';
 	import { m } from '$lib/paraglide/messages';
+	import { resolve } from '$app/paths';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import { t } from '$lib/i18n';
 	import { formatNewsDate } from '$lib/date';
-	import type { NewsItem, NewsCategory } from '$lib/data/news';
+	import { isInternalArticle, type NewsItem, type NewsCategory } from '$lib/data/news';
 
 	let { news }: { news: NewsItem[] } = $props();
 
@@ -107,13 +110,21 @@
 		aria-label={m.home_news_eyebrow()}
 	>
 		<div class="mx-auto max-w-6xl px-6">
-			<div class="mb-10">
-				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
-					{m.home_news_eyebrow()}
-				</p>
-				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-					{m.home_news_heading()}
-				</h2>
+			<div class="mb-10 flex items-end justify-between">
+				<div>
+					<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+						{m.home_news_eyebrow()}
+					</p>
+					<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+						{m.home_news_heading()}
+					</h2>
+				</div>
+				<a
+					href={localizeHref(resolve('/news'))}
+					class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline"
+				>
+					{m.home_news_link()} <span aria-hidden="true">&rarr;</span>
+				</a>
 			</div>
 
 			<div class="relative">
@@ -134,6 +145,7 @@
 										src={item.image}
 										alt={t(item.imageAlt)}
 										class="absolute inset-0 h-full w-full object-cover"
+										style:object-position={item.imagePosition}
 										loading={i === 0 ? 'eager' : 'lazy'}
 										decoding="async"
 										fetchpriority={i === 0 ? 'high' : 'auto'}
@@ -155,7 +167,14 @@
 									<p class="text-base leading-relaxed text-muted-foreground">
 										{t(item.excerpt)}
 									</p>
-									{#if item.link}
+									{#if isInternalArticle(item)}
+										<a
+											href={localizeHref(resolve('/news/[slug]', { slug: item.id }))}
+											class="mt-1 inline-flex items-center gap-1.5 text-base font-medium text-secondary hover:underline"
+										>
+											{m.news_read_more()} <span aria-hidden="true">&rarr;</span>
+										</a>
+									{:else if item.link}
 										<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 										<a
 											href={item.link}
@@ -163,7 +182,7 @@
 											rel="noopener noreferrer"
 											class="mt-1 inline-flex items-center gap-1.5 text-base font-medium text-secondary hover:underline"
 										>
-											{m.news_read_more()} <span aria-hidden="true">&rarr;</span>
+											{m.news_read_more()} <ExternalLink class="h-4 w-4" aria-hidden="true" />
 										</a>
 									{/if}
 								</div>

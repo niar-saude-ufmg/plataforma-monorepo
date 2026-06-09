@@ -3,6 +3,7 @@
 
 	"nav_home": "Home",
 	"nav_about": "Sobre",
+	"nav_news": "Notícias",
 	"nav_publications": "Publicações",
 	"nav_team": "Equipe",
 	"nav_contact": "Contato",
@@ -51,7 +52,8 @@
 	"home_pub_heading": "Trabalhos recentes",
 	"home_pub_text": "Artigos e produções científicas recentes do grupo.",
 	"home_pub_link": "Ver todas as publicações",
-	"pub_doi_short": "DOI",
+	"home_news_link": "Ver todas as notícias",
+	"pub_doi_short": "Acessar",
 
 	"home_team_eyebrow": "Equipe",
 	"home_team_heading": "Pesquisadores",
@@ -76,6 +78,14 @@
 	"about_trajectory_eyebrow": "Nossa trajetória",
 	"about_trajectory_heading": "História & Marcos",
 
+	"news_title": "Notícias",
+	"news_meta_desc": "Notícias, eventos e novidades do NIAR-Saúde",
+	"news_heading": "Notícias",
+	"news_subtitle": "Acompanhe as últimas notícias, eventos e novidades do NIAR-Saúde.",
+	"news_empty": "Em breve, novidades por aqui.",
+	"news_filter_all": "Todas",
+	"news_back_to_list": "Voltar para notícias",
+
 	"pub_title": "Publicações",
 	"pub_meta_desc": "Publicações e produções científicas do NIAR-Saúde",
 	"pub_heading": "Publicações",
@@ -84,7 +94,7 @@
 	"pub_filter_all_metas": "Todas as metas",
 	"pub_filter_all_years": "Todos os anos",
 	"pub_results_count": "{count} artigos encontrados",
-	"pub_doi_link": "Acessar via DOI",
+	"pub_doi_link": "Acessar",
 
 	"team_title": "Equipe",
 	"team_meta_desc": "Conheça a equipe do NIAR-Saúde",
