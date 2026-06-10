@@ -58,17 +58,24 @@
 			{t(item.title)}
 		</h1>
 
-		<div class="relative mt-8 aspect-video overflow-hidden rounded-2xl ring-1 ring-border">
-			<img
-				src={item.image}
-				alt={t(item.imageAlt)}
-				class="absolute inset-0 h-full w-full object-cover"
-				style:object-position={item.imagePosition}
-				loading="eager"
-				decoding="async"
-				fetchpriority="high"
-			/>
-		</div>
+		<figure class="mt-8">
+			<div class="relative aspect-video overflow-hidden rounded-2xl ring-1 ring-border">
+				<img
+					src={item.image}
+					alt={t(item.imageAlt)}
+					class="absolute inset-0 h-full w-full object-cover"
+					style:object-position={item.imagePosition}
+					loading="eager"
+					decoding="async"
+					fetchpriority="high"
+				/>
+			</div>
+			{#if item.caption}
+				<figcaption class="mt-3 text-sm italic text-foreground/60">
+					{t(item.caption)}
+				</figcaption>
+			{/if}
+		</figure>
 
 		<div class="mt-8 flex flex-col gap-6">
 			{#each item.body ?? [] as paragraph, i (i)}
