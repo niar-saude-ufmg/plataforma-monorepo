@@ -12,6 +12,13 @@ node_modules
 .DS_Store
 Thumbs.db
 
+# Python (rag-api)
+__pycache__/
+*.py[oc]
+rag-api/.venv/
+rag-api/data/processed/embeddings_backup.jsonl
+rag-api/.langgraph_api/
+
 # Env
 .env
 .env.*

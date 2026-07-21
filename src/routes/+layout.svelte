@@ -15,12 +15,33 @@
 
 	let { children } = $props();
 
+	// Header estilo Amazon: some ao rolar para baixo (como se fosse fixo saindo da
+	// tela) e reaparece assim que o usuário rola para cima.
+	let lastScrollY = $state(0);
+	let headerHidden = $state(false);
+
+	function handleScroll() {
+		const currentY = window.scrollY;
+		if (currentY <= 0) {
+			// No topo da página o header sempre fica visível.
+			headerHidden = false;
+		} else if (currentY > lastScrollY && currentY > 80) {
+			// Rolando para baixo (e já passou do próprio header): esconde.
+			headerHidden = true;
+		} else if (currentY < lastScrollY) {
+			// Rolando para cima: mostra novamente.
+			headerHidden = false;
+		}
+		lastScrollY = currentY;
+	}
+
 	const navLinks = [
 		{ href: '/' as const, hash: '', label: () => m.nav_home() },
 		{ href: '/about' as const, hash: '', label: () => m.nav_about() },
 		{ href: '/news' as const, hash: '', label: () => m.nav_news() },
 		{ href: '/publications' as const, hash: '', label: () => m.nav_publications() },
 		{ href: '/team' as const, hash: '', label: () => m.nav_team() },
+		{ href: '/assistente' as const, hash: '', label: () => m.nav_assistant() },
 		{ href: '/' as const, hash: '#contato', label: () => m.nav_contact() }
 	];
 
@@ -66,9 +87,13 @@
 	/>
 </svelte:head>
 
+<svelte:window onscroll={handleScroll} />
+
 <div class="flex min-h-screen flex-col">
 	<header
-		class="sticky top-0 z-50 overflow-visible bg-background/80 text-foreground backdrop-blur-sm"
+		class="sticky top-0 z-50 overflow-visible bg-background text-foreground transition-transform duration-300 {headerHidden
+			? '-translate-y-full'
+			: 'translate-y-0'}"
 	>
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
 			<a href={resolve('/')} class="relative z-10">
