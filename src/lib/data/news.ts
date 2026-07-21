@@ -3,13 +3,7 @@ import salaSeguraPais from '$lib/assets/news/sala-segura-primeira-do-pais.jpg';
 import salaSeguraInaugurada from '$lib/assets/news/sala-segura-inaugurada.jpg';
 import ramonSbcas from '$lib/assets/news/ramon_sbcas.jpeg';
 
-export type NewsCategory =
-	| 'event'
-	| 'award'
-	| 'media'
-	| 'post'
-	| 'publication'
-	| 'partnership';
+export type NewsCategory = 'event' | 'award' | 'media' | 'post' | 'publication' | 'partnership';
 
 export type NewsItem = {
 	id: string;

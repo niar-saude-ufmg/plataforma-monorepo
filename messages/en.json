@@ -1,20 +1,17 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-
 	"nav_home": "Home",
 	"nav_about": "About",
 	"nav_news": "News",
 	"nav_publications": "Publications",
 	"nav_team": "Team",
 	"nav_contact": "Contact",
-
 	"back_home": "Back to home",
 	"meta_label": "Goal {meta}",
 	"contact_email_label": "Email",
 	"contact_location_label": "Location",
 	"contact_location_value": "Universidade Federal de Minas Gerais",
 	"footer_address": "UFMG, Belo Horizonte",
-
 	"home_title": "Home",
 	"home_meta_desc": "NIAR - Institutional website",
 	"hero_eyebrow": "NIAR-Saúde",
@@ -22,18 +19,15 @@
 	"hero_about": "Interdisciplinary research bringing computing and health together, turning data into reliable solutions.",
 	"hero_cta_project": "Discover the project",
 	"hero_cta_publications": "View publications",
-
 	"home_about_eyebrow": "Our pillars",
 	"home_about_heading": "Innovation in responsible data and artificial intelligence for health",
 	"home_about_text": "NIAR-Saúde's work rests on three pillars that bring computing and health together: <span class=\"font-semibold text-primary\">governance</span> for the responsible use of artificial intelligence, the <span class=\"font-semibold text-primary\">data and models</span> that make solutions reliable, and the <span class=\"font-semibold text-primary\">applications</span> that take all of this into real-world health practice.",
-
 	"pillar_governance_title": "Governance",
 	"pillar_governance_desc": "Structuring processes and practices for the responsible use of artificial intelligence, focusing on quality, risk management, transparency and continuous governance.",
 	"pillar_data_title": "Data and Models",
 	"pillar_data_desc": "Development and operation of data and artificial intelligence models, covering data engineering, building, evaluation and continuous monitoring of solutions.",
 	"pillar_apps_title": "Applications",
 	"pillar_apps_desc": "Applying data and models in health contexts, focusing on impact, cost-effectiveness and decision-making support across different scenarios.",
-
 	"home_news_eyebrow": "Featured",
 	"home_news_heading": "Latest news & events",
 	"news_read_more": "Read the full story",
@@ -47,23 +41,20 @@
 	"news_category_post": "Announcement",
 	"news_category_publication": "Publication",
 	"news_category_partnership": "Partnership",
-
 	"home_pub_eyebrow": "Publications",
 	"home_pub_heading": "Recent work",
 	"home_pub_text": "Recent articles and scientific output from the group.",
 	"home_pub_link": "View all publications",
 	"home_news_link": "View all news",
 	"pub_doi_short": "Access",
-
 	"home_team_eyebrow": "Team",
 	"home_team_heading": "Researchers",
-	"home_team_text": "A multidisciplinary team bringing together computing, medicine, bioethics and public health.",
+	"home_team_text": "Meet the people behind NIAR-Saúde.",
+	"home_team_areas": "NIAR-Saúde's team brings together professionals from the fields of computing, medicine, bioethics and public health with a common goal: promoting the responsible use of artificial intelligence in health.",
 	"home_team_link": "View full team",
-
 	"home_contact_eyebrow": "Contact",
 	"home_contact_heading": "Get in touch",
 	"home_contact_text": "Interested in collaborating or learning more about our research?",
-
 	"about_title": "About",
 	"about_meta_desc": "Learn about NIAR and our mission",
 	"about_heading": "About NIAR-Saúde",
@@ -75,9 +66,12 @@
 	"about_metas_eyebrow": "Goals",
 	"about_metas_heading": "Areas of work",
 	"about_metas_text": "The project is organized into <span class=\"font-semibold text-primary\">seven concurrent goals</span>, distributed across four types of activity: processes and best practices, computational platform, pilot projects and dissemination.",
+	"about_team_eyebrow": "Team",
+	"about_team_heading": "Researchers",
+	"about_team_text": "A multidisciplinary team bringing together computing, medicine, bioethics and public health.",
+	"about_team_link": "View full team",
 	"about_trajectory_eyebrow": "Our journey",
 	"about_trajectory_heading": "History & Milestones",
-
 	"news_title": "News",
 	"news_meta_desc": "News, events and updates from NIAR-Saúde",
 	"news_heading": "News",
@@ -85,7 +79,6 @@
 	"news_empty": "News coming soon.",
 	"news_filter_all": "All",
 	"news_back_to_list": "Back to news",
-
 	"pub_title": "Publications",
 	"pub_meta_desc": "Publications and scientific output of NIAR-Saúde",
 	"pub_heading": "Publications",
@@ -95,14 +88,12 @@
 	"pub_filter_all_years": "All years",
 	"pub_results_count": "{count} articles found",
 	"pub_doi_link": "Access",
-
 	"team_title": "Team",
 	"team_meta_desc": "Meet the NIAR-Saúde team",
 	"team_heading": "Our Team",
 	"team_subtitle": "Meet all the researchers, students and collaborators who are part of NIAR-Saúde.",
 	"team_toggle_role": "By Role",
 	"team_toggle_meta": "By Goal",
-
 	"nav_assistant": "Assistant",
 	"assistant_title": "Assistant",
 	"assistant_meta_desc": "AI assistant that answers based on NIAR-Saúde documents",

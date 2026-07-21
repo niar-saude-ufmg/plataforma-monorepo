@@ -11,61 +11,24 @@
 	import wagnerImg from '$lib/assets/staff/wagner-meira.jpg';
 	import micheleImg from '$lib/assets/staff/michele.jpeg';
 	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
-	import virgilioImg from '$lib/assets/staff/virgilio.jpeg';
 	import anaPaulaImg from '$lib/assets/staff/ana-paula.jpeg';
+	import virgilioImg from '$lib/assets/staff/virgilio.jpeg';
 	import { publications } from '$lib/data/publications';
 	import { news } from '$lib/data/news';
 	import HomeNewsCarousel from '$lib/components/HomeNewsCarousel.svelte';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import { localizeHref } from '$lib/paraglide/runtime';
-	import { t } from '$lib/i18n';
 
 	const recentPublications = publications.slice(0, 4);
 
-	const featuredMembers = [
-		{
-			initials: 'WM',
-			name: 'Wagner Meira',
-			role: { pt: 'Coordenador Metas 3 e 7', en: 'Goals 3 and 7 Coordinator' },
-			area: { pt: 'Ciência da Computação', en: 'Computer Science' },
-			photo: wagnerImg
-		},
-		{
-			initials: 'MB',
-			name: 'Michele Brandão',
-			role: { pt: 'Coordenadora Meta 1', en: 'Goal 1 Coordinator' },
-			area: { pt: 'Ciência da Computação e IA Responsável', en: 'Computer Science and Responsible AI' },
-			photo: micheleImg
-		},
-		{
-			initials: 'DG',
-			name: 'Dorgival Guedes',
-			role: { pt: 'Coordenador Meta 3', en: 'Goal 3 Coordinator' },
-			area: { pt: 'Sistemas Distribuídos', en: 'Distributed Systems' },
-			photo: dorgivalImg,
-			photoPos: '30% 20%'
-		},
-		{
-			initials: 'AP',
-			name: 'Ana Paula Silva',
-			role: { pt: 'Coordenadora Meta 2', en: 'Goal 2 Coordinator' },
-			area: { pt: 'Computação Social', en: 'Social Computing' },
-			photo: anaPaulaImg
-		},
-		{
-			initials: 'VA',
-			name: 'Virgílio Almeida',
-			role: { pt: 'Pesquisador', en: 'Researcher' },
-			area: { pt: 'Ciência da Computação e IA Responsável', en: 'Computer Science and Responsible AI' },
-			photo: virgilioImg
-		},
-		{
-			initials: 'ML',
-			name: 'Mariangela Cherchiglia',
-			role: { pt: 'Coordenadora Meta 6', en: 'Goal 6 Coordinator' },
-			area: { pt: 'Saúde Pública', en: 'Public Health' }
-		}
+	// Avatares da faixa institucional — a lista completa vive em /sobre e /team.
+	const teamAvatars: Array<{ name: string; photo: string; photoPos?: string }> = [
+		{ name: 'Wagner Meira', photo: wagnerImg },
+		{ name: 'Michele Brandão', photo: micheleImg },
+		{ name: 'Dorgival Guedes', photo: dorgivalImg, photoPos: '30% 20%' },
+		{ name: 'Ana Paula Silva', photo: anaPaulaImg },
+		{ name: 'Virgílio Almeida', photo: virgilioImg }
 	];
 </script>
 
@@ -134,7 +97,9 @@
 					>
 						<ShieldCheck class="h-7 w-7 text-primary-foreground" />
 					</div>
-					<Card.Title class="text-xl font-bold text-foreground">{m.pillar_governance_title()}</Card.Title>
+					<Card.Title class="text-xl font-bold text-foreground"
+						>{m.pillar_governance_title()}</Card.Title
+					>
 					<Card.Description class="text-base leading-relaxed">
 						{m.pillar_governance_desc()}
 					</Card.Description>
@@ -177,7 +142,9 @@
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mb-12 flex items-end justify-between">
 			<div>
-				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.home_pub_eyebrow()}</p>
+				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+					{m.home_pub_eyebrow()}
+				</p>
 				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
 					{m.home_pub_heading()}
 				</h2>
@@ -216,7 +183,8 @@
 							rel="noopener noreferrer"
 							class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 						>
-							{m.pub_doi_short()} <ExternalLink class="h-4 w-4" aria-hidden="true" />
+							{m.pub_doi_short()}
+							<ExternalLink class="h-4 w-4" aria-hidden="true" />
 						</a>
 						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					{/if}
@@ -226,12 +194,15 @@
 	</div>
 </section>
 
-<!-- Equipe -->
+<!-- Faixa institucional / equipe -->
 <section id="equipe" class="relative z-10 bg-gradient-to-b from-white to-muted py-20">
 	<div class="mx-auto max-w-6xl px-6">
-		<div class="mb-12 flex items-end justify-between">
+		<!-- Mesmo cabeçalho das seções de Publicações e Contato. -->
+		<div class="mb-8 flex items-end justify-between">
 			<div>
-				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.home_team_eyebrow()}</p>
+				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+					{m.home_team_eyebrow()}
+				</p>
 				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
 					{m.home_team_heading()}
 				</h2>
@@ -241,36 +212,28 @@
 			</div>
 			<a
 				href={localizeHref(resolve('/team'))}
-				class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline"
+				class="inline-flex shrink-0 items-center gap-1 text-base font-medium text-secondary hover:underline"
 			>
 				{m.home_team_link()} <span aria-hidden="true">&rarr;</span>
 			</a>
 		</div>
 
-		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-			{#each featuredMembers as member (member.initials)}
-				<div
-					class="flex flex-col items-center rounded-lg bg-white p-8 text-center shadow-sm ring-1 ring-border transition-shadow hover:shadow-md"
-				>
-					{#if member.photo}
-						<img
-							src={member.photo}
-							alt={member.name}
-							class="h-20 w-20 rounded-full object-cover"
-							style="object-position: {member.photoPos ?? 'center 20%'}"
-						/>
-					{:else}
-						<div
-							class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-lg font-bold text-white"
-						>
-							{member.initials}
-						</div>
-					{/if}
-					<p class="mt-4 text-lg font-bold text-primary">{member.name}</p>
-					<p class="mt-1 text-sm font-semibold text-secondary">{t(member.role)}</p>
-					<p class="mt-1 text-sm text-muted-foreground">{t(member.area)}</p>
-				</div>
-			{/each}
+		<div class="flex items-center gap-5 rounded-lg bg-white px-6 py-4 ring-1 ring-border">
+			<div class="flex shrink-0">
+				{#each teamAvatars as member, i (member.name)}
+					<img
+						src={member.photo}
+						alt={member.name}
+						class="h-14 w-14 rounded-full object-cover ring-2 ring-white"
+						style="object-position: {member.photoPos ?? 'center 20%'}; margin-left: {i > 0
+							? '-16px'
+							: '0'}"
+					/>
+				{/each}
+			</div>
+			<p class="text-base leading-relaxed text-muted-foreground">
+				{m.home_team_areas()}
+			</p>
 		</div>
 	</div>
 </section>
@@ -279,8 +242,12 @@
 <section id="contato" class="relative z-10 bg-gradient-to-b from-white to-muted py-20">
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mb-12">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.home_contact_eyebrow()}</p>
-			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">{m.home_contact_heading()}</h2>
+			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+				{m.home_contact_eyebrow()}
+			</p>
+			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+				{m.home_contact_heading()}
+			</h2>
 			<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
 				{m.home_contact_text()}
 			</p>

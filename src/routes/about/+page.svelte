@@ -12,6 +12,7 @@
 	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
 	import antonioImg from '$lib/assets/staff/antonio.jpeg';
 	import deborahImg from '$lib/assets/staff/deborah.jpeg';
+	import virgilioImg from '$lib/assets/staff/virgilio.jpeg';
 	import { m } from '$lib/paraglide/messages';
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { t, type Localized } from '$lib/i18n';
@@ -61,7 +62,10 @@
 
 	const trajetoria: Array<{ titulo: Localized; data: Localized | null }> = [
 		{ titulo: { pt: 'Assinatura do TED', en: 'Signing of the TED' }, data: null },
-		{ titulo: { pt: 'Início do projeto', en: 'Project kickoff' }, data: { pt: 'Set 2025', en: 'Sep 2025' } },
+		{
+			titulo: { pt: 'Início do projeto', en: 'Project kickoff' },
+			data: { pt: 'Set 2025', en: 'Sep 2025' }
+		},
 		{ titulo: { pt: 'Framework NIAR', en: 'NIAR Framework' }, data: null },
 		{
 			titulo: { pt: 'Inauguração da sala segura', en: 'Secure room inauguration' },
@@ -148,6 +152,64 @@
 		}
 	];
 
+	const featuredMembers: Array<{
+		initials: string;
+		name: string;
+		role: Localized;
+		area: Localized;
+		photo?: string;
+		photoPos?: string;
+	}> = [
+		{
+			initials: 'WM',
+			name: 'Wagner Meira',
+			role: { pt: 'Coordenador Metas 3 e 7', en: 'Goals 3 and 7 Coordinator' },
+			area: { pt: 'Ciência da Computação', en: 'Computer Science' },
+			photo: wagnerImg
+		},
+		{
+			initials: 'MB',
+			name: 'Michele Brandão',
+			role: { pt: 'Coordenadora Meta 1', en: 'Goal 1 Coordinator' },
+			area: {
+				pt: 'Ciência da Computação e IA Responsável',
+				en: 'Computer Science and Responsible AI'
+			},
+			photo: micheleImg
+		},
+		{
+			initials: 'DG',
+			name: 'Dorgival Guedes',
+			role: { pt: 'Coordenador Meta 3', en: 'Goal 3 Coordinator' },
+			area: { pt: 'Sistemas Distribuídos', en: 'Distributed Systems' },
+			photo: dorgivalImg,
+			photoPos: '30% 20%'
+		},
+		{
+			initials: 'AP',
+			name: 'Ana Paula Silva',
+			role: { pt: 'Coordenadora Meta 2', en: 'Goal 2 Coordinator' },
+			area: { pt: 'Computação Social', en: 'Social Computing' },
+			photo: anaPaulaImg
+		},
+		{
+			initials: 'VA',
+			name: 'Virgílio Almeida',
+			role: { pt: 'Pesquisador', en: 'Researcher' },
+			area: {
+				pt: 'Ciência da Computação e IA Responsável',
+				en: 'Computer Science and Responsible AI'
+			},
+			photo: virgilioImg
+		},
+		{
+			initials: 'ML',
+			name: 'Mariangela Cherchiglia',
+			role: { pt: 'Coordenadora Meta 6', en: 'Goal 6 Coordinator' },
+			area: { pt: 'Saúde Pública', en: 'Public Health' }
+		}
+	];
+
 	// Coordinator label and name connector for the meta cards.
 	const coordLabel: Localized = { pt: 'Coordenação', en: 'Coordination' };
 	const andConnector: Localized = { pt: ' e ', en: ' and ' };
@@ -164,7 +226,8 @@
 			href={localizeHref(resolve('/'))}
 			class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 		>
-			<span aria-hidden="true">&larr;</span> {m.back_home()}
+			<span aria-hidden="true">&larr;</span>
+			{m.back_home()}
 		</a>
 
 		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">
@@ -180,7 +243,9 @@
 <section class="py-20">
 	<div class="mx-auto max-w-6xl space-y-20 px-6">
 		<div class="mx-auto max-w-3xl text-center">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.about_mission_eyebrow()}</p>
+			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+				{m.about_mission_eyebrow()}
+			</p>
 			<p class="mt-4 text-2xl leading-relaxed font-medium text-primary sm:text-3xl">
 				{m.about_mission_text()}
 			</p>
@@ -214,7 +279,9 @@
 <section class="bg-muted py-20">
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mx-auto mb-12 max-w-3xl text-center">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.about_metas_eyebrow()}</p>
+			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+				{m.about_metas_eyebrow()}
+			</p>
 			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
 				{m.about_metas_heading()}
 			</h2>
@@ -225,8 +292,7 @@
 		<div class="grid auto-rows-fr grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
 			{#each metas as meta, i (meta.num)}
 				<div
-					class="flex flex-col rounded-2xl bg-white p-8 ring-1 ring-border {i ===
-					metas.length - 1
+					class="flex flex-col rounded-2xl bg-white p-8 ring-1 ring-border {i === metas.length - 1
 						? 'sm:col-span-2 sm:w-[calc(50%-1rem)] sm:justify-self-center lg:col-span-1 lg:col-start-2 lg:w-auto'
 						: ''}"
 				>
@@ -268,11 +334,64 @@
 	</div>
 </section>
 
+<!-- Equipe -->
+<section id="equipe" class="py-20">
+	<div class="mx-auto max-w-6xl px-6">
+		<div class="mb-12 flex items-end justify-between">
+			<div>
+				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+					{m.about_team_eyebrow()}
+				</p>
+				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+					{m.about_team_heading()}
+				</h2>
+				<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
+					{m.about_team_text()}
+				</p>
+			</div>
+			<a
+				href={localizeHref(resolve('/team'))}
+				class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline"
+			>
+				{m.about_team_link()} <span aria-hidden="true">&rarr;</span>
+			</a>
+		</div>
+
+		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+			{#each featuredMembers as member (member.initials)}
+				<div
+					class="flex flex-col items-center rounded-lg bg-white p-8 text-center shadow-sm ring-1 ring-border transition-shadow hover:shadow-md"
+				>
+					{#if member.photo}
+						<img
+							src={member.photo}
+							alt={member.name}
+							class="h-20 w-20 rounded-full object-cover"
+							style="object-position: {member.photoPos ?? 'center 20%'}"
+						/>
+					{:else}
+						<div
+							class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-lg font-bold text-white"
+						>
+							{member.initials}
+						</div>
+					{/if}
+					<p class="mt-4 text-lg font-bold text-primary">{member.name}</p>
+					<p class="mt-1 text-sm font-semibold text-secondary">{t(member.role)}</p>
+					<p class="mt-1 text-sm text-muted-foreground">{t(member.area)}</p>
+				</div>
+			{/each}
+		</div>
+	</div>
+</section>
+
 <!-- Trajetória -->
-<section class="py-20">
+<section class="bg-muted py-20">
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mx-auto mb-16 max-w-3xl text-center">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">{m.about_trajectory_eyebrow()}</p>
+			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+				{m.about_trajectory_eyebrow()}
+			</p>
 			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
 				{m.about_trajectory_heading()}
 			</h2>
@@ -288,7 +407,7 @@
 				{#each trajetoria as marco, i (marco.titulo)}
 					<li class="relative grid grid-cols-1 sm:grid-cols-2 sm:gap-8">
 						<span
-							class="absolute top-1.5 left-4 h-3 w-3 -translate-x-1/2 rounded-full bg-secondary ring-4 ring-background sm:left-1/2"
+							class="absolute top-1.5 left-4 h-3 w-3 -translate-x-1/2 rounded-full bg-secondary ring-4 ring-muted sm:left-1/2"
 							aria-hidden="true"
 						></span>
 

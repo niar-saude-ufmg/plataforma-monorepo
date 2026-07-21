@@ -1,20 +1,17 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-
 	"nav_home": "Home",
 	"nav_about": "Sobre",
 	"nav_news": "Notícias",
 	"nav_publications": "Publicações",
 	"nav_team": "Equipe",
 	"nav_contact": "Contato",
-
 	"back_home": "Voltar à página inicial",
 	"meta_label": "Meta {meta}",
 	"contact_email_label": "E-mail",
 	"contact_location_label": "Localização",
 	"contact_location_value": "Universidade Federal de Minas Gerais",
 	"footer_address": "UFMG, Belo Horizonte",
-
 	"home_title": "Página Inicial",
 	"home_meta_desc": "NIAR - Site institucional",
 	"hero_eyebrow": "NIAR-Saúde",
@@ -22,18 +19,15 @@
 	"hero_about": "Pesquisa interdisciplinar que une computação e saúde, transformando dados em soluções confiáveis.",
 	"hero_cta_project": "Conheça o projeto",
 	"hero_cta_publications": "Ver publicações",
-
 	"home_about_eyebrow": "Nossos pilares",
 	"home_about_heading": "Inovação em dados e inteligência artificial responsável para a saúde",
 	"home_about_text": "O trabalho do NIAR-Saúde se sustenta em três pilares que unem computação e saúde: a <span class=\"font-semibold text-primary\">governança</span> para o uso responsável da inteligência artificial, os <span class=\"font-semibold text-primary\">dados e modelos</span> que dão confiabilidade às soluções, e as <span class=\"font-semibold text-primary\">aplicações</span> que levam tudo isso à prática em saúde.",
-
 	"pillar_governance_title": "Governança",
 	"pillar_governance_desc": "Estruturação de processos e práticas voltadas ao uso responsável da inteligência artificial, com foco em qualidade, gestão de riscos, transparência e governança contínua.",
 	"pillar_data_title": "Dados e Modelos",
 	"pillar_data_desc": "Desenvolvimento e operação de dados e modelos de inteligência artificial, abrangendo engenharia de dados, construção, avaliação e monitoramento contínuo de soluções.",
 	"pillar_apps_title": "Aplicações",
 	"pillar_apps_desc": "Aplicação de dados e modelos em contextos da saúde, com foco em impacto, custo-efetividade e suporte à tomada de decisão em diferentes cenários.",
-
 	"home_news_eyebrow": "Em destaque",
 	"home_news_heading": "Últimas notícias e eventos",
 	"news_read_more": "Ler matéria completa",
@@ -47,23 +41,20 @@
 	"news_category_post": "Comunicado",
 	"news_category_publication": "Publicação",
 	"news_category_partnership": "Parceria",
-
 	"home_pub_eyebrow": "Publicações",
 	"home_pub_heading": "Trabalhos recentes",
 	"home_pub_text": "Artigos e produções científicas recentes do grupo.",
 	"home_pub_link": "Ver todas as publicações",
 	"home_news_link": "Ver todas as notícias",
 	"pub_doi_short": "Acessar",
-
 	"home_team_eyebrow": "Equipe",
 	"home_team_heading": "Pesquisadores",
-	"home_team_text": "Um time multidisciplinar unindo computação, medicina, bioética e saúde pública.",
+	"home_team_text": "Conheça quem faz o NIAR-Saúde.",
+	"home_team_areas": "A equipe do NIAR-Saúde reúne profissionais das áreas de computação, medicina, bioética e saúde pública com um objetivo comum: promover o uso responsável da inteligência artificial na saúde.",
 	"home_team_link": "Ver equipe completa",
-
 	"home_contact_eyebrow": "Contato",
 	"home_contact_heading": "Fale conosco",
 	"home_contact_text": "Interessado em colaborar ou saber mais sobre nossas pesquisas?",
-
 	"about_title": "Sobre",
 	"about_meta_desc": "Conheça a NIAR e nossa missão",
 	"about_heading": "Sobre o NIAR-Saúde",
@@ -75,9 +66,12 @@
 	"about_metas_eyebrow": "Metas",
 	"about_metas_heading": "Áreas de atuação",
 	"about_metas_text": "O projeto se organiza em <span class=\"font-semibold text-primary\">sete metas</span> concomitantes, distribuídas em quatro tipos de atividade: processos e boas práticas, plataforma computacional, projetos piloto e disseminação.",
+	"about_team_eyebrow": "Equipe",
+	"about_team_heading": "Pesquisadores",
+	"about_team_text": "Um time multidisciplinar unindo computação, medicina, bioética e saúde pública.",
+	"about_team_link": "Ver equipe completa",
 	"about_trajectory_eyebrow": "Nossa trajetória",
 	"about_trajectory_heading": "História & Marcos",
-
 	"news_title": "Notícias",
 	"news_meta_desc": "Notícias, eventos e novidades do NIAR-Saúde",
 	"news_heading": "Notícias",
@@ -85,7 +79,6 @@
 	"news_empty": "Em breve, novidades por aqui.",
 	"news_filter_all": "Todas",
 	"news_back_to_list": "Voltar para notícias",
-
 	"pub_title": "Publicações",
 	"pub_meta_desc": "Publicações e produções científicas do NIAR-Saúde",
 	"pub_heading": "Publicações",
@@ -95,14 +88,12 @@
 	"pub_filter_all_years": "Todos os anos",
 	"pub_results_count": "{count} artigos encontrados",
 	"pub_doi_link": "Acessar",
-
 	"team_title": "Equipe",
 	"team_meta_desc": "Conheça a equipe do NIAR-Saúde",
 	"team_heading": "Nossa Equipe",
 	"team_subtitle": "Conheça todos os pesquisadores, estudantes e colaboradores que fazem parte do NIAR-Saúde.",
 	"team_toggle_role": "Por Função",
 	"team_toggle_meta": "Por Meta",
-
 	"nav_assistant": "Assistente",
 	"assistant_title": "Assistente",
 	"assistant_meta_desc": "Assistente de IA que responde com base nos documentos do NIAR-Saúde",

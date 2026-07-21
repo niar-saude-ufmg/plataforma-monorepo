@@ -46,10 +46,13 @@
 			href={localizeHref(resolve('/'))}
 			class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 		>
-			<span aria-hidden="true">&larr;</span> {m.back_home()}
+			<span aria-hidden="true">&larr;</span>
+			{m.back_home()}
 		</a>
 
-		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">{m.pub_heading()}</h1>
+		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+			{m.pub_heading()}
+		</h1>
 		<p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
 			{m.pub_subtitle()}
 		</p>
@@ -69,7 +72,9 @@
 					class="!h-auto rounded-full border-none bg-primary px-7 py-3 [&_svg]:text-white"
 				>
 					<span class="grid text-base font-normal text-white">
-						<span class="invisible col-start-1 row-start-1" aria-hidden="true">{m.pub_filter_all_metas()}</span>
+						<span class="invisible col-start-1 row-start-1" aria-hidden="true"
+							>{m.pub_filter_all_metas()}</span
+						>
 						<span class="col-start-1 row-start-1">{metaLabel}</span>
 					</span>
 				</Select.Trigger>
@@ -85,7 +90,9 @@
 					class="!h-auto rounded-full border-none bg-primary px-7 py-3 [&_svg]:text-white"
 				>
 					<span class="grid text-base font-normal text-white">
-						<span class="invisible col-start-1 row-start-1" aria-hidden="true">{m.pub_filter_all_years()}</span>
+						<span class="invisible col-start-1 row-start-1" aria-hidden="true"
+							>{m.pub_filter_all_years()}</span
+						>
 						<span class="col-start-1 row-start-1">{yearLabel}</span>
 					</span>
 				</Select.Trigger>
@@ -98,7 +105,9 @@
 			</Select.Root>
 		</div>
 
-		<p class="mt-4 text-sm text-muted-foreground">{m.pub_results_count({ count: filtered.length })}</p>
+		<p class="mt-4 text-sm text-muted-foreground">
+			{m.pub_results_count({ count: filtered.length })}
+		</p>
 
 		<div class="mt-6 flex flex-col gap-6">
 			{#each filtered as pub (pub.title)}
@@ -123,7 +132,8 @@
 							rel="noopener noreferrer"
 							class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 						>
-							{m.pub_doi_link()} <ExternalLink class="h-4 w-4" aria-hidden="true" />
+							{m.pub_doi_link()}
+							<ExternalLink class="h-4 w-4" aria-hidden="true" />
 						</a>
 						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					{/if}

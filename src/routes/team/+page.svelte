@@ -73,7 +73,10 @@
 		{
 			initials: 'AP',
 			name: 'Profa. Ana Paula Couto Silva',
-			info: { pt: 'Coordenadora Meta 2 · Computação Social', en: 'Goal 2 Coordinator · Social Computing' },
+			info: {
+				pt: 'Coordenadora Meta 2 · Computação Social',
+				en: 'Goal 2 Coordinator · Social Computing'
+			},
 			metas: ['2'],
 			group: 'Coordenação',
 			photo: anaPaulaImg
@@ -215,14 +218,20 @@
 		{
 			initials: 'CG',
 			name: 'Dra. Crizian Saar Gomes',
-			info: { pt: 'Desenvolvedora Plena · Saúde Pública', en: 'Mid-level Developer · Public Health' },
+			info: {
+				pt: 'Desenvolvedora Plena · Saúde Pública',
+				en: 'Mid-level Developer · Public Health'
+			},
 			metas: ['5'],
 			group: 'Pesquisadores'
 		},
 		{
 			initials: 'ES',
 			name: 'Dr. Eduardo Campos dos Santos',
-			info: { pt: 'Analista Finalístico · Mineração de Dados', en: 'Technical Analyst · Data Mining' },
+			info: {
+				pt: 'Analista Finalístico · Mineração de Dados',
+				en: 'Technical Analyst · Data Mining'
+			},
 			metas: ['3'],
 			group: 'Pesquisadores',
 			photo: eduardoImg
@@ -327,7 +336,10 @@
 		{
 			initials: 'JM',
 			name: 'Prof. Jorge Gustavo Velasquez Melendez',
-			info: { pt: 'Pesquisador · Epidemiologia Nutricional', en: 'Researcher · Nutritional Epidemiology' },
+			info: {
+				pt: 'Pesquisador · Epidemiologia Nutricional',
+				en: 'Researcher · Nutritional Epidemiology'
+			},
 			metas: ['5'],
 			group: 'Pesquisadores',
 			photo: jorgeImg
@@ -464,7 +476,10 @@
 		{
 			initials: 'GR',
 			name: 'Gregório Victor Rodrigues',
-			info: { pt: 'Doutorando · Medicina e Ciência de Dados', en: 'PhD Student · Medicine and Data Science' },
+			info: {
+				pt: 'Doutorando · Medicina e Ciência de Dados',
+				en: 'PhD Student · Medicine and Data Science'
+			},
 			metas: ['5'],
 			group: 'Doutorandos',
 			photo: gregorioImg
@@ -489,7 +504,10 @@
 		{
 			initials: 'BC',
 			name: 'Barbara Aguiar Carrato',
-			info: { pt: 'Mestranda · Enfermagem e Epidemiologia', en: "Master's Student · Nursing and Epidemiology" },
+			info: {
+				pt: 'Mestranda · Enfermagem e Epidemiologia',
+				en: "Master's Student · Nursing and Epidemiology"
+			},
 			metas: ['5'],
 			group: 'Mestrandos',
 			photo: barbaraImg
@@ -551,7 +569,10 @@
 		{
 			initials: 'IH',
 			name: 'Isadora Horta Rates',
-			info: { pt: 'Graduanda em Sistemas de Informação', en: 'Undergraduate in Information Systems' },
+			info: {
+				pt: 'Graduanda em Sistemas de Informação',
+				en: 'Undergraduate in Information Systems'
+			},
 			metas: ['3'],
 			group: 'Alunos de Iniciação Científica',
 			photo: isadoraHortaImg
@@ -636,7 +657,10 @@
 		{
 			initials: 'EC',
 			name: 'Eliete Guizilini Moreira de Carvalho',
-			info: { pt: 'Desenvolvedora Júnior · Ciência da Informação', en: 'Junior Developer · Information Science' },
+			info: {
+				pt: 'Desenvolvedora Júnior · Ciência da Informação',
+				en: 'Junior Developer · Information Science'
+			},
 			metas: ['6'],
 			group: 'Colaboradores Externos',
 			photo: elieteImg
@@ -644,7 +668,10 @@
 		{
 			initials: 'GV',
 			name: 'Guilherme Vezula Mateveli',
-			info: { pt: 'Desenvolvedor Sênior · Aplicações Web', en: 'Senior Developer · Web Applications' },
+			info: {
+				pt: 'Desenvolvedor Sênior · Aplicações Web',
+				en: 'Senior Developer · Web Applications'
+			},
 			metas: ['3'],
 			group: 'Colaboradores Externos',
 			photo: guilhermeImg,
@@ -733,10 +760,13 @@
 			href={localizeHref(resolve('/'))}
 			class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 		>
-			<span aria-hidden="true">&larr;</span> {m.back_home()}
+			<span aria-hidden="true">&larr;</span>
+			{m.back_home()}
 		</a>
 
-		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">{m.team_heading()}</h1>
+		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+			{m.team_heading()}
+		</h1>
 		<p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
 			{m.team_subtitle()}
 		</p>

@@ -59,10 +59,13 @@
 			href={localizeHref(resolve('/'))}
 			class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 		>
-			<span aria-hidden="true">&larr;</span> {m.back_home()}
+			<span aria-hidden="true">&larr;</span>
+			{m.back_home()}
 		</a>
 
-		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">{m.news_heading()}</h1>
+		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+			{m.news_heading()}
+		</h1>
 		<p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
 			{m.news_subtitle()}
 		</p>
@@ -154,7 +157,8 @@
 								rel="noopener noreferrer"
 								class="mt-1 inline-flex items-center gap-1.5 text-base font-medium text-secondary hover:underline"
 							>
-								{m.news_read_more()} <ExternalLink class="h-4 w-4" aria-hidden="true" />
+								{m.news_read_more()}
+								<ExternalLink class="h-4 w-4" aria-hidden="true" />
 							</a>
 						{/if}
 					</div>
@@ -209,7 +213,8 @@
 										rel="noopener noreferrer"
 										class="mt-auto inline-flex items-center gap-1.5 text-base font-medium text-secondary hover:underline"
 									>
-										{m.news_read_more()} <ExternalLink class="h-4 w-4" aria-hidden="true" />
+										{m.news_read_more()}
+										<ExternalLink class="h-4 w-4" aria-hidden="true" />
 									</a>
 								{/if}
 							</div>

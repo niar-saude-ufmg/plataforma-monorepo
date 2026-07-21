@@ -11,7 +11,13 @@
 	import { resolve } from '$app/paths';
 	import { Separator } from '$lib/components/ui/separator';
 	import { m } from '$lib/paraglide/messages';
-	import { locales, localizeHref, deLocalizeHref, getLocale, baseLocale } from '$lib/paraglide/runtime';
+	import {
+		locales,
+		localizeHref,
+		deLocalizeHref,
+		getLocale,
+		baseLocale
+	} from '$lib/paraglide/runtime';
 
 	let { children } = $props();
 
@@ -107,7 +113,7 @@
 						aria-current={active ? 'page' : undefined}
 						class="relative text-base font-semibold transition-colors after:absolute after:inset-x-0 after:-bottom-1.5 after:h-0.5 after:origin-left after:rounded-full after:bg-gradient-to-r after:from-primary after:to-secondary after:transition-transform after:duration-200 {active
 							? 'text-primary after:scale-x-100'
-							: 'text-primary/80 hover:text-primary after:scale-x-0'}"
+							: 'text-primary/80 after:scale-x-0 hover:text-primary'}"
 					>
 						{link.label()}
 					</a>
@@ -139,9 +145,7 @@
 	<footer class="relative z-10 bg-white text-foreground">
 		<Separator />
 		<div class="mx-auto max-w-6xl px-6 py-7">
-			<div
-				class="flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-start"
-			>
+			<div class="flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-start">
 				<div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 sm:justify-start">
 					<img src={footerLogo} alt="NIAR" class="h-8" />
 					<span class="text-border">|</span>
@@ -151,10 +155,7 @@
 					<img src={governoLogo} alt="Governo do Brasil" class="max-h-6 object-contain" />
 				</div>
 				<div class="flex flex-col items-center gap-1 text-sm sm:items-end sm:text-right">
-					<a
-						href="mailto:niar@dcc.ufmg.br"
-						class="font-medium text-secondary hover:underline"
-					>
+					<a href="mailto:niar@dcc.ufmg.br" class="font-medium text-secondary hover:underline">
 						niar@dcc.ufmg.br
 					</a>
 					<a

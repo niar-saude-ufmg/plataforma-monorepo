@@ -1,8 +1,5 @@
 <script lang="ts">
-	import EmblaCarousel, {
-		type EmblaCarouselType,
-		type EmblaOptionsType
-	} from 'embla-carousel';
+	import EmblaCarousel, { type EmblaCarouselType, type EmblaOptionsType } from 'embla-carousel';
 	import Autoplay from 'embla-carousel-autoplay';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
@@ -182,7 +179,8 @@
 											rel="noopener noreferrer"
 											class="mt-1 inline-flex items-center gap-1.5 text-base font-medium text-secondary hover:underline"
 										>
-											{m.news_read_more()} <ExternalLink class="h-4 w-4" aria-hidden="true" />
+											{m.news_read_more()}
+											<ExternalLink class="h-4 w-4" aria-hidden="true" />
 										</a>
 									{/if}
 								</div>

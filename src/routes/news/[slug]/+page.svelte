@@ -39,7 +39,8 @@
 			href={localizeHref(resolve('/news'))}
 			class="inline-flex items-center gap-1 text-sm font-medium text-secondary hover:underline"
 		>
-			<span aria-hidden="true">&larr;</span> {m.news_back_to_list()}
+			<span aria-hidden="true">&larr;</span>
+			{m.news_back_to_list()}
 		</a>
 
 		<div class="mt-6 flex items-center gap-3">
@@ -71,7 +72,7 @@
 				/>
 			</div>
 			{#if item.caption}
-				<figcaption class="mt-3 text-sm italic text-foreground/60">
+				<figcaption class="mt-3 text-sm text-foreground/60 italic">
 					{t(item.caption)}
 				</figcaption>
 			{/if}
