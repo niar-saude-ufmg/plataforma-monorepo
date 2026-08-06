@@ -52,6 +52,7 @@
 	import leonardoImg from '$lib/assets/staff/leonardo.jpeg';
 	import leticiaImg from '$lib/assets/staff/leticia.jpg';
 	import mariaCarvalhidoImg from '$lib/assets/staff/maria-carvalhido.jpeg';
+	import matheusImg from '$lib/assets/staff/matheus.jpeg';
 	import yasminImg from '$lib/assets/staff/yasmin.jpeg';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
@@ -632,7 +633,8 @@
 				en: 'Undergraduate in Information Systems · Responsible AI'
 			},
 			metas: ['1'],
-			group: 'Alunos de Iniciação Científica'
+			group: 'Alunos de Iniciação Científica',
+			photo: matheusImg
 		},
 		{
 			initials: 'SG',

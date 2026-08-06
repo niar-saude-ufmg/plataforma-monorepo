@@ -43,7 +43,20 @@
 	class="relative flex min-h-[70vh] items-center bg-cover bg-fixed text-primary-foreground"
 	style="background-image: url({homeImg}); background-position: center 20%;"
 >
-	<div class="absolute inset-0 bg-primary/70"></div>
+	<!-- Filtro orgânico: base sólida + manchas difusas nas cores do degradê da logo.
+	     transform-gpu/will-change promovem o filtro a uma camada de composição
+	     própria: o blur das manchas é rasterizado uma vez em vez de a cada frame de
+	     scroll, que é o que travava a página por causa do bg-fixed da section. -->
+	<div
+		class="absolute inset-0 transform-gpu overflow-hidden will-change-transform"
+		aria-hidden="true"
+	>
+		<div class="absolute inset-0 bg-primary/60"></div>
+		<div class="blob blob-a"></div>
+		<div class="blob blob-b"></div>
+		<div class="blob blob-c"></div>
+		<div class="blob blob-d"></div>
+	</div>
 	<div class="relative mx-auto w-full max-w-6xl px-6 py-16 text-center">
 		<p class="text-sm font-semibold tracking-widest text-white uppercase">
 			{m.hero_eyebrow()}
@@ -289,3 +302,53 @@
 		</div>
 	</div>
 </section>
+
+<style>
+	/* Manchas grandes e desfocadas que espalham as cores da logo sobre o filtro
+	   azul do hero. Estáticas — o desfoque é o que dá o aspecto orgânico. */
+	.blob {
+		position: absolute;
+		border-radius: 50%;
+		filter: blur(90px);
+	}
+
+	/* Ciano no alto, deslocado para a esquerda para não cair sobre o rosto da médica. */
+	.blob-a {
+		top: -25%;
+		left: 18%;
+		width: 65%;
+		height: 100%;
+		background: radial-gradient(circle, var(--azul-ciano) 0%, transparent 70%);
+		opacity: 0.5;
+	}
+
+	/* Azul profundo ancorando a base, onde ficam os botões. */
+	.blob-b {
+		bottom: -35%;
+		left: -5%;
+		width: 75%;
+		height: 90%;
+		background: radial-gradient(circle, var(--azul-profundo) 0%, transparent 70%);
+		opacity: 0.7;
+	}
+
+	/* Respiro de ciano atrás do texto, para o centro não ficar chapado. */
+	.blob-c {
+		top: 15%;
+		left: 5%;
+		width: 45%;
+		height: 65%;
+		background: radial-gradient(circle, var(--azul-ciano) 0%, transparent 65%);
+		opacity: 0.28;
+	}
+
+	/* Canto superior esquerdo mais denso, quebrando a simetria. */
+	.blob-d {
+		top: -20%;
+		left: -15%;
+		width: 50%;
+		height: 80%;
+		background: radial-gradient(circle, var(--azul-profundo) 0%, transparent 70%);
+		opacity: 0.6;
+	}
+</style>
