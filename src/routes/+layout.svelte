@@ -47,7 +47,7 @@
 		{ href: '/news' as const, hash: '', label: () => m.nav_news() },
 		{ href: '/publications' as const, hash: '', label: () => m.nav_publications() },
 		{ href: '/team' as const, hash: '', label: () => m.nav_team() },
-		{ href: '/assistente' as const, hash: '', label: () => m.nav_assistant() },
+		{ href: '/assistant' as const, hash: '', label: () => m.nav_assistant() },
 		{ href: '/' as const, hash: '#contato', label: () => m.nav_contact() }
 	];
 
