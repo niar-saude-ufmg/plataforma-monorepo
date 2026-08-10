@@ -3,6 +3,8 @@
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { m } from '$lib/paraglide/messages';
 	import { env } from '$env/dynamic/public';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import { corpus, corpusTypeOrder, type CorpusDocType } from '$lib/data/corpus';
 	import Send from 'lucide-svelte/icons/send';
 	import Loader from 'lucide-svelte/icons/loader-circle';
 	import FileText from 'lucide-svelte/icons/file-text';
@@ -13,6 +15,23 @@
 	// Base URL da API Python (rag-api). Em dev cai no default local; em produção
 	// defina PUBLIC_RAG_API_URL no ambiente de build.
 	const API_BASE = env.PUBLIC_RAG_API_URL ?? 'http://localhost:8000';
+
+	// Sem PUBLIC_RAG_API_URL definida, a página entra em modo "em breve": campo e
+	// sugestões desabilitados e NENHUMA requisição sai do navegador.
+	//
+	// Na prática isso separa dev de produção. O `.env.development` define a variável
+	// e o Vite só o carrega em modo dev, então:
+	//   npm run dev   -> variável definida  -> chat normal contra localhost:8000
+	//   npm run build -> variável ausente   -> modo "em breve"
+	//
+	// O motivo é o adapter estático: sem essa trava, o fallback localhost:8000 acima
+	// seria embutido no bundle publicado, e cada visitante mandaria a própria pergunta
+	// para a porta 8000 da MÁQUINA DELE — que falha sempre e, se houver algo escutando
+	// ali, entrega o texto digitado a esse serviço.
+	//
+	// Quando a API for publicada, defina PUBLIC_RAG_API_URL no ambiente de build
+	// apontando para ela: o modo normal volta sozinho, sem mexer no código.
+	const apiConfigured = Boolean(env.PUBLIC_RAG_API_URL);
 
 	type Fonte = {
 		titulo: string;
@@ -40,6 +59,19 @@
 	// Aviso compacto com accordion: fechado mostra só o essencial; "Saiba mais"
 	// expande os detalhes (origem, documentos, verificação) no próprio bloco.
 	let showNotice = $state(false);
+
+	// O acervo tem dezenas de documentos, então o aviso mostra só um resumo e a
+	// lista completa vai para um diálogo, agrupada por tipo.
+	const docTypeLabel: Record<CorpusDocType, () => string> = {
+		legislation: m.assistant_doc_type_legislation,
+		standard: m.assistant_doc_type_standard,
+		institutional: m.assistant_doc_type_institutional,
+		certification: m.assistant_doc_type_certification
+	};
+
+	const corpusGroups = corpusTypeOrder
+		.map((type) => ({ type, docs: corpus.filter((doc) => doc.type === type) }))
+		.filter((group) => group.docs.length > 0);
 
 	// Perguntas de exemplo mostradas no estado vazio (chips clicáveis).
 	const suggestions = [
@@ -83,7 +115,7 @@
 
 	async function send(overrideText?: string) {
 		const pergunta = (overrideText ?? input).trim();
-		if (!pergunta || loading) return;
+		if (!pergunta || loading || !apiConfigured) return;
 
 		errored = false;
 		messages.push({ role: 'user', text: pergunta });
@@ -169,7 +201,16 @@
 							<Sparkles class="size-7" aria-hidden="true" />
 						</div>
 						<h2 class="mt-4 text-xl font-semibold text-primary">{m.assistant_empty_title()}</h2>
-						<p class="mt-2 max-w-md text-muted-foreground">{m.assistant_empty_subtitle()}</p>
+						{#if apiConfigured}
+							<p class="mt-2 max-w-md text-muted-foreground">{m.assistant_empty_subtitle()}</p>
+						{:else}
+							<span
+								class="mt-3 inline-flex items-center rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold tracking-wide text-secondary uppercase"
+							>
+								{m.assistant_unavailable_badge()}
+							</span>
+							<p class="mt-3 max-w-md text-muted-foreground">{m.assistant_unavailable_text()}</p>
+						{/if}
 
 						<div class="mt-5 flex w-full max-w-2xl flex-col gap-2.5">
 							<span class="sr-only">{m.assistant_suggestions_label()}</span>
@@ -177,7 +218,8 @@
 								<button
 									type="button"
 									onclick={() => askSuggestion(suggestion())}
-									class="group flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 text-left text-sm text-foreground transition-colors hover:border-secondary/50 hover:bg-muted"
+									disabled={!apiConfigured}
+									class="group flex items-center gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3 text-left text-sm text-foreground transition-colors enabled:hover:border-secondary/50 enabled:hover:bg-muted disabled:cursor-default disabled:opacity-60"
 								>
 									<Sparkles
 										class="size-4 shrink-0 text-secondary transition-transform group-hover:scale-110"
@@ -281,12 +323,15 @@
 						bind:value={input}
 						onkeydown={onKeydown}
 						rows="1"
-						placeholder={m.assistant_input_placeholder()}
-						class="max-h-[200px] min-h-[2.5rem] flex-1 resize-none bg-transparent px-3 py-2 text-foreground outline-none placeholder:text-muted-foreground/60"
+						disabled={!apiConfigured}
+						placeholder={apiConfigured
+							? m.assistant_input_placeholder()
+							: m.assistant_unavailable_placeholder()}
+						class="max-h-[200px] min-h-[2.5rem] flex-1 resize-none bg-transparent px-3 py-2 text-foreground outline-none placeholder:text-muted-foreground/60 disabled:cursor-not-allowed"
 					></textarea>
 					<button
 						onclick={() => send()}
-						disabled={loading || !input.trim()}
+						disabled={loading || !input.trim() || !apiConfigured}
 						aria-label={m.assistant_send()}
 						class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-muted-foreground disabled:shadow-none"
 					>
@@ -337,20 +382,64 @@
 							<h3 class="mt-4 text-xs font-semibold tracking-wide text-primary uppercase">
 								{m.assistant_notice_docs_title()}
 							</h3>
-							<ul class="mt-2 space-y-1 text-muted-foreground">
-								<li class="flex gap-2">
-									<span aria-hidden="true" class="text-secondary">&bull;</span>
-									<span>{m.assistant_notice_doc_1()}</span>
-								</li>
-								<li class="flex gap-2">
-									<span aria-hidden="true" class="text-secondary">&bull;</span>
-									<span>{m.assistant_notice_doc_2()}</span>
-								</li>
-								<li class="flex gap-2">
-									<span aria-hidden="true" class="text-secondary">&bull;</span>
-									<span>{m.assistant_notice_doc_3()}</span>
-								</li>
-							</ul>
+							<p class="mt-2 leading-relaxed text-muted-foreground">
+								{m.assistant_docs_summary({ total: corpus.length })}
+							</p>
+
+							<Dialog.Root>
+								<Dialog.Trigger
+									class="mt-1 font-medium text-secondary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+								>
+									{m.assistant_docs_open()}
+								</Dialog.Trigger>
+								<Dialog.Content class="max-h-[85vh] gap-3 p-5 sm:max-w-2xl">
+									<Dialog.Header>
+										<Dialog.Title class="text-base font-semibold text-primary">
+											{m.assistant_docs_dialog_title()}
+										</Dialog.Title>
+										<Dialog.Description class="text-muted-foreground">
+											{m.assistant_docs_dialog_desc({ total: corpus.length })}
+										</Dialog.Description>
+									</Dialog.Header>
+
+									<!-- A lista é longa: rola dentro do diálogo em vez de esticar a página. -->
+									<div class="-mr-2 max-h-[60vh] overflow-y-auto pr-2">
+										{#each corpusGroups as group (group.type)}
+											<section class="mt-4 first:mt-0">
+												<h4
+													class="text-xs font-semibold tracking-wide text-primary uppercase"
+													id="corpus-group-{group.type}"
+												>
+													{docTypeLabel[group.type]()} ({group.docs.length})
+												</h4>
+												<ul
+													class="mt-2 space-y-2 text-muted-foreground"
+													aria-labelledby="corpus-group-{group.type}"
+												>
+													{#each group.docs as doc (doc.url)}
+														<li class="flex gap-2">
+															<span aria-hidden="true" class="text-secondary">&bull;</span>
+															<span class="min-w-0">
+																<a
+																	href={doc.url}
+																	target="_blank"
+																	rel="noopener noreferrer"
+																	class="font-medium text-primary hover:underline"
+																>
+																	{doc.title}
+																</a>
+																<span class="block text-xs">
+																	{doc.author}{doc.year ? ` — ${doc.year}` : ''}
+																</span>
+															</span>
+														</li>
+													{/each}
+												</ul>
+											</section>
+										{/each}
+									</div>
+								</Dialog.Content>
+							</Dialog.Root>
 
 							<p class="mt-4 text-muted-foreground">{m.assistant_notice_sources()}</p>
 						</div>

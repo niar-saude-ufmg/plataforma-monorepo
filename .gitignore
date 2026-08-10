@@ -16,15 +16,18 @@ Thumbs.db
 __pycache__/
 *.py[oc]
 rag-api/.venv/
-rag-api/data/processed/embeddings_backup.jsonl
 rag-api/.langgraph_api/
+
+# rag-api corpus: PDFs and chunks live in the niar-rag-prototype repo.
+rag-api/docs/
+rag-api/data/
 
 # Env
 .env
 .env.*
 !.env.example
-!.env.test
+# Local rag-api URL only, no secrets. Vite loads it in dev mode only.
+!.env.development
 
 # Vite
-vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
