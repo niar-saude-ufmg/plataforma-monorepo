@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Search from 'lucide-svelte/icons/search';
+	import { pageTitle } from '$lib/seo';
 	import ExternalLink from 'lucide-svelte/icons/external-link';
 	import * as Select from '$lib/components/ui/select';
 	import { publications } from '$lib/data/publications';
@@ -36,7 +37,7 @@
 </script>
 
 <svelte:head>
-	<title>{m.pub_title()}</title>
+	<title>{pageTitle(m.pub_title())}</title>
 	<meta name="description" content={m.pub_meta_desc()} />
 </svelte:head>
 

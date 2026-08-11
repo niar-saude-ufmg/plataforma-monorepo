@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { pageTitle } from '$lib/seo';
 	import Lock from 'lucide-svelte/icons/lock';
 	import GraduationCap from 'lucide-svelte/icons/graduation-cap';
 	import Server from 'lucide-svelte/icons/server';
@@ -16,6 +17,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { t, type Localized } from '$lib/i18n';
+	import ResponsibleAiDiagram from '$lib/components/ResponsibleAiDiagram.svelte';
 
 	const objetivos: Array<{ icon: typeof Lock; title: Localized; description: Localized }> = [
 		{
@@ -216,7 +218,7 @@
 </script>
 
 <svelte:head>
-	<title>{m.about_title()}</title>
+	<title>{pageTitle(m.about_title())}</title>
 	<meta name="description" content={m.about_meta_desc()} />
 </svelte:head>
 
@@ -239,8 +241,9 @@
 	</div>
 </section>
 
-<!-- Missão e Objetivos -->
-<section class="py-20">
+<!-- Missão e diagrama: seguem no mesmo cinza do topo, que só termina quando
+     começa "Como atuamos". -->
+<section class="py-20" style="background-color: rgb(245, 245, 245);">
 	<div class="mx-auto max-w-6xl space-y-20 px-6">
 		<div class="mx-auto max-w-3xl text-center">
 			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
@@ -251,6 +254,15 @@
 			</p>
 		</div>
 
+		<!-- Define "IA responsável" antes de qualquer conteúdo operacional: os blocos
+		     seguintes (objetivos, metas) pressupõem o conceito. -->
+		<ResponsibleAiDiagram />
+	</div>
+</section>
+
+<!-- Objetivos: primeira seção branca da página. -->
+<section class="py-20">
+	<div class="mx-auto max-w-6xl px-6">
 		<div>
 			<div class="text-center">
 				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">

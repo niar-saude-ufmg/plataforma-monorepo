@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Calendar from 'lucide-svelte/icons/calendar';
+	import { pageTitle } from '$lib/seo';
 	import { resolve } from '$app/paths';
 	import { m } from '$lib/paraglide/messages';
 	import { localizeHref } from '$lib/paraglide/runtime';
@@ -29,7 +30,7 @@
 </script>
 
 <svelte:head>
-	<title>{t(item.title)}</title>
+	<title>{pageTitle(t(item.title))}</title>
 	<meta name="description" content={t(item.excerpt)} />
 </svelte:head>
 

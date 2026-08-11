@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Newspaper from 'lucide-svelte/icons/newspaper';
+	import { pageTitle } from '$lib/seo';
 	import Calendar from 'lucide-svelte/icons/calendar';
 	import ExternalLink from 'lucide-svelte/icons/external-link';
 	import { resolve } from '$app/paths';
@@ -49,7 +50,7 @@
 </script>
 
 <svelte:head>
-	<title>{m.news_title()}</title>
+	<title>{pageTitle(m.news_title())}</title>
 	<meta name="description" content={m.news_meta_desc()} />
 </svelte:head>
 
