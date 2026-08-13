@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { pageTitle } from '$lib/seo';
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { m } from '$lib/paraglide/messages';
 	import { env } from '$env/dynamic/public';
@@ -52,9 +53,15 @@
 	let loading = $state(false);
 	let errored = $state(false);
 
-	// Dois estados para o cartão: inicial (compacto, só apresenta o assistente) e
-	// de conversa (mais alto/expansível para comportar mensagens, resposta e fontes).
-	const hasConversation = $derived(messages.length > 0 || loading);
+	// O cartão acompanha o conteúdo, e o bloco de boas-vindas é mais alto que a primeira
+	// pergunta — sem um piso, ele encolheria ao sair do estado vazio. Medimos a altura do
+	// estado inicial e a usamos como min-height dali em diante: o cartão só cresce.
+	let cardHeight = $state(0);
+	let initialCardHeight = $state(0);
+
+	$effect(() => {
+		if (messages.length === 0 && !loading && cardHeight > 0) initialCardHeight = cardHeight;
+	});
 
 	// Aviso compacto com accordion: fechado mostra só o essencial; "Saiba mais"
 	// expande os detalhes (origem, documentos, verificação) no próprio bloco.
@@ -157,7 +164,7 @@
 </script>
 
 <svelte:head>
-	<title>{m.assistant_title()}</title>
+	<title>{pageTitle(m.assistant_title())}</title>
 	<meta name="description" content={m.assistant_meta_desc()} />
 </svelte:head>
 
@@ -181,12 +188,13 @@
 			{m.assistant_subtitle()}
 		</p>
 
-		<!-- Cartão do chat: acompanha o conteúdo (compacto quando vazio) e só cresce/rola
-		     quando a conversa passa da altura máxima. -->
+		<!-- Cartão do chat: nasce do tamanho do conteúdo e cresce com a conversa até o
+		     máximo, sem nunca encolher (piso = altura do estado inicial). O que passar do
+		     máximo rola dentro da área de mensagens. -->
 		<div
-			class="mt-8 flex {hasConversation
-				? 'min-h-[440px]'
-				: 'min-h-[256px]'} max-h-[min(65vh,560px)] w-full max-w-4xl flex-col self-center overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-[min-height] duration-300"
+			bind:clientHeight={cardHeight}
+			style:min-height={initialCardHeight ? `min(${initialCardHeight}px, 65vh, 560px)` : null}
+			class="mt-8 flex max-h-[min(65vh,560px)] w-full max-w-4xl flex-col self-center overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-[height] duration-300"
 		>
 			<!-- Conversa: rola internamente para o input ficar sempre visível -->
 			<div
