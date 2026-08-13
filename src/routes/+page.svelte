@@ -3,8 +3,7 @@
 	import BrainCircuit from 'lucide-svelte/icons/brain-circuit';
 	import HeartHandshake from 'lucide-svelte/icons/heart-handshake';
 	import ShieldCheck from 'lucide-svelte/icons/shield-check';
-	import Mail from 'lucide-svelte/icons/mail';
-	import MapPin from 'lucide-svelte/icons/map-pin';
+	import MessageCircle from 'lucide-svelte/icons/message-circle';
 	import ExternalLink from 'lucide-svelte/icons/external-link';
 	import homeImg from '$lib/assets/home-img.jpg';
 	import wagnerImg from '$lib/assets/staff/wagner-meira.jpg';
@@ -329,65 +328,52 @@
 	</div>
 </section>
 
-<!-- Contato -->
-<section id="contato" class="relative z-10 bg-gradient-to-b from-white to-muted pt-14 pb-20">
-	<div class="mx-auto max-w-6xl px-6">
-		<div class="mb-12">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
-				{m.home_contact_eyebrow()}
-			</p>
-			<!-- Mesmo cabeçalho com link à direita das seções de Notícias, Publicações e Equipe:
-			     os cartões abaixo dão o essencial, e quem quer escrever de fato vai à página. -->
-			<div class="mt-2 flex items-end justify-between gap-6">
-				<h2 class="text-[1.75rem] font-bold tracking-tight text-primary sm:text-[2rem]">
-					{m.home_contact_heading()}
-				</h2>
-				<a
-					href={localizeHref(resolve('/contact'))}
-					class="inline-flex shrink-0 items-center gap-1 text-base font-medium text-secondary hover:underline"
-				>
-					{m.home_contact_link()} <span aria-hidden="true">&rarr;</span>
-				</a>
+<!-- Fechamento: assistente.
+
+     Faixa, e não seção. Não segue o PADRÃO DAS SEÇÕES acima de propósito: as cinco
+     seções anteriores apresentam o núcleo (o que acontece, como atua, o que produz,
+     quem faz) e esta encerra com uma ação — depois de "Nossa equipe", que é a parte
+     humana, a home termina convidando a interagir com o projeto. Uma sexta seção no
+     mesmo formato diluiria isso numa lista de seis assuntos equivalentes.
+
+     Por isso também não tem cartão dentro, nem captura do chat, nem explicação de como
+     a IA funciona: é uma chamada de ~290px de altura, não uma apresentação do produto.
+     Quem quiser saber mais clica.
+
+     Sangra de borda a borda em vez de virar um bloco arredondado dentro do container: é
+     o que a faz ler como fecho da página. Fundo branco, igual ao das seções: o corte para
+     o azul-marinho do footer logo abaixo é o próprio fim da página. -->
+<section class="relative z-10 bg-background py-16">
+	<div
+		class="mx-auto flex max-w-6xl flex-col gap-8 px-6 sm:flex-row sm:items-center sm:justify-between sm:gap-12"
+	>
+		<!-- `max-w-2xl`, e não `xl`: o título e o parágrafo ficaram mais longos, e numa coluna
+		     estreita passavam a ocupar cinco linhas — a faixa deixava de ser faixa. Ainda sobra
+		     largura para o botão na mesma linha. -->
+		<div class="max-w-2xl">
+			<div class="flex items-center gap-2">
+				<MessageCircle class="h-4 w-4 text-secondary" aria-hidden="true" />
+				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+					{m.home_assistant_eyebrow()}
+				</p>
 			</div>
-			<p class="mt-2 max-w-2xl text-lg leading-normal text-muted-foreground">
-				{m.home_contact_text()}
+			<h2 class="mt-2 text-[1.75rem] font-bold tracking-tight text-primary sm:text-[2rem]">
+				{m.home_assistant_heading()}
+			</h2>
+			<p class="mt-2 text-lg leading-normal text-muted-foreground">
+				{m.home_assistant_text()}
 			</p>
 		</div>
 
-		<div class="grid gap-6 sm:grid-cols-2">
-			<div class="flex items-center gap-5 rounded-lg bg-white p-6 ring-1 ring-border">
-				<div
-					class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary"
-				>
-					<Mail class="h-7 w-7 text-primary-foreground" />
-				</div>
-				<div>
-					<p class="font-bold text-primary">{m.contact_email_label()}</p>
-					<a href="mailto:niar@dcc.ufmg.br" class="text-sm text-secondary hover:underline">
-						niar@dcc.ufmg.br
-					</a>
-				</div>
-			</div>
-
-			<div class="flex items-center gap-5 rounded-lg bg-white p-6 ring-1 ring-border">
-				<div
-					class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary"
-				>
-					<MapPin class="h-7 w-7 text-primary-foreground" />
-				</div>
-				<div>
-					<p class="font-bold text-primary">{m.contact_location_label()}</p>
-					<a
-						href="https://www.google.com/maps/place/Universidade+Federal+de+Minas+Gerais/@-19.8669704,-43.9620077,17z/data=!3m1!4b1!4m6!3m5!1s0xa690ee806be67d:0xbb1391cea62811dd!8m2!3d-19.8669704!4d-43.9620077!16zL20vMDIxejJr"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="text-sm text-secondary hover:underline"
-					>
-						{m.contact_location_value()}
-					</a>
-				</div>
-			</div>
-		</div>
+		<!-- Pílula cheia, como o CTA primário do hero: é a única ação da faixa, então não
+		     precisa dividir atenção com um secundário. -->
+		<a
+			href={localizeHref(resolve('/assistant'))}
+			class="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-primary px-8 py-4 text-base font-semibold text-white transition-transform duration-200 hover:-translate-y-[3px] sm:self-auto"
+		>
+			{m.home_assistant_cta()}
+			<span aria-hidden="true">&rarr;</span>
+		</a>
 	</div>
 </section>
 
