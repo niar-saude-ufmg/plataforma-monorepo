@@ -578,6 +578,73 @@
 	   estado mora aqui em vez de sair de um :hover em cada elemento. */
 	let ativa: string | null = $state(null);
 
+	/* MORPH DA BOLHA, EM JAVASCRIPT
+	   O caminho de uma peça e o da bolha dela têm a MESMA lista de comandos (ver PARTES),
+	   então basta interpolar número a número para um virar o outro. Fazíamos isso pelo
+	   CSS, com `transition: d`, até descobrir que o Safari não implementa `d` como
+	   propriedade — lá a peça acendia mas nunca virava círculo. Em JS funciona em todo
+	   navegador, e de quebra a duração e a suavização ficam onde dá para lê-las. */
+	const MORPH_MS = 320;
+
+	/** Quebra um caminho em pedaços: letras de comando e números, na ordem em que estão. */
+	function fatiar(caminho: string): string[] {
+		return caminho.match(/[A-Za-z]|-?\d+(?:\.\d+)?/g) ?? [];
+	}
+
+	const formas = regioes.map((r) => ({ de: fatiar(r.d), para: fatiar(r.bolha) }));
+
+	function caminhoEm(indice: number, t: number): string {
+		const { de, para } = formas[indice];
+		let saida = '';
+		for (let k = 0; k < de.length; k++) {
+			const n = Number(de[k]);
+			saida += (Number.isNaN(n) ? de[k] : (n + (Number(para[k]) - n) * t).toFixed(1)) + ' ';
+		}
+		return saida;
+	}
+
+	/** Aceleração no começo, freio no fim — o mesmo espírito da curva que o CSS usava. */
+	const suavizar = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+
+	let pinceis: Array<SVGPathElement | null> = $state([]);
+	const progresso = regioes.map(() => 0);
+	let quadro: number | null = null;
+	let instante = 0;
+
+	function passo(agora: number) {
+		const dt = instante ? agora - instante : 16;
+		instante = agora;
+		let andando = false;
+		regioes.forEach((reg, i) => {
+			const alvo = ativa === reg.id ? 1 : 0;
+			if (progresso[i] === alvo) return;
+			const direcao = Math.sign(alvo - progresso[i]);
+			const novo = progresso[i] + (direcao * dt) / MORPH_MS;
+			progresso[i] = direcao > 0 ? Math.min(novo, 1) : Math.max(novo, 0);
+			pinceis[i]?.setAttribute('d', caminhoEm(i, suavizar(progresso[i])));
+			andando = true;
+		});
+		quadro = andando ? requestAnimationFrame(passo) : null;
+		if (!andando) instante = 0;
+	}
+
+	/** O sistema pediu menos movimento? Então a peça acende, mas não vira bolha. */
+	const semMovimento = () =>
+		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	$effect(() => {
+		ativa; // é a mudança dela que acorda o motor
+		if (semMovimento()) return;
+		if (quadro === null) {
+			instante = 0;
+			quadro = requestAnimationFrame(passo);
+		}
+	});
+
+	$effect(() => () => {
+		if (quadro !== null) cancelAnimationFrame(quadro);
+	});
+
 	/* Rodízio de destaque: de tempos em tempos uma peça sorteada se acende sozinha, para
 	   contar que o desenho responde ao mouse. Só roda depois que o diagrama aparece na
 	   tela, cala enquanto o mouse está numa peça e volta quando ele sai. */
@@ -742,14 +809,14 @@
 			class="venn-topo pointer-events-none absolute inset-0 h-full w-full"
 			aria-hidden="true"
 		>
-			{#each regioes as reg (reg.id)}
+			{#each regioes as reg, i (reg.id)}
 				<path
+					bind:this={pinceis[i]}
 					class="venn-regiao"
 					class:ativa={ativa === reg.id}
 					d={reg.d}
 					fill={reg.fill}
 					stroke="var(--azul-profundo)"
-					style="--forma: path('{reg.d}'); --bolha: path('{reg.bolha}')"
 				/>
 			{/each}
 		</svg>
@@ -893,7 +960,6 @@
 		stroke-opacity: 0;
 		stroke-width: 1.5;
 		transition:
-			d 320ms cubic-bezier(0.2, 0.7, 0.3, 1),
 			fill-opacity 180ms ease,
 			stroke-opacity 180ms ease;
 	}
@@ -943,16 +1009,13 @@
 	}
 
 	.venn-regiao.ativa {
-		d: var(--bolha);
 		fill-opacity: 1;
 		stroke-opacity: 0.3;
 		filter: drop-shadow(0 6px 18px rgb(15 31 91 / 0.3));
 	}
 
 	.venn-inter {
-		transition:
-			width 320ms cubic-bezier(0.2, 0.7, 0.3, 1),
-			scale 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
+		transition: scale 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
 	}
 
 	.venn-dim.ativa,
@@ -971,12 +1034,6 @@
 			transition-duration: 1ms;
 		}
 
-		/* Sem morph: a bolha vira a própria forma da peça, senão o realce viraria um pulo
-		   de uma forma para outra — justamente o que quem pediu menos movimento não quer. */
-		.venn-regiao.ativa {
-			--bolha: var(--forma);
-		}
-
 		.venn-dim.ativa,
 		.venn-inter.ativa,
 		.venn-trio.ativa {
@@ -991,9 +1048,7 @@
 	   demais e quatro dos cinco rótulos passam da borda da pétala. */
 	.venn-dim {
 		width: 18cqw;
-		transition:
-			width 320ms cubic-bezier(0.2, 0.7, 0.3, 1),
-			scale 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
+		transition: scale 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
 	}
 
 	.venn-dim :global(.venn-icon) {
@@ -1012,16 +1067,16 @@
 		letter-spacing: 0.05em;
 	}
 
-	/* A descrição só existe dentro da bolha, que é larga o bastante para ela: a peça
-	   realçada abre para 24cqw e o texto entra com um fade. Fora do realce ela continua
-	   na lista abaixo, que é a versão lida por leitores de tela. */
+	/* A descrição só existe dentro da bolha, que é larga o bastante para ela. Ela é MAIS
+	   LARGA que o rótulo e vaza para os lados com margem negativa, em vez de esticar a
+	   caixa: animar a largura da caixa fazia o título requebrar a cada quadro, e o texto
+	   ficava se acomodando durante toda a transição. Assim a caixa não muda de largura
+	   nunca, e o único movimento é o fade da frase. */
 	.venn-desc {
 		display: none;
-		font-size: 1.5cqw;
-	}
-
-	.venn-dim.ativa {
 		width: 24cqw;
+		margin-inline: -3cqw;
+		font-size: 1.5cqw;
 	}
 
 	.venn-dim.ativa .venn-desc {
@@ -1050,13 +1105,13 @@
 		font-size: 1.75cqw;
 	}
 
+	/* Mesma ideia da descrição das pétalas: a frase é mais larga que a chave e vaza para
+	   os lados, em vez de esticar a caixa e requebrar o texto durante a transição. */
 	.venn-inter-frase {
 		display: none;
-		font-size: 1.4cqw;
-	}
-
-	.venn-inter.ativa {
 		width: 22cqw;
+		margin-inline: -2.5cqw;
+		font-size: 1.4cqw;
 	}
 
 	.venn-inter.ativa .venn-inter-frase {
@@ -1070,9 +1125,7 @@
 	   duas linhas, e a frase inteira espera a bolha. */
 	.venn-trio {
 		width: 11cqw;
-		transition:
-			width 320ms cubic-bezier(0.2, 0.7, 0.3, 1),
-			scale 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
+		transition: scale 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
 	}
 
 	.venn-trio-chave {
@@ -1081,12 +1134,13 @@
 
 	.venn-trio-frase {
 		display: none;
+		width: 22cqw;
+		margin-inline: -5.5cqw;
 		font-size: 1.4cqw;
 	}
 
 	.venn-trio.ativa {
 		z-index: 3;
-		width: 22cqw;
 		scale: 1.05;
 	}
 
@@ -1133,10 +1187,6 @@
 			width: 18cqw;
 		}
 
-		.venn-inter.ativa {
-			width: 24cqw;
-		}
-
 		.venn-inter-chave {
 			font-size: 2.2cqw;
 		}
@@ -1147,10 +1197,6 @@
 
 		.venn-trio {
 			width: 13cqw;
-		}
-
-		.venn-trio.ativa {
-			width: 24cqw;
 		}
 
 		.venn-trio-chave {
