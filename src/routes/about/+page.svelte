@@ -13,7 +13,6 @@
 	import dorgivalImg from '$lib/assets/staff/Dorgival-2.jpg';
 	import antonioImg from '$lib/assets/staff/antonio.jpeg';
 	import deborahImg from '$lib/assets/staff/deborah.jpeg';
-	import virgilioImg from '$lib/assets/staff/virgilio.jpeg';
 	import { m } from '$lib/paraglide/messages';
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { t, type Localized } from '$lib/i18n';
@@ -118,7 +117,7 @@
 		},
 		{
 			num: '4',
-			title: { pt: 'IA para eletrocardiograma (IA-ECG)', en: 'AI for electrocardiogram (AI-ECG)' },
+			title: { pt: 'IA para eletrocardiograma', en: 'AI for electrocardiogram' },
 			description: {
 				pt: 'Desenvolvimento de algoritmo para diagnóstico automatizado de ECG, ampliando acesso e apoiando o laudo médico.',
 				en: 'Development of an algorithm for automated ECG diagnosis, expanding access and supporting medical reporting.'
@@ -154,64 +153,6 @@
 		}
 	];
 
-	const featuredMembers: Array<{
-		initials: string;
-		name: string;
-		role: Localized;
-		area: Localized;
-		photo?: string;
-		photoPos?: string;
-	}> = [
-		{
-			initials: 'WM',
-			name: 'Wagner Meira',
-			role: { pt: 'Coordenador Metas 3 e 7', en: 'Goals 3 and 7 Coordinator' },
-			area: { pt: 'Ciência da Computação', en: 'Computer Science' },
-			photo: wagnerImg
-		},
-		{
-			initials: 'MB',
-			name: 'Michele Brandão',
-			role: { pt: 'Coordenadora Meta 1', en: 'Goal 1 Coordinator' },
-			area: {
-				pt: 'Ciência da Computação e IA Responsável',
-				en: 'Computer Science and Responsible AI'
-			},
-			photo: micheleImg
-		},
-		{
-			initials: 'DG',
-			name: 'Dorgival Guedes',
-			role: { pt: 'Coordenador Meta 3', en: 'Goal 3 Coordinator' },
-			area: { pt: 'Sistemas Distribuídos', en: 'Distributed Systems' },
-			photo: dorgivalImg,
-			photoPos: '30% 20%'
-		},
-		{
-			initials: 'AP',
-			name: 'Ana Paula Silva',
-			role: { pt: 'Coordenadora Meta 2', en: 'Goal 2 Coordinator' },
-			area: { pt: 'Computação Social', en: 'Social Computing' },
-			photo: anaPaulaImg
-		},
-		{
-			initials: 'VA',
-			name: 'Virgílio Almeida',
-			role: { pt: 'Pesquisador', en: 'Researcher' },
-			area: {
-				pt: 'Ciência da Computação e IA Responsável',
-				en: 'Computer Science and Responsible AI'
-			},
-			photo: virgilioImg
-		},
-		{
-			initials: 'ML',
-			name: 'Mariangela Cherchiglia',
-			role: { pt: 'Coordenadora Meta 6', en: 'Goal 6 Coordinator' },
-			area: { pt: 'Saúde Pública', en: 'Public Health' }
-		}
-	];
-
 	// Coordinator label and name connector for the meta cards.
 	const coordLabel: Localized = { pt: 'Coordenação', en: 'Coordination' };
 	const andConnector: Localized = { pt: ' e ', en: ' and ' };
@@ -222,7 +163,25 @@
 	<meta name="description" content={m.about_meta_desc()} />
 </svelte:head>
 
-<section class="py-16" style="background-color: rgb(245, 245, 245);">
+<!-- A partir daqui as seções alternam cinza e branco, sem exceção: topo, apresentação
+     (mesmo cinza, é continuação do topo), diagrama, objetivos, metas e trajetória. `bg-muted` é o mesmo #F5F5F5 que estava escrito à mão no style.
+
+     Duas convenções valem para TODAS elas — ao acrescentar uma seção, copie daqui:
+
+     1. Ritmo vertical: `py-24` (96px em cima e embaixo), de modo que toda troca de
+        fundo tenha a mesma respiração dos dois lados. A única exceção é o par
+        topo+apresentação: são uma seção só aos olhos (mesmo cinza), então o intervalo
+        interno entre eles é menor de propósito (pb-16 + pt-6 = 88px) e só a borda
+        externa do bloco fecha em 96px.
+
+     2. Cabeçalho: rótulo em azul claro, H2 e subtítulo, sempre com as mesmas classes e
+        as mesmas distâncias — `mx-auto mb-12 max-w-3xl text-center` no bloco,
+        `text-sm font-semibold tracking-widest text-secondary uppercase` no rótulo,
+        `mt-2 text-3xl ... sm:text-4xl` no H2 e `mt-4 text-lg ...` no subtítulo. Os
+        compromissos alinham à esquerda porque o conteúdo abaixo é uma lista de linhas,
+        mas usam a mesma escala; o cabeçalho do diagrama vive em ResponsibleAiDiagram e
+        segue a mesma regra. -->
+<section class="bg-muted py-16">
 	<div class="mx-auto max-w-6xl px-6">
 		<a
 			href={localizeHref(resolve('/'))}
@@ -241,54 +200,118 @@
 	</div>
 </section>
 
-<!-- Missão e diagrama: seguem no mesmo cinza do topo, que só termina quando
-     começa "Como atuamos". -->
-<section class="py-20" style="background-color: rgb(245, 245, 245);">
-	<div class="mx-auto max-w-6xl space-y-20 px-6">
-		<div class="mx-auto max-w-3xl text-center">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
-				{m.about_mission_eyebrow()}
-			</p>
-			<p class="mt-4 text-2xl leading-relaxed font-medium text-primary sm:text-3xl">
-				{m.about_mission_text()}
-			</p>
-		</div>
+<!-- Apresentação: mesmo cinza do topo, é a continuação dele.
 
-		<!-- Define "IA responsável" antes de qualquer conteúdo operacional: os blocos
-		     seguintes (objetivos, metas) pressupõem o conceito. -->
+     Três níveis, não dois: rótulo, frase-chave e texto explicativo. A frase é a antiga
+     missão, que era uma seção inteira e agora funciona como abertura editorial deste
+     bloco — sem ela a coluna da esquerda ficava só com o rótulo, e as duas colunas não
+     se sustentavam.
+
+     `font-medium` e não `font-bold`: a frase precisa pesar mais que o corpo do texto,
+     mas não competir com os H2 das seções seguintes — o tamanho já faz esse trabalho.
+
+     pt-6, e não py-20: somado ao pb-16 do topo dá ~88px até o rótulo. O bloco não deve
+     ocupar um viewport — a ideia é que "Dimensões da IA Responsável" já apareça na
+     primeira rolagem. -->
+<section class="bg-muted pt-6 pb-24">
+	<div class="mx-auto max-w-6xl px-6">
+		<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+			{m.about_intro_eyebrow()}
+		</p>
+
+		<div class="mt-4 grid gap-8 lg:grid-cols-2 lg:gap-16">
+			<!-- 30px contra os 48px do H1: destaque, mas claramente de segundo nível. -->
+			<p class="max-w-lg text-[1.5rem] leading-snug font-medium text-primary sm:text-[1.875rem]">
+				{m.about_intro_statement()}
+			</p>
+
+			<!-- max-w-lg: ~68 caracteres por linha. space-y-4, e não 6: o intervalo fica
+			     menor que a altura de linha, então os dois parágrafos leem como um
+			     raciocínio só. -->
+			<div class="max-w-lg space-y-4">
+				<p class="leading-relaxed text-muted-foreground">{m.about_intro_p1()}</p>
+				<p class="leading-relaxed text-muted-foreground">{m.about_intro_p2()}</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Diagrama: define "IA responsável" antes de qualquer conteúdo operacional — os
+     blocos seguintes (objetivos, metas) pressupõem o conceito.
+
+     py-24 como todas as seções daqui para baixo — o pt entra na conta de altura do
+     Venn (ver o comentário em ResponsibleAiDiagram), então mexer aqui pede mexer lá. -->
+<section class="py-24">
+	<!-- max-w-7xl, e não o max-w-6xl das demais seções: é a única exceção da página e
+	     existe só para o quadrado de 1120px não encostar nas laterais da coluna. Os
+	     textos do bloco continuam em max-w-3xl/4xl, então a medida de linha não muda. -->
+	<div class="mx-auto max-w-7xl px-6">
 		<ResponsibleAiDiagram />
 	</div>
 </section>
 
-<!-- Objetivos: primeira seção branca da página. -->
-<section class="py-20">
+<!-- Objetivos -->
+<section class="bg-muted py-24">
 	<div class="mx-auto max-w-6xl px-6">
-		<div>
-			<div class="text-center">
-				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
-					{m.about_objectives_eyebrow()}
-				</p>
-				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-					{m.about_objectives_heading()}
-				</h2>
-			</div>
-			<div class="mt-12 flex flex-wrap justify-center gap-8">
-				{#each objetivos as item (item.title)}
-					<div
-						class="w-full rounded-2xl bg-white p-8 ring-1 ring-border sm:w-[calc(50%_-_1rem)] lg:w-[calc(33.333%_-_1.334rem)]"
-					>
-						<item.icon class="h-12 w-12 text-secondary" />
-						<h3 class="mt-4 text-xl font-bold text-primary">{t(item.title)}</h3>
-						<p class="mt-3 leading-relaxed text-muted-foreground">{t(item.description)}</p>
-					</div>
-				{/each}
-			</div>
+		<!-- Alinhado à esquerda, e não centralizado como os demais cabeçalhos: o conteúdo
+		     abaixo é uma lista de linhas, toda encostada à esquerda. Um título centralizado
+		     sobre ela criaria dois eixos concorrentes. O bloco e a lista compartilham a
+		     mesma margem esquerda (sem mx-auto nos dois). -->
+		<div class="mb-10 max-w-3xl">
+			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+				{m.about_objectives_eyebrow()}
+			</p>
+			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+				{m.about_objectives_heading()}
+			</h2>
 		</div>
+
+		<!-- Linhas, e não cartões: são cinco itens de uma mesma lista, e cinco caixas
+		     fechadas os transformavam em cinco objetos independentes (com a última fila
+		     sobrando duas colunas vazias). O fio entre as linhas basta para separá-los.
+
+		     Três colunas a partir de lg — ícone, título e descrição —, de modo que os
+		     títulos formem uma coluna própria e possam ser varridos de cima a baixo sem
+		     ler as descrições. Abaixo disso a descrição desce para a segunda linha,
+		     alinhada ao título (col-start-2), e o ícone mantém a sangria.
+
+		     O gap do grid é curto (20px) para o ícone colar no título e os dois lerem
+		     como um conjunto; a distância maior até a descrição vem do pl-5 dela, e não
+		     do gap — column-gap no CSS é um valor só para todas as colunas.
+
+		     20rem na coluna dos títulos: em 18rem "Transferência de tecnologia" quebrava
+		     em duas linhas sozinha, com a coluna do texto ainda sobrando largura.
+
+		     O ícone tem 28px, a mesma altura da linha do título (text-lg), e fica no topo:
+		     assim os dois se alinham exatamente e leem como um par. Centrá-lo na altura
+		     da linha inteira, como cheguei a tentar, o fazia flutuar abaixo do título
+		     sempre que a descrição passava de duas linhas.
+
+		     first:pt-0 / last:pb-0: sem isso o py-10 das linhas somaria ao mb-10 do
+		     cabeçalho e ao py-24 da seção, e as bordas do bloco respirariam mais que o
+		     miolo. -->
+		<ul class="max-w-5xl divide-y divide-border">
+			{#each objetivos as item (item.title)}
+				<li
+					class="grid grid-cols-[auto_1fr] items-start gap-x-4 gap-y-3 py-10 first:pt-0 last:pb-0 lg:grid-cols-[auto_20rem_1fr]"
+				>
+					<item.icon class="h-7 w-7 shrink-0 self-start text-secondary" />
+					<h3 class="text-lg font-bold text-primary">{t(item.title)}</h3>
+					<p class="col-start-2 leading-relaxed text-muted-foreground lg:col-start-3 lg:pl-6">
+						{t(item.description)}
+					</p>
+				</li>
+			{/each}
+		</ul>
 	</div>
 </section>
 
 <!-- Linhas de Pesquisa -->
-<section class="bg-muted py-20">
+<section class="py-24">
+	<!-- max-w-6xl como o resto da página: os cartões alinham com a lista de compromissos
+	     acima. A largura que se perde por coluna volta como texto pelo padding menor —
+	     p-5 em vez de p-8, já que num cartão de ~260px cada 8px de moldura custa uma
+	     palavra por linha. -->
 	<div class="mx-auto max-w-6xl px-6">
 		<div class="mx-auto mb-12 max-w-3xl text-center">
 			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
@@ -298,14 +321,33 @@
 				{m.about_metas_heading()}
 			</h2>
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-			<p class="mt-6 text-lg leading-relaxed text-muted-foreground">{@html m.about_metas_text()}</p>
+			<p class="mt-4 text-lg leading-relaxed text-muted-foreground">{@html m.about_metas_text()}</p>
 		</div>
 
-		<div class="grid auto-rows-fr grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+		<!-- 4 + 3, e não 3 + 3 + 1: são sete metas, e em três colunas a última ficava
+		     sozinha numa fila com duas lacunas ao lado — parecia sobra, não meta.
+
+		     O grid tem 8 colunas e cada cartão ocupa 2: assim os sete têm exatamente a
+		     mesma largura e o mesmo gap entre si nas duas filas. A segunda fila começa na
+		     coluna 2 (lg:col-start-2 no quinto cartão), o que a centraliza sem mexer em
+		     largura nenhuma — o deslocamento é de uma coluna + um gap de cada lado.
+		     Com lg:grid-cols-4 a fila de baixo ficaria encostada à esquerda; com um grid
+		     de 12 os cartões de baixo ficariam mais largos, sugerindo uma hierarquia que
+		     não existe.
+
+		     gap-x menor que gap-y (24 contra 32): cada 8px tirados do gap horizontal viram
+		     largura de cartão, e na vertical o respiro maior é que separa as duas filas.
+
+		     Abaixo de lg continua 1 e 2 colunas, com o último cartão centralizado. -->
+		<div class="grid auto-rows-fr grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-8">
 			{#each metas as meta, i (meta.num)}
+				<!-- bg-muted, e não bg-white: a seção agora é branca e um cartão branco só
+				     apareceria pelo ring. -->
 				<div
-					class="flex flex-col rounded-2xl bg-white p-8 ring-1 ring-border {i === metas.length - 1
-						? 'sm:col-span-2 sm:w-[calc(50%-1rem)] sm:justify-self-center lg:col-span-1 lg:col-start-2 lg:w-auto'
+					class="flex flex-col rounded-2xl bg-muted p-5 ring-1 ring-border lg:col-span-2 {i === 4
+						? 'lg:col-start-2'
+						: ''} {i === metas.length - 1
+						? 'sm:col-span-2 sm:w-[calc(50%-0.75rem)] sm:justify-self-center lg:w-auto lg:justify-self-stretch'
 						: ''}"
 				>
 					<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
@@ -320,12 +362,12 @@
 									<img
 										src={coord.photo}
 										alt={coord.name}
-										class="h-9 w-9 rounded-full object-cover ring-2 ring-white"
+										class="h-9 w-9 rounded-full object-cover ring-2 ring-muted"
 										style="object-position: center 20%; margin-left: {i > 0 ? '-10px' : '0'}"
 									/>
 								{:else}
 									<div
-										class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-xs font-bold text-white ring-2 ring-white"
+										class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-xs font-bold text-white ring-2 ring-muted"
 										style="margin-left: {i > 0 ? '-10px' : '0'}"
 									>
 										{coord.initials}
@@ -346,67 +388,19 @@
 	</div>
 </section>
 
-<!-- Equipe -->
-<section id="equipe" class="py-20">
-	<div class="mx-auto max-w-6xl px-6">
-		<div class="mb-12 flex items-end justify-between">
-			<div>
-				<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
-					{m.about_team_eyebrow()}
-				</p>
-				<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
-					{m.about_team_heading()}
-				</h2>
-				<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
-					{m.about_team_text()}
-				</p>
-			</div>
-			<a
-				href={localizeHref(resolve('/team'))}
-				class="inline-flex items-center gap-1 text-base font-medium text-secondary hover:underline"
-			>
-				{m.about_team_link()} <span aria-hidden="true">&rarr;</span>
-			</a>
-		</div>
-
-		<div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-			{#each featuredMembers as member (member.initials)}
-				<div
-					class="flex flex-col items-center rounded-lg bg-white p-8 text-center shadow-sm ring-1 ring-border transition-shadow hover:shadow-md"
-				>
-					{#if member.photo}
-						<img
-							src={member.photo}
-							alt={member.name}
-							class="h-20 w-20 rounded-full object-cover"
-							style="object-position: {member.photoPos ?? 'center 20%'}"
-						/>
-					{:else}
-						<div
-							class="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-lg font-bold text-white"
-						>
-							{member.initials}
-						</div>
-					{/if}
-					<p class="mt-4 text-lg font-bold text-primary">{member.name}</p>
-					<p class="mt-1 text-sm font-semibold text-secondary">{t(member.role)}</p>
-					<p class="mt-1 text-sm text-muted-foreground">{t(member.area)}</p>
-				</div>
-			{/each}
-		</div>
-	</div>
-</section>
-
 <!-- Trajetória -->
-<section class="bg-muted py-20">
+<section class="bg-muted py-24">
 	<div class="mx-auto max-w-6xl px-6">
-		<div class="mx-auto mb-16 max-w-3xl text-center">
+		<div class="mx-auto mb-12 max-w-3xl text-center">
 			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
 				{m.about_trajectory_eyebrow()}
 			</p>
 			<h2 class="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
 				{m.about_trajectory_heading()}
 			</h2>
+			<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
+				{m.about_trajectory_subtitle()}
+			</p>
 		</div>
 
 		<div class="relative mx-auto max-w-3xl">
@@ -415,18 +409,21 @@
 				aria-hidden="true"
 			></span>
 
-			<ol class="space-y-12">
+			<!-- space-y-8, e não 12: com quatro marcos a linha ficava alta demais para o
+			     que mostra. O intervalo volta a crescer sozinho conforme entrarem novos
+			     marcos, então não é um ajuste que precise ser refeito. -->
+			<ol class="space-y-8">
 				{#each trajetoria as marco, i (marco.titulo)}
 					<li class="relative grid grid-cols-1 sm:grid-cols-2 sm:gap-8">
 						<span
-							class="absolute top-1.5 left-4 h-3 w-3 -translate-x-1/2 rounded-full bg-secondary ring-4 ring-muted sm:left-1/2"
+							class="absolute top-1.5 left-4 h-3 w-3 -translate-x-1/2 rounded-full bg-secondary sm:left-1/2"
 							aria-hidden="true"
 						></span>
 
 						<div
 							class={i % 2 === 0
-								? 'pl-12 sm:col-start-1 sm:pr-8 sm:pl-0 sm:text-right'
-								: 'pl-12 sm:col-start-2 sm:pl-8'}
+								? 'pl-12 sm:col-start-1 sm:pr-6 sm:pl-0 sm:text-right'
+								: 'pl-12 sm:col-start-2 sm:pl-6'}
 						>
 							{#if marco.data}
 								<span
