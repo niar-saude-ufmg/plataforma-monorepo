@@ -1,0 +1,28 @@
+{
+  "name": "niar-plataforma",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "dotenv-cli": "^7.4.2",
+    "prisma": "6.2.1"
+  },
+  "scripts": {
+    "dev:shell": "pnpm --filter @niar/shell dev",
+    "dev:admin-web": "pnpm --filter @niar/admin-web dev",
+    "dev:admin-api": "dotenv -e ./.env -- pnpm --filter @niar/admin-api dev",
+    "dev": "node ./scripts/dev.mjs",
+    "setup": "node ./scripts/setup.mjs",
+    "db:up": "node ./scripts/db-up.mjs",
+    "db:down": "node ./scripts/db-down.mjs",
+    "db:logs": "node ./scripts/db-logs.mjs",
+    "prisma:generate": "node ./scripts/prisma-generate.mjs",
+    "prisma:migrate:dev": "node ./scripts/prisma-migrate-dev.mjs",
+    "build": "pnpm -r --if-present build",
+    "test": "node ./scripts/test-all.mjs"
+  }
+}

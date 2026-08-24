@@ -1,0 +1,135 @@
+:root {
+  color-scheme: light;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #15313b;
+  background:
+    radial-gradient(circle at top left, rgba(207, 241, 232, 0.9), transparent 30%),
+    linear-gradient(180deg, #f7fcfa 0%, #eef5f2 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.layout {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(21, 49, 59, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.session-box {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.page {
+  padding: 3rem 1.5rem;
+  display: grid;
+  place-items: center;
+}
+
+.hero,
+.card {
+  width: min(720px, 100%);
+  padding: 2rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(21, 49, 59, 0.1);
+  box-shadow: 0 20px 60px rgba(21, 49, 59, 0.08);
+}
+
+.hero-actions,
+.auth-form {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.auth-form {
+  flex-direction: column;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.auth-form input,
+.auth-form select {
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(21, 49, 59, 0.15);
+}
+
+.button-link,
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.1rem;
+  border: none;
+  border-radius: 999px;
+  background: #0e7c66;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.button-link.secondary {
+  background: #dcefe9;
+  color: #15313b;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: #0e7c66;
+}
+
+.muted {
+  color: #4c6570;
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
