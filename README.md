@@ -271,6 +271,22 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+## Credenciais locais de desenvolvimento
+
+Quando o `assistente-api` executa o `seed` em ambiente local, ele cria um usuário admin padrão caso esse usuário ainda não exista no banco.
+
+Credenciais atuais:
+
+- e-mail: `admin@hra.local`
+- senha: `admin12345`
+- papel: `admin`
+
+Observações:
+
+- essas credenciais existem apenas para desenvolvimento local;
+- elas não devem ser reutilizadas em produção;
+- se o usuário já existir no banco, o seed não cria outro igual.
+
 ## Prisma
 
 ### Aplicar SQL local
