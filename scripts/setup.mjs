@@ -1,8 +1,10 @@
 import fs from "node:fs";
 import { envExamplePath, envPath, rootDir } from "./lib/workspace-paths.mjs";
+import { ensureAssistenteApiReady } from "./lib/assistente-api-python.mjs";
 import { runCommand } from "./lib/run-command.mjs";
 
 runCommand("pnpm", ["install"], { cwd: rootDir });
+ensureAssistenteApiReady();
 
 if (!fs.existsSync(envPath)) {
   fs.copyFileSync(envExamplePath, envPath);

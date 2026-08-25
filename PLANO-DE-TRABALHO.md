@@ -121,26 +121,57 @@ A primeira fase deve seguir esta ordem lógica:
 
 ## 5. Decisões registradas até agora
 
-- o backend inicial deve usar `Node.js + Express + Prisma + MySQL em Docker`;
-- `PostgreSQL` fica como possibilidade futura, não como direção atual;
+- o backend inicial deve usar `Node.js + Express + Prisma` consumindo um banco `PostgreSQL` em Docker;
+- a fonte de verdade do banco compartilhado deve ficar em SQL versionado no monorepo;
 - o `institucional` deve ficar na rota principal `/`, mas fora da implementação inicial;
 - o `admin` deve ficar em `/admin`;
 - o `assistente` deve ficar em `/assistente`;
 - o `admin` não deve ser tratado como módulo separado de “portal” neste momento;
 - a shell principal deve cuidar de rotas e composição, não de regra de negócio;
 - o `institucional` já existe em `Svelte`, está em outro repositório e deve ser integrado apenas mais ao final;
-- o `assistente` entra depois;
+- o `assistente` agora pode entrar no monorepo mantendo frontend e backend separados, sem reescrita imediata;
 - o foco atual está no `admin` e na organização da plataforma.
 - o nome `admin` é provisório e pode ser revisto no futuro, já que “plataforma” representa o ecossistema como um todo.
 - o fluxo de `login` deve ficar centralizado na `shell`, como direção do modelo alvo;
 - `admin` e `assistente` devem funcionar como áreas autenticadas consumindo sessão compartilhada;
 - o login atualmente existente no `assistente` pode ser tratado apenas como mecanismo transitório durante a integração inicial.
+- a composição real entre `shell`, `admin-web` e `assistente-web` deve usar `Module Federation`, e não `iframe` ou placeholders permanentes.
+
+## 5.1 Decisão técnica para microfrontends
+
+Direção definida:
+
+- a `shell` será o app hospedeiro (`host`);
+- `admin-web` será exposto como microfrontend remoto (`remote`);
+- `assistente-web` será exposto como microfrontend remoto (`remote`);
+- a integração entre esses apps deve ser feita com `Module Federation` sobre a stack atual em `Vite + React`.
+
+Objetivo dessa decisão:
+
+- manter independência real entre os micros;
+- permitir evolução e reescrita gradual de cada frontend sem quebrar a estrutura mãe;
+- fazer o usuário entrar pela `shell`, mesmo que os micros continuem rodando em portas separadas no desenvolvimento;
+- preservar a separação de responsabilidades entre navegação central e domínio de cada módulo.
+
+Diretriz prática para desenvolvimento:
+
+- no ambiente local, os micros podem continuar rodando separadamente em portas próprias;
+- no entanto, o acesso funcional deve ocorrer pela `shell`, que carregará os remotos em suas rotas reais;
+- abrir `admin-web` e `assistente-web` diretamente por porta continuará útil para desenvolvimento isolado, mas não representa a experiência principal da plataforma.
+
+Sequência sugerida de implementação:
+
+1. configurar `Module Federation` no `shell` e no `admin-web`;
+2. expor um componente raiz do `admin-web` para consumo pelo `shell`;
+3. substituir o placeholder atual da rota `/admin` pela carga do microfrontend real;
+4. repetir a mesma estratégia para `assistente-web`;
+5. alinhar autenticação compartilhada, dependências compartilhadas e contratos entre host e remotes;
+6. deixar a integração futura do `institucional` compatível com esse mesmo modelo, quando chegar sua etapa.
 
 ## 6. Dúvidas e decisões em aberto
 
 Pontos ainda não fechados nesta etapa:
 
-- como a shell simples por rotas será estruturada tecnicamente no monorepo;
 - qual abordagem será adotada para integrar o `Svelte` do institucional na shell quando chegar a etapa final;
 - como será feita a aproximação entre o monorepo principal e o repositório externo do institucional;
 - como será o contrato de contexto entre `admin` e `assistente` quando o assistente entrar.
@@ -148,17 +179,19 @@ Pontos ainda não fechados nesta etapa:
 Observação:
 
 - a direção já definida é centralizar o `login` na `shell`;
-- o que permanece em aberto é a implementação técnica dessa autenticação compartilhada.
+- a direção técnica da composição dos micros agora também está definida como `Module Federation`;
+- o que permanece em aberto é a implementação detalhada da autenticação compartilhada, do repasse de contexto e da integração futura com o `institucional`.
 
 ## 7. Próximos passos sugeridos
 
 Próximos passos mais prováveis para continuidade:
 
-1. estruturar tecnicamente a shell simples por rotas dentro do monorepo;
-2. consolidar a estrutura inicial do monorepo;
-3. começar a estruturar o módulo `admin` e seu papel como núcleo do MVP;
-4. definir depois como o `institucional` em `Svelte` será incorporado na shell;
-5. evoluir este plano sempre que novas decisões forem tomadas.
+1. implementar `Module Federation` entre `shell` e `admin-web`;
+2. substituir a rota `/admin` da `shell` pelo microfrontend real do `admin`;
+3. repetir a integração federada para o `assistente-web`;
+4. consolidar autenticação e contexto compartilhado entre `shell` e micros;
+5. definir depois como o `institucional` em `Svelte` será incorporado na shell;
+6. evoluir este plano sempre que novas decisões forem tomadas.
 
 ## 8. Estrutura inicial recomendada do repositório
 
@@ -176,8 +209,8 @@ plataforma/
     shell/
     admin-web/
     admin-api/
-    assistente-web/   # depois
-    assistente-api/   # depois
+    assistente-web/
+    assistente-api/
   packages/
     contracts/
     auth/
@@ -229,20 +262,21 @@ Sugestão atual a ser adotada como direção inicial:
 - `Node.js`
 - `Express`
 - `Prisma`
-- `MySQL` em Docker nesta primeira etapa
+- `PostgreSQL` em Docker nesta primeira etapa
 
 Motivação:
 
-- stack simples e próxima de um cenário de produção mais realista;
+- stack simples e próxima do cenário real já usado hoje pelo assistente;
 - fácil entendimento para ensino e onboarding quando padronizada com Docker;
 - boa produtividade para estruturar rapidamente a API administrativa;
-- Prisma ajuda a organizar o modelo de dados e as migrações;
-- MySQL em Docker evita instalação manual do banco na máquina e mantém o ambiente mais previsível.
+- Prisma ajuda no consumo tipado das tabelas novas da plataforma;
+- o schema compartilhado deve ser mantido em SQL versionado;
+- PostgreSQL em Docker evita instalação manual do banco na máquina e mantém o ambiente mais previsível.
 
 Ponto de atenção:
 
-- manter `MySQL` como direção inicial também para alinhar melhor com o ambiente hoje considerado mais provável de produção;
-- `PostgreSQL` pode ser reavaliado futuramente caso a UFMG libere ou passe a suportar melhor esse cenário.
+- o `PostgreSQL` é a direção atual porque o assistente já usa essa base;
+- o uso de SQL versionado reduz acoplamento entre `Prisma` e `SQLAlchemy`.
 
 ### 9.3 Testes
 

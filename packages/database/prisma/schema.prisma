@@ -1,40 +1,255 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["admin", "assistant", "shared"]
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  role      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  projects  Project[]
+  id             Int                    @id @default(autoincrement())
+  email          String                 @unique @db.VarChar(255)
+  fullName       String                 @map("full_name") @db.VarChar(255)
+  hashedPassword String                 @map("hashed_password") @db.VarChar(255)
+  role           user_role              @default(researcher)
+  isActive       Boolean                @default(true) @map("is_active")
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  projects       Project[]              @relation("ProjectOwner")
+  wizardSessions WizardSession[]
+  auditLogs      AuditLog[]
+  statusChanges  ProjectStatusHistory[] @relation("StatusActor")
+
+  @@index([email], map: "idx_shared_users_email")
+  @@map("users")
+  @@schema("shared")
 }
 
-model Project {
-  id               String                 @id @default(cuid())
-  title            String
-  researcherId     String
-  requiresSafeRoom Boolean                @default(false)
-  dataSourceType   String?
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
-  researcher       User                   @relation(fields: [researcherId], references: [id])
-  statusHistory    ProjectStatusHistory[]
+model AppSetting {
+  key       String   @id @db.VarChar(100)
+  value     String
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@map("app_settings")
+  @@schema("shared")
+}
+
+model Dataset {
+  id          Int             @id @default(autoincrement())
+  name        String          @unique @db.VarChar(255)
+  description String          @default("")
+  enabled     Boolean         @default(true)
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  sessions    WizardSession[]
+  tables      CatalogTable[]
+
+  @@map("datasets")
+  @@schema("shared")
+}
+
+model CatalogTable {
+  id                Int                 @id @default(autoincrement())
+  datasetId         Int                 @map("dataset_id")
+  name              String              @db.VarChar(255)
+  description       String              @default("")
+  sampleRows        String              @default("[]") @map("sample_rows")
+  columns           CatalogColumn[]
+  dataset           Dataset             @relation(fields: [datasetId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  relationshipsFrom TableRelationship[] @relation("FromTable")
+  relationshipsTo   TableRelationship[] @relation("ToTable")
+
+  @@unique([datasetId, name], map: "uq_shared_table_dataset_name")
+  @@map("catalog_tables")
+  @@schema("shared")
+}
+
+model CatalogColumn {
+  id           Int          @id @default(autoincrement())
+  tableId      Int          @map("table_id")
+  name         String       @db.VarChar(255)
+  dataType     String       @map("data_type") @db.VarChar(100)
+  nullable     Boolean      @default(true)
+  isPrimaryKey Boolean      @default(false) @map("is_primary_key")
+  isForeignKey Boolean      @default(false) @map("is_foreign_key")
+  description  String       @default("")
+  validValues  String       @default("") @map("valid_values")
+  codingNotes  String       @default("") @map("coding_notes")
+  isPhi        Boolean      @default(false) @map("is_phi")
+  notes        String       @default("")
+  table        CatalogTable @relation(fields: [tableId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([tableId, name], map: "uq_shared_column_table_name")
+  @@map("catalog_columns")
+  @@schema("shared")
+}
+
+model TableRelationship {
+  id               Int          @id @default(autoincrement())
+  fromTableId      Int          @map("from_table_id")
+  toTableId        Int          @map("to_table_id")
+  fromColumn       String       @map("from_column") @db.VarChar(255)
+  toColumn         String       @map("to_column") @db.VarChar(255)
+  relationshipType String       @default("many_to_one") @map("relationship_type") @db.VarChar(50)
+  description      String       @default("")
+  fromTable        CatalogTable @relation("FromTable", fields: [fromTableId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  toTable          CatalogTable @relation("ToTable", fields: [toTableId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("table_relationships")
+  @@schema("shared")
+}
+
+model AuditLog {
+  id           Int      @id @default(autoincrement())
+  userId       Int?     @map("user_id")
+  action       String   @db.VarChar(100)
+  resourceType String   @default("") @map("resource_type") @db.VarChar(100)
+  resourceId   String   @default("") @map("resource_id") @db.VarChar(100)
+  details      String   @default("")
+  ipAddress    String   @default("") @map("ip_address") @db.VarChar(50)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("audit_logs")
+  @@schema("shared")
 }
 
 model ProjectStatusHistory {
-  id        String   @id @default(cuid())
-  projectId String
-  status    String
-  note      String?
-  sentAt    DateTime?
-  createdAt DateTime @default(now())
-  project   Project  @relation(fields: [projectId], references: [id])
+  id          Int      @id @default(autoincrement())
+  projectId   Int      @map("project_id")
+  status      String   @db.VarChar(100)
+  notes       String?
+  actorUserId Int?     @map("actor_user_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  actorUser   User?    @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([projectId], map: "idx_shared_project_status_history_project_id")
+  @@index([actorUserId], map: "idx_shared_project_status_history_actor_user_id")
+  @@map("project_status_history")
+  @@schema("shared")
+}
+
+model WizardSession {
+  id               Int               @id @default(autoincrement())
+  userId           Int               @map("user_id")
+  wizardType       wizard_type       @map("wizard_type")
+  currentStep      String            @map("current_step") @db.VarChar(50)
+  title            String            @default("Untitled") @db.VarChar(255)
+  datasetId        Int?              @map("dataset_id")
+  linkedProjectId  Int?              @map("linked_project_id")
+  sectionData      String            @default("{}") @map("section_data")
+  scriptContent    String            @default("") @map("script_content")
+  validationResult String            @default("{}") @map("validation_result")
+  qualityChecklist String            @default("{}") @map("quality_checklist")
+  llmModelUsed     String            @default("") @map("llm_model_used") @db.VarChar(100)
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
+  projects         Project?          @relation("ProjectSourceWizardSession")
+  messages         ChatMessage[]
+  cleaningVersions CleaningVersion[]
+  exports          ExportArtifact[]
+  dataset          Dataset?          @relation(fields: [datasetId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  linkedProject    WizardSession?    @relation("LinkedWizardSession", fields: [linkedProjectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  linkedSessions   WizardSession[]   @relation("LinkedWizardSession")
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("wizard_sessions")
+  @@schema("assistant")
+}
+
+model ChatMessage {
+  id         Int           @id @default(autoincrement())
+  sessionId  Int           @map("session_id")
+  role       String        @db.VarChar(20)
+  content    String
+  channel    String        @default("intake") @db.VarChar(20)
+  sectionKey String?       @map("section_key") @db.VarChar(50)
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  session    WizardSession @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("chat_messages")
+  @@schema("assistant")
+}
+
+model ExportArtifact {
+  id           Int               @id @default(autoincrement())
+  sessionId    Int               @map("session_id")
+  filename     String            @db.VarChar(255)
+  filePath     String            @map("file_path") @db.VarChar(500)
+  artifactType String            @map("artifact_type") @db.VarChar(50)
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  documents    ProjectDocument[]
+  session      WizardSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("export_artifacts")
+  @@schema("assistant")
+}
+
+model CleaningVersion {
+  id               Int           @id @default(autoincrement())
+  sessionId        Int           @map("session_id")
+  versionNumber    Int           @map("version_number")
+  label            String        @default("") @db.VarChar(255)
+  scriptContent    String        @default("") @map("script_content")
+  validationResult String        @default("{}") @map("validation_result")
+  messagesSnapshot String        @default("[]") @map("messages_snapshot")
+  notes            String        @default("")
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  session          WizardSession @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([sessionId, versionNumber], map: "uq_assistant_cleaning_version")
+  @@map("cleaning_versions")
+  @@schema("assistant")
+}
+
+model Project {
+  id                    Int                    @id @default(autoincrement())
+  ownerUserId           Int                    @map("owner_user_id")
+  sourceWizardSessionId Int                    @unique @map("source_wizard_session_id")
+  title                 String                 @db.VarChar(255)
+  submittedAt           DateTime?              @map("submitted_at") @db.Timestamptz(6)
+  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime               @default(now()) @map("updated_at") @db.Timestamptz(6)
+  documents             ProjectDocument[]
+  owner                 User                   @relation("ProjectOwner", fields: [ownerUserId], references: [id], onUpdate: NoAction)
+  sourceWizardSession   WizardSession          @relation("ProjectSourceWizardSession", fields: [sourceWizardSessionId], references: [id], onUpdate: NoAction)
+  statusHistory         ProjectStatusHistory[]
+
+  @@index([ownerUserId], map: "idx_admin_projects_owner_user_id")
+  @@map("projects")
+  @@schema("admin")
+}
+
+model ProjectDocument {
+  id                     Int             @id @default(autoincrement())
+  projectId              Int             @map("project_id")
+  sourceExportArtifactId Int?            @map("source_export_artifact_id")
+  documentType           String          @map("document_type") @db.VarChar(100)
+  originalFilename       String          @map("original_filename") @db.VarChar(255)
+  storagePath            String          @map("storage_path")
+  isCurrent              Boolean         @default(true) @map("is_current")
+  createdAt              DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  project                Project         @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sourceExportArtifact   ExportArtifact? @relation(fields: [sourceExportArtifactId], references: [id], onUpdate: NoAction)
+
+  @@index([projectId], map: "idx_admin_project_documents_project_id")
+  @@index([sourceExportArtifactId], map: "idx_admin_project_documents_source_export_artifact_id")
+  @@map("project_documents")
+  @@schema("admin")
+}
+
+enum wizard_type {
+  project_doc
+  data_clean
+
+  @@schema("assistant")
+}
+
+enum user_role {
+  researcher
+  admin
+
+  @@schema("shared")
 }

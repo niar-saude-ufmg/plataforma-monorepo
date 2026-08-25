@@ -1,17 +1,27 @@
-# assistente-web
+# Assistente Web
 
-Diretório reservado para a futura extração do frontend do assistente para dentro do monorepo.
+Este diretório agora contém o frontend real do assistente dentro do monorepo.
 
-## Origem atual
+## Origem
 
-Hoje a implementação real continua em:
+Código trazido de:
 
 ```text
-assistente/frontend
+/Users/guilherme/Documents/niar/repositorio/assistente/frontend
 ```
 
-## Direção
+## Stack atual
 
-- reaproveitar o frontend já existente inicialmente;
-- migrar ou adaptar para este diretório quando a integração com a shell estiver mais madura;
-- manter a independência do microfrontend do assistente sem forçar reescrita imediata.
+- `React`
+- `Vite`
+- `TypeScript`
+
+## Observação importante
+
+Neste primeiro corte, o frontend do assistente foi incorporado sem reescrita.
+
+A ideia é:
+
+- preservar o que já funciona;
+- integrar com a `shell` em etapa posterior;
+- só depois revisar se será mantido assim ou refeito dentro da estratégia final da plataforma.

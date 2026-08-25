@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net" modified="2026-08-17T12:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="modelo-admin-assistente" name="Modelo Admin Assistente">
+    <mxGraphModel dx="1536" dy="824" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Modelo proposto — Admin + Assistente (submissao governada pelo admin)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=22;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="420" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="note1" value="Direção: nenhuma tabela existente do assistente sera alterada neste primeiro corte. A plataforma adiciona tabelas novas e referencia wizard_sessions/export_artifacts." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="420" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="users" value="USERS&#xa;---&#xa;id (PK)&#xa;name&#xa;email&#xa;cpf&#xa;password_hash&#xa;system_role&#xa;approved&#xa;created_at&#xa;updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;verticalAlign=top;spacing=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="40" y="180" width="220" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="app_settings" value="APP_SETTINGS&#xa;---&#xa;key (PK)&#xa;value&#xa;updated_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="430" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="projects" value="PROJECTS&#xa;---&#xa;id (PK)&#xa;owner_user_id (FK → users.id)&#xa;source_wizard_session_id (FK → wizard_sessions.id, UNIQUE)&#xa;title&#xa;created_at&#xa;updated_at&#xa;&#xa;Regra: nasce quando o pesquisador submete" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacing=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="320" y="150" width="300" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="projects_future_note" value="Atributos para etapa futura&#xa;---&#xa;summary&#xa;primary_objective&#xa;secondary_objectives&#xa;hypotheses&#xa;study_type&#xa;clinical_domain&#xa;data_source_type&#xa;requires_safe_room (provavelmente derivado)&#xa;&#xa;Motivo: exigem ajuste no assistente para preenchimento estruturado." style="shape=callout;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="300" y="350" width="320" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="datasets" value="DATASETS&#xa;---&#xa;id (PK)&#xa;name&#xa;description&#xa;enabled&#xa;created_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="680" y="500" width="220" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="catalog_tables" value="CATALOG_TABLES&#xa;---&#xa;id (PK)&#xa;dataset_id (FK → datasets.id)&#xa;name&#xa;description&#xa;sample_rows" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="930" y="520" width="230" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="catalog_columns" value="CATALOG_COLUMNS&#xa;---&#xa;id (PK)&#xa;table_id (FK → catalog_tables.id)&#xa;name&#xa;data_type&#xa;nullable&#xa;is_primary_key&#xa;is_foreign_key&#xa;description&#xa;valid_values&#xa;coding_notes&#xa;is_phi&#xa;notes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="500" width="250" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="table_relationships" value="TABLE_RELATIONSHIPS&#xa;---&#xa;id (PK)&#xa;from_table_id (FK → catalog_tables.id)&#xa;to_table_id (FK → catalog_tables.id)&#xa;from_column&#xa;to_column&#xa;relationship_type&#xa;description" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="930" y="690" width="230" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="wizard_sessions" value="WIZARD_SESSIONS&#xa;---&#xa;id (PK)&#xa;user_id (FK → users.id)&#xa;wizard_type&#xa;current_step&#xa;title&#xa;dataset_id (FK)&#xa;linked_project_session_id (FK → wizard_sessions.id)&#xa;section_data&#xa;script_content&#xa;validation_result&#xa;quality_checklist&#xa;llm_model_used&#xa;created_at&#xa;updated_at&#xa;&#xa;Mantida sem project_id neste primeiro corte" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;verticalAlign=top;spacing=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="680" y="110" width="320" height="370" as="geometry"/>
+        </mxCell>
+        <mxCell id="chat_messages" value="CHAT_MESSAGES&#xa;---&#xa;id (PK)&#xa;session_id (FK → wizard_sessions.id)&#xa;role&#xa;content&#xa;channel&#xa;section_key&#xa;created_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="20" width="230" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="export_artifacts" value="EXPORT_ARTIFACTS&#xa;---&#xa;id (PK)&#xa;wizard_session_id (FK → wizard_sessions.id)&#xa;filename&#xa;file_path&#xa;artifact_type&#xa;created_at&#xa;&#xa;Tipos principais:&#xa;- project_docx&#xa;- submission_bundle&#xa;- data_clean_py&#xa;&#xa;Observacao: submission_bundle vira pacote tecnico da submissao" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;verticalAlign=top;spacing=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="170" width="250" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="cleaning_versions" value="CLEANING_VERSIONS&#xa;---&#xa;id (PK)&#xa;session_id (FK → wizard_sessions.id)&#xa;version_number&#xa;label&#xa;script_content&#xa;validation_result&#xa;messages_snapshot&#xa;notes&#xa;created_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="440" width="250" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="status_history" value="PROJECT_STATUS_HISTORY&#xa;---&#xa;id (PK)&#xa;project_id (FK → projects.id)&#xa;status&#xa;notes&#xa;actor_user_id (FK → users.id)&#xa;created_at&#xa;&#xa;Status iniciais sugeridos:&#xa;- draft&#xa;- submitted_to_committee&#xa;- under_review&#xa;- needs_changes&#xa;- approved&#xa;- rejected" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacing=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="680" y="650" width="300" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="project_documents" value="PROJECT_DOCUMENTS&#xa;---&#xa;id (PK)&#xa;project_id (FK → projects.id)&#xa;source_export_artifact_id (FK → export_artifacts.id, opcional)&#xa;document_type&#xa;original_filename&#xa;storage_path&#xa;is_current&#xa;created_at&#xa;&#xa;Uso principal: docx oficial visivel ao pesquisador e ao admin&#xa;Quando vier do assistente, aponta para o export_artifact do tipo project_docx" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="320" y="360" width="320" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="audit_logs" value="AUDIT_LOGS&#xa;---&#xa;id (PK)&#xa;user_id (FK → users.id)&#xa;action&#xa;resource_type&#xa;resource_id&#xa;details&#xa;ip_address&#xa;created_at" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="580" width="220" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="datasets_note" value="Observação de fluxo&#xa;---&#xa;Quando o assistente passar a estruturar data_source_type a partir de data_sources, será possível distinguir com mais clareza projetos com dataset próprio e projetos que exigem base do NIAR / sala segura." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="320" y="900" width="330" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="doc_note" value="Decisão atual&#xa;---&#xa;Criar project_documents para dar visibilidade ao documento principal do projeto.&#xa;Quando o docx vier do assistente, ele pode referenciar export_artifacts." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="860" width="260" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="project_creation_note" value="Fluxo atual pensado&#xa;---&#xa;O pesquisador trabalha no assistente usando wizard_sessions.&#xa;No submit, nasce projects; o docx atual vira project_document; o status passa a ser governado pelo admin." style="shape=callout;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="630" y="20" width="300" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="note2" value="Cinza = tabelas já existentes hoje no banco do assistente&#xa;Colorido = núcleo proposto/ajustado para convivência entre assistente e admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="860" width="300" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_users_projects" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#82b366;" edge="1" parent="1" source="users" target="projects">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_users_sessions" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#b85450;" edge="1" parent="1" source="users" target="wizard_sessions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_projects_sessions" value="1:0..1 (origem)" style="dashed=1;endArrow=block;html=1;rounded=0;strokeWidth=1.5;strokeColor=#82b366;" edge="1" parent="1" source="projects" target="wizard_sessions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_sessions_exports" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#9673a6;" edge="1" parent="1" source="wizard_sessions" target="export_artifacts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_datasets_sessions" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=1.5;strokeColor=#666666;" edge="1" parent="1" source="datasets" target="wizard_sessions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_datasets_tables" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=1.5;strokeColor=#666666;" edge="1" parent="1" source="datasets" target="catalog_tables">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tables_columns" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=1.5;strokeColor=#666666;" edge="1" parent="1" source="catalog_tables" target="catalog_columns">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_tables_relationships" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=1.5;strokeColor=#666666;" edge="1" parent="1" source="catalog_tables" target="table_relationships">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_sessions_messages" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=1.5;strokeColor=#666666;" edge="1" parent="1" source="wizard_sessions" target="chat_messages">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_sessions_cleaning_versions" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=1.5;strokeColor=#666666;" edge="1" parent="1" source="wizard_sessions" target="cleaning_versions">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_users_status" value="ator" style="dashed=1;endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#d6b656;" edge="1" parent="1" source="users" target="status_history">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_projects_documents" value="1:N" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#82b366;" edge="1" parent="1" source="projects" target="project_documents">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_exports_documents" value="origem" style="dashed=1;endArrow=block;html=1;rounded=0;strokeWidth=1.5;strokeColor=#9673a6;" edge="1" parent="1" source="export_artifacts" target="project_documents">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_users_audit" value="ator" style="dashed=1;endArrow=block;html=1;rounded=0;strokeWidth=1.5;strokeColor=#666666;" edge="1" parent="1" source="users" target="audit_logs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

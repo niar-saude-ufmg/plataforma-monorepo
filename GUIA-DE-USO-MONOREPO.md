@@ -21,14 +21,14 @@ cd /Users/guilherme/Documents/niar/repositorio/plataforma
 ### 1.3. Instalar dependências
 
 ```bash
-pnpm install
+pnpm setup
 ```
 
 Se aparecer `ERR_PNPM_IGNORED_BUILDS`:
 
 ```bash
 pnpm approve-builds --all
-pnpm install
+pnpm setup
 ```
 
 ### 1.4. Criar `.env`
@@ -37,13 +37,7 @@ pnpm install
 cp .env.example .env
 ```
 
-### 1.5. Gerar Prisma
-
-```bash
-pnpm prisma:generate
-```
-
-### 1.6. Ligar Docker
+### 1.5. Ligar Docker
 
 Se o Docker Desktop não estiver aberto:
 
@@ -57,19 +51,37 @@ No macOS, alternativa:
 open -a Docker
 ```
 
-### 1.7. Subir o banco
+### 1.6. Subir o banco
 
 ```bash
 pnpm db:up
 ```
 
-### 1.8. Subir tudo
+### 1.7. Aplicar SQL versionado
+
+```bash
+pnpm db:apply:sql
+```
+
+### 1.8. Atualizar o schema derivado do Prisma
+
+```bash
+pnpm prisma:db:pull
+pnpm prisma:generate
+```
+
+### 1.9. Subir tudo
 
 ```bash
 pnpm dev
 ```
 
-### 1.9. Rodar testes
+Observacao:
+
+- o `pnpm dev` agora tambem tenta subir `assistente-web` e `assistente-api`;
+- a `.venv` do `assistente-api` e preparada automaticamente pelo `pnpm setup` e tambem pelo proprio `pnpm dev`, se necessario.
+
+### 1.10. Rodar testes
 
 ```bash
 pnpm test
@@ -117,7 +129,29 @@ Se for usar a API:
 pnpm db:up
 ```
 
-## 4. Banco e Prisma
+### 3.4. Só o assistente-web
+
+```bash
+pnpm dev:assistente-web
+```
+
+### 3.5. Só o assistente-api
+
+```bash
+cd apps/assistente-api
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+## 4. Banco, SQL e Prisma
+
+### Atualizar o schema derivado
+
+```bash
+pnpm prisma:db:pull
+```
 
 ### Gerar o client
 
@@ -125,10 +159,10 @@ pnpm db:up
 pnpm prisma:generate
 ```
 
-### Rodar migração local
+### Aplicar SQL versionado
 
 ```bash
-pnpm prisma:migrate:dev
+pnpm db:apply:sql
 ```
 
 ### Ver logs do banco
@@ -192,11 +226,13 @@ Dependências principais:
 Pacote:
 
 - `packages/database/package.json`
+- `packages/database/sql/`
 
 Dependências principais:
 
 - `prisma`
 - `@prisma/client`
+- `pg`
 
 ## 6. Problemas comuns
 
@@ -210,6 +246,7 @@ pnpm install
 Depois:
 
 ```bash
+pnpm prisma:db:pull
 pnpm prisma:generate
 ```
 
@@ -258,8 +295,10 @@ Resumo das automações:
 - `pnpm db:down`
 - `pnpm db:logs`
 - `pnpm dev`
+- `pnpm dev:assistente-web`
+- `pnpm prisma:db:pull`
 - `pnpm prisma:generate`
-- `pnpm prisma:migrate:dev`
+- `pnpm db:apply:sql`
 - `pnpm test`
 
 Essas automações existem para facilitar o uso, mas o fluxo manual continua documentado separadamente.
@@ -273,8 +312,9 @@ node ./scripts/setup.mjs
 node ./scripts/db-up.mjs
 node ./scripts/db-down.mjs
 node ./scripts/db-logs.mjs
+node ./scripts/db-apply-sql.mjs
+node ./scripts/prisma-db-pull.mjs
 node ./scripts/dev.mjs
 node ./scripts/prisma-generate.mjs
-node ./scripts/prisma-migrate-dev.mjs
 node ./scripts/test-all.mjs
 ```

@@ -1,18 +1,38 @@
-# assistente-api
+# Assistente API
 
-Diretório reservado para a futura extração do backend do assistente para dentro do monorepo.
+Este diretório agora contém o backend real do assistente dentro do monorepo.
 
-## Origem atual
+## Origem
 
-Hoje a implementação real continua em:
+Código trazido de:
 
 ```text
-assistente/backend
+/Users/guilherme/Documents/niar/repositorio/assistente/backend
 ```
 
-## Direção
+## Stack atual
 
-- preservar o backend atual como base real de integração;
-- trazer esse backend para a estrutura `apps/assistente-api` em uma etapa posterior, com cuidado para não quebrar o fluxo já funcional;
-- manter o banco compartilhado no nível das APIs, não na shell;
-- consumir o mesmo pacote `@niar/database` usado pelo `admin-api` quando essa extração acontecer.
+- `Python`
+- `FastAPI`
+- `SQLAlchemy`
+- `PostgreSQL`
+
+## Arquivos locais gerados
+
+Em desenvolvimento local, o assistente grava exports temporários em:
+
+```text
+apps/assistente-api/.local/exports
+```
+
+Se necessário, esse caminho pode ser sobrescrito pela variável `EXPORTS_DIR` no `.env` da raiz do monorepo.
+
+## Observação importante
+
+Neste primeiro corte, o backend do assistente foi incorporado ao monorepo sem reescrita estrutural.
+
+Ou seja:
+
+- ele continua usando sua stack atual;
+- o banco continua compartilhado por referência com a camada SQL central da plataforma;
+- as tabelas já existentes do assistente não devem ser alteradas pela camada nova da plataforma.
