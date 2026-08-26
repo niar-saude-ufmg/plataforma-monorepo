@@ -29,7 +29,8 @@
 		color: string;
 		/**
 		 * Distância do rótulo ao centro, quando DIST_ROTULO não serve para esta dimensão.
-		 * Mexe só no texto: o centro da bolha continua em DIST_ROTULO para todas.
+		 * O recorte da pétala não muda — ele é geometria do Venn —, mas a BOLHA acompanha:
+		 * ela nasce centrada no texto, e ficaria torta se só o texto se mexesse.
 		 */
 		dist?: number;
 	};
@@ -193,7 +194,8 @@
 		text?: Localized;
 		/**
 		 * Giro em graus sobre o eixo do trio, quando o texto precisa fugir de uma borda.
-		 * Positivo é no sentido do anel (horário). Mexe só no texto, não na região.
+		 * Positivo é no sentido do anel (horário). O recorte da faixa não muda, mas a BOLHA
+		 * gira junto com o texto — ver desvioDoTrio.
 		 */
 		desvio?: number;
 	}> = [
@@ -299,11 +301,11 @@
 	   Onde o texto pode ficar, em distância a partir de CENTRO:
 	   - RÓTULO de cada dimensão, na direção do próprio círculo: a partir de ~287 o ponto
 	     já saiu dos dois vizinhos (é a "pétala" exclusiva) e vai até anel + raio = 507.
-	     DIST_ROTULO = 397 é o meio dessa faixa e é também o centro da
-	     bolha da pétala,
+	     DIST_ROTULO = 397 é o meio dessa faixa e é também o centro da bolha da pétala,
 	     para a bolha inflar centrada no texto. Empurrar TODOS os rótulos para fora (já
 	     tentamos, a 425) desequilibra o desenho; quem precisa de ajuste sobe sozinho pelo
-	     campo `dist` da própria dimensão. A pétala é estreita nas duas pontas: a ~350 do
+	     campo `dist` da própria dimensão — e a bolha sobe junto, senão o círculo abriria
+	     fora do texto. A pétala é estreita nas duas pontas: a ~350 do
 	     centro ela tem ±116 de largura, a ~440 tem ±186. Por isso o rótulo em repouso é só
 	     ÍCONE + TÍTULO: a descrição não cabe aqui em tamanho legível, e aparece na bolha
 	     (ver o realce no estilo);
@@ -499,8 +501,9 @@
 
 	   Toda bolha nasce CENTRADA no mesmo ponto em que o texto da peça já estava, para o
 	   realce ler como a peça inflando no lugar. A de uma pétala não cabe no quadrado por
-	   causa disso — a pétala já encosta na borda —, então ela transborda ~8% do lado do
-	   diagrama, e é o estilo que reserva esse espaço em volta (ver a medida do quadrado).
+	   causa disso — a pétala já encosta na borda —, então ela transborda 7,7% do lado do
+	   diagrama nas laterais e 9,5% em cima, onde o rótulo tem `dist` maior. É o estilo que
+	   reserva esse espaço em volta (ver a medida do quadrado).
 	   Já tentamos o contrário: recuar o centro da bolha até caber. Ficava com cara de
 	   pétala encolhendo para dentro, diferente dos outros dois níveis, que inflam. */
 	const RAIO_BOLHA = 200;
@@ -528,6 +531,11 @@
 		};
 	}
 
+	/* Giro do texto do trio do círculo i, quando ele tem um. A bolha PRECISA dele: ela
+	   nasce em volta do texto, e um desvio que só o texto conhecesse deixaria o círculo
+	   torto em relação às palavras que ele abre. Mesma razão do `dist` das pétalas. */
+	const desvioDoTrio = (i: number) => trios.find((tr) => tr.meio === dimensoes[i].key)?.desvio ?? 0;
+
 	const regioes: Regiao[] = dimensoes.flatMap((dim, i) => {
 		const eixo = anguloDe(i);
 		const bissetriz = eixo + PASSO / 2;
@@ -541,7 +549,7 @@
 					{ p: ponto(eixo + PASSO / 2, V_PAR), circulo: i + 1 },
 					{ p: ponto(eixo, V_TRIO), circulo: i - 1 }
 				],
-				ponto(eixo, DIST_ROTULO)
+				ponto(eixo, dim.dist ?? DIST_ROTULO)
 			),
 			// Nível 2: a lente do par (i, i+1), entre a ponta em 441 e o canto em 157.
 			montar(
@@ -553,7 +561,7 @@
 					{ p: ponto(bissetriz, V_QUARTETO), circulo: i - 1 },
 					{ p: ponto(eixo, V_TRIO), circulo: i + 1 }
 				],
-				ponto(bissetriz, (V_PAR + V_QUARTETO) / 2)
+				ponto(bissetriz, DIST_INTERSECAO)
 			),
 			// Nível 3: a faixa do trio (i-1, i, i+1), entre 287 e 102 no eixo do círculo i.
 			montar(
@@ -565,17 +573,24 @@
 					{ p: ponto(eixo, V_QUINTETO), circulo: i - 2 },
 					{ p: ponto(eixo - PASSO / 2, V_QUARTETO), circulo: i + 1 }
 				],
-				ponto(eixo, (V_TRIO + V_QUINTETO) / 2)
+				ponto(eixo + desvioDoTrio(i), DIST_TRIO)
 			)
 		];
 	});
 
-	/* A dica só começa quando o diagrama aparece na tela: se disparasse no carregamento,
-	   ela já teria acabado quando alguém rolasse até aqui. */
-	let dica = $state(false);
+	/* DOIS ESTADOS, DOIS GESTOS
+	   `sob` é a peça sob o mouse e responde por um realce leve: véu de cor e o contorno
+	   sendo desenhado. `ativa` é a peça ABERTA, e só o clique a define — é ela que vira
+	   bolha e mostra o texto longo.
 
-	/* Qual peça está sob o mouse. O realce é do desenho inteiro (peça + texto), então o
-	   estado mora aqui em vez de sair de um :hover em cada elemento. */
+	   Antes o hover fazia as duas coisas ao mesmo tempo e um rodízio automático acendia
+	   peças sozinho de tempos em tempos. O passeio do mouse pelo desenho abria e fechava
+	   bolhas grandes sem parar, e o rodízio competia com o mouse pela mesma tinta. Agora
+	   o realce que era do rodízio é a resposta ao hover, e abrir é um gesto deliberado.
+
+	   Os dois estados moram aqui, e não num `:hover` de cada elemento, porque o realce é
+	   do desenho INTEIRO — a peça no SVG e o bloco de texto em HTML, que são irmãos. */
+	let sob: string | null = $state(null);
 	let ativa: string | null = $state(null);
 
 	/* MORPH DA BOLHA, EM JAVASCRIPT
@@ -645,33 +660,12 @@
 		if (quadro !== null) cancelAnimationFrame(quadro);
 	});
 
-	/* Rodízio de destaque: de tempos em tempos uma peça sorteada se acende sozinha, para
-	   contar que o desenho responde ao mouse. Só roda depois que o diagrama aparece na
-	   tela, cala enquanto o mouse está numa peça e volta quando ele sai. */
-	let destaque: string | null = $state(null);
-	const PAUSA_DESTAQUE = 2600;
-
-	$effect(() => {
-		const parado =
-			typeof window !== 'undefined' &&
-			window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-		if (!dica || parado || ativa !== null) {
-			destaque = null;
-			return;
-		}
-		// `anterior` mora aqui, e não no estado, para o sorteio não reiniciar o próprio
-		// intervalo: o efeito só depende de quem o mouse está tocando.
-		let anterior: string | null = null;
-		const sortear = () => {
-			const outras = regioes.filter((r) => r.id !== anterior);
-			anterior = outras[Math.floor(Math.random() * outras.length)].id;
-			destaque = anterior;
-		};
-		sortear();
-		const relogio = setInterval(sortear, PAUSA_DESTAQUE);
-		return () => clearInterval(relogio);
-	});
 </script>
+
+<!-- Clique em QUALQUER lugar fecha a peça aberta. As peças param o próprio clique antes
+     dele chegar aqui (ver o stopPropagation), então continuam abrindo e trocando entre si;
+     todo o resto da tela — inclusive o miolo do desenho e o texto em volta — fecha. -->
+<svelte:window onclick={() => (ativa = null)} />
 
 <div>
 	<div class="mx-auto max-w-3xl text-center">
@@ -693,22 +687,7 @@
 		  a fonte lida por leitores de tela, então nada é anunciado duas vezes.
 		- lista: sempre no DOM. Visível abaixo de lg, e sr-only a partir de lg.
 	-->
-	<div
-		class="venn relative mx-auto hidden aspect-square lg:block"
-		{@attach (node) => {
-			const observador = new IntersectionObserver(
-				(entradas) => {
-					if (entradas.some((e) => e.isIntersecting)) {
-						dica = true;
-						observador.disconnect();
-					}
-				},
-				{ threshold: 0.35 }
-			);
-			observador.observe(node);
-			return () => observador.disconnect();
-		}}
-	>
+	<div class="venn relative mx-auto hidden aspect-square lg:block">
 		<svg viewBox="0 0 1000 1000" class="absolute inset-0 h-full w-full" aria-hidden="true">
 			{#each circulos as dim (dim.key)}
 				<circle
@@ -730,18 +709,27 @@
 			     alvo com a forma parada, e não crescendo junto, deixa o mapa de hover
 			     estável: a fronteira entre duas peças não se mexe enquanto uma está no ar. -->
 			{#each regioes as reg (reg.id)}
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<path
 					class="venn-alvo"
-					class:destacada={destaque === reg.id}
+					class:destacada={sob === reg.id && ativa !== reg.id}
+					class:aberta={ativa === reg.id}
 					role="presentation"
 					data-regiao={reg.id}
 					d={reg.d}
 					pathLength="1"
 					stroke="var(--azul-profundo)"
 					style="--cor: {reg.fill}"
-					onmouseenter={() => (ativa = reg.id)}
+					onmouseenter={() => (sob = reg.id)}
 					onmouseleave={() => {
-						if (ativa === reg.id) ativa = null;
+						if (sob === reg.id) sob = null;
+					}}
+					onclick={(e) => {
+						// Sem isto o clique subiria até a janela, que fecha tudo — e a peça
+						// abriria e fecharia no mesmo gesto.
+						e.stopPropagation();
+						ativa = ativa === reg.id ? null : reg.id;
 					}}
 				/>
 			{/each}
@@ -755,7 +743,7 @@
 
 		<!-- pointer-events-none: quem responde ao mouse são os paths do SVG, que estão
 		     embaixo. Sem isso um rótulo roubaria o hover da própria peça que o contém. -->
-		<div class="pointer-events-none absolute inset-0" aria-hidden="true">
+		<div class="venn-textos pointer-events-none absolute inset-0" aria-hidden="true">
 			{#each circulos as dim (dim.key)}
 				<div
 					class="venn-dim absolute -translate-x-1/2 -translate-y-1/2 text-center"
@@ -907,23 +895,41 @@
 	   é um comentário sobre o desenho e cabe lê-lo depois de um empurrãozinho de rolagem.
 	   O `max(28rem, …)` é um piso: abaixo disso o texto interno fica ilegível.
 
-	   O /1,09 e a margem de 9% são o espaço que a bolha da pétala DE CIMA precisa acima
-	   do quadrado (ela transborda ~7,7% do lado). A margem entra no mesmo orçamento
+	   O /1,10 e a margem de 10% são o espaço que a bolha da pétala DE CIMA precisa acima
+	   do quadrado. Ela é a pétala mais empurrada para fora (`dist` 415) e a bolha a
+	   acompanha, então transborda 9,5% do lado — mais que os 7,7% das laterais, que ficam
+	   em DIST_ROTULO. A margem entra no mesmo orçamento
 	   vertical, por isso ela divide a altura livre em vez de só somar. Como as duas saem
 	   do mesmo --lado, mudar o raio da bolha é mudar esses dois números juntos.
 
 	   svh, e não vh: no mobile o vh ignora a barra de endereço, mas aqui isso não chega a
 	   importar porque o Venn só existe a partir de lg. */
 	.venn {
-		--lado: min(84%, 74rem, max(28rem, (100svh - 13rem) / 1.09));
+		--lado: min(84%, 74rem, max(28rem, (100svh - 13rem) / 1.1));
 
 		width: var(--lado);
-		margin-top: calc(0.09 * var(--lado));
+		margin-top: calc(0.1 * var(--lado));
+	}
+
+	/* UM TAMANHO PARA TODO CORPO DE TEXTO
+	   Descrição da pétala, frase da lente, frase do trio e subtítulo do núcleo são o mesmo
+	   nível de leitura, então têm o mesmo tamanho — antes eram quatro valores (1,5 / 1,4 /
+	   1,4 / 1,55cqw) que só se diferenciavam por acaso. Ficou o maior dos quatro, o do
+	   núcleo, para que nenhum texto encolhesse na unificação. Quem varia por nível é o
+	   TÍTULO de cada peça, não o corpo.
+
+	   A variável mora AQUI, na camada de textos, e não na .venn: a .venn é o próprio
+	   container de consulta, e um elemento não responde à container query que ele mesmo
+	   estabelece — declarada lá, a troca de tamanho do @container passaria batida. */
+	.venn-textos {
+		--corpo: 1.55cqw;
+		--chave: 1.75cqw;
+		--chave-trio: 1.35cqw;
 	}
 
 	/* REALCE NO MOUSE
 	   As peças (os paths do SVG) são invisíveis em repouso e só existem para receber o
-	   mouse; ao ativar, a peça aparece com a cor densa, ganha sombra, sobe um tico e VIRA
+	   mouse; ao ativar, a peça aparece com a cor densa, ganha contorno e VIRA
 	   UMA BOLHA: o `d` do path é interpolado da forma recortada para um círculo em volta
 	   do próprio texto. As duas formas são cúbicas na mesma quantidade (ver PARTES), que
 	   é o que permite ao navegador interpolar uma na outra. O texto que mora na peça
@@ -964,29 +970,49 @@
 			stroke-opacity 180ms ease;
 	}
 
-	/* DICA DE INTERAÇÃO
-	   Enquanto ninguém mexe, o desenho se destaca sozinho: de tempos em tempos uma peça
-	   sorteada acende o contorno e ganha um véu de cor, com entrada lenta (700ms) para
-	   parecer respiração e não pisca-pisca. É o que conta ao visitante que cada pedaço do
-	   Venn é uma peça, e não um desenho chapado.
+	/* REALCE DO HOVER
+	   A peça sob o mouse acende o contorno, desenhado de ponta a ponta, e ganha um véu de
+	   cor. Esta era a animação do rodízio automático, que acendia peças sorteadas sozinho;
+	   agora é a resposta ao mouse, e o desenho só se mexe quando alguém o toca.
 
-	   Quem manda é o mouse: assim que ele entra numa peça o rodízio para, e quando sai ele
-	   volta (a lógica está no efeito lá em cima). Por isso a regra do realce vem DEPOIS
-	   desta: as duas têm a mesma força, e quem estiver por último ganha.
+	   O véu pinta no ALVO, que vive na camada de baixo, e não na peça de cima: lá em cima
+	   ele passaria por cima dos textos e lavaria as palavras. Aqui fica onde deve — sobre
+	   os círculos, sob o texto —, como uma sombra do próprio desenho. A camada de cima
+	   continua reservada à peça ABERTA, que aí sim tem de cobrir tudo.
 
-	   O cursor continua o normal, de propósito: a peça não é clicável, e `pointer`
-	   prometeria um clique que não existe. Quem avisa é a própria resposta ao mouse, que
-	   é imediata e grande — mais eloquente que qualquer seta. */
-	/* O rodízio pinta no ALVO, que vive na camada de baixo, e não na peça de cima: lá em
-	   cima o véu passaria por cima dos textos e lavaria as palavras. Aqui ele fica onde
-	   deve — sobre os círculos, sob o texto —, como uma sombra do próprio desenho. A peça
-	   de cima continua reservada ao hover, que aí sim tem de cobrir tudo. */
+	   As durações (700ms de véu, 900ms de traço) vêm do rodízio, onde eram lentas de
+	   propósito para parecer respiração e não pisca-pisca. Num gesto de mouse elas ficam
+	   arrastadas; se incomodar, é aqui que se encurta.
+
+	   O cursor agora é `pointer`: desde que abrir virou clique, a peça é clicável de fato,
+	   e a seta prometeria um gesto que não é o certo. */
 	.venn-alvo {
+		cursor: pointer;
 		stroke-opacity: 0;
 		stroke-width: 3.2;
 		transition:
 			fill-opacity 700ms ease,
 			stroke-opacity 700ms ease;
+	}
+
+	/* PEÇA ABERTA NÃO TEM HOVER
+	   O alvo do mouse não vira bolha — ele guarda o recorte parado da peça, para o mapa de
+	   cliques não se mexer enquanto uma está no ar. Só que o realce do hover é desenhado
+	   NESSE recorte: ao clicar, o contorno da peça original continuava aceso por baixo, e
+	   as pontas dele que passam da bolha apareciam como arestas soltas em volta do círculo.
+
+	   Então abrir desliga o hover da própria peça (a condição está no `class:destacada`), e
+	   aqui o apagar é rápido: nos 700ms de respiração do realce, o contorno ainda ficaria
+	   visível meio segundo depois de a bolha já ter aberto. */
+	/* Aberta, a peça também SOME do fundo. O alvo guarda o recorte parado dela, então
+	   pintá-lo da cor da seção apaga a peça de trás da bolha. Só faz diferença nas
+	   pétalas: a bolha tem raio 200 e o canto de uma pétala está a 262 do centro dela, ou
+	   seja, as duas pontas sobram para fora do círculo. Lentes e trios cabem inteiros
+	   dentro da bolha, e para eles esta regra não pinta nada visível. */
+	.venn-alvo.aberta {
+		fill: var(--background);
+		fill-opacity: 1;
+		transition-duration: 160ms;
 	}
 
 	.venn-alvo.destacada {
@@ -1010,8 +1036,7 @@
 
 	.venn-regiao.ativa {
 		fill-opacity: 1;
-		stroke-opacity: 0.3;
-		filter: drop-shadow(0 6px 18px rgb(15 31 91 / 0.3));
+		stroke-opacity: 0.45;
 	}
 
 	.venn-inter {
@@ -1025,8 +1050,12 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		/* O rodízio nem chega a começar quando o sistema pede menos movimento (o efeito
-		   consulta a mesma media query), então aqui não há o que desligar. */
+		/* O véu do hover fica; o traço correndo em volta da peça, não — ele é movimento
+		   puro, e o realce se sustenta só com a cor e o contorno já postos. */
+		.venn-alvo.destacada {
+			animation: none;
+			stroke-dasharray: none;
+		}
 
 		.venn-regiao,
 		.venn-dim,
@@ -1038,6 +1067,10 @@
 		.venn-inter.ativa,
 		.venn-trio.ativa {
 			scale: 1;
+		}
+
+		.venn-trio-chave {
+			transition-duration: 1ms;
 		}
 	}
 
@@ -1071,12 +1104,18 @@
 	   LARGA que o rótulo e vaza para os lados com margem negativa, em vez de esticar a
 	   caixa: animar a largura da caixa fazia o título requebrar a cada quadro, e o texto
 	   ficava se acomodando durante toda a transição. Assim a caixa não muda de largura
-	   nunca, e o único movimento é o fade da frase. */
+	   nunca, e o único movimento é o fade da frase.
+
+	   A MARGEM É CALCULADA, e não escrita à mão: (100% - largura) / 2 é o que sobra de cada
+	   lado, com 100% sendo a caixa que a contém. Escrita à mão ela precisa casar com a
+	   largura da caixa (margem + largura + margem = caixa) e desandava calada quando a
+	   caixa mudava só no @container lá embaixo: sobrerrestringida, a regra do CSS descarta
+	   a margem da direita e o texto desliza para a esquerda, saindo do centro da bolha. */
 	.venn-desc {
 		display: none;
 		width: 24cqw;
-		margin-inline: -3cqw;
-		font-size: 1.5cqw;
+		margin-inline: calc((100% - 24cqw) / 2);
+		font-size: var(--corpo);
 	}
 
 	.venn-dim.ativa .venn-desc {
@@ -1102,16 +1141,17 @@
 	}
 
 	.venn-inter-chave {
-		font-size: 1.75cqw;
+		font-size: var(--chave);
 	}
 
-	/* Mesma ideia da descrição das pétalas: a frase é mais larga que a chave e vaza para
-	   os lados, em vez de esticar a caixa e requebrar o texto durante a transição. */
+	/* Mesma ideia da descrição das pétalas, margem calculada inclusive: a frase é mais
+	   larga que a chave e vaza para os lados, em vez de esticar a caixa e requebrar o
+	   texto durante a transição. */
 	.venn-inter-frase {
 		display: none;
 		width: 22cqw;
-		margin-inline: -2.5cqw;
-		font-size: 1.4cqw;
+		margin-inline: calc((100% - 22cqw) / 2);
+		font-size: var(--corpo);
 	}
 
 	.venn-inter.ativa .venn-inter-frase {
@@ -1122,21 +1162,37 @@
 	/* A faixa de trio é a região mais apertada do desenho: entre o núcleo e a ponta em
 	   287 sobram ~147 unidades de altura e uns ±90 de largura no ponto em que o texto
 	   fica. Por isso a caixa é bem menor que a das lentes — cabe uma palavra-chave em
-	   duas linhas, e a frase inteira espera a bolha. */
+	   duas linhas, e a frase inteira espera a bolha. É a caixa que mais muda de largura no
+	   @container, e por isso a que mais precisava da margem calculada da frase. */
 	.venn-trio {
 		width: 11cqw;
 		transition: scale 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
 	}
 
+	/* A CHAVE DO TRIO CRESCE AO ABRIR
+	   Aberta, ela tem o mesmo tamanho da chave da lente: as duas são o mesmo nível de
+	   leitura, e dentro da bolha há espaço de sobra para as duas serem iguais.
+
+	   Em repouso, não: a faixa do trio é a região mais apertada do desenho, e no tamanho
+	   da lente as chaves encostam no disco escuro do núcleo — "Prestação de contas",
+	   "Confiança e inclusão", "Governança transparente" e "Direitos preservados" cruzam a
+	   borda dele. Então em repouso ela fica no tamanho que cabe ali, e é a abertura que a
+	   leva ao tamanho da lente. Cresce junto com a bolha (mesmos 320ms), para ser um
+	   movimento só e não um pulo de fonte no meio da transição. */
 	.venn-trio-chave {
-		font-size: 1.35cqw;
+		font-size: var(--chave-trio);
+		transition: font-size 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
+	}
+
+	.venn-trio.ativa .venn-trio-chave {
+		font-size: var(--chave);
 	}
 
 	.venn-trio-frase {
 		display: none;
 		width: 22cqw;
-		margin-inline: -5.5cqw;
-		font-size: 1.4cqw;
+		margin-inline: calc((100% - 22cqw) / 2);
+		font-size: var(--corpo);
 	}
 
 	.venn-trio.ativa {
@@ -1166,7 +1222,7 @@
 	}
 
 	.venn-hub-sub {
-		font-size: 1.55cqw;
+		font-size: var(--corpo);
 	}
 
 	/* Telas baixas: o quadrado encolheu para caber na altura e os cqw encolheram junto —
@@ -1179,32 +1235,18 @@
 		   pétala é o mesmo em qualquer tamanho de quadrado, e 2,2cqw já dá 14px num
 		   quadrado de 635. O que precisa de ajuda é o texto pequeno — descrição e
 		   interseções —, que a essa altura cairia para uns 8px. */
-		.venn-desc {
-			font-size: 1.9cqw;
+		.venn-textos {
+			--corpo: 1.9cqw;
+			--chave: 2.05cqw;
+			--chave-trio: 1.7cqw;
 		}
 
 		.venn-inter {
 			width: 18cqw;
 		}
 
-		.venn-inter-chave {
-			font-size: 2.2cqw;
-		}
-
-		.venn-inter-frase {
-			font-size: 1.9cqw;
-		}
-
 		.venn-trio {
 			width: 13cqw;
-		}
-
-		.venn-trio-chave {
-			font-size: 1.7cqw;
-		}
-
-		.venn-trio-frase {
-			font-size: 1.9cqw;
 		}
 
 		.venn-hub {
@@ -1220,8 +1262,5 @@
 			font-size: 2.65cqw;
 		}
 
-		.venn-hub-sub {
-			font-size: 1.9cqw;
-		}
 	}
 </style>
