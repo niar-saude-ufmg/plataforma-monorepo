@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { prisma } from "@niar/database";
 
 // hashedPassword fica de fora de propósito: como o select já não busca o
@@ -28,5 +29,10 @@ export const usersRepository = {
     prisma.user.findMany({
       select: userListSelect,
       orderBy: { id: "asc" }
-    })
+    }),
+
+  findByEmail: (email: string) => prisma.user.findUnique({ where: { email } }),
+
+  create: (data: { fullName: string; email: string; hashedPassword: string; role?: "researcher" | "admin" }) =>
+    prisma.user.create({ data })
 };
