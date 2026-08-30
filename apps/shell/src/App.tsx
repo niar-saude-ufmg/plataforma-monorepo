@@ -12,8 +12,6 @@ import {
 import { APP_ROUTES, APP_TITLES } from "@niar/config";
 import { UserRole } from "@niar/contracts";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { HomePage } from "./pages/HomePage";
-import { NotFoundPage } from "./pages/NotFoundPage";
 import { AuthenticatedUser, getCurrentUser, login as loginRequest } from "./services/auth-api";
 
 type SessionUser = {
@@ -25,6 +23,7 @@ type SessionUser = {
 
 const AdminRemote = lazy(() => import("admin/App"));
 const AssistantRemote = lazy(() => import("assistant/App"));
+const InstitutionalRemote = lazy(() => import("institucional/App"));
 
 const readSession = (): SessionUser | null => {
   const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
@@ -104,6 +103,9 @@ function LoginPage({
       </section>
       <section className="login-form-panel" aria-labelledby="login-title">
         <div className="login-form-content">
+          <Link className="back-to-site" to={APP_ROUTES.home}>
+            {"< Voltar ao site institucional"}
+          </Link>
           <p className="eyebrow">Acesso à plataforma</p>
           <h1 id="login-title">{APP_TITLES.login}</h1>
           <p className="muted">Use suas credenciais para continuar.</p>
@@ -186,8 +188,6 @@ export default function App() {
 
     return hasAccessToRoute(user?.role, location.pathname);
   }, [location.pathname, user?.role]);
-  const isLoginRoute = location.pathname === APP_ROUTES.login;
-
   const login = async (email: string, password: string) => {
     const result = await loginRequest(email, password);
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, result.token);
@@ -197,39 +197,8 @@ export default function App() {
     return sessionUser;
   };
 
-  const logout = () => {
-    writeSession(null);
-    setUser(null);
-  };
-
   return (
     <div className="layout">
-      {!isLoginRoute && <header className="topbar">
-        <div>
-          <p className="eyebrow">NIAR</p>
-          <strong>Shell da Plataforma</strong>
-        </div>
-        <nav className="nav-links">
-          <Link to={APP_ROUTES.home}>Início</Link>
-          <Link to={APP_ROUTES.admin}>Admin</Link>
-          <Link to={APP_ROUTES.assistant}>Assistente</Link>
-          <Link to={APP_ROUTES.login}>Login</Link>
-        </nav>
-        <div className="session-box">
-          {user ? (
-            <>
-              <span>{user.name}</span>
-              <button type="button" onClick={logout}>
-                Sair
-              </button>
-            </>
-          ) : (
-            <span>Sem sessão</span>
-          )}
-        </div>
-      </header>
-      }
-
       {isRestoringSession && <RemoteLoading label="sessão" />}
 
       {!isRestoringSession && !canAccessCurrentRoute && (
@@ -237,7 +206,6 @@ export default function App() {
       )}
 
       {!isRestoringSession && <Routes>
-        <Route path={APP_ROUTES.home} element={<HomePage />} />
         <Route path={APP_ROUTES.login} element={<LoginPage onLogin={login} />} />
         <Route
           path={`${APP_ROUTES.admin}/*`}
@@ -259,7 +227,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<NotFoundPage />} />
+        <Route
+          path="/*"
+          element={
+            <Suspense fallback={<RemoteLoading label="site institucional" />}>
+              <InstitutionalRemote />
+            </Suspense>
+          }
+        />
       </Routes>}
     </div>
   );

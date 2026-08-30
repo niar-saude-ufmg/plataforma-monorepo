@@ -13,6 +13,7 @@
     "prisma": "6.2.1"
   },
   "scripts": {
+    "dev:institucional": "pnpm --filter @niar/institucional dev",
     "dev:shell": "pnpm --filter @niar/shell dev",
     "dev:admin-web": "pnpm --filter @niar/admin-web dev",
     "dev:admin-api": "dotenv -e ./.env -- pnpm --filter @niar/admin-api dev",

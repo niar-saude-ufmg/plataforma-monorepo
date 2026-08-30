@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
       federation({
         name: "shell",
         remotes: {
+          institucional: env.VITE_INSTITUCIONAL_REMOTE_URL || "http://localhost:4176/assets/remoteEntry.js",
           admin: env.VITE_ADMIN_REMOTE_URL || "http://localhost:4174/assets/remoteEntry.js",
           assistant: env.VITE_ASSISTENTE_REMOTE_URL || "http://localhost:4175/assets/remoteEntry.js"
         },

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { assistantRoute } from '../routes';
+import { niarLogo } from '../assets/niar-logo';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -29,7 +30,7 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <img src="/niar-logo.png" alt="NIAr-Saúde" className="login-logo" />
+        <img src={niarLogo} alt="NIAr-Saúde" className="login-logo" />
         <h1>Assistente de Pesquisa em Saúde</h1>
         <p className="subtitle">Documentação guiada de projetos e limpeza de dados</p>
         <form onSubmit={handleSubmit}>

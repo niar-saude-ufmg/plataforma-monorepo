@@ -210,7 +210,7 @@ pnpm dev
 Esse é o comando padrão para trabalhar na plataforma. Ele prepara e serve os remotos federados, inicia a shell e também as APIs necessárias para os fluxos reais:
 
 - shell em `http://localhost:5173`;
-- remotos `admin-web` e `assistente-web` carregados pela shell;
+- remotos `institucional`, `admin-web` e `assistente-web` carregados pela shell;
 - `admin-api` e `assistente-api`.
 
 As portas próprias dos remotos são internas ao desenvolvimento. O acesso funcional deve ser feito pela shell, e não abrindo cada microfrontend separadamente.
@@ -343,6 +343,7 @@ O que cada automação faz:
 - `pnpm db:down`: desliga o banco local
 - `pnpm db:logs`: mostra os logs do banco
 - `pnpm dev`: prepara os remotos federados e sobe shell, APIs e micros necessários à plataforma
+- `pnpm dev:institucional`: sobe apenas o frontend institucional para desenvolvimento isolado
 - `pnpm dev:shell`: sobe só a shell
 - `pnpm dev:admin-web`: sobe só o frontend administrativo
 - `pnpm dev:admin-api`: sobe só o backend administrativo

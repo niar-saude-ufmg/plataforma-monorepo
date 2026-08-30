@@ -15,15 +15,14 @@ afterEach(() => {
 });
 
 describe("Shell App", () => {
-  it("renderiza a página pública inicial", () => {
+  it("renderiza a página pública de login", () => {
     render(
-      <MemoryRouter initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/login"]}>
         <App />
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Plataforma NIAR")).toBeInTheDocument();
-    expect(screen.getByText("Fazer login")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Login da Plataforma" })).toBeInTheDocument();
   });
 
   it("redireciona uma rota protegida para o login", () => {

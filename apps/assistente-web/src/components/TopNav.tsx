@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { APP_ROUTES } from '@niar/config';
 import { useAuth } from '../context/AuthContext';
 import { assistantRoute } from '../routes';
+import { niarLogo } from '../assets/niar-logo';
 
 const NAV_ITEMS = [
   { to: assistantRoute(), label: 'Início', end: true },
@@ -16,7 +17,7 @@ export function TopNav() {
   return (
     <header className="top-nav">
       <Link to={assistantRoute()} className="top-nav-brand" aria-label="NIAr-Saúde — Início">
-        <img src="/niar-logo.png" alt="NIAr-Saúde" className="top-nav-logo" />
+        <img src={niarLogo} alt="NIAr-Saúde" className="top-nav-logo" />
       </Link>
       <nav className="nav-links" aria-label="Menu principal">
         {NAV_ITEMS.map((item) => (
