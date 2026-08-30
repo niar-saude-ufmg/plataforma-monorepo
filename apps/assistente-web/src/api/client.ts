@@ -84,11 +84,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  login: (email: string, password: string) =>
-    request<{ access_token: string }>('/api/auth/login/json', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    }),
   me: () => request<User>('/api/auth/me'),
   listProjects: () => request<WizardSession[]>('/api/projects'),
   createProject: (title: string) =>
