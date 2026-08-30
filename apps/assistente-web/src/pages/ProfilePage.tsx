@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { APP_ROUTES } from '@niar/config';
 import { useAuth } from '../context/AuthContext';
 
 function roleLabel(role: string) {
@@ -40,7 +41,7 @@ export default function ProfilePage() {
 
         <div className="profile-actions">
           {user.role === 'admin' && (
-            <Link to="/admin" className="btn secondary">Administração</Link>
+            <Link to={APP_ROUTES.admin} className="btn secondary">Administração</Link>
           )}
           <button type="button" className="btn secondary" onClick={logout}>Sair</button>
         </div>

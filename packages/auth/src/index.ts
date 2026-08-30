@@ -2,10 +2,13 @@ import { APP_ROUTES } from "@niar/config";
 import { UserRole } from "@niar/contracts";
 
 export const SESSION_STORAGE_KEY = "niar.platform.session";
+export const ACCESS_TOKEN_STORAGE_KEY = "token";
+export const SESSION_CHANGED_EVENT = "niar:session-changed";
 export const defaultUserRole: UserRole = "researcher";
 
 export const isProtectedRoute = (pathname: string) =>
-  pathname.startsWith(APP_ROUTES.admin) || pathname.startsWith(APP_ROUTES.assistant);
+  pathname.startsWith(APP_ROUTES.admin) ||
+  pathname.startsWith(APP_ROUTES.assistant);
 
 export const isRoleAllowedForProtectedArea = (role?: UserRole) => Boolean(role);
 
@@ -19,7 +22,7 @@ export const hasAccessToRoute = (role: UserRole | undefined, pathname: string) =
   }
 
   if (pathname.startsWith(APP_ROUTES.admin)) {
-    return role === "admin" || role === "committee" || role === "researcher";
+    return Boolean(role);
   }
 
   if (pathname.startsWith(APP_ROUTES.assistant)) {
@@ -27,4 +30,14 @@ export const hasAccessToRoute = (role: UserRole | undefined, pathname: string) =
   }
 
   return true;
+};
+
+export const notifySessionChanged = () => {
+  window.dispatchEvent(new Event(SESSION_CHANGED_EVENT));
+};
+
+export const clearPlatformSession = () => {
+  window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  window.localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+  notifySessionChanged();
 };

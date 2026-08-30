@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { isRoleAllowedForProtectedArea } from "@niar/auth";
+import { hasAccessToRoute } from "@niar/auth";
 import { APP_ROUTES } from "@niar/config";
 import { UserRole } from "@niar/contracts";
 
@@ -13,8 +13,14 @@ export function ProtectedRoute({
 }) {
   const location = useLocation();
 
-  if (!isRoleAllowedForProtectedArea(userRole)) {
-    return <Navigate replace state={{ from: location.pathname }} to={APP_ROUTES.login} />;
+  if (!hasAccessToRoute(userRole, location.pathname)) {
+    return (
+      <Navigate
+        replace
+        state={{ from: `${location.pathname}${location.search}${location.hash}` }}
+        to={APP_ROUTES.login}
+      />
+    );
   }
 
   return <>{children}</>;

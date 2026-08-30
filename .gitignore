@@ -24,3 +24,8 @@ venv
 **/.local
 build
 *.log
+
+# Artefatos emitidos por verificações TypeScript locais nos apps Vite.
+apps/**/src/**/*.js
+apps/**/vite.config.js
+apps/**/tsconfig.tsbuildinfo

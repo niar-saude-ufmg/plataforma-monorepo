@@ -6,6 +6,7 @@ import { CleaningStepPanel } from '../components/CleaningStepPanel';
 import { LoadingPanel } from '../components/LoadingPanel';
 import { ProjectWorkspaceLayout } from '../components/ProjectWorkspaceLayout';
 import { SectionDraftPreviewModal } from '../components/SectionDraftPreviewModal';
+import { assistantRoute } from '../routes';
 import { SectionProgressBar, countFilledSections } from '../components/SectionProgressBar';
 import { Stepper } from '../components/Stepper';
 import { DOC_SECTIONS, DOC_SECTION_HINTS, DOC_STEP_KEYS, DOC_STEPS } from '../constants';
@@ -134,7 +135,7 @@ export default function DocWizardPage() {
   const ensureSession = async (): Promise<WizardSession> => {
     if (session) return session;
     const s = await api.createProject(title || 'Projeto sem título');
-    navigate(`/projects/${s.id}`, { replace: true });
+    navigate(assistantRoute(`/projects/${s.id}`), { replace: true });
     setSession(s);
     setTitle(s.title);
     return s;
@@ -157,7 +158,7 @@ export default function DocWizardPage() {
     const saved = await api.saveProjectDraft(session.id, payload);
     setSession(saved);
     setSaveMessage(`Rascunho salvo em ${new Date(saved.updated_at).toLocaleString('pt-BR')}`);
-    if (exit) navigate('/projects');
+    if (exit) navigate(assistantRoute('/projects'));
   };
 
   const goToStep = async (step: string) => {
@@ -485,7 +486,7 @@ export default function DocWizardPage() {
     <div className={`page wizard-page ${showProjectWorkspace ? 'wizard-page--workspace' : ''}`}>
       <header className="header">
         <div>
-          <Link to="/projects">← Todas as sessões</Link>
+          <Link to={assistantRoute('/projects')}>← Todas as sessões</Link>
           <h1>Assistente de Documento do Projeto</h1>
           {session && <p className="muted">Sessão #{session.id} · Última atualização {new Date(session.updated_at).toLocaleString('pt-BR')}</p>}
         </div>

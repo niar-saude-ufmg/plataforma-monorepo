@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { assistantRoute } from '../routes';
 
 export default function DashboardPage() {
   return (
@@ -9,7 +10,7 @@ export default function DashboardPage() {
       </header>
 
       <div className="dashboard-grid">
-        <Link to="/projects/new" className="dashboard-card">
+        <Link to={assistantRoute('/projects/new')} className="dashboard-card">
           <h2>Documento do Projeto</h2>
           <p>
             Documente seu estudo, exporte o project.docx e conclua com a engenharia de dados vinculada
@@ -20,7 +21,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="dashboard-links">
-        <Link to="/projects">Ver sessões de projeto</Link>
+        <Link to={assistantRoute('/projects')}>Ver sessões de projeto</Link>
       </div>
     </div>
   );

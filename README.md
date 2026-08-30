@@ -199,21 +199,25 @@ Dependências principais:
 - `@prisma/client`
 - `pg`
 
-## Como rodar cada parte separadamente
+## Desenvolvimento local
 
-### Rodar tudo
+### Fluxo normal
 
 ```bash
 pnpm dev
 ```
 
-Isso sobe:
+Esse é o comando padrão para trabalhar na plataforma. Ele prepara e serve os remotos federados, inicia a shell e também as APIs necessárias para os fluxos reais:
 
-- `shell`
-- `admin-web`
-- `admin-api`
-- `assistente-web`
-- `assistente-api`
+- shell em `http://localhost:5173`;
+- remotos `admin-web` e `assistente-web` carregados pela shell;
+- `admin-api` e `assistente-api`.
+
+As portas próprias dos remotos são internas ao desenvolvimento. O acesso funcional deve ser feito pela shell, e não abrindo cada microfrontend separadamente.
+
+### Desenvolvimento isolado
+
+Os comandos abaixo são opcionais e existem apenas para diagnosticar ou desenvolver um módulo sem iniciar toda a plataforma.
 
 ### Rodar só a shell
 
@@ -338,7 +342,7 @@ O que cada automação faz:
 - `pnpm db:up`: sobe o banco local no Docker
 - `pnpm db:down`: desliga o banco local
 - `pnpm db:logs`: mostra os logs do banco
-- `pnpm dev`: sobe `shell`, `admin-web`, `admin-api`, `assistente-web` e `assistente-api`
+- `pnpm dev`: prepara os remotos federados e sobe shell, APIs e micros necessários à plataforma
 - `pnpm dev:shell`: sobe só a shell
 - `pnpm dev:admin-web`: sobe só o frontend administrativo
 - `pnpm dev:admin-api`: sobe só o backend administrativo

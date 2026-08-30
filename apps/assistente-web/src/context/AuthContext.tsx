@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { ACCESS_TOKEN_STORAGE_KEY, clearPlatformSession } from '@niar/auth';
 import { api, User } from '../api/client';
 
 interface AuthContextType {
@@ -15,9 +16,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
     if (token) {
-      api.me().then(setUser).catch(() => localStorage.removeItem('token')).finally(() => setLoading(false));
+      api.me().then(setUser).catch(clearPlatformSession).finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
@@ -25,13 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const { access_token } = await api.login(email, password);
-    localStorage.setItem('token', access_token);
-    const me = await api.me();
-    setUser(me);
+    localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, access_token);
+    const user = await api.me();
+    setUser(user);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    clearPlatformSession();
     setUser(null);
   };
 

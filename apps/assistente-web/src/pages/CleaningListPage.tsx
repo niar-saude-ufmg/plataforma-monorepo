@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, WizardSession } from '../api/client';
+import { assistantRoute } from '../routes';
 import { CLEAN_STEP_LABELS } from '../constants';
 
 export default function CleaningListPage() {
@@ -13,14 +14,14 @@ export default function CleaningListPage() {
   return (
     <div className="page">
       <header className="header">
-        <Link to="/">← Painel</Link>
+        <Link to={assistantRoute()}>← Painel</Link>
         <h1>Sessões de Limpeza</h1>
-        <Link to="/cleaning/new" className="btn">Nova Limpeza</Link>
+        <Link to={assistantRoute('/cleaning/new')} className="btn">Nova Limpeza</Link>
       </header>
       <ul className="session-list">
         {sessions.map((s) => (
           <li key={s.id}>
-            <Link to={`/cleaning/${s.id}`}>
+            <Link to={assistantRoute(`/cleaning/${s.id}`)}>
               <strong>{s.title}</strong>
               <span>{CLEAN_STEP_LABELS[s.current_step] || s.current_step}</span>
               <span>{new Date(s.updated_at).toLocaleString('pt-BR')}</span>

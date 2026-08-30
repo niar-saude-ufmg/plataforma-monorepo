@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, WizardSession } from '../api/client';
 import { CleaningVersionsPanel, CleaningVersion } from '../components/CleaningVersionsPanel';
+import { assistantRoute } from '../routes';
 import { ChatPanel } from '../components/ChatPanel';
 import { DatasetExplorer } from '../components/DatasetExplorer';
 import { LoadingPanel } from '../components/LoadingPanel';
@@ -86,7 +87,7 @@ export default function CleanWizardPage() {
 
   const createSession = async () => {
     const s = await api.createCleaning(title || 'Limpeza sem título');
-    navigate(`/cleaning/${s.id}`, { replace: true });
+    navigate(assistantRoute(`/cleaning/${s.id}`), { replace: true });
     setSession(s);
     setTitle(s.title);
   };
@@ -120,7 +121,7 @@ export default function CleanWizardPage() {
     });
     setSession(updated);
     setSaveMessage(`Rascunho salvo em ${new Date(updated.updated_at).toLocaleString('pt-BR')}`);
-    if (exit) navigate('/cleaning');
+    if (exit) navigate(assistantRoute('/cleaning'));
   };
 
   const selectDataset = async (datasetId: number) => {
@@ -256,7 +257,7 @@ export default function CleanWizardPage() {
     <div className="page wizard-page">
       <header className="header">
         <div>
-          <Link to="/cleaning">← Todas as sessões</Link>
+          <Link to={assistantRoute('/cleaning')}>← Todas as sessões</Link>
           <h1>Assistente de Limpeza de Dados</h1>
           {session && (
             <p className="muted">

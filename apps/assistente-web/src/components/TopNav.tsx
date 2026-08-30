@@ -1,11 +1,13 @@
 import { Link, NavLink } from 'react-router-dom';
+import { APP_ROUTES } from '@niar/config';
 import { useAuth } from '../context/AuthContext';
+import { assistantRoute } from '../routes';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Início', end: true },
-  { to: '/projects', label: 'Projetos', end: false },
-  { to: '/perfil', label: 'Perfil', end: false },
-  { to: '/informacoes', label: 'Informações', end: false },
+  { to: assistantRoute(), label: 'Início', end: true },
+  { to: assistantRoute('/projects'), label: 'Projetos', end: false },
+  { to: assistantRoute('/perfil'), label: 'Perfil', end: false },
+  { to: assistantRoute('/informacoes'), label: 'Informações', end: false },
 ] as const;
 
 export function TopNav() {
@@ -13,7 +15,7 @@ export function TopNav() {
 
   return (
     <header className="top-nav">
-      <Link to="/" className="top-nav-brand" aria-label="NIAr-Saúde — Início">
+      <Link to={assistantRoute()} className="top-nav-brand" aria-label="NIAr-Saúde — Início">
         <img src="/niar-logo.png" alt="NIAr-Saúde" className="top-nav-logo" />
       </Link>
       <nav className="nav-links" aria-label="Menu principal">
@@ -30,7 +32,7 @@ export function TopNav() {
       </nav>
       <div className="top-nav-actions">
         {user?.role === 'admin' && (
-          <Link to="/admin" className="nav-link nav-link-admin">Administração</Link>
+          <Link to={APP_ROUTES.admin} className="nav-link nav-link-admin">Administração</Link>
         )}
         <button type="button" className="btn secondary small" onClick={logout}>Sair</button>
       </div>

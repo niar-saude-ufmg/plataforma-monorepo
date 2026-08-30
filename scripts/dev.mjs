@@ -1,5 +1,9 @@
 import { rootDir } from "./lib/workspace-paths.mjs";
-import { runStreamingCommand } from "./lib/run-command.mjs";
+import { runCommand, runStreamingCommand } from "./lib/run-command.mjs";
+
+// Vite Federation serves remotes from their production artifacts during local development.
+runCommand("pnpm", ["--filter", "@niar/admin-web", "build"], { cwd: rootDir });
+runCommand("pnpm", ["--filter", "@niar/assistente-web", "build"], { cwd: rootDir });
 
 await runStreamingCommand(
   "pnpm",
@@ -7,13 +11,15 @@ await runStreamingCommand(
     "exec",
     "concurrently",
     "-n",
-    "shell,admin-web,admin-api,assistente-web,assistente-api",
+    "shell,admin-build,admin-remote,admin-api,assistente-build,assistente-remote,assistente-api",
     "-c",
-    "green,yellow,blue,magenta,cyan",
+    "green,yellow,yellow,blue,magenta,magenta,cyan",
     "pnpm dev:shell",
-    "pnpm dev:admin-web",
+    "pnpm --filter @niar/admin-web dev:remote:watch",
+    "pnpm --filter @niar/admin-web dev:remote:serve",
     "pnpm dev:admin-api",
-    "pnpm dev:assistente-web",
+    "pnpm --filter @niar/assistente-web dev:remote:watch",
+    "pnpm --filter @niar/assistente-web dev:remote:serve",
     "pnpm dev:assistente-api"
   ],
   { cwd: rootDir }
