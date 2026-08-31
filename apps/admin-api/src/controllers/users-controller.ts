@@ -14,7 +14,7 @@ export class UserController {
       res.status(201).json(user);
     } catch (error) {
       if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
+        res.status(400).json({ errors: error.errors });
       } else if (error instanceof Error && error.message === "User with this email already exists") {
         res.status(409).json({ error: error.message });
       } else {
