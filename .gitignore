@@ -3,6 +3,7 @@ dist
 .turbo
 .DS_Store
 .env
+.env.test
 .env.production
 .env.local
 coverage
@@ -32,4 +33,4 @@ apps/**/tsconfig.tsbuildinfo
 mise.toml
 
 # Arquivos de configuração da IDE
-zed/
+**/.zed
