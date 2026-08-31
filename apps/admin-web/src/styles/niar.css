@@ -1,0 +1,543 @@
+/* ============================================================
+   NIAR-Saúde · admin-web
+   Estilos derivados do Manual de Identidade Visual (seção 2.2 e 2.3).
+   Nenhuma cor fora da paleta institucional é usada.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Paleta primária */
+  --azul-profundo: #0f1f5b;
+  --azul-ciano: #3fa9d9;
+  --azul-descritivo: #1c355e;
+
+  /* Paleta neutra */
+  --branco: #ffffff;
+  --cinza-chumbo: #4a4a4a;
+  --cinza-claro: #f5f5f5;
+
+  /* Derivadas (transparências das cores oficiais, sem cor nova na paleta) */
+  --linha: rgba(28, 53, 94, 0.12);
+  --linha-forte: rgba(28, 53, 94, 0.22);
+  --ciano-suave: rgba(63, 169, 217, 0.12);
+  --profundo-suave: rgba(15, 31, 91, 0.06);
+
+  --gradiente-institucional: linear-gradient(90deg, var(--azul-profundo) 0%, var(--azul-ciano) 100%);
+
+  --raio: 12px;
+  --raio-sm: 8px;
+  --sombra: 0 1px 2px rgba(15, 31, 91, 0.06), 0 8px 24px rgba(15, 31, 91, 0.06);
+
+  --fonte: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--fonte);
+  font-weight: 400;
+  color: var(--cinza-chumbo);
+  background: var(--cinza-claro);
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--azul-ciano);
+  outline-offset: 2px;
+}
+
+/* ---------- Estrutura ---------- */
+
+.app-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: var(--branco);
+  border-bottom: 1px solid var(--linha);
+  /* Assinatura da marca: o degradê "conhecimento profundo → clareza" no topo. */
+  box-shadow: inset 0 3px 0 0 transparent;
+  position: relative;
+}
+
+.app-header::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--gradiente-institucional);
+}
+
+.app-header__inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Wordmark provisório em texto. Substituir pelo SVG oficial da marca
+   (o manual não permite recriar a marca com outra fonte em produção). */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.1;
+}
+
+.brand__mark {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--gradiente-institucional);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand__descriptor {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--azul-descritivo);
+  letter-spacing: 0.01em;
+}
+
+.app-header__meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--azul-descritivo);
+  background: var(--ciano-suave);
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+/* ---------- Cabeçalho da página ---------- */
+
+.page-head {
+  margin-bottom: 28px;
+}
+
+.page-head__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--azul-ciano);
+  margin: 0 0 8px;
+}
+
+.page-head__title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--azul-profundo);
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+
+.page-head__subtitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 400;
+  max-width: 62ch;
+}
+
+/* ---------- Layout de duas colunas ---------- */
+
+.users-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .users-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .users-layout__aside {
+    order: -1;
+  }
+}
+
+/* ---------- Card ---------- */
+
+.card {
+  background: var(--branco);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  overflow: hidden;
+}
+
+.card__head {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--linha);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--azul-descritivo);
+}
+
+.card__hint {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.card__count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cinza-chumbo);
+  white-space: nowrap;
+}
+
+.card__body {
+  padding: 24px;
+}
+
+/* ---------- Tabela ---------- */
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 720px;
+}
+
+.table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--azul-descritivo);
+  background: var(--cinza-claro);
+  padding: 12px 24px;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 16px 24px;
+  border-top: 1px solid var(--linha);
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background: var(--profundo-suave);
+}
+
+.table__name {
+  font-weight: 600;
+  color: var(--azul-profundo);
+}
+
+.table__email {
+  color: var(--cinza-chumbo);
+}
+
+.table__date {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Pílulas de status e perfil ---------- */
+
+.pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill--role {
+  background: var(--profundo-suave);
+  color: var(--azul-descritivo);
+}
+
+.pill--ativo {
+  background: var(--ciano-suave);
+  color: var(--azul-descritivo);
+  box-shadow: inset 0 0 0 1px rgba(63, 169, 217, 0.45);
+}
+
+.pill--pendente {
+  background: var(--branco);
+  color: var(--azul-descritivo);
+  box-shadow: inset 0 0 0 1px var(--linha-forte);
+}
+
+.pill--inativo {
+  background: var(--cinza-claro);
+  color: var(--cinza-chumbo);
+  box-shadow: inset 0 0 0 1px var(--linha);
+}
+
+/* ---------- Formulário ---------- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--azul-descritivo);
+}
+
+.field__control,
+.field select {
+  width: 100%;
+  font-family: var(--fonte);
+  font-size: 14px;
+  color: var(--azul-profundo);
+  background: var(--branco);
+  border: 1px solid var(--linha-forte);
+  border-radius: var(--raio-sm);
+  padding: 11px 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field__control::placeholder {
+  color: rgba(74, 74, 74, 0.55);
+}
+
+.field__control:focus {
+  border-color: var(--azul-ciano);
+  box-shadow: 0 0 0 3px var(--ciano-suave);
+  outline: none;
+}
+
+.field__control[aria-invalid='true'] {
+  border-color: var(--azul-profundo);
+  box-shadow: 0 0 0 3px var(--profundo-suave);
+}
+
+.field__hint {
+  font-size: 12px;
+  color: var(--cinza-chumbo);
+}
+
+.field__error {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--azul-profundo);
+}
+
+.field--password {
+  position: relative;
+}
+
+.field__toggle {
+  position: absolute;
+  right: 8px;
+  top: 27px;
+  background: none;
+  border: 0;
+  font-family: var(--fonte);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--azul-ciano);
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: var(--raio-sm);
+}
+
+.field__toggle:hover {
+  background: var(--ciano-suave);
+}
+
+/* ---------- Botões ---------- */
+
+.btn {
+  font-family: var(--fonte);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--raio-sm);
+  padding: 12px 18px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+
+.btn--primary {
+  background: var(--gradiente-institucional);
+  color: var(--branco);
+}
+
+.btn--primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn--ghost {
+  background: var(--branco);
+  border-color: var(--linha-forte);
+  color: var(--azul-descritivo);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: var(--cinza-claro);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------- Avisos ---------- */
+
+.alert {
+  border-radius: var(--raio-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.alert--error {
+  background: var(--profundo-suave);
+  color: var(--azul-profundo);
+  border: 1px solid var(--linha-forte);
+  font-weight: 500;
+}
+
+.alert--success {
+  background: var(--ciano-suave);
+  color: var(--azul-descritivo);
+  border: 1px solid rgba(63, 169, 217, 0.4);
+  font-weight: 500;
+}
+
+/* ---------- Estados vazio / erro ---------- */
+
+.state {
+  text-align: center;
+  padding: 56px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.state__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ciano-suave);
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+  color: var(--azul-descritivo);
+}
+
+.state__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--azul-profundo);
+}
+
+.state__text {
+  margin: 0;
+  font-size: 14px;
+  max-width: 44ch;
+}
+
+.state__action {
+  margin-top: 10px;
+}
+
+/* ---------- Skeleton de carregamento ---------- */
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+  gap: 16px;
+  padding: 18px 24px;
+  border-top: 1px solid var(--linha);
+}
+
+.skeleton-bar {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--cinza-claro) 0%,
+    rgba(63, 169, 217, 0.16) 50%,
+    var(--cinza-claro) 100%
+  );
+  background-size: 200% 100%;
+  animation: niar-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes niar-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-bar {
+    animation: none;
+  }
+
+  * {
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
