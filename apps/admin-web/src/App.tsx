@@ -1,30 +1,29 @@
-import { APP_TITLES } from "@niar/config";
+import { UsersPage } from './pages/users-page';
 
-const cards = [
-  "Cadastro e gestão de usuários",
-  "Acompanhamento de projetos",
-  "Status, tramitação e envio para comissão"
-];
-
+/**
+ * Casca do admin. Substitui o placeholder anterior.
+ * Quando entrar roteamento (react-router), o <main> vira o outlet das rotas.
+ */
 export default function App() {
   return (
-    <main className="admin-layout">
-      <section className="admin-hero">
-        <p className="eyebrow">MVP administrativo</p>
-        <h1>{APP_TITLES.admin}</h1>
-        <p className="muted">
-          Este app concentra o fluxo principal da primeira entrega da plataforma.
-        </p>
-      </section>
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="app-header__inner">
+          {/* TODO: trocar por <img src="/logo-niar-saude.svg" alt="NIAR-Saúde" />.
+              O manual não permite recriar a marca com outra tipografia em produção. */}
+          <div className="brand">
+            <span className="brand__mark">NIAR-Saúde</span>
+            <span className="brand__descriptor">
+              Núcleo de Inteligência Artificial Responsável para a Saúde
+            </span>
+          </div>
+          <span className="app-header__meta">Painel administrativo</span>
+        </div>
+      </header>
 
-      <section className="card-grid">
-        {cards.map((card) => (
-          <article className="admin-card" key={card}>
-            <h2>{card}</h2>
-            <p>Placeholder inicial para implementação gradual das telas e regras do módulo admin.</p>
-          </article>
-        ))}
-      </section>
-    </main>
+      <main className="app-main">
+        <UsersPage />
+      </main>
+    </div>
   );
 }
