@@ -96,6 +96,8 @@ pnpm approve-builds --all
 pnpm setup
 ```
 
+O workspace ja deixa aprovados os builds necessarios de `prisma` e `esbuild`. Em uma maquina nova, esse comando extra costuma ser necessario apenas na primeira instalacao.
+
 ### Criar `.env`
 
 ```bash
@@ -138,6 +140,7 @@ pnpm db:down
 ```
 
 Se `pnpm db:up` falhar com erro de Docker daemon, o Docker não está em execução.
+Em ambientes com Podman, como Oracle Linux, a imagem ja esta declarada com nome completo para evitar erro de `short-name resolution`.
 
 ## Dependências por parte do sistema
 
@@ -339,7 +342,7 @@ pnpm test
 O que cada automação faz:
 
 - `pnpm setup`: instala dependências Node, prepara a `.venv` do `assistente-api`, cria `.env` se necessário e gera o Prisma Client
-- `pnpm db:up`: sobe o banco local no Docker
+- `pnpm db:up`: sobe o banco local no Docker ou Podman
 - `pnpm db:down`: desliga o banco local
 - `pnpm db:logs`: mostra os logs do banco
 - `pnpm dev`: prepara os remotos federados e sobe shell, APIs e micros necessários à plataforma
