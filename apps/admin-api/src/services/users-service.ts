@@ -1,5 +1,6 @@
 import { usersRepository } from "../repositories/users-repository.js";
 import { hash } from "bcryptjs";
+import { AppError } from "../errors/app-error.js";
 import { CreateUserInput, UserResponse } from "../schemas/user-schema.js";
 
 export const usersService = {
@@ -20,9 +21,10 @@ export const usersService = {
     const existing = await usersRepository.findByEmail(data.email);
 
     if (existing) {
-      throw new Error("User with this email already exists");
+      throw new AppError("User with this email already exists", 409);
     }
 
+    // Hash em 10 rounds, padrão do bcrypt do Python, compatível com o assistente
     const hashedPassword = await hash(data.password, 10);
 
     const user = await usersRepository.create({

@@ -1,5 +1,3 @@
-require("dotenv").config({ path: ".env.test" });
-
 module.exports = {
   preset: "ts-jest/presets/default-esm",
   testEnvironment: "node",
@@ -16,6 +14,5 @@ module.exports = {
   },
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1"
-  },
-  setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"]
+  }
 };
