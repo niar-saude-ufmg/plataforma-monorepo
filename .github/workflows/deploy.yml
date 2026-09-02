@@ -57,9 +57,8 @@ jobs:
         run: |
           DEPLOY_PORT="${DEPLOY_PORT:-22}"
           ssh -i ~/.ssh/niar-plataforma -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH'"
-          ssh -i ~/.ssh/niar-plataforma -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "cat > '$DEPLOY_PATH/.env.production'" <<'EOF'
-          ${PRODUCTION_ENV_FILE}
-          EOF
+          printf '%s\n' "$PRODUCTION_ENV_FILE" | \
+            ssh -i ~/.ssh/niar-plataforma -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" "cat > '$DEPLOY_PATH/.env.production'"
 
       - name: Run deployment on VM
         shell: bash

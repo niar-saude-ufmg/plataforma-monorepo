@@ -72,22 +72,20 @@ Se o Docker ainda não estiver instalado:
 
 Se o Docker já estiver instalado, mas não estiver rodando:
 
-```bash
-docker desktop start
-```
-
-No macOS, alternativa:
+- no macOS, pode abrir com:
 
 ```bash
 open -a Docker
 ```
+
+- em Linux ou Windows, iniciar o runtime/container engine pelo método do sistema ou da interface instalada
 
 ## Instalação do projeto
 
 ### Instalar dependências do workspace
 
 ```bash
-cd /Users/guilherme/Documents/niar/repositorio/plataforma
+cd <caminho-do-repositorio>/plataforma
 pnpm setup
 ```
 
@@ -237,6 +235,10 @@ Antes do primeiro deploy automático, a VM precisa já ter:
 - `pnpm 11`
 - `Docker` ou `Podman`
 - acesso de SSH com a chave configurada no GitHub
+
+Guia complementar:
+
+- `infra/vm/README.md`
 
 O script usado no host é:
 
