@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "pnpm exec dotenv -e ../../.env -- tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules ./node_modules/.bin/jest --runInBand"
+    "test": "pnpm exec cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
   },
   "dependencies": {
     "@niar/config": "workspace:*",

@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.audit.service import log_audit
-from app.core.config import get_settings
+from app.core.config import get_exports_dir, get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models import ChatMessage, ExportArtifact, User, WizardSession, WizardType
@@ -574,7 +574,7 @@ async def export_project(
     db: AsyncSession = Depends(get_db),
 ):
     settings = get_settings()
-    os.makedirs(settings.exports_dir, exist_ok=True)
+    exports_dir = get_exports_dir()
 
     result = await db.execute(
         select(WizardSession)
@@ -593,7 +593,7 @@ async def export_project(
         model_used=session.llm_model_used or settings.llm_model,
     )
     filename = f"project_{session.id}.docx"
-    filepath = os.path.join(settings.exports_dir, filename)
+    filepath = os.path.join(exports_dir, filename)
     doc.save(filepath)
 
     artifact = ExportArtifact(
@@ -627,7 +627,7 @@ async def submit_for_review(
     db: AsyncSession = Depends(get_db),
 ):
     settings = get_settings()
-    os.makedirs(settings.exports_dir, exist_ok=True)
+    exports_dir = get_exports_dir()
 
     project = await _get_project_doc_session(db, session_id, current_user.id)
     cleaning = await _get_linked_cleaning_session(db, session_id, current_user.id)
@@ -675,7 +675,7 @@ async def submit_for_review(
     )
 
     zip_filename = f"submissao_projeto_{project.id}.zip"
-    zip_path = os.path.join(settings.exports_dir, zip_filename)
+    zip_path = os.path.join(exports_dir, zip_filename)
     with open(zip_path, "wb") as f:
         f.write(zip_bytes)
 

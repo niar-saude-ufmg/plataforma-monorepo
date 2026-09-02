@@ -15,6 +15,8 @@ Esta base foi organizada para separar responsabilidades:
 - `apps/assistente-api`: backend real do assistente incorporado ao monorepo
 - `apps/assistente-web`: frontend real do assistente incorporado ao monorepo
 
+O objetivo e que a base funcione de forma consistente localmente e tambem na VM, mantendo os mesmos micros, as mesmas APIs e o mesmo banco compartilhado.
+
 ## Pré-requisitos
 
 Referência atual do projeto:
@@ -89,6 +91,13 @@ cd /Users/guilherme/Documents/niar/repositorio/plataforma
 pnpm setup
 ```
 
+O `pnpm setup` agora centraliza a preparação inicial por meio de um único utilitário de infraestrutura:
+
+- instala as dependências Node do monorepo;
+- prepara a `.venv` do `assistente-api`;
+- cria o `.env` se ele ainda não existir;
+- gera o Prisma Client do pacote compartilhado de banco.
+
 Se houver erro de `ERR_PNPM_IGNORED_BUILDS`:
 
 ```bash
@@ -103,6 +112,8 @@ O workspace ja deixa aprovados os builds necessarios de `prisma` e `esbuild`. Em
 ```bash
 cp .env.example .env
 ```
+
+O `EXPORTS_DIR` local ja aponta para `apps/assistente-api/.local/exports`. Se vier um `.env` antigo apontando para `/app`, o assistente agora tenta cair para um diretorio gravavel automaticamente.
 
 ### Aplicar o SQL versionado da plataforma
 
@@ -140,7 +151,55 @@ pnpm db:down
 ```
 
 Se `pnpm db:up` falhar com erro de Docker daemon, o Docker não está em execução.
-Em ambientes com Podman, como Oracle Linux, a imagem ja esta declarada com nome completo para evitar erro de `short-name resolution`.
+Em ambientes com Podman, como Oracle Linux, o `infra.mjs` detecta automaticamente o provider de compose e executa uma manutenção preventiva com `podman system renumber` antes de operações críticas para reduzir problemas de lock.
+
+## Deploy simples na VM
+
+### Preparar arquivo de ambiente
+
+```bash
+cp .env.production.example .env.production
+```
+
+Em producao, o arquivo contem duas URLs de banco:
+
+- `DATABASE_URL`: usada pelos scripts executados no host da VM;
+- `CONTAINER_DATABASE_URL`: usada pelas APIs quando elas estao dentro dos containers.
+
+### Subir stack de producao
+
+```bash
+pnpm prod:deploy
+```
+
+Esse comando:
+
+- sobe o Postgres;
+- aplica o SQL versionado em `packages/database/sql`;
+- builda shell, micros e APIs em serie por imagem;
+- sobe a stack com proxy reverso.
+
+O build continua serial de propósito para reduzir contenção de CPU, disco e locks em ambientes menores, especialmente na VM Oracle.
+
+### Buildar imagens sem subir
+
+```bash
+pnpm prod:build
+```
+
+No Oracle Linux com Podman, o build acontece em série e diretamente por imagem, sem depender de `compose build`, para reduzir contenção e ruídos de lock em ambientes menores.
+
+### Ver logs da stack
+
+```bash
+pnpm prod:logs
+```
+
+### Derrubar stack de producao
+
+```bash
+pnpm prod:down
+```
 
 ## Dependências por parte do sistema
 
@@ -210,7 +269,12 @@ Dependências principais:
 pnpm dev
 ```
 
-Esse é o comando padrão para trabalhar na plataforma. Ele prepara e serve os remotos federados, inicia a shell e também as APIs necessárias para os fluxos reais:
+Esse é o comando padrão para trabalhar na plataforma. Ele usa `turbo` para orquestrar o monorepo e sobe o ambiente em duas frentes:
+
+- remotos federados de `institucional`, `admin-web` e `assistente-web`;
+- shell, `admin-api` e `assistente-api` depois que os remotos ficam disponíveis.
+
+Os fluxos reais ficam acessíveis por:
 
 - shell em `http://localhost:5173`;
 - remotos `institucional`, `admin-web` e `assistente-web` carregados pela shell;
@@ -225,7 +289,7 @@ Os comandos abaixo são opcionais e existem apenas para diagnosticar ou desenvol
 ### Rodar só a shell
 
 ```bash
-pnpm dev:shell
+pnpm --filter @niar/shell dev
 ```
 
 Quando usar:
@@ -237,7 +301,7 @@ Quando usar:
 ### Rodar só o admin-web
 
 ```bash
-pnpm dev:admin-web
+pnpm --filter @niar/admin-web dev
 ```
 
 Quando usar:
@@ -248,7 +312,7 @@ Quando usar:
 ### Rodar só o admin-api
 
 ```bash
-pnpm dev:admin-api
+pnpm --filter @niar/admin-api dev
 ```
 
 Quando usar:
@@ -265,17 +329,21 @@ pnpm db:up
 ### Rodar só o assistente-web
 
 ```bash
-pnpm dev:assistente-web
+pnpm --filter @niar/assistente-web dev
 ```
 
 ### Rodar só o assistente-api
 
 ```bash
-cd apps/assistente-api
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+pnpm --filter @niar/assistente-api dev
+```
+
+### Rodar só um remoto federado em modo shell
+
+```bash
+pnpm --filter @niar/admin-web dev:remote
+pnpm --filter @niar/institucional dev:remote
+pnpm --filter @niar/assistente-web dev:remote
 ```
 
 ## Credenciais locais de desenvolvimento
@@ -341,35 +409,28 @@ pnpm test
 
 O que cada automação faz:
 
-- `pnpm setup`: instala dependências Node, prepara a `.venv` do `assistente-api`, cria `.env` se necessário e gera o Prisma Client
+- `pnpm setup`: preparação inicial do workspace inteiro via `scripts/infra.mjs`
 - `pnpm db:up`: sobe o banco local no Docker ou Podman
 - `pnpm db:down`: desliga o banco local
 - `pnpm db:logs`: mostra os logs do banco
-- `pnpm dev`: prepara os remotos federados e sobe shell, APIs e micros necessários à plataforma
-- `pnpm dev:institucional`: sobe apenas o frontend institucional para desenvolvimento isolado
-- `pnpm dev:shell`: sobe só a shell
-- `pnpm dev:admin-web`: sobe só o frontend administrativo
-- `pnpm dev:admin-api`: sobe só o backend administrativo
-- `pnpm dev:assistente-web`: sobe só o frontend do assistente
+- `pnpm dev`: sobe o ambiente integrado do monorepo usando `turbo`
 - `pnpm prisma:db:pull`: atualiza o `schema.prisma` a partir do banco
 - `pnpm prisma:generate`: gera o Prisma Client
 - `pnpm db:apply:sql`: aplica o SQL versionado da plataforma
-- `pnpm test`: executa os testes principais da base
+- `pnpm prod:build`: builda as imagens de produção em série
+- `pnpm prod:deploy`: sobe banco, aplica SQL, builda as imagens e levanta a stack de produção
+- `pnpm test`: executa os testes principais da base com `turbo`
 
 Essas automações existem para facilitar o uso, mas o fluxo manual continua descrito separadamente para que qualquer pessoa entenda cada etapa.
 
-## Fallback com scripts Node
+## Fallback manual do utilitário de infraestrutura
 
-Se o `pnpm` continuar sendo a origem do problema em algum ambiente:
+Se for necessário executar o utilitário diretamente:
 
 ```bash
-node ./scripts/setup.mjs
-node ./scripts/db-up.mjs
-node ./scripts/db-down.mjs
-node ./scripts/db-logs.mjs
-node ./scripts/db-apply-sql.mjs
-node ./scripts/prisma-db-pull.mjs
-node ./scripts/dev.mjs
-node ./scripts/prisma-generate.mjs
-node ./scripts/test-all.mjs
+node ./scripts/infra.mjs setup
+node ./scripts/infra.mjs db:up
+node ./scripts/infra.mjs db:apply:sql
+node ./scripts/infra.mjs prisma:db:pull
+node ./scripts/infra.mjs prod:deploy
 ```

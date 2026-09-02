@@ -3,6 +3,7 @@ dist
 .turbo
 .DS_Store
 .env
+.env.production
 .env.local
 coverage
 pnpm-lock.yaml

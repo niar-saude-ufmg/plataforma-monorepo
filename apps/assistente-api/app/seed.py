@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy import select, text, update
 
-from app.core.config import get_settings
+from app.core.config import get_exports_dir, get_settings
 from app.core.database import AsyncSessionLocal, Base, engine
 from app.core.security import get_password_hash
 from app.models import (
@@ -375,7 +375,7 @@ async def _apply_demo_samples(db) -> None:
 
 async def seed() -> None:
     settings = get_settings()
-    os.makedirs(settings.exports_dir, exist_ok=True)
+    get_exports_dir()
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

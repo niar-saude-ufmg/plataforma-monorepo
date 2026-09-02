@@ -1,0 +1,11 @@
+{
+  "name": "@niar/assistente-api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../scripts/infra.mjs assistente-api:dev",
+    "build": "node ../../scripts/infra.mjs assistente-api:check",
+    "check": "node ../../scripts/infra.mjs assistente-api:check"
+  }
+}

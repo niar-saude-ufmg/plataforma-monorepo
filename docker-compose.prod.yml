@@ -1,0 +1,116 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    container_name: niar-plataforma-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-niar_plataforma}
+      POSTGRES_USER: ${POSTGRES_USER:-niar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-niar}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-niar} -d ${POSTGRES_DB:-niar_plataforma}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  admin-api:
+    image: localhost/niar-plataforma-admin-api:latest
+    build:
+      context: .
+      dockerfile: apps/admin-api/Dockerfile.prod
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      DATABASE_URL: ${CONTAINER_DATABASE_URL:-postgresql://niar:niar@postgres:5432/niar_plataforma}
+      PORT: 3333
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  assistente-api:
+    image: localhost/niar-plataforma-assistente-api:latest
+    build:
+      context: apps/assistente-api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      ASSISTENTE_API_PORT: 8000
+      DATABASE_URL: ${CONTAINER_DATABASE_URL:-postgresql://niar:niar@postgres:5432/niar_plataforma}
+      EXPORTS_DIR: /data/exports
+    volumes:
+      - assistente-exports:/data/exports
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  shell:
+    image: localhost/niar-plataforma-shell:latest
+    build:
+      context: .
+      dockerfile: apps/shell/Dockerfile.prod
+      args:
+        VITE_ASSISTENTE_API_URL: /assistente-api
+        VITE_INSTITUCIONAL_REMOTE_URL: /remotes/institucional/assets/remoteEntry.js
+        VITE_ADMIN_REMOTE_URL: /remotes/admin/assets/remoteEntry.js
+        VITE_ASSISTENTE_REMOTE_URL: /remotes/assistente/assets/remoteEntry.js
+    restart: unless-stopped
+
+  institucional-web:
+    image: localhost/niar-plataforma-institucional-web:latest
+    build:
+      context: .
+      dockerfile: apps/institucional/Dockerfile.prod
+      args:
+        VITE_REMOTE_BASE: /remotes/institucional/
+    restart: unless-stopped
+
+  admin-web:
+    image: localhost/niar-plataforma-admin-web:latest
+    build:
+      context: .
+      dockerfile: apps/admin-web/Dockerfile.prod
+      args:
+        VITE_REMOTE_BASE: /remotes/admin/
+    restart: unless-stopped
+
+  assistente-web:
+    image: localhost/niar-plataforma-assistente-web:latest
+    build:
+      context: .
+      dockerfile: apps/assistente-web/Dockerfile.prod
+      args:
+        VITE_API_URL: /assistente-api
+        VITE_REMOTE_BASE: /remotes/assistente/
+    restart: unless-stopped
+
+  caddy:
+    image: docker.io/library/caddy:2-alpine
+    container_name: niar-plataforma-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - shell
+      - institucional-web
+      - admin-web
+      - assistente-web
+      - admin-api
+      - assistente-api
+
+volumes:
+  postgres-data:
+  assistente-exports:
+  caddy-data:
+  caddy-config:

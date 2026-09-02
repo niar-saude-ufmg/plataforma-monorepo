@@ -8,26 +8,30 @@
   },
   "devDependencies": {
     "concurrently": "^9.0.1",
+    "cross-env": "^7.0.3",
     "dotenv-cli": "^7.4.2",
     "pg": "^8.16.3",
-    "prisma": "6.2.1"
+    "prisma": "6.2.1",
+    "turbo": "^2.5.6",
+    "wait-on": "^8.0.3"
   },
   "scripts": {
-    "dev:institucional": "pnpm --filter @niar/institucional dev",
-    "dev:shell": "pnpm --filter @niar/shell dev",
-    "dev:admin-web": "pnpm --filter @niar/admin-web dev",
-    "dev:admin-api": "dotenv -e ./.env -- pnpm --filter @niar/admin-api dev",
-    "dev:assistente-web": "pnpm --filter @niar/assistente-web dev",
-    "dev:assistente-api": "node ./scripts/dev-assistente-api.mjs",
-    "dev": "node ./scripts/dev.mjs",
-    "setup": "node ./scripts/setup.mjs",
-    "db:up": "node ./scripts/db-up.mjs",
-    "db:down": "node ./scripts/db-down.mjs",
-    "db:logs": "node ./scripts/db-logs.mjs",
-    "db:apply:sql": "node ./scripts/db-apply-sql.mjs",
-    "prisma:db:pull": "node ./scripts/prisma-db-pull.mjs",
-    "prisma:generate": "node ./scripts/prisma-generate.mjs",
-    "build": "pnpm -r --if-present build",
-    "test": "node ./scripts/test-all.mjs"
+    "dev:remotes": "pnpm exec turbo run dev:remote --continue=always --filter=@niar/institucional --filter=@niar/admin-web --filter=@niar/assistente-web",
+    "dev:apps": "pnpm exec wait-on tcp:4174 tcp:4175 tcp:4176 && pnpm exec turbo run dev --continue=always --filter=@niar/shell --filter=@niar/admin-api --filter=@niar/assistente-api",
+    "dev": "pnpm exec concurrently -k -n remotes,apps -c yellow,cyan \"pnpm dev:remotes\" \"pnpm dev:apps\"",
+    "setup": "node ./scripts/infra.mjs setup",
+    "db:up": "node ./scripts/infra.mjs db:up",
+    "db:down": "node ./scripts/infra.mjs db:down",
+    "db:logs": "node ./scripts/infra.mjs db:logs",
+    "db:apply:sql": "node ./scripts/infra.mjs db:apply:sql",
+    "prod:build": "node ./scripts/infra.mjs prod:build",
+    "prod:up": "node ./scripts/infra.mjs prod:up",
+    "prod:down": "node ./scripts/infra.mjs prod:down",
+    "prod:logs": "node ./scripts/infra.mjs prod:logs",
+    "prod:deploy": "node ./scripts/infra.mjs prod:deploy",
+    "prisma:db:pull": "node ./scripts/infra.mjs prisma:db:pull",
+    "prisma:generate": "node ./scripts/infra.mjs prisma:generate",
+    "build": "pnpm exec turbo run build",
+    "test": "pnpm exec turbo run test"
   }
 }
