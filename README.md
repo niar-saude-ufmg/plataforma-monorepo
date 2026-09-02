@@ -202,6 +202,60 @@ pnpm prod:logs
 pnpm prod:down
 ```
 
+## Publicação com GitHub Actions
+
+O repositório agora possui dois workflows:
+
+- `.github/workflows/ci.yml`: roda em `pull_request` e em `push` para `main` e branches `feat/**`
+- `.github/workflows/deploy.yml`: roda em `push` para `main` e também pode ser acionado manualmente por `workflow_dispatch`
+
+### Fluxo recomendado
+
+1. criar branch para a tarefa
+2. abrir pull request
+3. deixar a `CI` validar `pnpm setup`, `pnpm build` e `pnpm test`
+4. aprovar e fazer merge na `main`
+5. o workflow de deploy sincroniza o repositório com a VM e executa `pnpm prod:deploy`
+
+### Secrets necessários no GitHub
+
+Cadastrar estes secrets no repositório antes do primeiro deploy:
+
+- `DEPLOY_HOST`: IP ou domínio da VM
+- `DEPLOY_PORT`: porta SSH da VM, normalmente `22`
+- `DEPLOY_USER`: usuário SSH da VM, por exemplo `opc`
+- `DEPLOY_PATH`: diretório do projeto na VM, por exemplo `/home/opc/niar/plataforma`
+- `DEPLOY_SSH_KEY`: chave privada usada pelo GitHub Actions para acessar a VM
+- `PRODUCTION_ENV_FILE`: conteúdo completo do `.env.production`
+
+### O que a VM precisa ter pronto
+
+Antes do primeiro deploy automático, a VM precisa já ter:
+
+- `nvm`
+- `Node 22`
+- `pnpm 11`
+- `Docker` ou `Podman`
+- acesso de SSH com a chave configurada no GitHub
+
+O script usado no host é:
+
+- `infra/vm/deploy.sh`
+
+Ele faz:
+
+- entra na pasta do projeto
+- ativa `Node 22` via `nvm`
+- roda `pnpm install --frozen-lockfile`
+- roda `pnpm prod:deploy`
+
+### Observações importantes
+
+- o deploy automático foi pensado para acontecer apenas depois do merge na `main`
+- o workflow envia o conteúdo do repositório para a VM por `rsync`
+- o arquivo `.env.production` não vai para o Git; ele é recriado na VM a partir do secret `PRODUCTION_ENV_FILE`
+- se a VM estiver com problema de runtime do `Podman`, o workflow pode falhar mesmo com o repositório correto
+
 ## Dependências por parte do sistema
 
 ### Shell
