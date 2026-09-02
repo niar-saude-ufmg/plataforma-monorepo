@@ -1,0 +1,16 @@
+FROM docker.io/library/node:22-alpine
+
+WORKDIR /workspace
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY apps ./apps
+COPY packages ./packages
+COPY scripts ./scripts
+
+RUN corepack enable && pnpm install --frozen-lockfile
+
+ENV NODE_ENV=production
+
+EXPOSE 3333
+
+CMD ["node", "--import", "tsx", "apps/admin-api/src/server.ts"]

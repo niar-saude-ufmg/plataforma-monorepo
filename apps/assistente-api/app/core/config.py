@@ -1,3 +1,5 @@
+import os
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 
@@ -47,3 +49,32 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def get_exports_dir() -> Path:
+    settings = get_settings()
+    configured = Path(settings.exports_dir).expanduser()
+    candidates = [configured]
+
+    if configured != _DEFAULT_EXPORTS_DIR:
+        candidates.append(_DEFAULT_EXPORTS_DIR)
+
+    fallback = Path(tempfile.gettempdir()) / "niar-assistente-exports"
+    if fallback not in candidates:
+        candidates.append(fallback)
+
+    last_error = None
+
+    for candidate in candidates:
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            probe = candidate / ".write-test"
+            probe.touch(exist_ok=True)
+            probe.unlink(missing_ok=True)
+            return candidate
+        except OSError as exc:
+            last_error = exc
+
+    raise RuntimeError(
+        f"Nao foi possivel preparar um diretorio gravavel para exports. Ultimo erro: {last_error}"
+    )

@@ -3,9 +3,9 @@ dist
 .turbo
 .DS_Store
 .env
+.env.production
 .env.local
 coverage
-pnpm-lock.yaml
 apps/admin-api/prisma/dev.db
 .pytest_cache
 .mypy_cache

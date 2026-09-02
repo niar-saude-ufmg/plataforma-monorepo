@@ -15,7 +15,7 @@ Garantir:
 ### 1.2. Entrar na pasta
 
 ```bash
-cd /Users/guilherme/Documents/niar/repositorio/plataforma
+cd <caminho-do-repositorio>/plataforma
 ```
 
 ### 1.3. Instalar dependências
@@ -41,15 +41,13 @@ cp .env.example .env
 
 Se o Docker Desktop não estiver aberto:
 
-```bash
-docker desktop start
-```
-
-No macOS, alternativa:
+- no macOS, pode abrir com:
 
 ```bash
 open -a Docker
 ```
+
+- em Linux ou Windows, iniciar o runtime/container engine pelo método do sistema ou da interface instalada
 
 ### 1.6. Subir o banco
 
@@ -92,7 +90,7 @@ pnpm test
 Fluxo mais comum:
 
 ```bash
-cd /Users/guilherme/Documents/niar/repositorio/plataforma
+cd <caminho-do-repositorio>/plataforma
 pnpm db:up
 pnpm dev
 ```
@@ -108,19 +106,23 @@ pnpm db:down
 ### 3.1. Só a shell
 
 ```bash
-pnpm dev:shell
+pnpm --filter @niar/shell dev
 ```
+
+Observacao:
+
+- a shell so consegue carregar os micros se `admin-web`, `assistente-web` e `institucional` tambem estiverem ativos como remotes
 
 ### 3.2. Só o admin-web
 
 ```bash
-pnpm dev:admin-web
+pnpm --filter @niar/admin-web dev
 ```
 
 ### 3.3. Só o admin-api
 
 ```bash
-pnpm dev:admin-api
+pnpm --filter @niar/admin-api dev
 ```
 
 Se for usar a API:
@@ -132,18 +134,18 @@ pnpm db:up
 ### 3.4. Só o assistente-web
 
 ```bash
-pnpm dev:assistente-web
+pnpm --filter @niar/assistente-web dev
 ```
 
 ### 3.5. Só o assistente-api
 
 ```bash
-cd apps/assistente-api
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+pnpm --filter @niar/assistente-api dev
 ```
+
+Observacao:
+
+- esse comando usa o fluxo centralizado do `infra.mjs` para garantir a `.venv` e a inicializacao correta do backend Python
 
 ## 4. Banco, SQL e Prisma
 

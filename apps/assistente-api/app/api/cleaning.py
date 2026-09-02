@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.audit.service import log_audit
-from app.core.config import get_settings
+from app.core.config import get_exports_dir, get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models import (
@@ -421,8 +421,7 @@ async def export_cleaning_version(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    settings = get_settings()
-    os.makedirs(settings.exports_dir, exist_ok=True)
+    exports_dir = get_exports_dir()
     await _get_cleaning_session(db, session_id, current_user.id)
     result = await db.execute(
         select(CleaningVersion).where(
@@ -436,9 +435,7 @@ async def export_cleaning_version(
     if not version.script_content.strip():
         raise HTTPException(status_code=400, detail="Esta versão não possui script para exportar.")
 
-    script_path = os.path.join(
-        settings.exports_dir, f"data_clean_{session_id}_v{version.version_number}.py"
-    )
+    script_path = os.path.join(exports_dir, f"data_clean_{session_id}_v{version.version_number}.py")
     with open(script_path, "w") as f:
         f.write(version.script_content)
 
@@ -620,7 +617,7 @@ async def export_cleaning(
     db: AsyncSession = Depends(get_db),
 ):
     settings = get_settings()
-    os.makedirs(settings.exports_dir, exist_ok=True)
+    exports_dir = get_exports_dir()
 
     result = await db.execute(
         select(WizardSession)
@@ -630,8 +627,8 @@ async def export_cleaning(
     if not session:
         raise HTTPException(status_code=404, detail="Sessão não encontrada")
 
-    script_path = os.path.join(settings.exports_dir, f"data_clean_{session.id}.py")
-    readme_path = os.path.join(settings.exports_dir, f"data_clean_{session.id}_README.md")
+    script_path = os.path.join(exports_dir, f"data_clean_{session.id}.py")
+    readme_path = os.path.join(exports_dir, f"data_clean_{session.id}_README.md")
 
     with open(script_path, "w") as f:
         f.write(session.script_content)

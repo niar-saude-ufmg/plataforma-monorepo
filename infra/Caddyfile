@@ -1,0 +1,29 @@
+:80 {
+	handle_path /remotes/institucional/* {
+		reverse_proxy institucional-web:80
+	}
+
+	handle_path /remotes/admin/* {
+		reverse_proxy admin-web:80
+	}
+
+	handle_path /remotes/assistente/* {
+		reverse_proxy assistente-web:80
+	}
+
+	handle_path /assistente-api/* {
+		reverse_proxy assistente-api:8000
+	}
+
+	handle /api/admin/* {
+		reverse_proxy admin-api:3333
+	}
+
+	handle_path /admin-api/* {
+		reverse_proxy admin-api:3333
+	}
+
+	handle {
+		reverse_proxy shell:80
+	}
+}
