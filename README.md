@@ -11,7 +11,7 @@ Esta base foi organizada para separar responsabilidades:
 - `apps/shell`: rotas, login e composição principal da plataforma
 - `apps/admin-web`: frontend administrativo
 - `apps/admin-api`: backend administrativo
-- `packages/database`: camada central de SQL versionado; o `schema.prisma` e derivado para consumo do admin
+- `packages/database`: camada central do banco compartilhado; o SQL versionado fica aqui e o `schema.prisma` e derivado para consumo do admin
 - `apps/assistente-api`: backend real do assistente incorporado ao monorepo
 - `apps/assistente-web`: frontend real do assistente incorporado ao monorepo
 
@@ -114,6 +114,7 @@ cp .env.example .env
 ```
 
 O `EXPORTS_DIR` local ja aponta para `apps/assistente-api/.local/exports`. Se vier um `.env` antigo apontando para `/app`, o assistente agora tenta cair para um diretorio gravavel automaticamente.
+Para o Postgres local sem SSL, use `sslmode=disable` na `DATABASE_URL`, como no `.env.example`.
 
 ### Aplicar o SQL versionado da plataforma
 
@@ -364,7 +365,7 @@ Observações:
 
 ## Prisma
 
-### Aplicar SQL local
+### Fluxo do banco compartilhado
 
 ```bash
 pnpm db:apply:sql
@@ -372,9 +373,32 @@ pnpm db:apply:sql
 
 Observação:
 
-- o SQL versionado é a fonte de verdade das tabelas novas da plataforma;
+- o SQL em `packages/database/sql` e a fonte de verdade estrutural;
 - o `Prisma` fica como camada de consumo tipado no `admin-api`;
 - o `schema.prisma` deve ser tratado como espelho derivado do banco.
+
+### Como alterar o banco
+
+Quando surgir uma mudanca nova, como adicionar `comissao`, novos status ou novos atributos:
+
+1. editar `packages/database/sql/001_base.sql`
+2. aplicar a mudanca no banco local com `pnpm db:apply:sql`
+3. atualizar o Prisma com `pnpm prisma:db:pull`
+4. regenerar o client com `pnpm prisma:generate`
+5. ajustar o `admin-api` para usar os novos campos, tabelas ou relacionamentos
+6. ajustar o `assistente-api` se a mudanca afetar models, queries, seed ou integracoes
+
+Exemplos comuns:
+
+- nova coluna em `shared.users`: atualizar o SQL, rodar apply, atualizar Prisma e depois ajustar validação/retorno no `admin-api`
+- nova tabela em `admin`: atualizar o SQL, rodar apply, atualizar Prisma e depois criar o uso dela no `admin-api`
+- nova tabela ou coluna em `assistant`: atualizar o SQL e depois ajustar os models/queries Python do assistente
+
+Regra prática:
+
+- mudou estrutura do banco: atualizar primeiro o SQL em `packages/database/sql`
+- mudou consumo no Node: atualizar depois o Prisma
+- mudou consumo no Python: revisar depois os arquivos do `assistente-api`
 
 ### Atualizar o schema derivado
 
@@ -418,7 +442,7 @@ O que cada automação faz:
 - `pnpm prisma:generate`: gera o Prisma Client
 - `pnpm db:apply:sql`: aplica o SQL versionado da plataforma
 - `pnpm prod:build`: builda as imagens de produção em série
-- `pnpm prod:deploy`: sobe banco, aplica SQL, builda as imagens e levanta a stack de produção
+- `pnpm prod:deploy`: sobe banco, aplica o SQL versionado, builda as imagens e levanta a stack de produção
 - `pnpm test`: executa os testes principais da base com `turbo`
 
 Essas automações existem para facilitar o uso, mas o fluxo manual continua descrito separadamente para que qualquer pessoa entenda cada etapa.
@@ -430,7 +454,6 @@ Se for necessário executar o utilitário diretamente:
 ```bash
 node ./scripts/infra.mjs setup
 node ./scripts/infra.mjs db:up
-node ./scripts/infra.mjs db:apply:sql
 node ./scripts/infra.mjs prisma:db:pull
 node ./scripts/infra.mjs prod:deploy
 ```
