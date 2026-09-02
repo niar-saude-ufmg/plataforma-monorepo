@@ -95,7 +95,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro,Z
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
