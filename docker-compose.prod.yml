@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-niar_plataforma}
       POSTGRES_USER: ${POSTGRES_USER:-niar}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-niar}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -96,7 +94,6 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data

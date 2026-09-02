@@ -257,6 +257,7 @@ Ele faz:
 - o workflow envia o conteúdo do repositório para a VM por `rsync`
 - o arquivo `.env.production` não vai para o Git; ele é recriado na VM a partir do secret `PRODUCTION_ENV_FILE`
 - se a VM estiver com problema de runtime do `Podman`, o workflow pode falhar mesmo com o repositório correto
+- nesta etapa o proxy publica somente `HTTP` na porta `80`; `HTTPS` na `443` só deve voltar quando o Caddy estiver configurado com domínio/certificados
 
 ## Dependências por parte do sistema
 

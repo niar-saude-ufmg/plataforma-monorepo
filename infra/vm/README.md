@@ -117,9 +117,11 @@ pnpm prod:deploy
 
 Em algumas execucoes no Oracle Linux ja apareceu erro de lock do Podman. O `infra.mjs` ja tenta mitigar isso com `podman system renumber` antes de operacoes criticas.
 
-### Portas 80 e 443
+### Portas publicadas
 
-O proxy reverso publica `80:80` e `443:443`. Se a VM estiver com firewall ativo, essas portas precisam estar liberadas.
+Nesta etapa, o proxy reverso publica apenas `80:80`. Se a VM estiver com firewall ativo, essa porta precisa estar liberada.
+
+A porta `443` ficou de fora por segurança e só deve voltar quando o Caddy estiver configurado com domínio e TLS reais.
 
 ### `.env.production`
 
