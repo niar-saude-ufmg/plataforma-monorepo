@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { prisma } from "@niar/database";
 
 // hashedPassword fica de fora de propósito: como o select já não busca o
