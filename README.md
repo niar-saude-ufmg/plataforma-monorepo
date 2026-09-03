@@ -174,9 +174,9 @@ pnpm prod:deploy
 Esse comando:
 
 - sobe o Postgres;
-- aplica o SQL versionado em `packages/database/sql`;
+- espera o Postgres ficar pronto e aplica o SQL versionado em `packages/database/sql`;
 - builda shell, micros e APIs em serie por imagem;
-- sobe a stack com proxy reverso.
+- recria os containers da stack com proxy reverso.
 
 O build continua serial de propósito para reduzir contenção de CPU, disco e locks em ambientes menores, especialmente na VM Oracle.
 
