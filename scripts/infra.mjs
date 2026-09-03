@@ -211,6 +211,41 @@ function runCompose(composeArgs, options = {}) {
   runCommand(provider.command, args, { cwd: rootDir });
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function waitForDatabase(databaseUrl, options = {}) {
+  const retries = options.retries ?? 20;
+  const delayMs = options.delayMs ?? 3000;
+
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    const client = new Client({ connectionString: databaseUrl });
+
+    try {
+      await client.connect();
+      await client.query("SELECT 1");
+      await client.end().catch(() => undefined);
+      return;
+    } catch (error) {
+      await client.end().catch(() => undefined);
+
+      if (attempt === retries) {
+        throw new Error(
+          `Banco de dados indisponivel apos ${retries} tentativas: ${
+            error instanceof Error ? error.message : error
+          }`
+        );
+      }
+
+      console.log(`Aguardando banco de dados ficar pronto (${attempt}/${retries})...`);
+      await sleep(delayMs);
+    }
+  }
+}
+
 function buildContainerImage(target) {
   const runtime = detectContainerRuntime();
   const args = ["build", "-f", target.dockerfile, "-t", target.image];
@@ -338,6 +373,7 @@ async function applySql(args) {
   const client = new Client({ connectionString: databaseUrl });
 
   try {
+    await waitForDatabase(databaseUrl);
     await client.connect();
 
     for (const file of files) {
@@ -352,7 +388,7 @@ async function applySql(args) {
   } catch (error) {
     console.error("Falha ao aplicar o SQL versionado.");
     console.error(error instanceof Error ? error.message : error);
-    process.exitCode = 1;
+    throw error;
   } finally {
     await client.end().catch(() => undefined);
   }
@@ -462,7 +498,7 @@ async function main() {
 
     case "prod:up":
       await withInfraLock(() => {
-        runCompose([...prodComposeArgs, "up", "-d", "--build"]);
+        runCompose([...prodComposeArgs, "up", "-d", "--build", "--force-recreate", "--remove-orphans"]);
       });
       return;
 
@@ -487,7 +523,7 @@ async function main() {
           buildContainerImage(target);
         }
 
-        runCompose([...prodComposeArgs, "up", "-d"]);
+        runCompose([...prodComposeArgs, "up", "-d", "--force-recreate", "--remove-orphans"]);
       });
       return;
 
