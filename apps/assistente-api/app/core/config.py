@@ -5,15 +5,27 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[4]
-_ENV_FILE = _PROJECT_ROOT / ".env"
 _ASSISTENTE_ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_EXPORTS_DIR = _ASSISTENTE_ROOT / ".local" / "exports"
 
 
+def _discover_env_file() -> Path | None:
+    current = Path(__file__).resolve()
+
+    for parent in current.parents:
+        candidate = parent / ".env"
+        if candidate.exists():
+            return candidate
+
+    return None
+
+
+_ENV_FILE = _discover_env_file()
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=str(_ENV_FILE) if _ENV_FILE.exists() else ".env",
+        env_file=str(_ENV_FILE) if _ENV_FILE else ".env",
         extra="ignore",
     )
 
