@@ -249,7 +249,8 @@ Guia complementar:
 - o workflow envia o conteúdo do repositório para a VM por `rsync`
 - o arquivo `.env.production` não vai para o Git; ele é recriado na VM a partir do secret `PRODUCTION_ENV_FILE`
 - o workflow assume que a VM ja foi provisionada corretamente com Docker
-- nesta etapa o proxy publica somente `HTTP` na porta `80`; `HTTPS` na `443` só deve voltar quando o Caddy estiver configurado com domínio/certificados
+- com `niarplataforma.duckdns.org` apontando para a VM, o Caddy pode publicar `HTTP` na `80` e `HTTPS` na `443` com certificado automatico
+- o `DuckDNS` esta sendo usado nesta etapa apenas como dominio provisório e sem custo para viabilizar o HTTPS; ele nao deve ser tratado como DNS final da plataforma
 
 ## Dependências por parte do sistema
 
