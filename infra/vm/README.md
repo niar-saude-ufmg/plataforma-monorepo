@@ -1,128 +1,97 @@
 # VM Oracle Linux
 
-Este guia concentra a preparacao minima da VM para receber o deploy automatico do monorepo.
+Este guia define o fluxo correto para a VM de producao da plataforma.
 
-## Objetivo
+## Diretriz
 
-Ao final, a VM deve conseguir:
+- ambiente local: `Docker`
+- VM Oracle Linux: `Docker`
+- CI/CD: `Docker`
 
-- receber o codigo por SSH a partir do GitHub Actions;
-- executar `pnpm install --frozen-lockfile`;
-- executar `pnpm prod:deploy`;
-- subir a stack com Postgres, APIs, micros e proxy.
+O projeto nao deve depender de `Podman`.
 
-## Premissas
+## Provisionamento da VM
 
-- sistema operacional: Oracle Linux
-- usuario de acesso: `opc`
-- diretorio do projeto na VM: `/home/opc/niar/plataforma`
-- deploy automatizado disparado apos merge na `main`
+O provisionamento da instancia deve acontecer uma vez, no bootstrap da VM, usando:
 
-## Preparacao inicial da VM
+- [cloud-init.yaml](./cloud-init.yaml)
 
-### 1. Atualizar pacotes basicos
+Esse arquivo prepara a Oracle Linux para o padrao do projeto:
 
-```bash
-sudo dnf update -y
-sudo dnf install -y git curl
-```
+- instala `git` e `curl`
+- instala `Docker Engine`
+- instala o plugin `docker compose`
+- remove `podman-docker`, para evitar alias de `docker -> podman`
+- habilita o servico do Docker
+- instala `nvm`
+- instala `Node.js 22`
+- instala `pnpm 11.19.0`
+- cria `/home/opc/niar/plataforma`
 
-### 2. Instalar Node 22 via nvm
+## Como usar o cloud-init
 
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-source ~/.bashrc
-nvm install 22
-nvm use 22
-nvm alias default 22
-```
+Na criacao da VM na Oracle, informar o conteudo de [cloud-init.yaml](./cloud-init.yaml) no campo de dados de inicializacao da instancia.
 
-Se estiver usando `zsh`, troque `~/.bashrc` por `~/.zshrc`.
+Depois que a VM subir pela primeira vez:
 
-### 3. Instalar pnpm 11
+1. acessar a VM por SSH
+2. encerrar e abrir a sessao novamente, para aplicar o grupo `docker` ao usuario `opc`
+3. validar:
 
 ```bash
-npm install -g pnpm@11.19.0
+docker --version
+docker compose version
+docker info
+node --version
 pnpm --version
 ```
 
-### 4. Verificar runtime de containers
+O `docker --version` nao pode mencionar `Podman`.
 
-No Oracle Linux, normalmente o runtime disponivel sera `podman`.
+## Primeira validacao manual
 
-Verifique:
-
-```bash
-podman --version
-podman compose version
-```
-
-Se o alias `podman compose` nao estiver disponivel, conferir antes do deploy automatico como o ambiente esta oferecendo Compose.
-
-### 5. Criar a pasta do projeto
+Depois de provisionar a VM:
 
 ```bash
 mkdir -p /home/opc/niar/plataforma
-```
-
-## Chave SSH para o GitHub Actions
-
-O secret `DEPLOY_SSH_KEY` deve conter a chave privada correspondente a uma chave publica autorizada em:
-
-```bash
-~/.ssh/authorized_keys
-```
-
-Se precisar adicionar manualmente:
-
-```bash
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
-touch ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/authorized_keys
-```
-
-Depois, anexar a chave publica ao arquivo.
-
-## Variaveis do GitHub
-
-Configurar estes secrets no repositório:
-
-- `DEPLOY_HOST`
-- `DEPLOY_PORT`
-- `DEPLOY_USER`
-- `DEPLOY_PATH`
-- `DEPLOY_SSH_KEY`
-- `PRODUCTION_ENV_FILE`
-
-Valores esperados hoje:
-
-- `DEPLOY_USER=opc`
-- `DEPLOY_PORT=22`
-- `DEPLOY_PATH=/home/opc/niar/plataforma`
-
-## Primeiro teste manual na VM
-
-Depois de copiar o repositório e criar o `.env.production`, validar:
-
-```bash
 cd /home/opc/niar/plataforma
+```
+
+Em seguida:
+
+1. copiar o repositorio
+2. criar `.env.production`
+3. rodar:
+
+```bash
 pnpm install --frozen-lockfile
 pnpm prod:deploy
 ```
 
-## Problemas conhecidos
+## Fluxo do GitHub Actions
 
-### Locks do Podman
+Depois que a VM ja estiver provisionada corretamente, o workflow de deploy passa a fazer apenas:
 
-Em algumas execucoes no Oracle Linux ja apareceu erro de lock do Podman. O `infra.mjs` ja tenta mitigar isso com `podman system renumber` antes de operacoes criticas.
+1. sincronizar o repositório por `rsync`
+2. recriar `.env.production` a partir do secret `PRODUCTION_ENV_FILE`
+3. ativar `Node 22` via `nvm`
+4. rodar `pnpm install --frozen-lockfile`
+5. rodar `pnpm prod:deploy`
 
-### Portas publicadas
+Ou seja: o workflow faz deploy da aplicacao, nao provisionamento da VM.
 
-Nesta etapa, o proxy reverso publica apenas `80:80`. Se a VM estiver com firewall ativo, essa porta precisa estar liberada.
+## Portas
 
-A porta `443` ficou de fora por segurança e só deve voltar quando o Caddy estiver configurado com domínio e TLS reais.
+- `80`: publica o proxy reverso
+- `127.0.0.1:5432`: Postgres restrito ao host da VM
 
-### `.env.production`
+O banco nao deve ficar exposto publicamente.
 
-O arquivo nao fica versionado no Git. No deploy automatico, ele e recriado a partir do secret `PRODUCTION_ENV_FILE`.
+## Migracao de uma VM antiga com Podman
+
+Se a VM ja foi usada com `Podman` antes desta padronizacao:
+
+1. parar e remover os containers antigos do Podman
+2. garantir que nenhuma porta importante ainda esteja ocupada
+3. validar que `docker --version` agora aponta para Docker real
+4. so depois executar o primeiro deploy com a stack nova

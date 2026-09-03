@@ -3,6 +3,8 @@ services:
     image: docker.io/library/postgres:16-alpine
     container_name: niar-plataforma-postgres
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-niar_plataforma}
       POSTGRES_USER: ${POSTGRES_USER:-niar}

@@ -65,4 +65,10 @@ jobs:
         run: |
           DEPLOY_PORT="${DEPLOY_PORT:-22}"
           ssh -i ~/.ssh/niar-plataforma -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" \
-            "bash '$DEPLOY_PATH/infra/vm/deploy.sh' '$DEPLOY_PATH'"
+            "export NVM_DIR=\"\$HOME/.nvm\" && \
+            [ -s \"\$NVM_DIR/nvm.sh\" ] && \
+            . \"\$NVM_DIR/nvm.sh\" && \
+            nvm use 22 >/dev/null && \
+            cd '$DEPLOY_PATH' && \
+            pnpm install --frozen-lockfile && \
+            pnpm prod:deploy"

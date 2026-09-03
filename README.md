@@ -80,6 +80,8 @@ open -a Docker
 
 - em Linux ou Windows, iniciar o runtime/container engine pelo método do sistema ou da interface instalada
 
+Na VM Oracle Linux de produção, o padrão do projeto também deve ser `Docker` com `docker compose`. O monorepo não deve depender de `Podman`.
+
 ## Instalação do projeto
 
 ### Instalar dependências do workspace
@@ -150,7 +152,6 @@ pnpm db:down
 ```
 
 Se `pnpm db:up` falhar com erro de Docker daemon, o Docker não está em execução.
-Em ambientes com Podman, como Oracle Linux, o `infra.mjs` detecta automaticamente o provider de compose e executa uma manutenção preventiva com `podman system renumber` antes de operações críticas para reduzir problemas de lock.
 
 ## Deploy simples na VM
 
@@ -165,6 +166,8 @@ Em producao, o arquivo contem duas URLs de banco:
 - `DATABASE_URL`: usada pelos scripts executados no host da VM;
 - `CONTAINER_DATABASE_URL`: usada pelas APIs quando elas estao dentro dos containers.
 
+No `docker-compose.prod.yml`, o Postgres de producao fica publicado apenas em `127.0.0.1:5432`, para permitir `pnpm prod:deploy` no host sem expor a porta do banco publicamente.
+
 ### Subir stack de producao
 
 ```bash
@@ -175,10 +178,8 @@ Esse comando:
 
 - sobe o Postgres;
 - espera o Postgres ficar pronto e aplica o SQL versionado em `packages/database/sql`;
-- builda shell, micros e APIs em serie por imagem;
+- builda shell, micros e APIs pelo `docker compose`;
 - recria os containers da stack com proxy reverso.
-
-O build continua serial de propósito para reduzir contenção de CPU, disco e locks em ambientes menores, especialmente na VM Oracle.
 
 ### Buildar imagens sem subir
 
@@ -186,7 +187,7 @@ O build continua serial de propósito para reduzir contenção de CPU, disco e l
 pnpm prod:build
 ```
 
-No Oracle Linux com Podman, o build acontece em série e diretamente por imagem, sem depender de `compose build`, para reduzir contenção e ruídos de lock em ambientes menores.
+Esse comando usa o `docker compose build` da stack de producao.
 
 ### Ver logs da stack
 
@@ -233,30 +234,19 @@ Antes do primeiro deploy automático, a VM precisa já ter:
 - `nvm`
 - `Node 22`
 - `pnpm 11`
-- `Docker` ou `Podman`
+- `Docker`
 - acesso de SSH com a chave configurada no GitHub
 
 Guia complementar:
 
 - `infra/vm/README.md`
 
-O script usado no host é:
-
-- `infra/vm/deploy.sh`
-
-Ele faz:
-
-- entra na pasta do projeto
-- ativa `Node 22` via `nvm`
-- roda `pnpm install --frozen-lockfile`
-- roda `pnpm prod:deploy`
-
 ### Observações importantes
 
 - o deploy automático foi pensado para acontecer apenas depois do merge na `main`
 - o workflow envia o conteúdo do repositório para a VM por `rsync`
 - o arquivo `.env.production` não vai para o Git; ele é recriado na VM a partir do secret `PRODUCTION_ENV_FILE`
-- se a VM estiver com problema de runtime do `Podman`, o workflow pode falhar mesmo com o repositório correto
+- o workflow assume que a VM ja foi provisionada corretamente com Docker
 - nesta etapa o proxy publica somente `HTTP` na porta `80`; `HTTPS` na `443` só deve voltar quando o Caddy estiver configurado com domínio/certificados
 
 ## Dependências por parte do sistema
@@ -491,15 +481,15 @@ pnpm test
 O que cada automação faz:
 
 - `pnpm setup`: preparação inicial do workspace inteiro via `scripts/infra.mjs`
-- `pnpm db:up`: sobe o banco local no Docker ou Podman
+- `pnpm db:up`: sobe o banco local com Docker
 - `pnpm db:down`: desliga o banco local
 - `pnpm db:logs`: mostra os logs do banco
 - `pnpm dev`: sobe o ambiente integrado do monorepo usando `turbo`
 - `pnpm prisma:db:pull`: atualiza o `schema.prisma` a partir do banco
 - `pnpm prisma:generate`: gera o Prisma Client
 - `pnpm db:apply:sql`: aplica o SQL versionado da plataforma
-- `pnpm prod:build`: builda as imagens de produção em série
-- `pnpm prod:deploy`: sobe banco, aplica o SQL versionado, builda as imagens e levanta a stack de produção
+- `pnpm prod:build`: builda as imagens de producao com `docker compose`
+- `pnpm prod:deploy`: sobe banco, aplica o SQL versionado, builda as imagens e levanta a stack de producao
 - `pnpm test`: executa os testes principais da base com `turbo`
 
 Essas automações existem para facilitar o uso, mas o fluxo manual continua descrito separadamente para que qualquer pessoa entenda cada etapa.
