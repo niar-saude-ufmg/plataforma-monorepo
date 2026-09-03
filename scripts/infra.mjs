@@ -15,70 +15,6 @@ const isWindows = process.platform === "win32";
 const infraLockDir = path.join(rootDir, ".local");
 const infraLockPath = path.join(infraLockDir, "infra.lock");
 const prodComposeArgs = ["-f", "docker-compose.prod.yml", "--env-file", ".env.production"];
-const prodServices = [
-  "shell",
-  "institucional-web",
-  "admin-web",
-  "assistente-web",
-  "admin-api",
-  "assistente-api"
-];
-const prodBuildTargets = [
-  {
-    label: "shell",
-    context: ".",
-    dockerfile: "apps/shell/Dockerfile.prod",
-    image: "localhost/niar-plataforma-shell:latest",
-    buildArgs: {
-      VITE_ASSISTENTE_API_URL: "/assistente-api",
-      VITE_INSTITUCIONAL_REMOTE_URL: "/remotes/institucional/assets/remoteEntry.js",
-      VITE_ADMIN_REMOTE_URL: "/remotes/admin/assets/remoteEntry.js",
-      VITE_ASSISTENTE_REMOTE_URL: "/remotes/assistente/assets/remoteEntry.js"
-    }
-  },
-  {
-    label: "institucional-web",
-    context: ".",
-    dockerfile: "apps/institucional/Dockerfile.prod",
-    image: "localhost/niar-plataforma-institucional-web:latest",
-    buildArgs: {
-      VITE_REMOTE_BASE: "/remotes/institucional/"
-    }
-  },
-  {
-    label: "admin-web",
-    context: ".",
-    dockerfile: "apps/admin-web/Dockerfile.prod",
-    image: "localhost/niar-plataforma-admin-web:latest",
-    buildArgs: {
-      VITE_REMOTE_BASE: "/remotes/admin/"
-    }
-  },
-  {
-    label: "assistente-web",
-    context: ".",
-    dockerfile: "apps/assistente-web/Dockerfile.prod",
-    image: "localhost/niar-plataforma-assistente-web:latest",
-    buildArgs: {
-      VITE_API_URL: "/assistente-api",
-      VITE_REMOTE_BASE: "/remotes/assistente/"
-    }
-  },
-  {
-    label: "admin-api",
-    context: ".",
-    dockerfile: "apps/admin-api/Dockerfile.prod",
-    image: "localhost/niar-plataforma-admin-api:latest",
-    buildArgs: {}
-  },
-  {
-    label: "assistente-api",
-    context: "apps/assistente-api",
-    dockerfile: "Dockerfile",
-    image: "localhost/niar-plataforma-assistente-api:latest",
-    buildArgs: {}
-  }
-];
 
 function usage() {
   console.error(`Uso: node ./scripts/infra.mjs <comando>
@@ -93,122 +29,56 @@ Comandos:
   process.exit(1);
 }
 
-function probe(command, args) {
+function captureCommand(command, args, options = {}) {
   return spawnSync(command, args, {
-    encoding: "utf8",
-    shell: isWindows
-  });
-}
-
-function splitCommandString(value) {
-  return value
-    .split(" ")
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-}
-
-function detectComposeProvider() {
-  const override = process.env.NIAR_COMPOSE_PROVIDER;
-
-  if (override) {
-    if (override === "docker") {
-      return { command: "docker", prefix: ["compose"], runtime: "docker" };
-    }
-
-    if (override === "podman") {
-      return { command: "podman", prefix: ["compose"], runtime: "podman" };
-    }
-
-    if (override === "podman-compose") {
-      return { command: "podman-compose", prefix: [], runtime: "podman" };
-    }
-
-    const custom = splitCommandString(override);
-    return { command: custom[0], prefix: custom.slice(1), runtime: "custom" };
-  }
-
-  const dockerVersion = probe("docker", ["--version"]);
-  const dockerText = `${dockerVersion.stdout ?? ""}${dockerVersion.stderr ?? ""}`;
-
-  if (dockerVersion.status === 0 && !/podman/i.test(dockerText)) {
-    return { command: "docker", prefix: ["compose"], runtime: "docker" };
-  }
-
-  const podmanComposeVersion = probe("podman-compose", ["version"]);
-  if (podmanComposeVersion.status === 0) {
-    return { command: "podman-compose", prefix: [], runtime: "podman" };
-  }
-
-  const podmanVersion = probe("podman", ["--version"]);
-  if (podmanVersion.status === 0) {
-    return { command: "podman", prefix: ["compose"], runtime: "podman" };
-  }
-
-  if (dockerVersion.status === 0) {
-    return {
-      command: "docker",
-      prefix: ["compose"],
-      runtime: /podman/i.test(dockerText) ? "podman" : "docker"
-    };
-  }
-
-  console.error("Nao foi possivel localizar Docker ou Podman para executar o compose.");
-  process.exit(1);
-}
-
-function detectContainerRuntime() {
-  const composeProvider = detectComposeProvider();
-  return composeProvider.runtime === "podman" ? "podman" : "docker";
-}
-
-function runCaptured(command, args, options = {}) {
-  const result = spawnSync(command, args, {
     cwd: rootDir,
     encoding: "utf8",
-    maxBuffer: 1024 * 1024 * 64,
+    maxBuffer: 1024 * 1024 * 16,
     shell: isWindows,
     env: process.env,
     ...options
   });
-
-  if (result.stdout) {
-    process.stdout.write(result.stdout);
-  }
-
-  if (result.stderr) {
-    process.stderr.write(result.stderr);
-  }
-
-  return result;
 }
 
-function ensurePodmanHealthy() {
-  const result = runCaptured("podman", ["system", "renumber"]);
+function ensureDockerAvailable() {
+  const dockerVersion = captureCommand("docker", ["--version"]);
 
-  if (result.error) {
-    console.warn("Falha ao executar `podman system renumber`. Seguindo mesmo assim.");
-    return;
+  if (dockerVersion.error || dockerVersion.status !== 0) {
+    console.error("Docker nao encontrado. Instale Docker Desktop/localmente ou Docker Engine na VM antes de continuar.");
+    process.exit(1);
   }
 
-  if (result.status !== 0) {
-    console.warn("`podman system renumber` retornou erro. Seguindo mesmo assim.");
+  const dockerOutput = `${dockerVersion.stdout ?? ""}${dockerVersion.stderr ?? ""}`;
+
+  if (/podman/i.test(dockerOutput)) {
+    console.error("O comando docker deste ambiente aponta para Podman. O projeto esta padronizado apenas em Docker.");
+    process.exit(1);
+  }
+
+  const composeVersion = captureCommand("docker", ["compose", "version"]);
+
+  if (composeVersion.error || composeVersion.status !== 0) {
+    console.error("docker compose nao esta disponivel neste ambiente.");
+    process.exit(1);
+  }
+
+  const dockerInfo = captureCommand("docker", ["info"]);
+
+  if (dockerInfo.error || dockerInfo.status !== 0) {
+    console.error("Docker daemon indisponivel para o usuario atual. Inicie o Docker e confirme as permissoes antes de continuar.");
+    process.exit(1);
   }
 }
 
 function runCompose(composeArgs, options = {}) {
-  const provider = detectComposeProvider();
-
-  if (provider.runtime === "podman" && options.maintenance !== false) {
-    ensurePodmanHealthy();
-  }
-
-  const args = [...provider.prefix, ...composeArgs];
+  ensureDockerAvailable();
+  const args = ["compose", ...composeArgs];
 
   if (options.stream) {
-    return runStreamingCommand(provider.command, args, { cwd: rootDir });
+    return runStreamingCommand("docker", args, { cwd: rootDir });
   }
 
-  runCommand(provider.command, args, { cwd: rootDir });
+  runCommand("docker", args, { cwd: rootDir });
 }
 
 function sleep(ms) {
@@ -244,19 +114,6 @@ async function waitForDatabase(databaseUrl, options = {}) {
       await sleep(delayMs);
     }
   }
-}
-
-function buildContainerImage(target) {
-  const runtime = detectContainerRuntime();
-  const args = ["build", "-f", target.dockerfile, "-t", target.image];
-
-  for (const [key, value] of Object.entries(target.buildArgs)) {
-    args.push("--build-arg", `${key}=${value}`);
-  }
-
-  args.push(target.context);
-
-  runCommand(runtime, args, { cwd: rootDir });
 }
 
 function ensureLockDirectory() {
@@ -489,10 +346,7 @@ async function main() {
 
     case "prod:build":
       await withInfraLock(() => {
-        for (const target of prodBuildTargets) {
-          console.log(`Buildando ${target.label}...`);
-          buildContainerImage(target);
-        }
+        runCompose([...prodComposeArgs, "build"]);
       });
       return;
 
@@ -518,12 +372,7 @@ async function main() {
       });
       await applySql(["--env-file", ".env.production"]);
       await withInfraLock(() => {
-        for (const target of prodBuildTargets) {
-          console.log(`Buildando ${target.label}...`);
-          buildContainerImage(target);
-        }
-
-        runCompose([...prodComposeArgs, "up", "-d", "--force-recreate", "--remove-orphans"]);
+        runCompose([...prodComposeArgs, "up", "-d", "--build", "--force-recreate", "--remove-orphans"]);
       });
       return;
 

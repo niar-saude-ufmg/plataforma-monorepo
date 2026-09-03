@@ -9,7 +9,6 @@ Data de referencia: 2026-09-02.
 - monorepo com `pnpm workspace` e `turbo`
 - `CI` em `.github/workflows/ci.yml`
 - workflow de deploy em `.github/workflows/deploy.yml`
-- script de deploy da VM em `infra/vm/deploy.sh`
 - documentacao base em `README.md`
 - guia operacional em `GUIA-DE-USO-MONOREPO.md`
 - guia de preparacao da VM em `infra/vm/README.md`
@@ -79,7 +78,7 @@ A VM precisa ter:
 - `nvm`
 - `Node 22`
 - `pnpm 11`
-- `Docker` ou `Podman`
+- `Docker`
 - pasta do projeto criada
 
 Referencia:
@@ -114,16 +113,20 @@ Impacto:
 
 - se a equipe usar outro prefixo de branch, o `push` nao dispara a CI, embora o `pull_request` continue cobrindo
 
-### 4.3. Runtime da VM
+### 4.3. Provisionamento da VM
 
-No Oracle Linux ainda existe risco operacional com locks do Podman.
+O deploy automatico assume que a VM ja foi provisionada corretamente com:
 
-Mitigacao atual:
+- `Docker Engine`
+- `docker compose`
+- `nvm`
+- `Node 22`
+- `pnpm 11.19.0`
 
-- `infra.mjs` tenta executar `podman system renumber`
-- build de producao feito em serie
+Referencia:
 
-Isso ajuda, mas nao elimina todo problema de runtime da VM.
+- `infra/vm/cloud-init.yaml`
+- `infra/vm/README.md`
 
 ## 5. Melhorias recomendadas depois
 
