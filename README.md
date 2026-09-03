@@ -166,6 +166,8 @@ Em producao, o arquivo contem duas URLs de banco:
 - `DATABASE_URL`: usada pelos scripts executados no host da VM;
 - `CONTAINER_DATABASE_URL`: usada pelas APIs quando elas estao dentro dos containers.
 
+No `assistente-api`, a URL assincrona do SQLAlchemy normaliza `sslmode=disable` para compatibilidade com `asyncpg`.
+
 No `docker-compose.prod.yml`, o Postgres de producao fica publicado apenas em `127.0.0.1:5432`, para permitir `pnpm prod:deploy` no host sem expor a porta do banco publicamente.
 
 ### Subir stack de producao
