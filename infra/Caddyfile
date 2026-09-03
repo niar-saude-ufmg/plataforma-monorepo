@@ -1,4 +1,4 @@
-:80 {
+niarplataforma.duckdns.org {
 	handle_path /remotes/institucional/* {
 		reverse_proxy institucional-web:80
 	}
