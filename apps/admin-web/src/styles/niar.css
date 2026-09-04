@@ -133,10 +133,61 @@ body {
   padding: 32px 24px 64px;
 }
 
+.app-main--public {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.users-page--public {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.users-page--public .page-head,
+.users-page--public .card {
+  width: min(100%, 720px);
+}
+
+.users-page--public .page-head {
+  text-align: left;
+}
+
+.users-page--public .page-head__subtitle {
+  margin: 0;
+}
+
+.users-page--public .card__head,
+.users-page--public .card__body {
+  display: flex;
+  justify-content: center;
+}
+
+.users-page--public .card__head > div,
+.users-page--public .form {
+  width: 100%;
+}
+
 /* ---------- Cabeçalho da página ---------- */
 
 .page-head {
   margin-bottom: 28px;
+}
+
+.page-head__back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--azul-descritivo);
+  text-decoration: none;
+}
+
+.page-head__back-link:hover {
+  color: var(--azul-profundo);
 }
 
 .page-head__eyebrow {

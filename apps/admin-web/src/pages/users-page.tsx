@@ -1,4 +1,9 @@
+import { APP_ROUTES } from '@niar/config';
 import { UserForm } from '../components/user-form';
+
+type UsersPageProps = {
+  mode?: 'admin' | 'public';
+};
 
 /*
  * Tela principal do admin nesta entrega: cadastro de pesquisador.
@@ -7,11 +12,18 @@ import { UserForm } from '../components/user-form';
  * saiu desta tarefa e volta junto da gestão administrativa de usuários.
  * Nenhuma chamada HTTP acontece aqui — a tela só compõe o formulário.
  */
-export function UsersPage() {
+export function UsersPage({ mode = 'admin' }: UsersPageProps) {
+  const isPublicMode = mode === 'public';
+
   return (
-    <>
+    <div className={isPublicMode ? 'users-page users-page--public' : 'users-page'}>
       <header className="page-head">
-        <p className="page-head__eyebrow">Administração</p>
+        {isPublicMode ? (
+          <a className="page-head__back-link" href={APP_ROUTES.home}>
+            {'< Voltar ao institucional'}
+          </a>
+        ) : null}
+        {!isPublicMode ? <p className="page-head__eyebrow">Administração</p> : null}
         <h1 className="page-head__title">Cadastro de pesquisador</h1>
         <p className="page-head__subtitle">
           Cadastre pesquisadores com acesso à plataforma. O perfil de pesquisador dá acesso aos
@@ -31,6 +43,6 @@ export function UsersPage() {
           <UserForm />
         </div>
       </section>
-    </>
+    </div>
   );
 }
