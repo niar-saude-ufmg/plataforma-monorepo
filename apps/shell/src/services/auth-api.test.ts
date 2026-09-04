@@ -21,6 +21,8 @@ describe("shell auth api", () => {
   });
 
   it("faz login no endpoint do assistente usando a base resolvida", async () => {
+    vi.stubEnv("VITE_ASSISTENTE_API_URL", "http://localhost:8000/");
+
     const fetchSpy = vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ access_token: "token-teste" }), {
@@ -45,7 +47,7 @@ describe("shell auth api", () => {
 
     expect(fetchSpy).toHaveBeenNthCalledWith(
       1,
-      `${window.location.origin}/assistente-api/api/auth/login/json`,
+      "http://localhost:8000/api/auth/login/json",
       {
         method: "POST",
         body: JSON.stringify({ email: "pesquisador@plataforma.local", password: "pesquisador" }),
@@ -57,7 +59,7 @@ describe("shell auth api", () => {
 
     expect(fetchSpy).toHaveBeenNthCalledWith(
       2,
-      `${window.location.origin}/assistente-api/api/auth/me`,
+      "http://localhost:8000/api/auth/me",
       {
         headers: {
           "Content-Type": "application/json",
