@@ -9,7 +9,7 @@
  */
 
 /** Único perfil criado nesta entrega. Outros perfis voltam na tarefa da gestão de usuários. */
-export type UserRole = 'researcher';
+export type UserRole = 'researcher' | 'admin';
 
 /**
  * Entrada do cadastro como a UI produz (camelCase).
@@ -37,7 +37,7 @@ export interface CreateUserPayload {
 
 /** Usuário como a tela precisa dele (resposta do POST, já normalizada pelo service). */
 export interface User {
-  id: string;
+  id: number;
   fullName: string;
   email: string;
   role: UserRole;
@@ -53,5 +53,5 @@ export interface User {
 export interface ApiError {
   message: string;
   status?: number;
-  fieldErrors?: Partial<Record<'fullName' | 'email' | 'password', string>>;
+  fieldErrors?: Partial<Record<'fullName' | 'email' | 'password' | 'passwordConfirmation', string>>;
 }

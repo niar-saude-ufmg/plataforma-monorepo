@@ -1,15 +1,9 @@
 /**
  * CONTRATO DOS HOOKS DE USUÁRIOS — escopo atual: só o cadastro.
  *
- * A implementação real (React Query + admin-api) é responsabilidade do time de
- * integração. Este arquivo define o formato que as telas esperam e, enquanto a
- * versão real não chega, reexporta a versão mock para o front rodar sozinho.
- *
- * PARA LIGAR NA API DE VERDADE: troque a linha de reexport lá embaixo por
- *
- *   export { useCreateUser } from './use-users.query';
- *
- * e apague o import do mock. Nenhum componente precisa ser alterado.
+ * Este arquivo define o contrato público do hook de usuários para as telas.
+ * A implementação real fica em `use-users.query.ts`, para manter a UI separada
+ * da estratégia de acesso à API.
  *
  * ATENÇÃO (atualização de escopo): useUsers/useQuery, a query key da listagem
  * e o invalidateQueries saíram desta entrega. Fica só o useMutation do cadastro.
@@ -40,4 +34,4 @@ export interface UseCreateUserResult {
  * (Sem invalidateQueries: não há listagem nesta entrega.)
  */
 
-export { useCreateUser } from './use-users.mock';
+export { useCreateUser } from './use-users.query';

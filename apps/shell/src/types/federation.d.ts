@@ -8,7 +8,7 @@ declare module "institucional/App" {
 declare module "admin/App" {
   import { ComponentType } from "react";
 
-  const AdminApp: ComponentType;
+  const AdminApp: ComponentType<{ mode?: "admin" | "public" }>;
   export default AdminApp;
 }
 
