@@ -2,6 +2,7 @@ import os
 import tempfile
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -9,7 +10,7 @@ _ASSISTENTE_ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_EXPORTS_DIR = _ASSISTENTE_ROOT / ".local" / "exports"
 
 
-def _discover_env_file() -> Path | None:
+def _discover_env_file() -> Optional[Path]:
     current = Path(__file__).resolve()
 
     for parent in current.parents:
