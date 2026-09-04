@@ -1,9 +1,18 @@
 import { jest } from "@jest/globals";
 import request from "supertest";
-import type { User } from "@niar/database";
 
-const findByEmail = jest.fn<() => Promise<User | null>>();
-const create = jest.fn<() => Promise<User>>();
+type StoredUser = {
+  id: number;
+  email: string;
+  fullName: string;
+  hashedPassword: string;
+  role: "researcher" | "admin";
+  isActive: boolean;
+  createdAt: Date;
+};
+
+const findByEmail = jest.fn<() => Promise<StoredUser | null>>();
+const create = jest.fn<() => Promise<StoredUser>>();
 
 // Mesma técnica usada em users.list.test.ts: mocka o repository antes de
 // qualquer coisa importar o app, pra não depender de um Postgres real.
@@ -13,7 +22,7 @@ jest.unstable_mockModule("../src/repositories/users-repository.js", () => ({
 
 const { app } = await import("../src/app.js");
 
-const buildStoredUser = (overrides: Partial<User> = {}): User => ({
+const buildStoredUser = (overrides: Partial<StoredUser> = {}): StoredUser => ({
   id: 1,
   email: "teste@niar.local.test",
   fullName: "Teste",
