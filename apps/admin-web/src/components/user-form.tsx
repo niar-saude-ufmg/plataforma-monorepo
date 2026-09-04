@@ -15,14 +15,17 @@ type FormState = {
   fullName: string;
   email: string;
   password: string;
+  passwordConfirmation: string;
 };
 
 type FieldErrors = Partial<Record<keyof FormState, string>>;
+type TouchedFields = Partial<Record<keyof FormState, boolean>>;
 
 const INITIAL_STATE: FormState = {
   fullName: '',
   email: '',
   password: '',
+  passwordConfirmation: '',
 };
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -41,8 +44,17 @@ function validate(values: FormState): FieldErrors {
   if (values.password.length < MIN_PASSWORD_LENGTH) {
     errors.password = `A senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`;
   }
+  if (values.passwordConfirmation.length < MIN_PASSWORD_LENGTH) {
+    errors.passwordConfirmation = `A confirmação de senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`;
+  } else if (values.password !== values.passwordConfirmation) {
+    errors.passwordConfirmation = 'A confirmação de senha deve ser igual à senha informada.';
+  }
 
   return errors;
+}
+
+function getFieldError(field: keyof FormState, values: FormState) {
+  return validate(values)[field];
 }
 
 function isApiError(value: unknown): value is ApiError {
@@ -57,17 +69,40 @@ interface UserFormProps {
 export function UserForm({ onCreated }: UserFormProps) {
   const [values, setValues] = useState<FormState>(INITIAL_STATE);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [touchedFields, setTouchedFields] = useState<TouchedFields>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
 
   const { mutateAsync, isPending } = useCreateUser();
 
   function updateField<K extends keyof FormState>(field: K, value: FormState[K]) {
-    setValues((current) => ({ ...current, [field]: value }));
-    setErrors((current) => ({ ...current, [field]: undefined }));
+    setValues((current) => {
+      const nextValues = { ...current, [field]: value };
+      setErrors((currentErrors) => {
+        const nextErrors = { ...currentErrors, [field]: undefined };
+
+        if (touchedFields[field]) {
+          nextErrors[field] = getFieldError(field, nextValues);
+        }
+
+        if (field === 'password' && touchedFields.passwordConfirmation) {
+          nextErrors.passwordConfirmation = getFieldError('passwordConfirmation', nextValues);
+        }
+
+        return nextErrors;
+      });
+
+      return nextValues;
+    });
     setFormError(null);
     setSuccessMessage(null);
+  }
+
+  function handleBlur(field: keyof FormState) {
+    setTouchedFields((current) => ({ ...current, [field]: true }));
+    setErrors((current) => ({ ...current, [field]: getFieldError(field, values) }));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -78,6 +113,12 @@ export function UserForm({ onCreated }: UserFormProps) {
 
     const validationErrors = validate(values);
     if (Object.keys(validationErrors).length > 0) {
+      setTouchedFields({
+        fullName: true,
+        email: true,
+        password: true,
+        passwordConfirmation: true,
+      });
       setErrors(validationErrors);
       return;
     }
@@ -94,6 +135,7 @@ export function UserForm({ onCreated }: UserFormProps) {
       const created = await mutateAsync(payload);
       setValues(INITIAL_STATE);
       setErrors({});
+      setTouchedFields({});
       setSuccessMessage(`${created.fullName} foi cadastrado(a) como pesquisador(a).`);
       onCreated?.(created);
     } catch (error) {
@@ -136,6 +178,7 @@ export function UserForm({ onCreated }: UserFormProps) {
           placeholder="Ex.: Ana Beatriz Souza"
           value={values.fullName}
           onChange={(event) => updateField('fullName', event.target.value)}
+          onBlur={() => handleBlur('fullName')}
           aria-invalid={Boolean(errors.fullName)}
           aria-describedby={errors.fullName ? 'fullName-error' : undefined}
         />
@@ -159,6 +202,7 @@ export function UserForm({ onCreated }: UserFormProps) {
           placeholder="nome@niar-saude.org"
           value={values.email}
           onChange={(event) => updateField('email', event.target.value)}
+          onBlur={() => handleBlur('email')}
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? 'email-error' : undefined}
         />
@@ -182,8 +226,9 @@ export function UserForm({ onCreated }: UserFormProps) {
           placeholder="Mínimo de 8 caracteres"
           value={values.password}
           onChange={(event) => updateField('password', event.target.value)}
+          onBlur={() => handleBlur('password')}
           aria-invalid={Boolean(errors.password)}
-          aria-describedby={errors.password ? 'password-error' : 'password-hint'}
+          aria-describedby={errors.password ? 'password-error' : undefined}
         />
         <button
           type="button"
@@ -197,11 +242,39 @@ export function UserForm({ onCreated }: UserFormProps) {
           <span className="field__error" id="password-error" role="alert">
             {errors.password}
           </span>
-        ) : (
-          <span className="field__hint" id="password-hint">
-            A pessoa troca a senha no primeiro acesso.
+        ) : null}
+      </div>
+
+      <div className="field field--password">
+        <label className="field__label" htmlFor="passwordConfirmation">
+          Repetir senha
+        </label>
+        <input
+          id="passwordConfirmation"
+          name="passwordConfirmation"
+          className="field__control"
+          type={showPasswordConfirmation ? 'text' : 'password'}
+          autoComplete="new-password"
+          placeholder="Repita a senha informada"
+          value={values.passwordConfirmation}
+          onChange={(event) => updateField('passwordConfirmation', event.target.value)}
+          onBlur={() => handleBlur('passwordConfirmation')}
+          aria-invalid={Boolean(errors.passwordConfirmation)}
+          aria-describedby={errors.passwordConfirmation ? 'password-confirmation-error' : undefined}
+        />
+        <button
+          type="button"
+          className="field__toggle"
+          onClick={() => setShowPasswordConfirmation((current) => !current)}
+          aria-pressed={showPasswordConfirmation}
+        >
+          {showPasswordConfirmation ? 'Ocultar' : 'Mostrar'}
+        </button>
+        {errors.passwordConfirmation ? (
+          <span className="field__error" id="password-confirmation-error" role="alert">
+            {errors.passwordConfirmation}
           </span>
-        )}
+        ) : null}
       </div>
 
       <button type="submit" className="btn btn--primary" disabled={isPending}>

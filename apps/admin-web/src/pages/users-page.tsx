@@ -25,7 +25,6 @@ export function UsersPage() {
             <h2 className="card__title" id="new-user-title">
               Novo pesquisador
             </h2>
-            <p className="card__hint">O acesso fica pendente até o primeiro login.</p>
           </div>
         </div>
         <div className="card__body">
