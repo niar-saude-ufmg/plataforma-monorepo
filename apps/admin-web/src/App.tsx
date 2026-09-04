@@ -1,4 +1,16 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UsersPage } from './pages/users-page';
+import './styles/niar.css';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 /**
  * Casca do admin. Substitui o placeholder anterior.
@@ -6,24 +18,26 @@ import { UsersPage } from './pages/users-page';
  */
 export default function App() {
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <div className="app-header__inner">
-          {/* TODO: trocar por <img src="/logo-niar-saude.svg" alt="NIAR-Saúde" />.
-              O manual não permite recriar a marca com outra tipografia em produção. */}
-          <div className="brand">
-            <span className="brand__mark">NIAR-Saúde</span>
-            <span className="brand__descriptor">
-              Núcleo de Inteligência Artificial Responsável para a Saúde
-            </span>
+    <QueryClientProvider client={queryClient}>
+      <div className="app-shell">
+        <header className="app-header">
+          <div className="app-header__inner">
+            {/* TODO: trocar por <img src="/logo-niar-saude.svg" alt="NIAR-Saúde" />.
+                O manual não permite recriar a marca com outra tipografia em produção. */}
+            <div className="brand">
+              <span className="brand__mark">NIAR-Saúde</span>
+              <span className="brand__descriptor">
+                Núcleo de Inteligência Artificial Responsável para a Saúde
+              </span>
+            </div>
+            <span className="app-header__meta">Painel administrativo</span>
           </div>
-          <span className="app-header__meta">Painel administrativo</span>
-        </div>
-      </header>
+        </header>
 
-      <main className="app-main">
-        <UsersPage />
-      </main>
-    </div>
+        <main className="app-main">
+          <UsersPage />
+        </main>
+      </div>
+    </QueryClientProvider>
   );
 }
