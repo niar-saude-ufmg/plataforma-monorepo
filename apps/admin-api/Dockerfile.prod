@@ -8,10 +8,11 @@ COPY packages ./packages
 COPY scripts ./scripts
 
 RUN corepack enable && pnpm install --frozen-lockfile
+RUN pnpm --filter @niar/database prisma:generate
 RUN pnpm --filter @niar/admin-api build
 
 ENV NODE_ENV=production
 
 EXPOSE 3333
 
-CMD ["node", "apps/admin-api/dist/src/server.js"]
+CMD ["pnpm", "--filter", "@niar/admin-api", "exec", "tsx", "src/server.ts"]
