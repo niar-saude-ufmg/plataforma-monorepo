@@ -31,6 +31,7 @@ async function fillForm() {
   await user.type(screen.getByLabelText('Nome completo'), 'Ana Beatriz Souza');
   await user.type(screen.getByLabelText('E-mail'), 'ana.souza@niar-saude.org');
   await user.type(screen.getByLabelText('Senha'), 'senhaforte1');
+  await user.type(screen.getByLabelText('Repetir senha'), 'senhaforte1');
   await user.click(screen.getByRole('button', { name: 'Cadastrar pesquisador' }));
 }
 
@@ -54,6 +55,7 @@ describe('UsersPage — cadastro de pesquisador', () => {
     expect(screen.getByLabelText('Nome completo')).toBeInTheDocument();
     expect(screen.getByLabelText('E-mail')).toBeInTheDocument();
     expect(screen.getByLabelText('Senha')).toBeInTheDocument();
+    expect(screen.getByLabelText('Repetir senha')).toBeInTheDocument();
   });
 
   it('não exibe seletor de perfil', () => {
@@ -75,7 +77,89 @@ describe('UsersPage — cadastro de pesquisador', () => {
     expect(
       screen.getByText('A senha precisa ter pelo menos 8 caracteres.'),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText('A confirmação de senha precisa ter pelo menos 8 caracteres.'),
+    ).toBeInTheDocument();
     expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('valida quando a confirmação de senha é diferente da senha', async () => {
+    const user = userEvent.setup();
+    render(<UsersPage />);
+
+    await user.type(screen.getByLabelText('Nome completo'), 'Ana Beatriz Souza');
+    await user.type(screen.getByLabelText('E-mail'), 'ana.souza@niar-saude.org');
+    await user.type(screen.getByLabelText('Senha'), 'senhaforte1');
+    await user.type(screen.getByLabelText('Repetir senha'), 'senhaforte2');
+    await user.click(screen.getByRole('button', { name: 'Cadastrar pesquisador' }));
+
+    expect(
+      screen.getByText('A confirmação de senha deve ser igual à senha informada.'),
+    ).toBeInTheDocument();
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('valida campos ao perder foco sem esperar o submit', async () => {
+    const user = userEvent.setup();
+    render(<UsersPage />);
+
+    await user.click(screen.getByLabelText('Nome completo'));
+    await user.tab();
+    await user.click(screen.getByLabelText('E-mail'));
+    await user.tab();
+    await user.click(screen.getByLabelText('Senha'));
+    await user.tab();
+    await user.click(screen.getByLabelText('Repetir senha'));
+    await user.tab();
+
+    expect(screen.getByText('Informe o nome completo do pesquisador.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Informe um e-mail válido, como nome@instituicao.org.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('A senha precisa ter pelo menos 8 caracteres.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('A confirmação de senha precisa ter pelo menos 8 caracteres.'),
+    ).toBeInTheDocument();
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('revalida o campo tocado enquanto a pessoa corrige o valor', async () => {
+    const user = userEvent.setup();
+    render(<UsersPage />);
+
+    const emailInput = screen.getByLabelText('E-mail');
+
+    await user.click(emailInput);
+    await user.tab();
+
+    expect(
+      screen.getByText('Informe um e-mail válido, como nome@instituicao.org.'),
+    ).toBeInTheDocument();
+
+    await user.type(emailInput, 'ana.souza@niar-saude.org');
+
+    expect(
+      screen.queryByText('Informe um e-mail válido, como nome@instituicao.org.'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('controla mostrar e ocultar senha de forma independente', async () => {
+    const user = userEvent.setup();
+    render(<UsersPage />);
+
+    const passwordInput = screen.getByLabelText('Senha');
+    const passwordConfirmationInput = screen.getByLabelText('Repetir senha');
+    const toggleButtons = screen.getAllByRole('button', { name: 'Mostrar' });
+
+    expect(passwordInput).toHaveAttribute('type', 'password');
+    expect(passwordConfirmationInput).toHaveAttribute('type', 'password');
+
+    await user.click(toggleButtons[0]);
+
+    expect(passwordInput).toHaveAttribute('type', 'text');
+    expect(passwordConfirmationInput).toHaveAttribute('type', 'password');
   });
 
   it('envia o cadastro com role "researcher" definido internamente', async () => {
@@ -102,6 +186,7 @@ describe('UsersPage — cadastro de pesquisador', () => {
     expect(screen.getByLabelText('Nome completo')).toHaveValue('');
     expect(screen.getByLabelText('E-mail')).toHaveValue('');
     expect(screen.getByLabelText('Senha')).toHaveValue('');
+    expect(screen.getByLabelText('Repetir senha')).toHaveValue('');
   });
 
   it('mostra o estado de envio no botão e evita duplo envio', () => {
