@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UsersPage } from './users-page';
+import { APP_ROUTES } from '@niar/config';
 import type { ApiError } from '../types/user';
 
 /**
@@ -35,15 +36,32 @@ async function fillForm() {
   await user.click(screen.getByRole('button', { name: 'Cadastrar pesquisador' }));
 }
 
+const locationAssignMock = vi.fn();
+
 beforeEach(() => {
   vi.clearAllMocks();
   setCreateState();
   mutateAsync.mockResolvedValue({
-    id: '3',
+    id: 3,
     fullName: 'Ana Beatriz Souza',
     email: 'ana.souza@niar-saude.org',
     role: 'researcher',
     createdAt: '2026-08-31T12:00:00.000Z',
+  });
+
+  Object.defineProperty(window, 'location', {
+    configurable: true,
+    value: {
+      ...window.location,
+      assign: locationAssignMock,
+    },
+  });
+});
+
+afterEach(() => {
+  Object.defineProperty(window, 'location', {
+    configurable: true,
+    value: globalThis.location,
   });
 });
 
@@ -173,6 +191,21 @@ describe('UsersPage — cadastro de pesquisador', () => {
         password: 'senhaforte1',
         role: 'researcher',
       });
+    });
+  });
+
+  it('na rota pública, oferece retorno para a Sala Segura e redireciona após o cadastro', async () => {
+    render(<UsersPage mode="public" />);
+
+    expect(screen.getByRole('link', { name: '< Voltar para a Sala Segura' })).toHaveAttribute(
+      'href',
+      APP_ROUTES.salaSegura,
+    );
+
+    await fillForm();
+
+    await waitFor(() => {
+      expect(locationAssignMock).toHaveBeenCalledWith(APP_ROUTES.salaSegura);
     });
   });
 

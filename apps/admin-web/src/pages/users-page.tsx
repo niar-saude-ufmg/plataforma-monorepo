@@ -15,12 +15,20 @@ type UsersPageProps = {
 export function UsersPage({ mode = 'admin' }: UsersPageProps) {
   const isPublicMode = mode === 'public';
 
+  function handleCreated() {
+    if (!isPublicMode || typeof window === 'undefined') {
+      return;
+    }
+
+    window.location.assign(APP_ROUTES.salaSegura);
+  }
+
   return (
     <div className={isPublicMode ? 'users-page users-page--public' : 'users-page'}>
       <header className="page-head">
         {isPublicMode ? (
-          <a className="page-head__back-link" href={APP_ROUTES.home}>
-            {'< Voltar ao institucional'}
+          <a className="page-head__back-link" href={APP_ROUTES.salaSegura}>
+            {'< Voltar para a Sala Segura'}
           </a>
         ) : null}
         {!isPublicMode ? <p className="page-head__eyebrow">Administração</p> : null}
@@ -40,7 +48,7 @@ export function UsersPage({ mode = 'admin' }: UsersPageProps) {
           </div>
         </div>
         <div className="card__body">
-          <UserForm />
+          <UserForm onCreated={handleCreated} />
         </div>
       </section>
     </div>
