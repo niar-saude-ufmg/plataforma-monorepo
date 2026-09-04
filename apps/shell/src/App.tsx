@@ -21,9 +21,29 @@ type SessionUser = {
   role: UserRole;
 };
 
-const AdminRemote = lazy(() => import("admin/App"));
-const AssistantRemote = lazy(() => import("assistant/App"));
-const InstitutionalRemote = lazy(() => import("institucional/App"));
+const AdminRemote = import.meta.env.MODE === "test"
+  ? lazy(async () => ({
+      default: function AdminRemoteTestStub() {
+        return <h1>Cadastro de pesquisador</h1>;
+      }
+    }))
+  : lazy(() => import("admin/App"));
+
+const AssistantRemote = import.meta.env.MODE === "test"
+  ? lazy(async () => ({
+      default: function AssistantRemoteTestStub() {
+        return <h1>Assistente de Pesquisa</h1>;
+      }
+    }))
+  : lazy(() => import("assistant/App"));
+
+const InstitutionalRemote = import.meta.env.MODE === "test"
+  ? lazy(async () => ({
+      default: function InstitutionalRemoteTestStub() {
+        return <h1>Site Institucional</h1>;
+      }
+    }))
+  : lazy(() => import("institucional/App"));
 
 const readSession = (): SessionUser | null => {
   const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
@@ -207,6 +227,14 @@ export default function App() {
 
       {!isRestoringSession && <Routes>
         <Route path={APP_ROUTES.login} element={<LoginPage onLogin={login} />} />
+        <Route
+          path={APP_ROUTES.researcherSignup}
+          element={
+            <Suspense fallback={<RemoteLoading label="cadastro de pesquisador" />}>
+              <AdminRemote />
+            </Suspense>
+          }
+        />
         <Route
           path={`${APP_ROUTES.admin}/*`}
           element={

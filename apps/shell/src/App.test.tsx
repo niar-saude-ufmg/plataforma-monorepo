@@ -35,6 +35,16 @@ describe("Shell App", () => {
     expect(screen.getByRole("heading", { name: "Login da Plataforma" })).toBeInTheDocument();
   });
 
+  it("permite abrir o cadastro público de pesquisador sem login", async () => {
+    render(
+      <MemoryRouter initialEntries={["/cadastro/pesquisador"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole("heading", { name: "Cadastro de pesquisador" })).toBeInTheDocument();
+  });
+
   it("autentica pela shell e direciona o perfil para sua área", async () => {
     vi.mocked(login).mockResolvedValue({
       token: "token-de-teste",
