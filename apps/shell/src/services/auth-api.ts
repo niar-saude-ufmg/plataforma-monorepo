@@ -1,6 +1,20 @@
 import { UserRole } from "@niar/contracts";
 
-const apiUrl = import.meta.env.VITE_ASSISTENTE_API_URL || "http://localhost:8000";
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
+
+export function getAssistenteApiBaseUrl() {
+  const configuredUrl = import.meta.env.VITE_ASSISTENTE_API_URL?.trim();
+
+  if (configuredUrl) {
+    return trimTrailingSlash(configuredUrl);
+  }
+
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return `${window.location.origin}/assistente-api`;
+  }
+
+  return "/assistente-api";
+}
 
 type TokenResponse = {
   access_token: string;
@@ -15,7 +29,7 @@ export type AuthenticatedUser = {
 };
 
 async function request<T>(path: string, options: RequestInit = {}) {
-  const response = await fetch(`${apiUrl}${path}`, {
+  const response = await fetch(`${getAssistenteApiBaseUrl()}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",

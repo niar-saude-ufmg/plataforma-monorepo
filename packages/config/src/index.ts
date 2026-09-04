@@ -1,6 +1,7 @@
 export const APP_ROUTES = {
   home: "/",
   salaSegura: "/sala-segura",
+  researcherSignup: "/cadastro/pesquisador",
   login: "/login",
   admin: "/admin",
   assistant: "/assistente"

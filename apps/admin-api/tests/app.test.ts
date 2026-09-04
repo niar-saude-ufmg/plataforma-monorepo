@@ -1,5 +1,15 @@
+import { jest } from "@jest/globals";
 import request from "supertest";
-import { app } from "../src/app.js";
+
+jest.unstable_mockModule("../src/repositories/users-repository.js", () => ({
+  usersRepository: {
+    findAll: jest.fn(),
+    findByEmail: jest.fn(),
+    create: jest.fn()
+  }
+}));
+
+const { app } = await import("../src/app.js");
 
 describe("admin api", () => {
   it("expõe healthcheck", async () => {

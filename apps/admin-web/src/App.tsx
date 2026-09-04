@@ -1,30 +1,51 @@
-import { APP_TITLES } from "@niar/config";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { UsersPage } from './pages/users-page';
+import './styles/niar.css';
 
-const cards = [
-  "Cadastro e gestão de usuários",
-  "Acompanhamento de projetos",
-  "Status, tramitação e envio para comissão"
-];
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-export default function App() {
+type AppProps = {
+  mode?: 'admin' | 'public';
+};
+
+/**
+ * Casca do admin. Substitui o placeholder anterior.
+ * Quando entrar roteamento (react-router), o <main> vira o outlet das rotas.
+ */
+export default function App({ mode = 'admin' }: AppProps) {
+  const isPublicMode = mode === 'public';
+
   return (
-    <main className="admin-layout">
-      <section className="admin-hero">
-        <p className="eyebrow">MVP administrativo</p>
-        <h1>{APP_TITLES.admin}</h1>
-        <p className="muted">
-          Este app concentra o fluxo principal da primeira entrega da plataforma.
-        </p>
-      </section>
+    <QueryClientProvider client={queryClient}>
+      <div className="app-shell">
+        {!isPublicMode ? (
+          <header className="app-header">
+            <div className="app-header__inner">
+              {/* TODO: trocar por <img src="/logo-niar-saude.svg" alt="NIAR-Saúde" />.
+                  O manual não permite recriar a marca com outra tipografia em produção. */}
+              <div className="brand">
+                <span className="brand__mark">NIAR-Saúde</span>
+                <span className="brand__descriptor">
+                  Núcleo de Inteligência Artificial Responsável para a Saúde
+                </span>
+              </div>
+              <span className="app-header__meta">Painel administrativo</span>
+            </div>
+          </header>
+        ) : null}
 
-      <section className="card-grid">
-        {cards.map((card) => (
-          <article className="admin-card" key={card}>
-            <h2>{card}</h2>
-            <p>Placeholder inicial para implementação gradual das telas e regras do módulo admin.</p>
-          </article>
-        ))}
-      </section>
-    </main>
+        <main className={isPublicMode ? 'app-main app-main--public' : 'app-main'}>
+          <UsersPage mode={mode} />
+        </main>
+      </div>
+    </QueryClientProvider>
   );
 }

@@ -26,7 +26,13 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       host: "0.0.0.0",
-      port: 5174
+      port: 5174,
+      proxy: {
+        "/api/admin": {
+          target: env.VITE_ADMIN_API_PROXY_TARGET || `http://localhost:${env.ADMIN_API_PORT || 3333}`,
+          changeOrigin: true
+        }
+      }
     },
     build: {
       target: "esnext"

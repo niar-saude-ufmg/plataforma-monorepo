@@ -3,6 +3,7 @@ dist
 .turbo
 .DS_Store
 .env
+.env.test
 .env.production
 .env.local
 coverage
@@ -29,3 +30,7 @@ build
 apps/**/src/**/*.js
 apps/**/vite.config.js
 apps/**/tsconfig.tsbuildinfo
+mise.toml
+
+# Arquivos de configuração da IDE
+**/.zed
