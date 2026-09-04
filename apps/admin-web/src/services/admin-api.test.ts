@@ -20,6 +20,8 @@ describe('admin-api service', () => {
   });
 
   it('envia o payload esperado e normaliza a resposta de sucesso', async () => {
+    vi.stubEnv('VITE_ADMIN_API_URL', 'http://localhost:3333/api/admin/');
+
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -44,7 +46,7 @@ describe('admin-api service', () => {
       role: 'researcher',
     });
 
-    expect(fetchSpy).toHaveBeenCalledWith(`${window.location.origin}/api/admin/users`, {
+    expect(fetchSpy).toHaveBeenCalledWith('http://localhost:3333/api/admin/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
