@@ -231,7 +231,7 @@ export default function App() {
           path={APP_ROUTES.researcherSignup}
           element={
             <Suspense fallback={<RemoteLoading label="cadastro de pesquisador" />}>
-              <AdminRemote />
+              <AdminRemote mode="public" />
             </Suspense>
           }
         />
