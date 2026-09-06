@@ -254,3 +254,14 @@ enum user_role {
 
   @@schema("shared")
 }
+
+enum project_status {
+  submitted_to_committee
+  under_review
+  needs_changes
+  approved
+  rejected
+  resubmitted_to_committee
+
+  @@schema("shared")
+}
