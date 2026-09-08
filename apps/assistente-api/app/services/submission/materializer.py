@@ -1,18 +1,19 @@
-"""Materializer for submission project to committee."""
-
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from sqlalchemy import select, desc
+
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models import (
-    WizardSession,
+    ExportArtifact,
     Project,
     ProjectDocument,
-    ProjectStatusHistory,
     ProjectStatus,
-    ExportArtifact
+    ProjectStatusHistory,
+    WizardSession,
 )
+
 
 async def materialize_project(
     *,
@@ -21,79 +22,76 @@ async def materialize_project(
     user_id: int,
     docx_artifact: ExportArtifact,
 ) -> Project:
-    """Materialize a project from a wizard session and a DOCX artifact."""
+    await db_session.execute(
+        select(WizardSession.id).where(WizardSession.id == session.id).with_for_update()
+    )
 
     existing = await db_session.execute(
         select(Project).where(Project.source_wizard_session_id == session.id)
     )
     project = existing.scalar_one_or_none()
+    submitted_at = datetime.now(timezone.utc)
 
     if project:
-        async with db_session.begin():
-            query_old_doc = await db_session.execute(
-                select(ProjectDocument).where(
-                    ProjectDocument.project_id == project.id,
-                    ProjectDocument.is_current,
-                )
+        project.title = session.title
+        project.updated_at = submitted_at
+
+        current_documents = await db_session.execute(
+            select(ProjectDocument).where(
+                ProjectDocument.project_id == project.id,
+                ProjectDocument.is_current.is_(True),
             )
-            old_doc = query_old_doc.scalar_one_or_none()
+        )
+        for current_document in current_documents.scalars().all():
+            current_document.is_current = False
 
-            if old_doc:
-                old_doc.is_current = False
-
-            new_doc = ProjectDocument(
-                project=project,
-                source_export_artifact=docx_artifact,
-                storage_path=docx_artifact.file_path,
-                original_filename=docx_artifact.filename,
-                is_current=True,
+        last_status_result = await db_session.execute(
+            select(ProjectStatusHistory)
+            .where(ProjectStatusHistory.project_id == project.id)
+            .order_by(desc(ProjectStatusHistory.created_at))
+            .limit(1)
+        )
+        last_status = last_status_result.scalar_one_or_none()
+        if last_status is None:
+            project.submitted_at = project.submitted_at or submitted_at
+            notes = "Primeira submissão"
+            status = ProjectStatus.submitted_to_committee
+        else:
+            notes = (
+                "Reenvio com ajustes solicitados"
+                if last_status.status == ProjectStatus.needs_changes
+                else "Reenvio da submissão"
             )
-            db_session.add(new_doc)
-
-            last_status = await db_session.execute(
-                select(ProjectStatusHistory)
-                .where(ProjectStatusHistory.project_id == project.id)
-                .order_by(desc(ProjectStatusHistory.created_at))
-                .limit(1)
-            )
-            last = last_status.scalar_one_or_none()
-
-            notes = "Reenvio da submissão"
-            if last and last.status == ProjectStatus.needs_changes:
-                notes = "Reenvio com ajustes solicitados"
-
-            history = ProjectStatusHistory(
-                project_id=project.id,
-                status=ProjectStatus.submitted_to_committee,
-                actor_user_id=user_id,
-                notes=notes,
-            )
-            db_session.add(history)
+            status = ProjectStatus.resubmitted_to_committee
     else:
-        async with db_session.begin():
-            project = Project(
-                owner_user_id=user_id,
-                source_wizard_session_id=session.id,
-                title=session.title,
-                submitted_at=datetime.now(timezone.utc),
-            )
-            db_session.add(project)
+        project = Project(
+            owner_user_id=user_id,
+            source_wizard_session_id=session.id,
+            title=session.title,
+            submitted_at=submitted_at,
+        )
+        db_session.add(project)
+        await db_session.flush()
+        notes = "Primeira submissão"
+        status = ProjectStatus.submitted_to_committee
 
-            project_doc = ProjectDocument(
-                project=project,
-                source_export_artifact=docx_artifact,
-                storage_path=docx_artifact.file_path,
-                original_filename=docx_artifact.filename,
-                is_current=True,
-            )
-            db_session.add(project_doc)
-
-            history = ProjectStatusHistory(
-                project_id=project.id,
-                status=ProjectStatus.submitted_to_committee,
-                actor_user_id=user_id,
-                notes="Primeira submissão",
-            )
-            db_session.add(history)
+    db_session.add(
+        ProjectDocument(
+            project_id=project.id,
+            source_export_artifact=docx_artifact,
+            document_type="project_docx",
+            storage_path=docx_artifact.file_path,
+            original_filename=docx_artifact.filename,
+            is_current=True,
+        )
+    )
+    db_session.add(
+        ProjectStatusHistory(
+            project_id=project.id,
+            status=status,
+            actor_user_id=user_id,
+            notes=notes,
+        )
+    )
 
     return project

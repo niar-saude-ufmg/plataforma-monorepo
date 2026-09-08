@@ -207,6 +207,22 @@ CREATE TABLE IF NOT EXISTS shared.project_status_history (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'shared'
+      AND table_name = 'project_status_history'
+      AND column_name = 'status'
+      AND (data_type <> 'USER-DEFINED' OR udt_schema <> 'shared' OR udt_name <> 'project_status')
+  ) THEN
+    ALTER TABLE shared.project_status_history
+      ALTER COLUMN status TYPE shared.project_status
+      USING status::text::shared.project_status;
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_shared_project_status_history_project_id
   ON shared.project_status_history (project_id);
 
