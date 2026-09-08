@@ -31,6 +31,7 @@ from app.services.llm.json_utils import coerce_section_value
 from app.services.llm.prompts import PROJECT_DOC_SECTIONS
 from app.services.scriptgen.validator import validate_script
 from app.services.submission.bundle import build_submission_zip
+from app.services.submission.materializer import materialize_project
 from app.services.wizards.orchestrator import (
     extract_section_content,
     run_advisory_chat,
@@ -664,12 +665,34 @@ async def submit_for_review(
     )
     doc_buffer = BytesIO()
     doc.save(doc_buffer)
+    docx_bytes = doc_buffer.getvalue()
+    submitted_at = datetime.now(timezone.utc)
+    docx_filename = f"project_{project.id}_submission_{submitted_at:%Y%m%dT%H%M%S%fZ}.docx"
+    docx_path = os.path.join(exports_dir, docx_filename)
+    with open(docx_path, "wb") as f:
+        f.write(docx_bytes)
+
+    docx_artifact = ExportArtifact(
+        session_id=project.id,
+        filename=docx_filename,
+        file_path=docx_path,
+        artifact_type="project_docx",
+    )
+    db.add(docx_artifact)
+    await db.flush()
+    await materialize_project(
+        db_session=db,
+        session=project,
+        user_id=current_user.id,
+        docx_artifact=docx_artifact,
+    )
+
     zip_bytes = build_submission_zip(
         project_title=project.title,
         project_id=project.id,
         cleaning_session_id=cleaning.id,
         user_email=current_user.email,
-        docx_bytes=doc_buffer.getvalue(),
+        docx_bytes=docx_bytes,
         script_content=cleaning.script_content,
         model_used=cleaning.llm_model_used or settings.llm_model,
     )

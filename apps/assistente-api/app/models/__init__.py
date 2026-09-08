@@ -318,6 +318,7 @@ class ProjectDocument(Base):
 
 class ProjectStatus(str, enum.Enum):
     submitted_to_committee = "submitted_to_committee"
+    resubmitted_to_committee = "resubmitted_to_committee"
     under_review = "under_review"
     needs_changes = "needs_changes"
     approved = "approved"
