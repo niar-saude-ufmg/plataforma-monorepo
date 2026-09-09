@@ -1,3 +1,4 @@
+import type { UserRole } from "@niar/contracts";
 import { z } from "zod";
 
 export const createUserSchema = z.object({
@@ -16,7 +17,7 @@ export type UserResponse = {
   id: number;
   email: string;
   full_name: string;
-  role: "researcher" | "admin";
+  role: UserRole;
   is_active: boolean;
   created_at: string;
 };
