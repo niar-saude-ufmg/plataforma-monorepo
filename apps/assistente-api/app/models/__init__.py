@@ -20,6 +20,7 @@ from app.core.database import Base
 class UserRole(str, enum.Enum):
     researcher = "researcher"
     admin = "admin"
+    committee = "committee"
 
 
 class WizardType(str, enum.Enum):

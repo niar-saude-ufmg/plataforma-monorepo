@@ -1,5 +1,5 @@
 import { prisma } from "@niar/database";
-
+import type { UserRole } from "@niar/contracts";
 // hashedPassword fica de fora de propósito: como o select já não busca o
 // campo, ele nunca existe em memória nas camadas acima (service/controller),
 // então não tem como vazar por esquecimento na resposta da API.
@@ -16,7 +16,7 @@ export type UserListRecord = {
   id: number;
   email: string;
   fullName: string;
-  role: "researcher" | "admin";
+  role: UserRole; // O papel vem do UserRole de @niar/contracts, nao de uma lista escrita a mao acho que fica mais fácil
   isActive: boolean;
   createdAt: Date;
 };
@@ -32,6 +32,6 @@ export const usersRepository = {
 
   findByEmail: (email: string) => prisma.user.findUnique({ where: { email } }),
 
-  create: (data: { fullName: string; email: string; hashedPassword: string; role?: "researcher" | "admin" }) =>
+    create: (data: { fullName: string; email: string; hashedPassword: string; role?: UserRole }) =>
     prisma.user.create({ data })
 };

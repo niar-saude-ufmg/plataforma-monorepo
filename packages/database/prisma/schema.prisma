@@ -250,6 +250,7 @@ enum wizard_type {
 enum user_role {
   researcher
   admin
+  committee
 
   @@schema("shared")
 }
