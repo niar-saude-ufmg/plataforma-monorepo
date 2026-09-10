@@ -1,38 +1,40 @@
 import { NextFunction, Request, Response } from "express";
-import { ZodError } from "zod";
-import { createUserSchema } from "../schemas/user-schema.js";
+import { AppError } from "../errors/app-error.js";
+import { createPublicUserSchema, createUserByAdminSchema, listUsersQuerySchema } from "../schemas/user-schema.js";
 import { usersService } from "../services/users-service.js";
 
 export const usersController = {
-  list: async (_request: Request, response: Response, next: NextFunction) => {
+  list: async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const users = await usersService.listUsers();
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+
+      const query = listUsersQuerySchema.parse(request.query);
+      const users = await usersService.listUsers(query, request.user);
       response.status(200).json(users);
     } catch (error) {
-      // next(error) entrega o erro pro Express, que devolve um 500 pra
-      // quem chamou. Sem isso, um erro dentro de uma função async some
-      // sem virar resposta nenhuma.
       next(error);
     }
   },
 
-  create: async (request: Request, response: Response) => {
+  create: async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const data = createUserSchema.parse(request.body);
+      const data = createPublicUserSchema.parse(request.body);
       const user = await usersService.createUser(data);
       response.status(201).json(user);
     } catch (error) {
-      if (error instanceof ZodError) {
-        response.status(400).json({ errors: error.errors });
-        return;
-      }
+      next(error);
+    }
+  },
 
-      if (error instanceof Error && error.message === "User with this email already exists") {
-        response.status(409).json({ error: error.message });
-        return;
-      }
-
-      response.status(500).json({ error: "Internal server error" });
+  createByAdmin: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      const data = createUserByAdminSchema.parse(request.body);
+      const user = await usersService.createUserByAdmin(data);
+      response.status(201).json(user);
+    } catch (error) {
+      next(error);
     }
   }
 };

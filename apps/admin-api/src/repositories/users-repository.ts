@@ -21,17 +21,29 @@ export type UserListRecord = {
   createdAt: Date;
 };
 
+export type UserListFilter = {
+  role?: UserRole;
+  page: number;
+  pageSize: number;
+};
+
 export const usersRepository = {
   // Única camada que acessa o Prisma/banco. Service e controller não sabem
   // que existe um Postgres por trás disso.
-  findAll: (): Promise<UserListRecord[]> =>
+  findAll: (filter: UserListFilter): Promise<UserListRecord[]> =>
     prisma.user.findMany({
       select: userListSelect,
-      orderBy: { id: "asc" }
+      where: filter.role ? { role: filter.role } : undefined,
+      orderBy: { id: "asc" },
+      skip: (filter.page - 1) * filter.pageSize,
+      take: filter.pageSize
     }),
 
   findByEmail: (email: string) => prisma.user.findUnique({ where: { email } }),
 
-    create: (data: { fullName: string; email: string; hashedPassword: string; role?: UserRole }) =>
+  // O middleware de auth usa isso: token só tem o id, precisa buscar a role.
+  findById: (id: number) => prisma.user.findUnique({ where: { id } }),
+
+  create: (data: { fullName: string; email: string; hashedPassword: string; role?: UserRole }) =>
     prisma.user.create({ data })
 };
