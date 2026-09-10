@@ -723,11 +723,18 @@ async def submit_for_review(
     )
     await db.commit()
 
-    return Response(
-        content=zip_bytes,
-        media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="{zip_filename}"'},
+    return FileResponse(
+        docx_path,
+        filename=docx_filename,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
+
+    # trecho de código não removido caso seja reutilizado para o envio de um zip bundle ao admin
+    # return Response(
+    #     content=zip_bytes,
+    #     media_type="application/zip",
+    #     headers={"Content-Disposition": f'attachment; filename="{zip_filename}"'},
+    # )
 
 
 @router.get("/{session_id}/cleaning", response_model=WizardSessionOut)
