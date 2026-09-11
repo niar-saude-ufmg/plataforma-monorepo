@@ -1,5 +1,6 @@
 import { createTheme, type ThemeOptions } from '@mui/material/styles';
 import { deepmerge } from '@mui/utils';
+import { inputTheme } from '../components/Input/Input.theme';
 import { buttonTheme } from '../components/Button/Button.theme';
 import { niar } from '../tokens/index';
 
@@ -26,6 +27,7 @@ const niarThemeOptions: ThemeOptions = {
   shape: { borderRadius: Number.parseFloat(niar.radius.small) },
   components: {
     MuiButton: buttonTheme,
+    MuiOutlinedInput: inputTheme,
   },
 };
 
