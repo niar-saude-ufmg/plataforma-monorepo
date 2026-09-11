@@ -54,3 +54,9 @@ export type {
   BreadcrumbItem,
   BreadcrumbsProps,
 } from "./Breadcrumbs/Breadcrumbs";
+export { Avatar } from "./Avatar/Avatar";
+export type { AvatarProps } from "./Avatar/Avatar";
+export { ListText } from "./ListText/ListText";
+export type { ListTextItem, ListTextProps } from "./ListText/ListText";
+export { Menu } from "./Menu/Menu";
+export type { MenuGroup, MenuItemOption, MenuProps } from "./Menu/Menu";

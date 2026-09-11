@@ -18,6 +18,8 @@ import { niar } from "../tokens/index";
 import { headerTheme } from "../components/Header/Header.theme";
 import { sidebarTheme } from "../components/Sidebar/Sidebar.theme";
 import { breadcrumbsTheme } from "../components/Breadcrumbs/Breadcrumbs.theme";
+import { avatarTheme } from "../components/Avatar/Avatar.theme";
+import { menuTheme } from "../components/Menu/Menu.theme";
 
 const niarThemeOptions: ThemeOptions = {
   palette: {
@@ -73,6 +75,8 @@ const niarThemeOptions: ThemeOptions = {
     MuiAppBar: headerTheme,
     MuiDrawer: sidebarTheme,
     MuiBreadcrumbs: breadcrumbsTheme,
+    MuiAvatar: avatarTheme,
+    MuiMenu: menuTheme,
   },
 };
 
