@@ -46,10 +46,15 @@
     "react-dom": "^18.3.1 || ^19.0.0"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@base-ui/react": "^1.8.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^7.3.1",
+=======
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+>>>>>>> 5ddaf0d (Build initial platform administration flow)
     "@mui/material": "^9.4.0",
     "@mui/utils": "^9.4.0"
   },
@@ -63,14 +68,23 @@
     "@types/react-dom": "^18.3.1",
     "chokidar-cli": "^3.0.0",
     "concurrently": "^9.2.4",
+<<<<<<< HEAD
     "jsdom": "^25.0.1",
+=======
+>>>>>>> 5ddaf0d (Build initial platform administration flow)
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "storybook": "^10.6.0",
     "style-dictionary": "^5.5.3",
     "typescript": "^5.6.3",
+<<<<<<< HEAD
     "vite": "^5.4.21",
     "vitest": "^2.1.5"
+=======
+    "jsdom": "^25.0.1",
+    "vitest": "^2.1.5",
+    "vite": "^5.4.21"
+>>>>>>> 5ddaf0d (Build initial platform administration flow)
   },
   "files": [
     "dist"
