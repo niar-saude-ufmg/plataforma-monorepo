@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import MuiButton, {
   type ButtonProps as MuiButtonProps,
 } from "@mui/material/Button";
@@ -12,3 +13,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return <MuiButton ref={ref} {...props} />;
   },
 );
+=======
+import MuiButton, { type ButtonProps as MuiButtonProps } from '@mui/material/Button';
+import { forwardRef } from 'react';
+
+export type ButtonProps = Omit<MuiButtonProps, 'color'> & {
+  color?: 'primary' | 'secondary';
+};
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(props, ref) {
+  return <MuiButton ref={ref} {...props} />;
+});
+>>>>>>> 5ddaf0d (Build initial platform administration flow)
