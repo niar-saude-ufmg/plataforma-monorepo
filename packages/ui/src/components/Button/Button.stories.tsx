@@ -1,32 +1,33 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
-import { niar } from '../../tokens/index';
-import { Button } from './Button';
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { niar } from "../../tokens/index";
+import { Button } from "./Button";
 
-const variants = ['contained', 'outlined', 'text'] as const;
-const sizes = ['small', 'medium', 'large'] as const;
+const variants = ["contained", "outlined", "text"] as const;
+const sizes = ["small", "medium", "large"] as const;
 
 const meta = {
-  title: 'Componentes/Button',
+  title: "Componentes/Button",
   component: Button,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   args: {
-    children: 'Button',
-    variant: 'contained',
-    color: 'primary',
-    size: 'medium',
+    children: "Button",
+    variant: "contained",
+    color: "primary",
+    size: "medium",
     disabled: false,
   },
   argTypes: {
-    variant: { control: 'select', options: variants },
-    color: { control: 'select', options: ['primary', 'secondary'] },
-    size: { control: 'select', options: sizes },
-    children: { control: 'text' },
-    disabled: { control: 'boolean' },
+    variant: { control: "select", options: variants },
+    color: { control: "select", options: ["primary", "secondary"] },
+    size: { control: "select", options: sizes },
+    children: { control: "text" },
+    disabled: { control: "boolean" },
   },
   parameters: {
     docs: {
       description: {
-        component: 'Botão MUI configurado pelo NiarProvider, com estilos e variantes definidos junto ao componente.',
+        component:
+          "Botão MUI configurado pelo NiarProvider, com estilos e variantes definidos junto ao componente.",
       },
     },
   },
@@ -35,7 +36,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const rowStyle = { display: 'flex', alignItems: 'center', gap: niar.spacing.xl };
+const rowStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: niar.spacing.xl,
+};
 
 export const Playground: Story = {};
 
@@ -81,7 +86,13 @@ export const Sizes: Story = {
 export const Disabled: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, max-content)', gap: niar.spacing.xl }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, max-content)",
+        gap: niar.spacing.xl,
+      }}
+    >
       {variants.map((variant) => (
         <Button key={variant} variant={variant} disabled>
           {variant[0].toUpperCase() + variant.slice(1)}
