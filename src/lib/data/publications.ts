@@ -13,6 +13,15 @@ export const publications: Publication[] = [
 		year: '2026',
 		metas: ['1'],
 		title:
+			'From Principles to Longitudinal AI Governance: An Evidence-Based Framework for Continuous Oversight',
+		authors:
+			'Vasconcelos, M., Pereira, R.G., Brito, L.E., Brandão, M.A., Marques-Neto, H.T., Almeida, J.M., Silva, A.P.C., Meira Jr, W., Almeida, V.',
+		journal: 'Proceedings of the Data for Policy 2026 Conference'
+	},
+	{
+		year: '2026',
+		metas: ['1'],
+		title:
 			'Responsible AI for Public Health: A Methodological Illustration with a Forecasting Model applied to Respiratory Hospitalizations on SUS Data',
 		authors:
 			'Pereira, R.G., Brito, L.E.L., Avelar, I., Carvalho, M., Vasconcelos, M., Brandão, M.A., Meira Jr, W.',

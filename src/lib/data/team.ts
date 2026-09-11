@@ -57,6 +57,8 @@ import fabianaImg from '$lib/assets/staff/fabiana.jpeg';
 import gregorioImg from '$lib/assets/staff/gregorio.jpeg';
 import isadoraHortaImg from '$lib/assets/staff/isadora-horta.jpeg';
 import joaoMarcosImg from '$lib/assets/staff/joao-marcos.jpeg';
+import joaoVictorImg from '$lib/assets/staff/joao-victor.jpeg';
+import juliaImg from '$lib/assets/staff/julia.jpeg';
 import leonardoImg from '$lib/assets/staff/leonardo.jpeg';
 import leticiaImg from '$lib/assets/staff/leticia.jpg';
 import mariaCarvalhidoImg from '$lib/assets/staff/maria-carvalhido.jpeg';
@@ -518,6 +520,14 @@ export const team: TeamMember[] = [
 		photo: barbaraImg
 	},
 	{
+		initials: 'JV',
+		name: 'João Victor Almeida Silva',
+		info: { pt: 'Mestrando · Ciência da Computação', en: "Master's Student · Computer Science" },
+		metas: ['1', '3'],
+		group: 'Mestrandos',
+		photo: joaoVictorImg
+	},
+	{
 		initials: 'KA',
 		name: 'Karolina Ivete Azevedo',
 		info: { pt: 'Mestranda · IA Responsável', en: "Master's Student · Responsible AI" },
@@ -600,6 +610,14 @@ export const team: TeamMember[] = [
 		metas: ['3'],
 		group: 'Alunos de Iniciação Científica',
 		photo: joaoMarcosImg
+	},
+	{
+		initials: 'JF',
+		name: 'Júlia Rajão Ferreira Silveira',
+		info: { pt: 'Graduanda em Enfermagem', en: 'Undergraduate in Nursing' },
+		metas: ['3'],
+		group: 'Alunos de Iniciação Científica',
+		photo: juliaImg
 	},
 	{
 		initials: 'LR',
@@ -687,10 +705,10 @@ export const team: TeamMember[] = [
 		initials: 'IR',
 		name: 'Isadora Cristina de Matos Rodrigues',
 		info: {
-			pt: 'Desenvolvedora · Aplicações Web e Dados Públicos',
-			en: 'Developer · Web Applications and Public Data'
+			pt: 'Desenvolvedora · Aplicações Web, Dados Públicos e Privacidade',
+			en: 'Developer · Web Applications, Public Data and Privacy'
 		},
-		metas: ['3'],
+		metas: ['1', '3'],
 		group: 'Colaboradores Externos',
 		photo: isadoraImg
 	},
