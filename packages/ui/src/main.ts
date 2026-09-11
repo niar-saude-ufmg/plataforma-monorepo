@@ -56,3 +56,11 @@ export { FileUpload } from "./components/index";
 export type { FileUploadProps } from "./components/index";
 export { Timeline } from "./components/index";
 export type { TimelineItem, TimelineProps } from "./components/index";
+export { Header, Sidebar, Breadcrumbs } from "./components/index";
+export type {
+  HeaderProps,
+  SidebarItem,
+  SidebarProps,
+  BreadcrumbItem,
+  BreadcrumbsProps,
+} from "./components/index";

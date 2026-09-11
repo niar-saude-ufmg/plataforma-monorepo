@@ -45,3 +45,12 @@ export { FileUpload } from "./FileUpload/FileUpload";
 export type { FileUploadProps } from "./FileUpload/FileUpload";
 export { Timeline } from "./Timeline/Timeline";
 export type { TimelineItem, TimelineProps } from "./Timeline/Timeline";
+export { Header } from "./Header/Header";
+export type { HeaderProps } from "./Header/Header";
+export { Sidebar } from "./Sidebar/Sidebar";
+export type { SidebarItem, SidebarProps } from "./Sidebar/Sidebar";
+export { Breadcrumbs } from "./Breadcrumbs/Breadcrumbs";
+export type {
+  BreadcrumbItem,
+  BreadcrumbsProps,
+} from "./Breadcrumbs/Breadcrumbs";
