@@ -1,0 +1,44 @@
+{
+  "source": [
+    "src/tokens/global.json",
+    "src/tokens/brand.json"
+  ],
+  "log": {
+    "errors": {
+      "brokenReferences": "throw"
+    }
+  },
+  "platforms": {
+    "css": {
+      "transforms": [
+        "name/kebab"
+      ],
+      "prefix": "niar",
+      "buildPath": "src/tokens/styles/",
+      "files": [
+        {
+          "destination": "tokens.css",
+          "format": "css/variables",
+          "options": {
+            "showFileHeader": false,
+            "outputReferences": true
+          }
+        }
+      ]
+    },
+    "typescript": {
+      "transforms": [],
+      "buildPath": "src/tokens/styles/",
+      "files": [
+        {
+          "destination": "tokens.ts",
+          "format": "javascript/esm",
+          "options": {
+            "showFileHeader": false,
+            "minify": true
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "colors": {
+    "brand": {
+      "deep": { "value": "{colors.base.deep}", "type": "color" },
+      "cyan": { "value": "{colors.base.cyan}", "type": "color" },
+      "descriptive": { "value": "{colors.base.descriptive}", "type": "color" }
+    },
+    "neutral": {
+      "white": { "value": "{colors.base.white}", "type": "color" },
+      "charcoal": { "value": "{colors.base.charcoal}", "type": "color" },
+      "light": { "value": "{colors.base.light}", "type": "color" }
+    },
+    "action": {
+      "primary": { "value": "{colors.base.descriptive}", "type": "color" },
+      "onPrimary": { "value": "{colors.base.white}", "type": "color" },
+      "secondary": { "value": "{colors.base.cyan}", "type": "color" },
+      "onSecondary": { "value": "{colors.base.deep}", "type": "color" }
+    },
+    "text": {
+      "heading": { "value": "{colors.base.deep}", "type": "color" },
+      "subtitle": { "value": "{colors.base.descriptive}", "type": "color" },
+      "body": { "value": "{colors.base.charcoal}", "type": "color" }
+    },
+    "accent": {
+      "digital": { "value": "{colors.base.cyan}", "type": "color" }
+    },
+    "surface": {
+      "page": { "value": "{colors.base.light}", "type": "color" },
+      "card": { "value": "{colors.base.white}", "type": "color" }
+    },
+    "border": { "value": "rgba(28, 53, 94, 0.12)", "type": "color" },
+    "focus": { "value": "{colors.base.cyan}", "type": "color" }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "colors": {
+    "base": {
+      "deep": { "value": "#0f1f5b", "type": "color" },
+      "cyan": { "value": "#3fa9d9", "type": "color" },
+      "descriptive": { "value": "#1c355e", "type": "color" },
+      "white": { "value": "#ffffff", "type": "color" },
+      "charcoal": { "value": "#4a4a4a", "type": "color" },
+      "light": { "value": "#f5f5f5", "type": "color" }
+    }
+  },
+  "spacing": {
+    "none": { "value": "0px", "type": "dimension" },
+    "2xs": { "value": "4px", "type": "dimension" },
+    "xs": { "value": "8px", "type": "dimension" },
+    "sm": { "value": "12px", "type": "dimension" },
+    "md": { "value": "16px", "type": "dimension" },
+    "lg": { "value": "20px", "type": "dimension" },
+    "xl": { "value": "24px", "type": "dimension" },
+    "2xl": { "value": "32px", "type": "dimension" },
+    "3xl": { "value": "48px", "type": "dimension" },
+    "4xl": { "value": "64px", "type": "dimension" }
+  },
+  "radius": {
+    "small": { "value": "8px", "type": "dimension" },
+    "medium": { "value": "12px", "type": "dimension" }
+  },
+  "borderWidth": {
+    "default": { "value": "1px", "type": "dimension" },
+    "focus": { "value": "2px", "type": "dimension" }
+  },
+  "fontFamily": {
+    "value": "'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif",
+    "type": "fontFamily"
+  },
+  "fontWeight": {
+    "regular": { "value": 400, "type": "fontWeight" },
+    "medium": { "value": 500, "type": "fontWeight" },
+    "semibold": { "value": 600, "type": "fontWeight" },
+    "bold": { "value": 700, "type": "fontWeight" }
+  },
+  "fontSize": {
+    "caption": { "value": "12px", "type": "dimension" },
+    "body": { "value": "14px", "type": "dimension" },
+    "subtitle": { "value": "16px", "type": "dimension" },
+    "title": { "value": "22px", "type": "dimension" },
+    "heading": { "value": "30px", "type": "dimension" }
+  },
+  "shadow": {
+    "card": {
+      "value": "0 1px 2px rgba(15, 31, 91, 0.06), 0 8px 24px rgba(15, 31, 91, 0.06)",
+      "type": "shadow"
+    }
+  }
+}

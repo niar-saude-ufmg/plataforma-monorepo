@@ -1,0 +1,104 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { niar } from '../tokens/index.ts';
+
+<Meta title="Fundamentos/Tokens" />
+
+# Tokens
+
+Os tokens mantêm as decisões visuais do NIAR em uma fonte única e entregam os mesmos nomes para TypeScript e CSS.
+
+## Global e marca
+
+`global.json` contém valores básicos: paleta bruta, escala de espaçamento, tipografia, raios e sombras. Ele é separado fisicamente para organizar a manutenção, mas não adiciona `global` nos nomes públicos. `brand.json` atribui significado a esses valores e gera a API usada no produto, como `niar.colors.action.primary`.
+
+Componentes e páginas devem usar principalmente os tokens definidos em `brand.json`. Isso permite alterar a aplicação da marca sem procurar valores hexadecimais ou medidas espalhados pelo código. Os valores de `global.json` servem para construir e manter esses papéis.
+
+<div className="docs-table-wrapper">
+  <table className="docs-table">
+    <thead><tr><th>Camada</th><th>Responsabilidade</th><th>Exemplo</th></tr></thead>
+    <tbody>
+      <tr><td>Global</td><td>Valores-base e escalas</td><td><code>colors.descriptive</code></td></tr>
+      <tr><td>Marca</td><td>Papéis usados na interface</td><td><code>niar.colors.action.primary</code></td></tr>
+      <tr><td>Componente</td><td>Combinação dos papéis em uma experiência</td><td><code>Button color="primary"</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+## Categorias públicas
+
+<div className="docs-table-wrapper">
+  <table className="docs-table">
+    <thead><tr><th>Categoria</th><th>Exemplos</th><th>Aplicação</th></tr></thead>
+    <tbody>
+      <tr><td>Cores</td><td><code>niar.colors.action.primary</code><br /><code>niar.colors.text.body</code></td><td>Ações, textos, superfícies, bordas e foco</td></tr>
+      <tr><td>Espaçamento</td><td><code>niar.spacing.xs</code><br /><code>niar.spacing.xl</code></td><td>Margens, paddings e gaps</td></tr>
+      <tr><td>Tipografia</td><td><code>niar.fontSize.body</code><br /><code>niar.fontWeight.semibold</code></td><td>Família, pesos e tamanhos</td></tr>
+      <tr><td>Raios</td><td><code>niar.radius.small</code><br /><code>niar.radius.medium</code></td><td>Controles e superfícies</td></tr>
+      <tr><td>Bordas</td><td><code>niar.borderWidth.default</code></td><td>Contornos e indicadores de foco</td></tr>
+      <tr><td>Sombras</td><td><code>niar.shadow.card</code></td><td>Elevação discreta</td></tr>
+    </tbody>
+  </table>
+</div>
+
+## Uso em componentes
+
+Os componentes de `@niar/ui/components` recebem a configuração padrão pelo `NiarProvider`, usado uma vez na raiz da aplicação React.
+
+```tsx
+import { Button } from '@niar/ui/components';
+import { NiarProvider } from '@niar/ui/theme';
+
+<NiarProvider>
+  <Button color="primary" variant="contained">Continuar</Button>
+</NiarProvider>
+```
+
+Produtos que precisam ajustar o tema podem criar uma variação e entregá-la ao provider:
+
+```tsx
+import { createNiarTheme, NiarProvider } from '@niar/ui/theme';
+
+const theme = createNiarTheme({
+  shape: { borderRadius: 12 },
+});
+
+<NiarProvider theme={theme}>{/* aplicação */}</NiarProvider>
+```
+
+## Uso em páginas
+
+TypeScript usa o objeto `niar`:
+
+```tsx
+import { niar } from '@niar/ui/tokens';
+
+<header style={{ color: niar.colors.text.heading, padding: niar.spacing.xl }}>
+  Projeto de pesquisa
+</header>
+```
+
+CSS importa as variáveis uma vez na entrada da aplicação:
+
+```css
+@import '@niar/ui/tokens.css';
+
+.project-page {
+  color: var(--niar-colors-text-body);
+  padding: var(--niar-spacing-xl);
+  background: var(--niar-colors-surface-page);
+}
+```
+
+## Geração
+
+O Style Dictionary 5 lê `global.json` e `brand.json` e resolve os aliases em `tokens/styles/tokens.ts` e `tokens/styles/tokens.css`. O build compila e copia essas duas saídas para `dist`; não existe mais um `generated.ts` solto na raiz dos tokens.
+
+<div className="docs-table-wrapper">
+  <table className="docs-table">
+    <thead><tr><th>Importação</th><th>Saída</th><th>Uso</th></tr></thead>
+    <tbody>
+      <tr><td><code>@niar/ui/tokens</code></td><td>JavaScript ESM e tipos</td><td>Componentes, temas e páginas TypeScript</td></tr>
+      <tr><td><code>@niar/ui/tokens.css</code></td><td>Variáveis CSS</td><td>Páginas React, Svelte e estilos globais</td></tr>
+    </tbody>
+  </table>
+</div>
