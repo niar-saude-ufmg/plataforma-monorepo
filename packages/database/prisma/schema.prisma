@@ -116,14 +116,14 @@ model AuditLog {
 }
 
 model ProjectStatusHistory {
-  id          Int      @id @default(autoincrement())
-  projectId   Int      @map("project_id")
-  status      String   @db.VarChar(100)
+  id          Int            @id @default(autoincrement())
+  projectId   Int            @map("project_id")
+  status      project_status
   notes       String?
-  actorUserId Int?     @map("actor_user_id")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  actorUser   User?    @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  actorUserId Int?           @map("actor_user_id")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  actorUser   User?          @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([projectId], map: "idx_shared_project_status_history_project_id")
   @@index([actorUserId], map: "idx_shared_project_status_history_actor_user_id")
@@ -251,6 +251,17 @@ enum user_role {
   researcher
   admin
   committee
+
+  @@schema("shared")
+}
+
+enum project_status {
+  submitted_to_committee
+  under_review
+  needs_changes
+  approved
+  rejected
+  resubmitted_to_committee
 
   @@schema("shared")
 }
