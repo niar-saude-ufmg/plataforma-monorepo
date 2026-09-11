@@ -1,14 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Icon, type IconName } from "./Icon";
 
-const iconNames: IconName[] = [
-  "inbox",
-  "check",
-  "info",
-  "warning",
-  "error",
-  "search",
-];
+const iconNames: IconName[] = ["menu", "close", "check", "add", "edit", "delete", "search", "filter", "moreVert", "settings", "person", "logout", "home", "dashboard", "folder", "description", "uploadFile", "download", "visibility", "visibilityOff"];
 const colors = [
   "inherit",
   "primary",
@@ -22,7 +15,7 @@ const meta = {
   title: "Componentes/Icon",
   component: Icon,
   tags: ["autodocs"],
-  args: { name: "inbox" as IconName },
+  args: { name: "menu" as IconName },
   argTypes: {
     name: { control: "select", options: iconNames },
     color: { control: "select", options: colors },
@@ -42,12 +35,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
 
-export const Principais: Story = {
+export const Icons: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
-    <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(80px, 1fr))", gap: 20, alignItems: "center" }}>
       {iconNames.map((name) => (
-        <Icon key={name} name={name} titleAccess={name} />
+        <div key={name} style={{ display: "grid", gap: 6, justifyItems: "center", fontSize: 11 }}>
+          <Icon name={name} titleAccess={name} />
+          <span>{name}</span>
+        </div>
       ))}
     </div>
   ),
@@ -58,7 +54,7 @@ export const Colors: Story = {
   render: () => (
     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
       {colors.map((color) => (
-        <Icon key={color} name="info" color={color} titleAccess={color} />
+        <Icon key={color} name="search" color={color} titleAccess={color} />
       ))}
     </div>
   ),

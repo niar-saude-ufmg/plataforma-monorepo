@@ -12,6 +12,7 @@ import { snackbarTheme } from '../components/Snackbar/Snackbar.theme';
 import { dialogTheme } from '../components/Dialog/Dialog.theme';
 import { stepperTheme } from '../components/Stepper/Stepper.theme';
 import { tabsTheme } from '../components/Tabs/Tabs.theme';
+import { iconButtonTheme } from '../components/IconButton/IconButton.theme';
 import { tabTheme } from '../components/Tabs/Tab.theme';
 import { niar } from '../tokens/index';
 
@@ -49,6 +50,7 @@ const niarThemeOptions: ThemeOptions = {
     MuiDialog: dialogTheme,
     MuiStepIcon: stepperTheme,
     MuiTabs: tabsTheme,
+    MuiIconButton: iconButtonTheme,
     MuiTab: tabTheme,
   },
 };

@@ -39,3 +39,5 @@ export type { StepperProps } from "./Stepper/Stepper";
 export type { StepOption } from "./Stepper/Stepper";
 export { Tabs } from "./Tabs/Tabs";
 export type { TabsProps, TabOption } from "./Tabs/Tabs";
+export { IconButton } from "./IconButton/IconButton";
+export type { IconButtonProps } from "./IconButton/IconButton";
