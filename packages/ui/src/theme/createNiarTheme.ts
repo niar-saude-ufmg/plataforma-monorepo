@@ -9,6 +9,10 @@ import { statusChipTheme } from '../components/StatusChip/StatusChip.theme';
 import { checkboxTheme } from '../components/Checkbox/Checkbox.theme';
 import { radioTheme } from '../components/RadioGroup/RadioGroup.theme';
 import { snackbarTheme } from '../components/Snackbar/Snackbar.theme';
+import { dialogTheme } from '../components/Dialog/Dialog.theme';
+import { stepperTheme } from '../components/Stepper/Stepper.theme';
+import { tabsTheme } from '../components/Tabs/Tabs.theme';
+import { tabTheme } from '../components/Tabs/Tab.theme';
 import { niar } from '../tokens/index';
 
 const niarThemeOptions: ThemeOptions = {
@@ -42,6 +46,10 @@ const niarThemeOptions: ThemeOptions = {
     MuiCheckbox: checkboxTheme,
     MuiRadio: radioTheme,
     MuiSnackbar: snackbarTheme,
+    MuiDialog: dialogTheme,
+    MuiStepIcon: stepperTheme,
+    MuiTabs: tabsTheme,
+    MuiTab: tabTheme,
   },
 };
 
