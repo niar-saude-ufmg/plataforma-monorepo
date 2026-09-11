@@ -1,20 +1,31 @@
-import TextField, { type TextFieldProps } from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
-import InputAdornment from '@mui/material/InputAdornment';
-import SvgIcon from '@mui/material/SvgIcon';
-import { forwardRef, useState } from 'react';
+import TextField, { type TextFieldProps } from "@mui/material/TextField";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import SvgIcon from "@mui/material/SvgIcon";
+import { forwardRef, useState } from "react";
 
-export type InputProps = Omit<TextFieldProps<'outlined'>,
-  'variant' | 'size' | 'type' | 'select' | 'multiline' | 'rows' | 'minRows' | 'maxRows' | 'slots' | 'slotProps'
+export type InputProps = Omit<
+  TextFieldProps<"outlined">,
+  | "variant"
+  | "size"
+  | "type"
+  | "select"
+  | "multiline"
+  | "rows"
+  | "minRows"
+  | "maxRows"
+  | "slots"
+  | "slotProps"
 > & {
-  type?: 'text' | 'email' | 'password';
+  type?: "text" | "email" | "password";
 };
 
 export const Input = forwardRef<HTMLDivElement, InputProps>(function Input(
-  { type = 'text', disabled, ...props }, ref,
+  { type = "text", disabled, ...props },
+  ref,
 ) {
   const [showPassword, setShowPassword] = useState(false);
-  const isPassword = type === 'password';
+  const isPassword = type === "password";
 
   return (
     <TextField
@@ -23,7 +34,7 @@ export const Input = forwardRef<HTMLDivElement, InputProps>(function Input(
       variant="outlined"
       size="medium"
       disabled={disabled}
-      type={isPassword && showPassword ? 'text' : type}
+      type={isPassword && showPassword ? "text" : type}
       slotProps={{
         input: {
           endAdornment: isPassword ? (
@@ -32,7 +43,7 @@ export const Input = forwardRef<HTMLDivElement, InputProps>(function Input(
                 type="button"
                 edge="end"
                 disabled={disabled}
-                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => setShowPassword((visible) => !visible)}
               >

@@ -1,7 +1,7 @@
-import type { Components, Theme } from '@mui/material/styles';
-import { niar } from '../../tokens/index';
+import type { Components, Theme } from "@mui/material/styles";
+import { niar } from "../../tokens/index";
 
-export const inputTheme: Components<Theme>['MuiOutlinedInput'] = {
+export const inputTheme: Components<Theme>["MuiOutlinedInput"] = {
   styleOverrides: {
     root: {
       borderRadius: niar.radius.small,
