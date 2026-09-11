@@ -6,3 +6,5 @@ export { niar } from './tokens/index';
 export type { NiarTokens } from './tokens/index';
 export { Dialog, Stepper, Tabs } from './components/index';
 export type { DialogProps, StepperProps, StepOption, TabsProps, TabOption } from './components/index';
+export { IconButton } from './components/index';
+export type { IconButtonProps } from './components/index';

@@ -12,7 +12,7 @@ export function EmptyState({
   title,
   description,
   action,
-  icon = "inbox",
+  icon = "folder",
 }: EmptyStateProps) {
   const renderedIcon =
     typeof icon === "string" ? (

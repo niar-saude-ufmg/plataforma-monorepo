@@ -10,7 +10,7 @@ describe("Icon", () => {
   });
 
   it("permite ocultar o ícone decorativo da acessibilidade", () => {
-    const { container } = render(<Icon name="info" aria-hidden="true" />);
+    const { container } = render(<Icon name="search" aria-hidden="true" />);
     expect(container.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
   });
 });
