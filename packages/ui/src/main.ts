@@ -1,5 +1,5 @@
-export { Button, Input, Select } from './components/index';
-export type { ButtonProps, InputProps, SelectProps } from './components/index';
+export { Button, Input, Select, Card, Alert, StatusChip, Textarea, Checkbox, RadioGroup } from './components/index';
+export type { ButtonProps, InputProps, SelectProps, CardProps, AlertProps, StatusChipProps, StatusChipStatus, TextareaProps, CheckboxProps, RadioGroupProps, RadioGroupOption } from './components/index';
 export { createNiarTheme, NiarProvider, niarTheme, useNiarTheme } from './theme/index';
 export type { NiarProviderProps } from './theme/index';
 export { niar } from './tokens/index';
