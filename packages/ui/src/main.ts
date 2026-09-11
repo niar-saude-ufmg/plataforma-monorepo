@@ -4,3 +4,5 @@ export { createNiarTheme, NiarProvider, niarTheme, useNiarTheme } from './theme/
 export type { NiarProviderProps } from './theme/index';
 export { niar } from './tokens/index';
 export type { NiarTokens } from './tokens/index';
+export { Dialog, Stepper, Tabs } from './components/index';
+export type { DialogProps, StepperProps, StepOption, TabsProps, TabOption } from './components/index';
