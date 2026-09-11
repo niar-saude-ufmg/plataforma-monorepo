@@ -29,11 +29,11 @@ export function Dialog({
       onClose={onClose}
       slotProps={{ paper: { sx: { minWidth } } }}
     >
-      {title && (
+      {(title || showCloseButton) && (
         <DialogTitle
           sx={{ position: "relative", pr: showCloseButton ? 7 : undefined }}
         >
-          {title}
+          {title || <span className="visually-hidden">Dialog</span>}
           {showCloseButton && (
             <IconButton
               aria-label="Fechar"

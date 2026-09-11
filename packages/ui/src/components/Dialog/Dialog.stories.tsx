@@ -7,7 +7,7 @@ const meta = {
   component: Dialog,
   tags: ["autodocs"],
   args: {
-    open: true,
+    open: false,
     title: "Enviar projeto",
     children: "Confira as informações antes de enviar.",
   },
@@ -16,7 +16,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const Playground: Story = {
   render: () => {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
     return (
       <>
         <Button onClick={() => setOpen(true)}>Abrir dialog</Button>
