@@ -1,27 +1,42 @@
-import { createTheme, type ThemeOptions } from '@mui/material/styles';
-import { deepmerge } from '@mui/utils';
-import { inputTheme } from '../components/Input/Input.theme';
-import { buttonTheme } from '../components/Button/Button.theme';
-import { cardTheme } from '../components/Card/Card.theme';
-import { alertTheme } from '../components/Alert/Alert.theme';
-import { iconTheme } from '../components/Icon/Icon.theme';
-import { statusChipTheme } from '../components/StatusChip/StatusChip.theme';
-import { checkboxTheme } from '../components/Checkbox/Checkbox.theme';
-import { radioTheme } from '../components/RadioGroup/RadioGroup.theme';
-import { snackbarTheme } from '../components/Snackbar/Snackbar.theme';
-import { dialogTheme } from '../components/Dialog/Dialog.theme';
-import { stepperTheme } from '../components/Stepper/Stepper.theme';
-import { tabsTheme } from '../components/Tabs/Tabs.theme';
-import { iconButtonTheme } from '../components/IconButton/IconButton.theme';
-import { tabTheme } from '../components/Tabs/Tab.theme';
-import { niar } from '../tokens/index';
+import { createTheme, type ThemeOptions } from "@mui/material/styles";
+import { deepmerge } from "@mui/utils";
+import { inputTheme } from "../components/Input/Input.theme";
+import { buttonTheme } from "../components/Button/Button.theme";
+import { cardTheme } from "../components/Card/Card.theme";
+import { alertTheme } from "../components/Alert/Alert.theme";
+import { iconTheme } from "../components/Icon/Icon.theme";
+import { statusChipTheme } from "../components/StatusChip/StatusChip.theme";
+import { checkboxTheme } from "../components/Checkbox/Checkbox.theme";
+import { radioTheme } from "../components/RadioGroup/RadioGroup.theme";
+import { snackbarTheme } from "../components/Snackbar/Snackbar.theme";
+import { dialogTheme } from "../components/Dialog/Dialog.theme";
+import { stepperTheme } from "../components/Stepper/Stepper.theme";
+import { tabsTheme } from "../components/Tabs/Tabs.theme";
+import { iconButtonTheme } from "../components/IconButton/IconButton.theme";
+import { tabTheme } from "../components/Tabs/Tab.theme";
+import { niar } from "../tokens/index";
+import { headerTheme } from "../components/Header/Header.theme";
+import { sidebarTheme } from "../components/Sidebar/Sidebar.theme";
+import { breadcrumbsTheme } from "../components/Breadcrumbs/Breadcrumbs.theme";
 
 const niarThemeOptions: ThemeOptions = {
   palette: {
-    primary: { main: niar.colors.action.primary, contrastText: niar.colors.action.onPrimary },
-    secondary: { main: niar.colors.action.secondary, contrastText: niar.colors.action.onSecondary },
-    background: { default: niar.colors.surface.page, paper: niar.colors.surface.card },
-    text: { primary: niar.colors.text.body, secondary: niar.colors.text.subtitle },
+    primary: {
+      main: niar.colors.action.primary,
+      contrastText: niar.colors.action.onPrimary,
+    },
+    secondary: {
+      main: niar.colors.action.secondary,
+      contrastText: niar.colors.action.onSecondary,
+    },
+    background: {
+      default: niar.colors.surface.page,
+      paper: niar.colors.surface.card,
+    },
+    text: {
+      primary: niar.colors.text.body,
+      secondary: niar.colors.text.subtitle,
+    },
     divider: niar.colors.border,
   },
   typography: {
@@ -31,7 +46,10 @@ const niarThemeOptions: ThemeOptions = {
     fontWeightBold: niar.fontWeight.bold,
     body1: { color: niar.colors.text.body, fontSize: niar.fontSize.body },
     body2: { color: niar.colors.text.body, fontSize: niar.fontSize.caption },
-    subtitle1: { color: niar.colors.text.subtitle, fontSize: niar.fontSize.subtitle },
+    subtitle1: {
+      color: niar.colors.text.subtitle,
+      fontSize: niar.fontSize.subtitle,
+    },
     h1: { color: niar.colors.text.heading, fontSize: niar.fontSize.heading },
     h2: { color: niar.colors.text.heading, fontSize: niar.fontSize.title },
   },
@@ -52,6 +70,9 @@ const niarThemeOptions: ThemeOptions = {
     MuiTabs: tabsTheme,
     MuiIconButton: iconButtonTheme,
     MuiTab: tabTheme,
+    MuiAppBar: headerTheme,
+    MuiDrawer: sidebarTheme,
+    MuiBreadcrumbs: breadcrumbsTheme,
   },
 };
 
