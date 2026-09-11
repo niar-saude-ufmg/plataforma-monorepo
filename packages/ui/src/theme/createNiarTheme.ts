@@ -5,6 +5,10 @@ import { buttonTheme } from '../components/Button/Button.theme';
 import { cardTheme } from '../components/Card/Card.theme';
 import { alertTheme } from '../components/Alert/Alert.theme';
 import { iconTheme } from '../components/Icon/Icon.theme';
+import { statusChipTheme } from '../components/StatusChip/StatusChip.theme';
+import { checkboxTheme } from '../components/Checkbox/Checkbox.theme';
+import { radioTheme } from '../components/RadioGroup/RadioGroup.theme';
+import { snackbarTheme } from '../components/Snackbar/Snackbar.theme';
 import { niar } from '../tokens/index';
 
 const niarThemeOptions: ThemeOptions = {
@@ -34,6 +38,10 @@ const niarThemeOptions: ThemeOptions = {
     MuiCard: cardTheme,
     MuiAlert: alertTheme,
     MuiSvgIcon: iconTheme,
+    MuiChip: statusChipTheme,
+    MuiCheckbox: checkboxTheme,
+    MuiRadio: radioTheme,
+    MuiSnackbar: snackbarTheme,
   },
 };
 
