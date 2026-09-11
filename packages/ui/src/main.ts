@@ -64,3 +64,12 @@ export type {
   BreadcrumbItem,
   BreadcrumbsProps,
 } from "./components/index";
+export { Avatar, ListText, Menu } from "./components/index";
+export type {
+  AvatarProps,
+  ListTextItem,
+  ListTextProps,
+  MenuItemOption,
+  MenuGroup,
+  MenuProps,
+} from "./components/index";
