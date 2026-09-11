@@ -631,6 +631,12 @@ async def submit_for_review(
     exports_dir = get_exports_dir()
 
     project = await _get_project_doc_session(db, session_id, current_user.id)
+    await db.execute(
+        select(WizardSession.id)
+        .where(WizardSession.id == project.id)
+        .with_for_update()
+    )
+
     cleaning = await _get_linked_cleaning_session(db, session_id, current_user.id)
     if not cleaning:
         raise HTTPException(

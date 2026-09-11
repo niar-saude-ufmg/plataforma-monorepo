@@ -23,8 +23,7 @@ async def materialize_project(
     docx_artifact: ExportArtifact,
 ) -> Project:
     await db_session.execute(
-        select(WizardSession.id).where(WizardSession.id == session.id).with_for_update()
-    )
+        select(WizardSession.id).where(WizardSession.id == session.id))
 
     existing = await db_session.execute(
         select(Project).where(Project.source_wizard_session_id == session.id)

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException, Request
+from sqlalchemy import Select
 
 from app.api import projects as projects_module
 from app.models import (
@@ -262,7 +263,7 @@ class TestSubmitForReview:
         settings = SimpleNamespace(llm_model="modelo-teste")
         document = MagicMock()
         document.save.side_effect = lambda target: target.write(b"docx oficial")
-        db = make_db()
+        db = make_db(query_result())
 
         with (
             patch.object(
@@ -360,3 +361,85 @@ class TestSubmitForReview:
         assert exc_info.value.status_code == 404
         db.commit.assert_not_awaited()
         db.flush.assert_not_awaited()
+
+    def test_submit_acquires_for_update_lock_before_writing(
+        self, tmp_path, make_db, make_session
+    ):
+        """
+        Concorrência: o endpoint deve adquirir lock exclusivo na wizard_session
+        antes de gerar/inserir qualquer artefato para evitar condições de corrida.
+        """
+        session = make_session(session_id=42, user_id=7)
+        cleaning = SimpleNamespace(
+            id=84,
+            script_content="print('ok')",
+            llm_model_used="",
+            current_step="validation",
+            updated_at=None,
+        )
+        current_user = MagicMock(spec=User)
+        current_user.id = 7
+        current_user.email = "pesquisador@niar.local"
+        request = MagicMock(spec=Request)
+        request.client = SimpleNamespace(host="127.0.0.1")
+
+        captured_statements: list[Select] = []
+
+        async def capture_execute(stmt, *args, **kwargs):
+            captured_statements.append(stmt)
+            return query_result()
+
+        db = make_db()
+        db.execute = AsyncMock(side_effect=capture_execute)
+
+        with (
+            patch.object(
+                projects_module,
+                "_get_project_doc_session",
+                new=AsyncMock(return_value=session),
+            ),
+            patch.object(
+                projects_module,
+                "_get_linked_cleaning_session",
+                new=AsyncMock(return_value=cleaning),
+            ),
+            patch.object(
+                projects_module, "get_settings", return_value=SimpleNamespace(llm_model="modelo-teste")
+            ),
+            patch.object(projects_module, "get_exports_dir", return_value=str(tmp_path)),
+            patch.object(
+                projects_module,
+                "validate_script",
+                return_value={"syntax_ok": True, "safety_ok": True},
+            ),
+            patch.object(projects_module, "build_project_doc", return_value=MagicMock()),
+            patch.object(
+                projects_module, "build_submission_zip", return_value=b"zip tecnico"
+            ),
+            patch.object(
+                projects_module,
+                "materialize_project",
+                new=AsyncMock(return_value=MagicMock()),
+            ),
+            patch.object(projects_module, "log_audit", new=AsyncMock()),
+        ):
+            asyncio.run(
+                projects_module.submit_for_review(
+                    session_id=session.id,
+                    request=request,
+                    current_user=current_user,
+                    db=db,
+                )
+            )
+
+        assert len(captured_statements) >= 1, (
+            "Esperado pelo menos um db.execute no fluxo de submit"
+        )
+
+        first_stmt = captured_statements[0]
+        assert isinstance(first_stmt, Select), (
+            f"Esperado um SELECT como primeira operação, mas foi {type(first_stmt)}"
+        )
+        assert first_stmt._for_update_arg is not None, (
+            "Esperado SELECT ... WITH FOR UPDATE como primeira operação de banco"
+        )
