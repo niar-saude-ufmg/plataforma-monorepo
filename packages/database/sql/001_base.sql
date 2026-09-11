@@ -12,9 +12,11 @@ BEGIN
     JOIN pg_namespace n ON n.oid = t.typnamespace
     WHERE t.typname = 'user_role' AND n.nspname = 'shared'
   ) THEN
-    CREATE TYPE shared.user_role AS ENUM ('researcher', 'admin');
+    CREATE TYPE shared.user_role AS ENUM ('researcher', 'admin', 'committee');
   END IF;
 END $$;
+
+ALTER TYPE shared.user_role ADD VALUE IF NOT EXISTS 'committee';
 
 DO $$
 BEGIN
