@@ -4,6 +4,7 @@ import { inputTheme } from '../components/Input/Input.theme';
 import { buttonTheme } from '../components/Button/Button.theme';
 import { cardTheme } from '../components/Card/Card.theme';
 import { alertTheme } from '../components/Alert/Alert.theme';
+import { iconTheme } from '../components/Icon/Icon.theme';
 import { niar } from '../tokens/index';
 
 const niarThemeOptions: ThemeOptions = {
@@ -32,6 +33,7 @@ const niarThemeOptions: ThemeOptions = {
     MuiOutlinedInput: inputTheme,
     MuiCard: cardTheme,
     MuiAlert: alertTheme,
+    MuiSvgIcon: iconTheme,
   },
 };
 
