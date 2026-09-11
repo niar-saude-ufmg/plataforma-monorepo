@@ -41,3 +41,7 @@ export { Tabs } from "./Tabs/Tabs";
 export type { TabsProps, TabOption } from "./Tabs/Tabs";
 export { IconButton } from "./IconButton/IconButton";
 export type { IconButtonProps } from "./IconButton/IconButton";
+export { FileUpload } from "./FileUpload/FileUpload";
+export type { FileUploadProps } from "./FileUpload/FileUpload";
+export { Timeline } from "./Timeline/Timeline";
+export type { TimelineItem, TimelineProps } from "./Timeline/Timeline";
