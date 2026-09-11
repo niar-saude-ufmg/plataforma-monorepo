@@ -2,6 +2,8 @@ import { createTheme, type ThemeOptions } from '@mui/material/styles';
 import { deepmerge } from '@mui/utils';
 import { inputTheme } from '../components/Input/Input.theme';
 import { buttonTheme } from '../components/Button/Button.theme';
+import { cardTheme } from '../components/Card/Card.theme';
+import { alertTheme } from '../components/Alert/Alert.theme';
 import { niar } from '../tokens/index';
 
 const niarThemeOptions: ThemeOptions = {
@@ -28,6 +30,8 @@ const niarThemeOptions: ThemeOptions = {
   components: {
     MuiButton: buttonTheme,
     MuiOutlinedInput: inputTheme,
+    MuiCard: cardTheme,
+    MuiAlert: alertTheme,
   },
 };
 
