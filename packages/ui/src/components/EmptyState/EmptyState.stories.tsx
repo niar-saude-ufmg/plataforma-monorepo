@@ -10,6 +10,11 @@ const meta = {
     icon: "inbox",
   },
   argTypes: {
+    "aria-level": {
+      control: "number",
+      description: "Nível semântico do título para manter a hierarquia de headings.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "3" } },
+    },
     icon: {
       control: "select",
       options: ["inbox", "check", "info", "warning", "error", "search"],

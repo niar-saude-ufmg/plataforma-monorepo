@@ -1,0 +1,71 @@
+import { Canvas, Controls, Description, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Listing.stories";
+
+<Meta of={Stories} />
+
+# Listing
+
+Template para listagens que combina `Table` com `Skeleton` durante o carregamento e `EmptyState` quando `rows` está vazio.
+
+O cabeçalho é opcional e pode receber `title`, `description` e `action`, como um botão de cadastro.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Action
+
+<Description of={Stories.Action} />
+<Canvas of={Stories.Action} />
+
+`emptyState` aceita `title`, `description`, `icon` e `action` para personalizar o estado vazio. `pagination`, `selectable` e as configurações de sorting são encaminhadas para a `Table`; consulte a [documentação da Table](?path=/docs/componentes-table--docs) para ver todas as propriedades e exemplos.
+
+As props de paginação seguem o `TablePagination` do MUI, incluindo `count`, `page`, `rowsPerPage`, `onPageChange` e `onRowsPerPageChange`.
+
+Para habilitar seleção, use `selectable` e trate as linhas recebidas em `onSelectionChange`. A ordenação é configurada nas colunas da `Table` com `sortable: true`; use `onClick` na coluna para reagir à troca de ordenação.
+
+### Loading
+
+<Description of={Stories.Loading} />
+<Canvas of={Stories.Loading} />
+
+### Empty
+
+<Description of={Stories.Empty} />
+<Canvas of={Stories.Empty} />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+code={`import { Listing } from "@niar/ui";
+
+const handleSort = () => {};
+
+const columns = [
+  { key: "name", label: "Projeto", sortable: true, onClick: handleSort },
+  { key: "status", label: "Status" },
+];
+
+<Listing
+  columns={columns}
+  rows={[{ name: "Projeto A", status: "Em análise" }]}
+/>`}
+/>
+
+Para exibir carregamento, use `loading`:
+
+<Source dark language="tsx" code={`<Listing loading columns={columns} />`} />
+
+### Acessibilidade
+
+- Mantenha labels de coluna objetivos e descritivos.
+- O título usa `aria-level={2}` por padrão; ajuste esse valor quando o `Listing` estiver inserido em uma hierarquia diferente.
+- No estado vazio, o título do `EmptyState` usa `aria-level={3}` por padrão e pode ser personalizado dentro de `emptyState`.
+- Defina `aria-label` para identificar a finalidade da lista para tecnologias assistivas.
+- Use `loading` enquanto os dados ainda não estiverem disponíveis.
+- Use `state="empty"` para comunicar uma busca sem resultados.

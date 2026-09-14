@@ -8,12 +8,14 @@ export type EmptyStateProps = {
   description?: string;
   action?: ReactNode;
   icon?: IconName | ReactNode;
+  "aria-level"?: number;
 };
 export function EmptyState({
   title,
   description,
   action,
   icon = "folder",
+  "aria-level": ariaLevel = 3,
 }: EmptyStateProps) {
   const renderedIcon =
     typeof icon === "string" ? (
@@ -24,7 +26,14 @@ export function EmptyState({
   return (
     <Box sx={emptyStateStyles}>
       {renderedIcon}
-      <Typography variant="h6">{title}</Typography>
+      <Typography
+        component="div"
+        role="heading"
+        aria-level={ariaLevel}
+        variant="h6"
+      >
+        {title}
+      </Typography>
       {description && (
         <Typography color="text.secondary">{description}</Typography>
       )}
