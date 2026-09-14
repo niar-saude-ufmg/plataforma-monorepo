@@ -1,0 +1,31 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Header.stories";
+
+<Meta of={Stories} />
+
+# Header
+
+Cabeçalho de largura total para receber logo e conteúdo da aplicação.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Props
+<Controls of={Stories.Playground} sort="alpha" />
+### WithLogo
+<Description of={Stories.WithLogo} />
+<Canvas of={Stories.WithLogo} />
+### Exemplo de aplicação
+```tsx
+import { Header } from "@niar/ui";
+export function AppHeader() {
+  return <Header logo logoAlt="NIAR"><nav>Menu</nav></Header>;
+}
+```
+### Acessibilidade
+- Forneça texto alternativo para o logo quando ele transmitir informação.
+- Mantenha a navegação dentro de um elemento semântico quando aplicável.

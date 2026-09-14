@@ -9,6 +9,7 @@ import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 
 export type FileUploadProps = {
   label?: string;
+  description?: string;
   accept?: string;
   multiple?: boolean;
   disabled?: boolean;
@@ -18,6 +19,7 @@ export type FileUploadProps = {
 
 export function FileUpload({
   label = "Selecionar arquivo",
+  description = "Arraste um arquivo ou selecione no seu dispositivo",
   accept,
   multiple = false,
   disabled = false,
@@ -72,7 +74,7 @@ export function FileUpload({
         >
           <UploadFile color="primary" fontSize="large" aria-hidden="true" />
           <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
-            Arraste um arquivo ou selecione no seu dispositivo
+            {description}
           </Typography>
           <Button
             variant="outlined"
