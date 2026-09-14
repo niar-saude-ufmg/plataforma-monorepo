@@ -6,9 +6,11 @@ import { Header } from "./Header";
 describe("Header", () => {
   it("renderiza logo e conteúdo", () => {
     render(
-      <Header logo={<img src="/niar-logo.png" alt="NIAR" />}>Navegação</Header>,
+      <Header logo logoAlt="Marca NIAR">
+        Navegação
+      </Header>,
     );
-    expect(screen.getByAltText("NIAR")).toBeInTheDocument();
+    expect(screen.getByAltText("Marca NIAR")).toBeInTheDocument();
     expect(screen.getByText("Navegação")).toBeInTheDocument();
   });
 });

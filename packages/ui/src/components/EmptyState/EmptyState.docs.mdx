@@ -1,0 +1,29 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./EmptyState.stories";
+
+<Meta of={Stories} />
+
+# EmptyState
+
+Mensagem de orientação exibida quando não há conteúdo para apresentar.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Props
+<Controls of={Stories.Playground} sort="alpha" />
+### WithAction
+<Description of={Stories.WithAction} />
+<Canvas of={Stories.WithAction} />
+### Exemplo de aplicação
+```tsx
+import { EmptyState } from "@niar/ui";
+export function EmptyProjects() { return <EmptyState title="Nenhum projeto encontrado" icon="inbox" />; }
+```
+### Acessibilidade
+- Use título e descrição claros.
+- A ação deve ter rótulo acessível e indicar o próximo passo.

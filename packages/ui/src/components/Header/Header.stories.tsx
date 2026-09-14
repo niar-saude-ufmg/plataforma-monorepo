@@ -5,8 +5,25 @@ import { Header } from "./Header";
 const meta = {
   title: "Componentes/Header",
   component: Header,
-  tags: ["autodocs"],
   parameters: { layout: "fullscreen", docs: { codePanel: true } },
+  argTypes: {
+    logo: {
+      control: "boolean",
+      description: "Exibe o logo padrão do NIAR à esquerda do conteúdo.",
+      table: { category: "PROPS", defaultValue: { summary: "false" } },
+    },
+    logoAlt: {
+      control: "text",
+      description:
+        "Texto alternativo do logo exibido para tecnologias assistivas.",
+      table: { category: "PROPS", defaultValue: { summary: "NIAR" } },
+    },
+    children: {
+      description:
+        "Conteúdo do cabeçalho, como navegação, ações ou identificação da pessoa usuária.",
+      table: { category: "PROPS" },
+    },
+  },
   decorators: [
     (Story) => (
       <div style={{ boxSizing: "border-box", display: "block", width: "100%" }}>
@@ -23,14 +40,34 @@ export const Playground: Story = {
   args: {
     children: <ContentSlot />,
   },
+  parameters: {
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story:
+          "Cabeçalho com uma área de conteúdo ocupando toda a largura disponível.",
+      },
+      source: { code: "<Header><div>Content</div></Header>" },
+    },
+  },
 };
 
 export const WithLogo: Story = {
   args: {
-    logo: (
-      <img src="/niar-logo.png" alt="NIAR" style={{ height: 20, width: 92 }} />
-    ),
+    logo: true,
     children: <ContentSlot />,
+  },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story: "Cabeçalho com o logo NIAR e uma área de conteúdo.",
+      },
+      source: {
+        code: "<Header logo><div>Content</div></Header>",
+      },
+    },
   },
 };
 
