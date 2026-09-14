@@ -1,0 +1,44 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Icon.stories";
+
+<Meta of={Stories} />
+
+# Icon
+
+Ícones principais usados pela plataforma.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Icons
+
+<Description of={Stories.Icons} />
+<Canvas of={Stories.Icons} />
+
+### Colors
+
+<Description of={Stories.Colors} />
+<Canvas of={Stories.Colors} />
+
+### Exemplo de aplicação
+
+```tsx
+import { Icon } from "@niar/ui";
+export function SearchIcon() {
+  return <Icon name="search" color="primary" />;
+}
+```
+
+### Acessibilidade
+
+- Use `titleAccess` quando o ícone transmitir informação.
+- Use `aria-hidden="true"` quando o ícone for apenas decorativo.
