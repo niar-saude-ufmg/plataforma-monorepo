@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Breadcrumbs.stories";
 
@@ -21,21 +22,23 @@ Navegação estrutural que mostra o caminho até a página atual e diferencia o 
 
 ### Exemplo de aplicação
 
-```tsx
-import { Breadcrumbs } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Breadcrumbs } from "@niar/ui";
 
 export function ProjectBreadcrumbs() {
-  return (
-    <Breadcrumbs
-      items={[
-        { label: "Início", href: "/" },
-        { label: "Projetos", href: "/projetos" },
-        { label: "Detalhes" },
-      ]}
-    />
-  );
-}
-```
+    return (
+      <Breadcrumbs
+        items={[
+          { label: "Início", href: "/" },
+          { label: "Projetos", href: "/projetos" },
+          { label: "Detalhes" },
+        ]}
+      />
+    );
+}`}
+/>
 
 ### Acessibilidade
 

@@ -1,7 +1,9 @@
-import type { Preview } from '@storybook/react-vite';
-import { NiarProvider } from '../src/theme/index';
-import '../src/tokens/styles/tokens.css';
-import './docs.css';
+import type { Preview } from "@storybook/react-vite";
+import { create } from "storybook/theming";
+import { NiarProvider } from "../src/theme/index";
+import { niar } from "../src/tokens/index";
+import "../src/tokens/styles/tokens.css";
+import "./docs.css";
 
 const preview: Preview = {
   decorators: [
@@ -12,15 +14,24 @@ const preview: Preview = {
     ),
   ],
   parameters: {
-    layout: 'centered',
+    layout: "centered",
+    backgrounds: {
+      default: "light",
+      values: [{ name: "light", value: niar.colors.surface.card }],
+    },
     controls: { expanded: true },
     docs: {
-      canvas: { sourceState: 'shown' },
-      source: { state: 'open' },
+      canvas: { sourceState: "shown" },
+      source: { state: "open" },
+      theme: create({ base: "light" }),
     },
     options: {
       storySort: {
-        order: ['Fundamentos', ['Identidade Visual', 'Cores', 'Tokens'], 'Componentes'],
+        order: [
+          "Fundamentos",
+          ["Identidade Visual", "Cores", "Tokens"],
+          "Componentes",
+        ],
       },
     },
   },

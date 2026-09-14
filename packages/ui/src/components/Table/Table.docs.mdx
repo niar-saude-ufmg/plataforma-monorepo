@@ -1,4 +1,10 @@
-import { Canvas, Controls, Description, Meta } from "@storybook/addon-docs/blocks";
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
 import * as Stories from "./Table.stories";
 
 <Meta of={Stories} />
@@ -16,29 +22,33 @@ Tabela para listagens da plataforma. As colunas aceitam `render` para compor Sta
 
 Estrutura do objeto `pagination`:
 
-```tsx
-type TablePaginationConfig = {
-  count: number;
-  page: number;
-  rowsPerPage: number;
-  rowsPerPageOptions?: number[];
-  onPageChange: (event: React.MouseEvent | null, page: number) => void;
-  onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-};
-```
+<Source
+  dark
+  language="tsx"
+  code={`type TablePaginationConfig = {
+    count: number;
+    page: number;
+    rowsPerPage: number;
+    rowsPerPageOptions?: number[];
+    onPageChange: (event: React.MouseEvent | null, page: number) => void;
+    onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+};`}
+/>
 
 Estrutura de uma coluna:
 
-```tsx
-type TableColumn<T> = {
-  key: keyof T & string;
-  label: React.ReactNode;
-  align?: "left" | "center" | "right" | "justify" | "inherit";
-  sortable?: boolean;
-  onClick?: () => void;
-  render?: (value: T[keyof T], row: T) => React.ReactNode;
-};
-```
+<Source
+  dark
+  language="tsx"
+  code={`type TableColumn<T> = {
+    key: keyof T & string;
+    label: React.ReactNode;
+    align?: "left" | "center" | "right" | "justify" | "inherit";
+    sortable?: boolean;
+    onClick?: () => void;
+    render?: (value: T[keyof T], row: T) => React.ReactNode;
+};`}
+/>
 
 ### Status
 
@@ -77,28 +87,30 @@ type TableColumn<T> = {
 
 Estrutura da propriedade `collapsible`:
 
-```tsx
-type Collapsible = (row: Row) => React.ReactNode;
-```
+<Source
+  dark
+  language="tsx"
+  code={`type Collapsible = (row: Row) => React.ReactNode;`}
+/>
 
 ### Exemplo de aplicação
 
-```tsx
-import { Table } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Table } from "@niar/ui";
 
 const columns = [
   { key: "name", label: "Projeto" },
   { key: "status", label: "Status" },
 ];
 
-const rows = [
-  { name: "Projeto A", status: "Em análise" },
-];
+const rows = [{ name: "Projeto A", status: "Em análise" }];
 
 export function ProjectTable() {
-  return <Table columns={columns} rows={rows} />;
-}
-```
+    return <Table columns={columns} rows={rows} />;
+}`}
+/>
 
 ### Acessibilidade
 

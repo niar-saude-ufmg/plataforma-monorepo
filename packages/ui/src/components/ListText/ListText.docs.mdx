@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./ListText.stories";
 
@@ -26,10 +27,21 @@ Lista de pares label e valor para exibir detalhes de entidades.
 <Description of={Stories.Layout} />
 <Canvas of={Stories.Layout} />
 ### Exemplo de aplicação
-```tsx
-import { ListText } from "@niar/ui";
-export function ProjectDetails() { return <ListText items={[{ label: "Status", value: "Em análise" }, { label: "Responsável", value: "Usuário NIAR" }]} />; }
-```
-### Acessibilidade
-- Use labels objetivos e valores completos.
-- Preserve a ordem lógica das informações.
+<Source
+  dark
+  language="tsx"
+  code={`import { ListText } from "@niar/ui";
+
+export function ProjectDetails() {
+    return (
+      <ListText
+        items={[
+          { label: "Status", value: "Em análise" },
+          { label: "Responsável", value: "Usuário NIAR" },
+        ]}
+      />
+    );
+}`}
+/>
+### Acessibilidade - Use labels objetivos e valores completos. - Preserve a
+ordem lógica das informações.

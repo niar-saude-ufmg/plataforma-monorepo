@@ -1,4 +1,10 @@
-import { Canvas, Controls, Description, Meta } from "@storybook/addon-docs/blocks";
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
 import * as Stories from "./Alert.stories";
 
 <Meta of={Stories} />
@@ -36,13 +42,15 @@ Mensagem persistente para comunicar sucesso, aviso, erro ou informação.
 
 ### Exemplo de aplicação
 
-```tsx
-import { Alert } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Alert } from "@niar/ui";
 
 export function ProjectAlert() {
-  return <Alert severity="info">A análise está em andamento.</Alert>;
-}
-```
+    return <Alert severity="info">A análise está em andamento.</Alert>;
+}`}
+/>
 
 ### Acessibilidade
 

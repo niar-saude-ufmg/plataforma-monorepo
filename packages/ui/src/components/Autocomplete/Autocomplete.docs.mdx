@@ -1,4 +1,10 @@
-import { Canvas, Controls, Description, Meta } from "@storybook/addon-docs/blocks";
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
 import * as Stories from "./Autocomplete.stories";
 
 <Meta of={Stories} />
@@ -21,15 +27,17 @@ Campo de busca e seleção baseado no Autocomplete do MUI. É indicado para filt
 
 ### Exemplo de aplicação
 
-```tsx
-import { Autocomplete } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Autocomplete } from "@niar/ui";
 
 <Autocomplete
-  label="Projeto"
-  options={["Opção 1", "Opção 2"]}
-  onChange={(value) => console.log(value)}
+    label="Projeto"
+    options={["Opção 1", "Opção 2"]}
+    onChange={(value) => console.log(value)}
+/>;`}
 />
-```
 
 ### Acessibilidade
 

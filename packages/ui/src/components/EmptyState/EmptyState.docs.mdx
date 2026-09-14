@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./EmptyState.stories";
 
@@ -20,10 +21,19 @@ Mensagem de orientação exibida quando não há conteúdo para apresentar.
 <Description of={Stories.WithAction} />
 <Canvas of={Stories.WithAction} />
 ### Exemplo de aplicação
-```tsx
-import { EmptyState } from "@niar/ui";
-export function EmptyProjects() { return <EmptyState title="Nenhum projeto encontrado" icon="inbox" />; }
-```
-### Acessibilidade
-- Use título e descrição claros.
-- A ação deve ter rótulo acessível e indicar o próximo passo.
+<Source
+  dark
+  language="tsx"
+  code={`import { EmptyState } from "@niar/ui";
+
+export function EmptyProjects() {
+    return (
+      <EmptyState
+        title="Nenhum projeto encontrado"
+        icon="inbox"
+      />
+    );
+}`}
+/>
+### Acessibilidade - Use título e descrição claros. - A ação deve ter rótulo
+acessível e indicar o próximo passo.

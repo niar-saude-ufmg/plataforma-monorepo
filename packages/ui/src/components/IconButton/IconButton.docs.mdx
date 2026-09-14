@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./IconButton.stories";
 
@@ -26,12 +27,15 @@ Botão compacto que usa um ícone para representar uma ação.
 
 ### Exemplo de aplicação
 
-```tsx
-import { IconButton } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { IconButton } from "@niar/ui";
+
 export function CloseAction() {
-  return <IconButton name="close" aria-label="Fechar" />;
-}
-```
+    return <IconButton name="close" aria-label="Fechar" />;
+}`}
+/>
 
 ### Acessibilidade
 

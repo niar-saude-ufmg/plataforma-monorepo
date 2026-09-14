@@ -9,19 +9,31 @@ export const statusChipTheme: Components<Theme>["MuiChip"] = {
       variants: [
         {
           props: { color: "success" },
-          style: { backgroundColor: "#d9f2e6", color: "#176b4d" },
+          style: {
+            backgroundColor: niar.colors.feedback.successSurface,
+            color: niar.colors.feedback.success,
+          },
         },
         {
           props: { color: "warning" },
-          style: { backgroundColor: "#fff1c2", color: "#765400" },
+          style: {
+            backgroundColor: niar.colors.feedback.warningSurface,
+            color: niar.colors.feedback.warning,
+          },
         },
         {
           props: { color: "error" },
-          style: { backgroundColor: "#fde2e2", color: "#9b2c2c" },
+          style: {
+            backgroundColor: niar.colors.feedback.errorSurface,
+            color: niar.colors.feedback.error,
+          },
         },
         {
           props: { color: "info" },
-          style: { backgroundColor: "#dcecf7", color: niar.colors.action.primary },
+          style: {
+            backgroundColor: niar.colors.feedback.infoSurface,
+            color: niar.colors.feedback.info,
+          },
         },
       ],
     },

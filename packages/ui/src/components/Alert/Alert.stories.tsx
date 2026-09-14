@@ -27,7 +27,17 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Playground: Story = { parameters: { docs: { canvas: { sourceState: "shown" }, description: { story: "Use o Alert para comunicar uma mensagem persistente relacionada ao estado de uma operação." } } } };
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story:
+          "Use o Alert para comunicar uma mensagem persistente relacionada ao estado de uma operação.",
+      },
+    },
+  },
+};
 export const Success: Story = {
   args: { severity: "success", children: "Projeto salvo com sucesso." },
 };

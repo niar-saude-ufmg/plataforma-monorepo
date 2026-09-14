@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Tabs.stories";
 
@@ -17,10 +18,22 @@ Navegação por abas para alternar entre conteúdos relacionados.
 ### Props
 <Controls of={Stories.Playground} sort="alpha" />
 ### Exemplo de aplicação
-```tsx
-import { Tabs } from "@niar/ui";
-export function ProjectTabs() { return <Tabs defaultValue="overview" options={[{ value: "overview", label: "Visão geral" }, { value: "documents", label: "Documentos" }]} />; }
-```
-### Acessibilidade
-- Use rótulos claros e únicos para cada aba.
-- Mantenha `aria-label` quando houver mais de uma navegação.
+<Source
+  dark
+  language="tsx"
+  code={`import { Tabs } from "@niar/ui";
+
+export function ProjectTabs() {
+    return (
+      <Tabs
+        defaultValue="overview"
+        options={[
+          { value: "overview", label: "Visão geral" },
+          { value: "documents", label: "Documentos" },
+        ]}
+      />
+    );
+}`}
+/>
+### Acessibilidade - Use rótulos claros e únicos para cada aba. - Mantenha
+`aria-label` quando houver mais de uma navegação.

@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Timeline.stories";
 
@@ -20,10 +21,18 @@ Linha do tempo para exibir o histórico de mudanças de um projeto.
 <Description of={Stories.Compact} />
 <Canvas of={Stories.Compact} />
 ### Exemplo de aplicação
-```tsx
-import { Timeline } from "@niar/ui";
-export function History() { return <Timeline items={[{ title: "Projeto submetido", date: "Hoje, 10:30" }]} />; }
-```
-### Acessibilidade
-- Mantenha os eventos em ordem cronológica.
-- Use títulos e datas compreensíveis.
+<Source
+  dark
+  language="tsx"
+  code={`import { Timeline } from "@niar/ui";
+
+export function History() {
+    return (
+      <Timeline
+        items={[{ title: "Projeto submetido", date: "Hoje, 10:30" }]}
+      />
+    );
+}`}
+/>
+### Acessibilidade - Mantenha os eventos em ordem cronológica. - Use títulos e
+datas compreensíveis.

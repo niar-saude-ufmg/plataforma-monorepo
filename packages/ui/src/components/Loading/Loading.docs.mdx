@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Loading.stories";
 
@@ -32,12 +33,14 @@ Indicador visual de carregamento circular ou linear, sem texto embutido.
 
 ### Exemplo de aplicação
 
-```tsx
-import { Loading } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Loading } from "@niar/ui";
 export function Progress() {
-  return <Loading variant="linear" value={60} />;
-}
-```
+    return <Loading variant="linear" value={60} />;
+}`}
+/>
 
 ### Acessibilidade
 

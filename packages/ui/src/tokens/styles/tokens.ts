@@ -38,6 +38,16 @@ export default {
     },
     border: "rgba(28, 53, 94, 0.12)",
     focus: "#3fa9d9",
+    feedback: {
+      success: "#176b4d",
+      successSurface: "#d9f2e6",
+      warning: "#765400",
+      warningSurface: "#fff1c2",
+      error: "#9b2c2c",
+      errorSurface: "#fde2e2",
+      info: "#1c355e",
+      infoSurface: "#dcecf7",
+    },
   },
   spacing: {
     none: "0px",

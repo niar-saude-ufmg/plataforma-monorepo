@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Icon.stories";
 
@@ -31,12 +32,15 @@ import * as Stories from "./Icon.stories";
 
 ### Exemplo de aplicação
 
-```tsx
-import { Icon } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Icon } from "@niar/ui";
+
 export function SearchIcon() {
-  return <Icon name="search" color="primary" />;
-}
-```
+    return <Icon name="search" color="primary" />;
+}`}
+/>
 
 ### Acessibilidade
 
