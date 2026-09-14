@@ -75,7 +75,7 @@ export type {
   MenuGroup,
   MenuProps,
 } from "./components/index";
-export { PageHeader, Details, Listing } from "./templates/index";
+export { PageHeader, Details, Listing, Filter } from "./templates/index";
 export type {
   PageHeaderNavigation,
   PageHeaderProps,
@@ -83,4 +83,8 @@ export type {
   DetailsListItem,
   DetailsTimelineItem,
   ListingProps,
+  FilterProps,
+  FilterCheckedField,
+  FilterSearchField,
+  FilterSelectableField,
 } from "./templates/index";
