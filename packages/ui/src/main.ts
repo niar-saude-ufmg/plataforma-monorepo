@@ -75,11 +75,12 @@ export type {
   MenuGroup,
   MenuProps,
 } from "./components/index";
-export { PageHeader, Details } from "./templates/index";
+export { PageHeader, Details, Listing } from "./templates/index";
 export type {
   PageHeaderNavigation,
   PageHeaderProps,
   DetailsProps,
   DetailsListItem,
   DetailsTimelineItem,
+  ListingProps,
 } from "./templates/index";
