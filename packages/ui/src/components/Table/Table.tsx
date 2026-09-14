@@ -3,8 +3,9 @@ import MuiTable, {
 } from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
+import TableSortLabel from "@mui/material/TableSortLabel";
+import Checkbox from "@mui/material/Checkbox";
 import TableContainer from "@mui/material/TableContainer";
-import type { TableContainerProps } from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TablePagination, {
@@ -24,6 +25,8 @@ export type TableColumn<T> = {
   key: keyof T & string;
   label: ReactNode;
   align?: "left" | "center" | "right" | "justify" | "inherit";
+  sortable?: boolean;
+  onClick?: () => void;
   render?: (value: T[keyof T], row: T) => ReactNode;
 };
 
@@ -33,42 +36,81 @@ export type TableProps<T extends Record<string, unknown>> = Omit<
 > & {
   columns: readonly TableColumn<T>[];
   rows: readonly T[];
-  containerProps?: Omit<TableContainerProps, "children">;
   collapsible?: (row: T) => ReactNode;
-  pagination?: Omit<
-    TablePaginationProps,
-    "component" | "count" | "page" | "rowsPerPage" | "onPageChange" | "onRowsPerPageChange"
-  >;
+  selectable?: boolean;
+  onSelectionChange?: (rows: readonly T[]) => void;
+  pagination?: Omit<TablePaginationProps, "component">;
 };
 
 export function Table<T extends Record<string, unknown>>({
   columns,
   rows,
-  containerProps,
   collapsible,
+  selectable = false,
+  onSelectionChange,
   pagination,
   ...tableProps
 }: TableProps<T>) {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [expanded, setExpanded] = useState<number | null>(null);
-  const visibleRows = pagination
-    ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  const [sort, setSort] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const sortedRows = sort
+    ? [...rows].sort((a, b) => {
+        const aValue = String(a[sort.key] ?? "");
+        const bValue = String(b[sort.key] ?? "");
+        const result = aValue.localeCompare(bValue);
+        return sort.direction === "asc" ? result : -result;
+      })
     : rows;
+  const visibleRows = pagination
+    ? sortedRows.slice(pagination.page * pagination.rowsPerPage, pagination.page * pagination.rowsPerPage + pagination.rowsPerPage)
+    : sortedRows;
+  const allSelected = selected.size === sortedRows.length && sortedRows.length > 0;
+  const toggleSelection = (index: number) => {
+    setSelected((current) => {
+      const next = new Set(current);
+      next.has(index) ? next.delete(index) : next.add(index);
+      onSelectionChange?.(sortedRows.filter((_, rowIndex) => next.has(rowIndex)));
+      return next;
+    });
+  };
   return (
     <TableContainer
       component={Paper}
       elevation={0}
       variant="outlined"
-      {...containerProps}
     >
       <MuiTable {...tableProps}>
         <TableHead>
           <TableRow>
             {collapsible ? <TableCell>Ações</TableCell> : null}
+            {selectable ? (
+              <TableCell>
+                <Checkbox checked={allSelected} indeterminate={selected.size > 0 && !allSelected} onChange={() => { const next = allSelected ? new Set<number>() : new Set(sortedRows.map((_, index) => index)); setSelected(next); onSelectionChange?.(allSelected ? [] : sortedRows); }} slotProps={{ input: { "aria-label": "Selecionar todas as linhas" } }} />
+              </TableCell>
+            ) : null}
             {columns.map((column) => (
               <TableCell key={column.key} align={column.align}>
-                {column.label}
+                {column.sortable ? (
+                  <TableSortLabel
+                    active={sort?.key === column.key || column.sortable}
+                    direction={sort?.key === column.key ? sort.direction : "asc"}
+                    sx={{
+                      color: "text.primary",
+                      "& .MuiTableSortLabel-icon": {
+                        opacity: 1,
+                        color: "inherit",
+                      },
+                    }}
+                    onClick={() => {
+                      const direction = sort?.key === column.key && sort.direction === "asc" ? "desc" : "asc";
+                      setSort({ key: column.key, direction });
+                      column.onClick?.();
+                    }}
+                  >
+                    {column.label}
+                  </TableSortLabel>
+                ) : column.label}
               </TableCell>
             ))}
           </TableRow>
@@ -76,7 +118,7 @@ export function Table<T extends Record<string, unknown>>({
         <TableBody>
           {visibleRows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length + (collapsible ? 1 : 0)}>
+              <TableCell colSpan={columns.length + (collapsible ? 1 : 0) + (selectable ? 1 : 0)}>
                 <Typography color="text.secondary" align="center">
                   Nenhum registro encontrado
                 </Typography>
@@ -95,6 +137,11 @@ export function Table<T extends Record<string, unknown>>({
                     >
                       {expanded === index ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
                     </IconButton>
+                  </TableCell>
+                ) : null}
+                {selectable ? (
+                  <TableCell>
+                    <Checkbox checked={selected.has(index)} onChange={() => toggleSelection(index)} slotProps={{ input: { "aria-label": "Selecionar linha" } }} />
                   </TableCell>
                 ) : null}
                 {columns.map((column) => (
@@ -122,14 +169,6 @@ export function Table<T extends Record<string, unknown>>({
       {pagination ? (
         <TablePagination
           component="div"
-          count={rows.length}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_, nextPage) => setPage(nextPage)}
-          onRowsPerPageChange={(event) => {
-            setRowsPerPage(Number(event.target.value));
-            setPage(0);
-          }}
           {...pagination}
         />
       ) : null}
