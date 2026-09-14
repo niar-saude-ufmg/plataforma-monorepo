@@ -1,0 +1,50 @@
+import { Canvas, Controls, Description, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Alert.stories";
+
+<Meta of={Stories} />
+
+# Alert
+
+Mensagem persistente para comunicar sucesso, aviso, erro ou informação.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Success
+
+<Description of={Stories.Success} />
+<Canvas of={Stories.Success} />
+
+### Error
+
+<Description of={Stories.Error} />
+<Canvas of={Stories.Error} />
+
+### Warning
+
+<Description of={Stories.Warning} />
+<Canvas of={Stories.Warning} />
+
+### Info
+
+<Description of={Stories.Info} />
+<Canvas of={Stories.Info} />
+
+### Exemplo de aplicação
+
+```tsx
+import { Alert } from "@niar/ui";
+
+export function ProjectAlert() {
+  return <Alert severity="info">A análise está em andamento.</Alert>;
+}
+```
+
+### Acessibilidade
+
+- Use uma mensagem clara e suficiente sem depender apenas da cor.
+- Escolha a severity de acordo com o significado da mensagem.
