@@ -2,6 +2,13 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
+import {
+  headerAppBarStyles,
+  headerContentStyles,
+  headerLogoStyles,
+  headerLogoWrapperStyles,
+  headerToolbarStyles,
+} from "./Header.styles";
 
 export type HeaderProps = {
   children?: ReactNode;
@@ -15,21 +22,15 @@ export function Header({ children, logo, logoAlt = "NIAR" }: HeaderProps) {
       position="static"
       color="inherit"
       elevation={0}
-      sx={{ width: "100%" }}
+      sx={headerAppBarStyles}
     >
-      <Toolbar sx={{ borderBottom: 1, borderColor: "divider", minHeight: 64 }}>
+      <Toolbar sx={headerToolbarStyles}>
         {logo && (
-          <Box sx={{ alignItems: "center", display: "flex", mr: 2 }}>
-            <img
-              src="/niar-logo.png"
-              alt={logoAlt}
-              style={{ height: 20, width: 92 }}
-            />
+          <Box sx={headerLogoWrapperStyles}>
+            <img src="/niar-logo.png" alt={logoAlt} style={headerLogoStyles} />
           </Box>
         )}
-        <Box sx={{ alignItems: "center", display: "flex", flex: 1, gap: 1 }}>
-          {children}
-        </Box>
+        <Box sx={headerContentStyles}>{children}</Box>
       </Toolbar>
     </AppBar>
   );

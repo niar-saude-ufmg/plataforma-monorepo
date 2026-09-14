@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Skeleton.stories";
 
@@ -29,10 +30,14 @@ Placeholder visual para preservar o layout enquanto o conteúdo é carregado.
 <Description of={Stories.Circular} />
 <Canvas of={Stories.Circular} />
 ### Exemplo de aplicação
-```tsx
-import { Skeleton } from "@niar/ui";
-export function LoadingContent() { return <Skeleton variant="text" lines={3} />; }
-```
-### Acessibilidade
-- Use enquanto o conteúdo real ainda está carregando.
-- Preserve o mesmo espaço ocupado pelo conteúdo esperado.
+<Source
+  dark
+  language="tsx"
+  code={`import { Skeleton } from "@niar/ui";
+
+export function LoadingContent() {
+    return <Skeleton variant="text" lines={3} />;
+}`}
+/>
+### Acessibilidade - Use enquanto o conteúdo real ainda está carregando. -
+Preserve o mesmo espaço ocupado pelo conteúdo esperado.

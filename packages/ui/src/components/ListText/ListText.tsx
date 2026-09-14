@@ -3,6 +3,7 @@ import ListItem from "@mui/material/ListItem";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { listTextLayoutStyles, listTextValueStyles } from "./ListText.styles";
 
 export type ListTextItem = {
   label: ReactNode;
@@ -28,11 +29,8 @@ export function ListText({
         <ListItem key={index} divider={dividers} disableGutters dense={dense}>
           <Box
             sx={{
+              ...listTextLayoutStyles,
               display: layout === "inline" ? "grid" : "flex",
-              flexDirection: "column",
-              gap: 0.5,
-              gridTemplateColumns: "minmax(120px, 0.7fr) minmax(0, 1.3fr)",
-              width: "100%",
             }}
           >
             <Typography color="text.secondary" variant="body2">
@@ -41,7 +39,7 @@ export function ListText({
             <Typography
               color="text.primary"
               variant="body1"
-              sx={{ fontWeight: 600 }}
+              sx={listTextValueStyles}
             >
               {item.value}
             </Typography>

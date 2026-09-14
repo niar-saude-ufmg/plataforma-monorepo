@@ -1,4 +1,10 @@
-import { Canvas, Controls, Description, Meta } from "@storybook/addon-docs/blocks";
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
 import * as Stories from "./StatusChip.stories";
 
 <Meta of={Stories} />
@@ -26,18 +32,20 @@ Indicador visual para estados de projetos e etapas do fluxo. Use `display="chip"
 
 ### Exemplo de aplicação
 
-```tsx
-import { StatusChip } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { StatusChip } from "@niar/ui";
 
 export function ProjectStatus() {
-  return (
-    <>
-      <StatusChip status="success" label="Aprovado" />
-      <StatusChip status="warning" label="Em análise" display="text" />
-    </>
-  );
-}
-```
+    return (
+      <>
+        <StatusChip status="success" label="Aprovado" />
+        <StatusChip status="warning" label="Em análise" display="text" />
+      </>
+    );
+}`}
+/>
 
 ### Acessibilidade
 

@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { type ReactNode } from "react";
 import { Icon, type IconName } from "../Icon/Icon";
+import { emptyStateStyles } from "./EmptyState.styles";
 export type EmptyStateProps = {
   title: string;
   description?: string;
@@ -21,17 +22,7 @@ export function EmptyState({
       icon
     );
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 1.5,
-        py: 6,
-        textAlign: "center",
-      }}
-    >
+    <Box sx={emptyStateStyles}>
       {renderedIcon}
       <Typography variant="h6">{title}</Typography>
       {description && (

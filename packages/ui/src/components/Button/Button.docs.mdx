@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Button.stories";
 
@@ -41,13 +42,15 @@ Botão MUI configurado pelo NiarProvider, com estilos e variantes definidos junt
 
 ### Exemplo de aplicação
 
-```tsx
-import { Button } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Button } from "@niar/ui";
 
 export function ContinueButton() {
-  return <Button onClick={() => console.log("continuar")}>Continuar</Button>;
-}
-```
+    return <Button onClick={() => console.log("continuar")}>Continuar</Button>;
+}`}
+/>
 
 ### Acessibilidade
 

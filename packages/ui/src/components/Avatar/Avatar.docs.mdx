@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Avatar.stories";
 
@@ -36,13 +37,15 @@ Avatar para representar uma pessoa usuária por imagem, iniciais ou ícone, usan
 
 ### Exemplo de aplicação
 
-```tsx
-import { Avatar } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Avatar } from "@niar/ui";
 
 export function UserAvatar() {
-  return <Avatar alt="Usuário NIAR">UN</Avatar>;
-}
-```
+    return <Avatar alt="Usuário NIAR">UN</Avatar>;
+}`}
+/>
 
 ### Acessibilidade
 

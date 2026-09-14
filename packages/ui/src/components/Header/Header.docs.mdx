@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Header.stories";
 
@@ -20,12 +21,19 @@ Cabeçalho de largura total para receber logo e conteúdo da aplicação.
 <Description of={Stories.WithLogo} />
 <Canvas of={Stories.WithLogo} />
 ### Exemplo de aplicação
-```tsx
-import { Header } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Header } from "@niar/ui";
+
 export function AppHeader() {
-  return <Header logo logoAlt="NIAR"><nav>Menu</nav></Header>;
-}
-```
-### Acessibilidade
-- Forneça texto alternativo para o logo quando ele transmitir informação.
-- Mantenha a navegação dentro de um elemento semântico quando aplicável.
+    return (
+      <Header logo logoAlt="NIAR">
+        <nav>Menu</nav>
+      </Header>
+    );
+}`}
+/>
+### Acessibilidade - Forneça texto alternativo para o logo quando ele transmitir
+informação. - Mantenha a navegação dentro de um elemento semântico quando
+aplicável.

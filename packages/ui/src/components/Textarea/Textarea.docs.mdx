@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Textarea.stories";
 
@@ -23,10 +24,14 @@ Campo multiline outlined para textos longos.
 <Description of={Stories.Disabled} />
 <Canvas of={Stories.Disabled} />
 ### Exemplo de aplicação
-```tsx
-import { Textarea } from "@niar/ui";
-export function DescriptionField() { return <Textarea label="Descrição do projeto" />; }
-```
-### Acessibilidade
-- Use um label visível associado ao campo.
-- Preserve mensagens de erro junto ao campo.
+<Source
+  dark
+  language="tsx"
+  code={`import { Textarea } from "@niar/ui";
+
+export function DescriptionField() {
+    return <Textarea label="Descrição do projeto" />;
+}`}
+/>
+### Acessibilidade - Use um label visível associado ao campo. - Preserve
+mensagens de erro junto ao campo.

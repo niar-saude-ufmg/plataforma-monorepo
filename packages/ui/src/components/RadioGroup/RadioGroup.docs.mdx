@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./RadioGroup.stories";
 
@@ -24,20 +25,22 @@ Grupo de opções mutuamente exclusivas com rótulos acessíveis.
 
 ### Exemplo de aplicação
 
-```tsx
-import { RadioGroup } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { RadioGroup } from "@niar/ui";
 export function DataOrigin() {
-  return (
-    <RadioGroup
-      label="Origem"
-      options={[
-        { value: "own", label: "Base própria" },
-        { value: "niar", label: "Base do NIAR" },
-      ]}
-    />
-  );
-}
-```
+    return (
+      <RadioGroup
+        label="Origem"
+        options={[
+          { value: "own", label: "Base própria" },
+          { value: "niar", label: "Base do NIAR" },
+        ]}
+      />
+    );
+}`}
+/>
 
 ### Acessibilidade
 

@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Menu.stories";
 
@@ -17,22 +18,23 @@ Barra de menus com grupos e itens acionáveis.
 ### Props
 <Controls of={Stories.Playground} sort="alpha" />
 ### Exemplo de aplicação
-```tsx
-import { Menu } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Menu } from "@niar/ui";
 export function MainMenu() {
-  return (
-    <Menu
-      groups={[{
-        label: "Arquivo",
-        items: [
-          { label: "Novo projeto", onClick: () => console.log("novo") },
-          { label: "Abrir", href: "/projetos" },
-        ],
-      }]}
-    />
-  );
-}
-```
-### Acessibilidade
-- Use rótulos claros para grupos e itens.
-- Itens desabilitados devem permanecer compreensíveis.
+    return (
+      <Menu
+        groups={[{
+          label: "Arquivo",
+          items: [
+            { label: "Novo projeto", onClick: () => console.log("novo") },
+            { label: "Abrir", href: "/projetos" },
+          ],
+        }]}
+      />
+    );
+}`}
+/>
+### Acessibilidade - Use rótulos claros para grupos e itens. - Itens
+desabilitados devem permanecer compreensíveis.

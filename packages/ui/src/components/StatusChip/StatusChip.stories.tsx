@@ -7,7 +7,10 @@ const meta = {
   parameters: {
     docs: {
       source: { code: '<StatusChip status="success" label="Aprovado" />' },
-      description: { component: "Indicador compacto para representar o estado de um projeto, usuário ou etapa do fluxo. Use status para aplicar a semântica visual e display=\"text\" quando o espaço for reduzido." },
+      description: {
+        component:
+          'Indicador compacto para representar o estado de um projeto, usuário ou etapa do fluxo. Use status para aplicar a semântica visual e display="text" quando o espaço for reduzido.',
+      },
     },
   },
   argTypes: {
@@ -24,7 +27,8 @@ const meta = {
     display: {
       control: "select",
       options: ["chip", "text"],
-      description: "Escolhe entre o indicador com fundo suave ou apenas o texto colorido para contextos compactos.",
+      description:
+        "Escolhe entre o indicador com fundo suave ou apenas o texto colorido para contextos compactos.",
       table: {
         category: "PROPS",
         type: { summary: "chip | text" },
@@ -32,7 +36,8 @@ const meta = {
       },
     },
     label: {
-      description: "Texto que comunica o estado para a pessoa usuária e para leitores de tela.",
+      description:
+        "Texto que comunica o estado para a pessoa usuária e para leitores de tela.",
       table: {
         category: "PROPS",
         type: { summary: "ReactNode" },
@@ -57,8 +62,13 @@ export const Playground: Story = {
   parameters: {
     docs: {
       canvas: { sourceState: "shown" },
-      description: { story: "Altere status, display e size para avaliar as formas de apresentação do estado e escolher a combinação adequada para cada contexto." },
-      source: { code: '<StatusChip status="info" display="chip" label="Em análise" />' },
+      description: {
+        story:
+          "Altere status, display e size para avaliar as formas de apresentação do estado e escolher a combinação adequada para cada contexto.",
+      },
+      source: {
+        code: '<StatusChip status="info" display="chip" label="Em análise" />',
+      },
     },
   },
 };
@@ -73,8 +83,12 @@ export const Display: Story = {
     controls: { disable: true },
     docs: {
       canvas: { sourceState: "shown" },
-      description: { story: "Compare a apresentação com fundo e a versão somente texto." },
-      source: { code: 'import { StatusChip } from "@niar/ui";\n\nexport function StatusExample() {\n  return (\n    <>\n      <StatusChip status="success" label="Chip" display="chip" />\n      <StatusChip status="success" label="Texto" display="text" />\n    </>\n  );\n}' },
+      description: {
+        story: "Compare a apresentação com fundo e a versão somente texto.",
+      },
+      source: {
+        code: 'import { StatusChip } from "@niar/ui";\n\nexport function StatusExample() {\n  return (\n    <>\n      <StatusChip status="success" label="Chip" display="chip" />\n      <StatusChip status="success" label="Texto" display="text" />\n    </>\n  );\n}',
+      },
     },
   },
 };
@@ -92,8 +106,13 @@ export const States: Story = {
     controls: { disable: true },
     docs: {
       canvas: { sourceState: "shown" },
-      description: { story: "Mostra todos os estados semânticos disponíveis para uso no fluxo da plataforma." },
-      source: { code: 'import { StatusChip } from "@niar/ui";\n\nexport function StatusStates() {\n  return <StatusChip status="success" label="success" />;\n}' },
+      description: {
+        story:
+          "Mostra todos os estados semânticos disponíveis para uso no fluxo da plataforma.",
+      },
+      source: {
+        code: 'import { StatusChip } from "@niar/ui";\n\nexport function StatusStates() {\n  return <StatusChip status="success" label="success" />;\n}',
+      },
     },
   },
 };

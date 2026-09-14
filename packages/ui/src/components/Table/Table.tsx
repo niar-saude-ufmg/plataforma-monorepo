@@ -52,7 +52,10 @@ export function Table<T extends Record<string, unknown>>({
   ...tableProps
 }: TableProps<T>) {
   const [expanded, setExpanded] = useState<number | null>(null);
-  const [sort, setSort] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+  const [sort, setSort] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const sortedRows = sort
     ? [...rows].sort((a, b) => {
@@ -63,30 +66,45 @@ export function Table<T extends Record<string, unknown>>({
       })
     : rows;
   const visibleRows = pagination
-    ? sortedRows.slice(pagination.page * pagination.rowsPerPage, pagination.page * pagination.rowsPerPage + pagination.rowsPerPage)
+    ? sortedRows.slice(
+        pagination.page * pagination.rowsPerPage,
+        pagination.page * pagination.rowsPerPage + pagination.rowsPerPage,
+      )
     : sortedRows;
-  const allSelected = selected.size === sortedRows.length && sortedRows.length > 0;
+  const allSelected =
+    selected.size === sortedRows.length && sortedRows.length > 0;
   const toggleSelection = (index: number) => {
     setSelected((current) => {
       const next = new Set(current);
       next.has(index) ? next.delete(index) : next.add(index);
-      onSelectionChange?.(sortedRows.filter((_, rowIndex) => next.has(rowIndex)));
+      onSelectionChange?.(
+        sortedRows.filter((_, rowIndex) => next.has(rowIndex)),
+      );
       return next;
     });
   };
   return (
-    <TableContainer
-      component={Paper}
-      elevation={0}
-      variant="outlined"
-    >
+    <TableContainer component={Paper} elevation={0} variant="outlined">
       <MuiTable {...tableProps}>
         <TableHead>
           <TableRow>
             {collapsible ? <TableCell>Ações</TableCell> : null}
             {selectable ? (
               <TableCell>
-                <Checkbox checked={allSelected} indeterminate={selected.size > 0 && !allSelected} onChange={() => { const next = allSelected ? new Set<number>() : new Set(sortedRows.map((_, index) => index)); setSelected(next); onSelectionChange?.(allSelected ? [] : sortedRows); }} slotProps={{ input: { "aria-label": "Selecionar todas as linhas" } }} />
+                <Checkbox
+                  checked={allSelected}
+                  indeterminate={selected.size > 0 && !allSelected}
+                  onChange={() => {
+                    const next = allSelected
+                      ? new Set<number>()
+                      : new Set(sortedRows.map((_, index) => index));
+                    setSelected(next);
+                    onSelectionChange?.(allSelected ? [] : sortedRows);
+                  }}
+                  slotProps={{
+                    input: { "aria-label": "Selecionar todas as linhas" },
+                  }}
+                />
               </TableCell>
             ) : null}
             {columns.map((column) => (
@@ -94,7 +112,9 @@ export function Table<T extends Record<string, unknown>>({
                 {column.sortable ? (
                   <TableSortLabel
                     active={sort?.key === column.key || column.sortable}
-                    direction={sort?.key === column.key ? sort.direction : "asc"}
+                    direction={
+                      sort?.key === column.key ? sort.direction : "asc"
+                    }
                     sx={{
                       color: "text.primary",
                       "& .MuiTableSortLabel-icon": {
@@ -103,14 +123,19 @@ export function Table<T extends Record<string, unknown>>({
                       },
                     }}
                     onClick={() => {
-                      const direction = sort?.key === column.key && sort.direction === "asc" ? "desc" : "asc";
+                      const direction =
+                        sort?.key === column.key && sort.direction === "asc"
+                          ? "desc"
+                          : "asc";
                       setSort({ key: column.key, direction });
                       column.onClick?.();
                     }}
                   >
                     {column.label}
                   </TableSortLabel>
-                ) : column.label}
+                ) : (
+                  column.label
+                )}
               </TableCell>
             ))}
           </TableRow>
@@ -118,7 +143,11 @@ export function Table<T extends Record<string, unknown>>({
         <TableBody>
           {visibleRows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length + (collapsible ? 1 : 0) + (selectable ? 1 : 0)}>
+              <TableCell
+                colSpan={
+                  columns.length + (collapsible ? 1 : 0) + (selectable ? 1 : 0)
+                }
+              >
                 <Typography color="text.secondary" align="center">
                   Nenhum registro encontrado
                 </Typography>
@@ -128,29 +157,41 @@ export function Table<T extends Record<string, unknown>>({
             visibleRows.map((row, index) => (
               <Fragment key={index}>
                 <TableRow hover key={index}>
-                {collapsible ? (
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      aria-label="Expandir linha"
-                      onClick={() => setExpanded(expanded === index ? null : index)}
-                    >
-                      {expanded === index ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-                    </IconButton>
-                  </TableCell>
-                ) : null}
-                {selectable ? (
-                  <TableCell>
-                    <Checkbox checked={selected.has(index)} onChange={() => toggleSelection(index)} slotProps={{ input: { "aria-label": "Selecionar linha" } }} />
-                  </TableCell>
-                ) : null}
-                {columns.map((column) => (
-                  <TableCell key={column.key} align={column.align}>
-                    {column.render
-                      ? column.render(row[column.key], row)
-                      : String(row[column.key] ?? "")}
-                  </TableCell>
-                ))}
+                  {collapsible ? (
+                    <TableCell>
+                      <IconButton
+                        size="small"
+                        aria-label="Expandir linha"
+                        onClick={() =>
+                          setExpanded(expanded === index ? null : index)
+                        }
+                      >
+                        {expanded === index ? (
+                          <KeyboardArrowUp />
+                        ) : (
+                          <KeyboardArrowDown />
+                        )}
+                      </IconButton>
+                    </TableCell>
+                  ) : null}
+                  {selectable ? (
+                    <TableCell>
+                      <Checkbox
+                        checked={selected.has(index)}
+                        onChange={() => toggleSelection(index)}
+                        slotProps={{
+                          input: { "aria-label": "Selecionar linha" },
+                        }}
+                      />
+                    </TableCell>
+                  ) : null}
+                  {columns.map((column) => (
+                    <TableCell key={column.key} align={column.align}>
+                      {column.render
+                        ? column.render(row[column.key], row)
+                        : String(row[column.key] ?? "")}
+                    </TableCell>
+                  ))}
                 </TableRow>
                 {collapsible ? (
                   <TableRow>
@@ -166,12 +207,7 @@ export function Table<T extends Record<string, unknown>>({
           )}
         </TableBody>
       </MuiTable>
-      {pagination ? (
-        <TablePagination
-          component="div"
-          {...pagination}
-        />
-      ) : null}
+      {pagination ? <TablePagination component="div" {...pagination} /> : null}
     </TableContainer>
   );
 }

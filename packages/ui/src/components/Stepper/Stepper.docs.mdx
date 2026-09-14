@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Stepper.stories";
 
@@ -23,10 +24,19 @@ Indicador de progresso por etapas, horizontal ou vertical, com labels e descriç
 <Description of={Stories.Vertical} />
 <Canvas of={Stories.Vertical} />
 ### Exemplo de aplicação
-```tsx
-import { Stepper } from "@niar/ui";
-export function ProjectSteps() { return <Stepper steps={["Dados", "Revisão", "Envio"]} activeStep={1} />; }
-```
-### Acessibilidade
-- Mantenha a etapa ativa perceptível além da cor.
-- Use descrições curtas e relacionadas a cada etapa.
+<Source
+  dark
+  language="tsx"
+  code={`import { Stepper } from "@niar/ui";
+
+export function ProjectSteps() {
+    return (
+      <Stepper
+        steps={["Dados", "Revisão", "Envio"]}
+        activeStep={1}
+      />
+    );
+}`}
+/>
+### Acessibilidade - Mantenha a etapa ativa perceptível além da cor. - Use
+descrições curtas e relacionadas a cada etapa.

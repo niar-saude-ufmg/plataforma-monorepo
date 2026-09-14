@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./FileUpload.stories";
 
@@ -23,19 +24,20 @@ import * as Stories from "./FileUpload.stories";
 <Description of={Stories.Disabled} />
 <Canvas of={Stories.Disabled} />
 ### Exemplo de aplicação
-```tsx
-import { FileUpload } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { FileUpload } from "@niar/ui";
 export function Documents() {
-  return (
-    <FileUpload
-      accept=".pdf"
-      description="Envie o documento em formato PDF"
-      onChange={(files) => console.log(files)}
-    />
-  );
-}
-```
-### Acessibilidade
-- Mantenha um rótulo acessível para o input.
-- Indique os formatos aceitos no texto da interface.
-- Ofereça remoção individual para cada arquivo selecionado.
+    return (
+      <FileUpload
+        accept=".pdf"
+        description="Envie o documento em formato PDF"
+        onChange={(files) => console.log(files)}
+      />
+    );
+}`}
+/>
+### Acessibilidade - Mantenha um rótulo acessível para o input. - Indique os
+formatos aceitos no texto da interface. - Ofereça remoção individual para cada
+arquivo selecionado.

@@ -3,6 +3,7 @@ import MuiSnackbar, {
 } from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import { forwardRef } from "react";
+import { niar } from "../../tokens/index";
 export type SnackbarProps = Omit<MuiSnackbarProps, "children"> & {
   message: string;
   severity?: "success" | "info" | "warning" | "error";
@@ -16,12 +17,12 @@ export const Snackbar = forwardRef<HTMLDivElement, SnackbarProps>(
           variant="filled"
           sx={{
             backgroundColor: {
-              success: "#176b4d",
-              info: "#1c355e",
-              warning: "#765400",
-              error: "#9b2c2c",
+              success: niar.colors.feedback.success,
+              info: niar.colors.feedback.info,
+              warning: niar.colors.feedback.warning,
+              error: niar.colors.feedback.error,
             }[severity],
-            color: "#fff",
+            color: niar.colors.base.white,
           }}
         >
           {message}

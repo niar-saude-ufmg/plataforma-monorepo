@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Input.stories";
 
@@ -46,14 +47,16 @@ Campo outlined de texto, e-mail ou senha, com altura única e controle de visibi
 
 ### Exemplo de aplicação
 
-```tsx
-import { Input } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Input } from "@niar/ui";
 export function Credentials() {
-  return (
-    <Input label="Senha" type="password" autoComplete="current-password" />
-  );
-}
-```
+    return (
+      <Input label="Senha" type="password" autoComplete="current-password" />
+    );
+}`}
+/>
 
 ### Acessibilidade
 

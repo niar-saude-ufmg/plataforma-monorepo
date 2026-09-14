@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Snackbar.stories";
 
@@ -20,10 +21,20 @@ Mensagem temporária para comunicar o resultado de uma ação.
 <Description of={Stories.Severities} />
 <Canvas of={Stories.Severities} />
 ### Exemplo de aplicação
-```tsx
-import { Snackbar } from "@niar/ui";
-export function Saved() { return <Snackbar open message="Projeto salvo." severity="success" />; }
-```
-### Acessibilidade
-- Use mensagens curtas e claras.
-- Não dependa apenas da cor para comunicar o resultado.
+<Source
+  dark
+  language="tsx"
+  code={`import { Snackbar } from "@niar/ui";
+
+export function Saved() {
+    return (
+      <Snackbar
+        open
+        message="Projeto salvo."
+        severity="success"
+      />
+    );
+}`}
+/>
+### Acessibilidade - Use mensagens curtas e claras. - Não dependa apenas da cor
+para comunicar o resultado.

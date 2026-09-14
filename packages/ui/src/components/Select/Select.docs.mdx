@@ -3,6 +3,7 @@ import {
   Controls,
   Description,
   Meta,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Select.stories";
 
@@ -30,20 +31,22 @@ Seleção simples nativa com estilo outlined e altura consistente com o Input.
 
 ### Exemplo de aplicação
 
-```tsx
-import { Select } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Select } from "@niar/ui";
 export function ProjectType() {
-  return (
-    <Select
-      label="Tipo de projeto"
-      options={[
-        { value: "own", label: "Base própria" },
-        { value: "niar", label: "Base do NIAR" },
-      ]}
-    />
-  );
-}
-```
+    return (
+      <Select
+        label="Tipo de projeto"
+        options={[
+          { value: "own", label: "Base própria" },
+          { value: "niar", label: "Base do NIAR" },
+        ]}
+      />
+    );
+}`}
+/>
 
 ### Acessibilidade
 

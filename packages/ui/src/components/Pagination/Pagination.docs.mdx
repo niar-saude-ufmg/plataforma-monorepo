@@ -3,7 +3,7 @@ import {
   Controls,
   Description,
   Meta,
-  Subtitle,
+  Source,
 } from "@storybook/addon-docs/blocks";
 import * as Stories from "./Pagination.stories";
 
@@ -22,14 +22,16 @@ Componente de navegação entre páginas baseado no `Pagination` do Material UI.
 
 Estrutura das propriedades do Pagination:
 
-```tsx
-type PaginationProps = {
-  count: number;
-  color?: "primary" | "secondary" | "standard";
-  size?: "small" | "medium" | "large";
-  onChange?: (event: React.ChangeEvent<unknown>, page: number) => void;
-};
-```
+<Source
+  dark
+  language="tsx"
+  code={`type PaginationProps = {
+    count: number;
+    color?: "primary" | "secondary" | "standard";
+    size?: "small" | "medium" | "large";
+    onChange?: (event: React.ChangeEvent<unknown>, page: number) => void;
+};`}
+/>
 
 ### Cores
 
@@ -43,20 +45,22 @@ type PaginationProps = {
 
 ### Exemplo de aplicação
 
-```tsx
-import { Pagination } from "@niar/ui";
+<Source
+  dark
+  language="tsx"
+  code={`import { Pagination } from "@niar/ui";
 
 export function ProjectPagination() {
-  return (
-    <Pagination
-      count={10}
-      color="primary"
-      size="medium"
-      onChange={(_, page) => console.log("Página selecionada:", page)}
-    />
-  );
-}
-```
+    return (
+      <Pagination
+        count={10}
+        color="primary"
+        size="medium"
+        onChange={(_, page) => console.log("Página selecionada:", page)}
+      />
+    );
+}`}
+/>
 
 ### Acessibilidade
 

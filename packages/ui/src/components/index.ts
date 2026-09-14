@@ -65,4 +65,7 @@ export type { TableColumn, TableProps } from "./Table/Table";
 export { Pagination } from "./Pagination/Pagination";
 export type { PaginationProps } from "./Pagination/Pagination";
 export { Autocomplete } from "./Autocomplete/Autocomplete";
-export type { AutocompleteOption, AutocompleteProps } from "./Autocomplete/Autocomplete";
+export type {
+  AutocompleteOption,
+  AutocompleteProps,
+} from "./Autocomplete/Autocomplete";
