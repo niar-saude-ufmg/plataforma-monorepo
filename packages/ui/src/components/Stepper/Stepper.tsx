@@ -8,19 +8,17 @@ export type StepperProps = {
   steps: readonly (string | StepOption)[];
   activeStep?: number;
   orientation?: "horizontal" | "vertical";
-  alternativeLabel?: boolean;
 };
 export function Stepper({
   steps,
   activeStep = 0,
   orientation = "horizontal",
-  alternativeLabel = false,
 }: StepperProps) {
   return (
     <MuiStepper
       activeStep={activeStep}
       orientation={orientation}
-      alternativeLabel={orientation === "horizontal" && alternativeLabel}
+      alternativeLabel={false}
     >
       {steps.map((step) => {
         const option = typeof step === "string" ? { label: step } : step;
