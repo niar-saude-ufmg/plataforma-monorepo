@@ -18,6 +18,39 @@ export const buttonTheme: Components<Theme>["MuiButton"] = {
       },
       variants: [
         {
+          props: { color: "inverse", variant: "contained" },
+          style: {
+            backgroundColor: niar.colors.surface.card,
+            border: `${niar.borderWidth.default} solid ${niar.colors.surface.card}`,
+            color: niar.colors.brand.deep,
+            "&:hover": { backgroundColor: niar.colors.base.light },
+          },
+        },
+        {
+          props: { color: "inverse", variant: "outlined" },
+          style: {
+            backgroundColor: "transparent",
+            borderColor: niar.colors.surface.card,
+            color: niar.colors.surface.card,
+            "&:hover": { backgroundColor: alpha(niar.colors.surface.card, 0.12) },
+          },
+        },
+        {
+          props: { color: "inverse", variant: "text" },
+          style: {
+            color: niar.colors.surface.card,
+            "&:hover": { backgroundColor: alpha(niar.colors.surface.card, 0.12) },
+          },
+        },
+        {
+          props: { variant: "inverse" },
+          style: {
+            backgroundColor: niar.colors.surface.card,
+            color: niar.colors.brand.deep,
+            "&:hover": { backgroundColor: niar.colors.base.light },
+          },
+        },
+        {
           props: { color: "primary", variant: "contained" },
           style: {
             backgroundColor: niar.colors.action.primary,

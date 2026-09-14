@@ -24,7 +24,7 @@ const meta = {
     },
     color: {
       control: "select",
-      options: ["primary", "secondary"],
+      options: ["primary", "secondary", "inverse"],
       description: "Define a cor semântica do botão a partir do tema NIAR.",
       table: { category: "PROPS", defaultValue: { summary: "primary" } },
     },
@@ -126,6 +126,38 @@ export const Secondary: Story = {
     <div style={rowStyle}>
       {variants.map((variant) => (
         <Button key={variant} color="secondary" variant={variant}>
+          {variant[0].toUpperCase() + variant.slice(1)}
+        </Button>
+      ))}
+    </div>
+  ),
+};
+
+export const Inverse: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story: "Apresenta as variantes do botão inverse sobre uma superfície escura.",
+      },
+      source: {
+        code: `<Button color="inverse" variant="contained">Contained</Button>
+<Button color="inverse" variant="outlined">Outlined</Button>
+<Button color="inverse" variant="text">Text</Button>`,
+      },
+    },
+  },
+  render: () => (
+    <div
+      style={{
+        ...rowStyle,
+        backgroundColor: niar.colors.brand.deep,
+        padding: niar.spacing.xl,
+      }}
+    >
+      {(["contained", "outlined", "text"] as const).map((variant) => (
+        <Button key={variant} color="inverse" variant={variant}>
           {variant[0].toUpperCase() + variant.slice(1)}
         </Button>
       ))}
