@@ -19,6 +19,7 @@ export type ListingProps<T extends Record<string, unknown>> = {
   "aria-level"?: number;
   description?: ReactNode;
   action?: ReactNode;
+  filter?: ReactNode;
   "aria-label"?: string;
   columns: readonly TableColumn<T>[];
   rows?: readonly T[];
@@ -34,6 +35,7 @@ export function Listing<T extends Record<string, unknown>>({
   "aria-level": ariaLevel = 2,
   description,
   action,
+  filter,
   "aria-label": ariaLabel = "Lista de registros",
   columns,
   rows = [],
@@ -74,6 +76,7 @@ export function Listing<T extends Record<string, unknown>>({
           ) : null}
         </Box>
       )}
+      {filter}
       {loading ? (
         <Box aria-live="polite">
           <Skeleton variant="rounded" lines={5} height={48} />

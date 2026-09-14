@@ -7,7 +7,7 @@ import * as Stories from "./Listing.stories";
 
 Template para listagens que combina `Table` com `Skeleton` durante o carregamento e `EmptyState` quando `rows` está vazio.
 
-O cabeçalho é opcional e pode receber `title`, `description` e `action`, como um botão de cadastro.
+O cabeçalho é opcional e pode receber `title`, `description` e `action`, como um botão de cadastro. O `filter` também é opcional e recebe um componente React, como o template [Filter](?path=/docs/templates-filter--docs).
 
 <Description of={Stories.Playground} />
 <Canvas of={Stories.Playground} />
@@ -20,6 +20,11 @@ O cabeçalho é opcional e pode receber `title`, `description` e `action`, como 
 
 <Description of={Stories.Action} />
 <Canvas of={Stories.Action} />
+
+### Filter
+
+<Description of={Stories.Filtered} />
+<Canvas of={Stories.Filtered} />
 
 `emptyState` aceita `title`, `description`, `icon` e `action` para personalizar o estado vazio. `pagination`, `selectable` e as configurações de sorting são encaminhadas para a `Table`; consulte a [documentação da Table](?path=/docs/componentes-table--docs) para ver todas as propriedades e exemplos.
 

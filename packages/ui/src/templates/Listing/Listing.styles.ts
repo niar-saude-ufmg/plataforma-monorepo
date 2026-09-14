@@ -2,7 +2,7 @@ import { niar } from "../../tokens/index";
 
 export const listingContentStyles = {
   display: "grid",
-  gap: niar.spacing.lg,
+  gap: niar.spacing["2xl"],
   width: "100%",
 };
 

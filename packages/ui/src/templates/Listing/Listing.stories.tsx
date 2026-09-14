@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import Button from "@mui/material/Button";
+import { useState } from "react";
 import { Listing } from "./Listing";
+import { Filter } from "../Filter/Filter";
 
 const columns = [
   { key: "name", label: "Projeto" },
@@ -10,6 +12,20 @@ const rows = [
   { name: "Projeto A", status: "Em análise" },
   { name: "Projeto B", status: "Aprovado" },
 ];
+const filter = (
+  <Filter
+    search={[{ key: "project", label: "Projeto", options: ["Projeto A", "Projeto B"] }]}
+    checkedOptions={[{
+      key: "status",
+      label: "Status",
+      type: "checkbox",
+      options: [
+        { value: "analysis", label: "Em análise" },
+        { value: "approved", label: "Aprovado" },
+      ],
+    }]}
+  />
+);
 
 const meta = {
   title: "Templates/Listing",
@@ -34,6 +50,11 @@ const meta = {
     action: {
       control: false,
       description: "Ação opcional exibida ao lado do título, como cadastrar.",
+      table: { category: "PROPS" },
+    },
+    filter: {
+      control: "object",
+      description: "Componente React opcional exibido acima da listagem.",
       table: { category: "PROPS" },
     },
     loading: {
@@ -92,6 +113,7 @@ export const Playground: Story = {
     description: "Acompanhe os projetos cadastrados na plataforma.",
     columns,
     rows,
+    filter,
   },
   parameters: {
     docs: {
@@ -127,6 +149,74 @@ export const Action: Story = {
     },
   },
 };
+
+export const Filtered: Story = {
+  args: {
+    title: "Projetos",
+    columns,
+    rows,
+    filter,
+  },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: { story: "Listagem com um componente Filter acima da tabela." },
+      source: {
+        code: `<Listing
+  filter={<Filter search={[{ key: "project", label: "Projeto", options: ["Projeto A", "Projeto B"] }]} />}
+  columns={columns}
+  rows={rows}
+/>`,
+      },
+    },
+  },
+  render: () => <FilteredListing />,
+};
+
+function FilteredListing() {
+  const [values, setValues] = useState<Record<string, unknown>>({});
+  const filteredRows = rows.filter((row) => {
+    const project = values.project;
+    const statuses = Array.isArray(values.status) ? values.status : [];
+    return (
+      (!project || row.name === project) &&
+      (statuses.length === 0 || statuses.includes(row.status))
+    );
+  });
+
+  return (
+    <Listing
+      title="Projetos"
+      columns={columns}
+      rows={filteredRows}
+      filter={
+        <Filter
+          search={[
+            {
+              key: "project",
+              label: "Projeto",
+              options: ["Projeto A", "Projeto B"],
+            },
+          ]}
+          checkedOptions={[
+            {
+              key: "status",
+              label: "Status",
+              type: "checkbox",
+              options: [
+                { value: "Em análise", label: "Em análise" },
+                { value: "Aprovado", label: "Aprovado" },
+              ],
+            },
+          ]}
+          values={values}
+          onChange={setValues}
+        />
+      }
+    />
+  );
+}
 
 export const Loading: Story = {
   args: {
