@@ -6,6 +6,7 @@ export const tabTheme: Components<Theme>["MuiTab"] = {
       minWidth: 0,
       paddingLeft: `calc(${niar.spacing.md} / 2)`,
       paddingRight: `calc(${niar.spacing.md} / 2)`,
+      textTransform: "none",
     },
   },
 };

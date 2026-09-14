@@ -3,7 +3,7 @@ import { niar } from "../../tokens/index";
 export const headerAppBarStyles = { width: "100%" };
 export const headerToolbarStyles = {
   borderBottom: `${niar.borderWidth.default} solid ${niar.colors.border}`,
-  minHeight: niar.spacing["4xl"],
+  minHeight: `calc(${niar.spacing["4xl"]} + ${niar.spacing.xs})`,
 };
 export const headerLogoWrapperStyles = {
   alignItems: "center",
@@ -17,6 +17,6 @@ export const headerContentStyles = {
   gap: niar.spacing["2xs"],
 };
 export const headerLogoStyles = {
-  height: niar.spacing.md,
-  width: niar.spacing["4xl"],
+  height: niar.spacing["2xl"],
+  width: "auto",
 };
