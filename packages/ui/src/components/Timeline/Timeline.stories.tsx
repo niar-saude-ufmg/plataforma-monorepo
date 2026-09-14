@@ -1,16 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Timeline } from "./Timeline";
 
-const meta = {
-  title: "Componentes/Timeline",
-  component: Timeline,
-  tags: ["autodocs"],
-  parameters: { docs: { codePanel: true } },
-} satisfies Meta<typeof Timeline>;
-
-export default meta;
-type Story = StoryObj<typeof meta>;
-
 const items = [
   {
     title: "Projeto submetido",
@@ -29,10 +19,62 @@ const items = [
     color: "grey" as const,
   },
 ];
-
-export const Playground: Story = { args: { items } };
+const meta = {
+  title: "Componentes/Timeline",
+  component: Timeline,
+  args: { items },
+  argTypes: {
+    items: {
+      control: "object",
+      description:
+        "Eventos em ordem cronológica com title, description, date e color.",
+      table: { category: "PROPS" },
+    },
+    "aria-label": {
+      control: "text",
+      description: "Nome acessível da linha do tempo.",
+      table: {
+        category: "ACCESSIBILITY",
+        defaultValue: { summary: "Linha do tempo" },
+      },
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "Linha do tempo para exibir o histórico de mudanças de um projeto.",
+      },
+      source: {
+        code: '<Timeline items={[{ title: "Projeto submetido", date: "Hoje, 10:30" }]} />',
+      },
+    },
+  },
+} satisfies Meta<typeof Timeline>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+export const Playground: Story = {
+  parameters: {
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story: "Configure os eventos e suas cores no playground.",
+      },
+    },
+  },
+};
 export const Compact: Story = {
   args: {
     items: items.map(({ title, date, color }) => ({ title, date, color })),
+  },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: { story: "Versão compacta sem descrições nos eventos." },
+      source: {
+        code: '<Timeline items={[{ title: "Projeto submetido", date: "Hoje, 10:30" }, { title: "Em análise", date: "Hoje, 11:15", color: "secondary" }]} />',
+      },
+    },
   },
 };
