@@ -1,6 +1,7 @@
 export { PageHeader } from "./PageHeader/PageHeader";
 export { Details } from "./Details";
 export { Listing } from "./Listing";
+export { Filter } from "./Filter";
 export type {
   PageHeaderNavigation,
   PageHeaderProps,
@@ -11,3 +12,9 @@ export type {
   DetailsTimelineItem,
 } from "./Details";
 export type { ListingProps } from "./Listing";
+export type {
+  FilterCheckedField,
+  FilterProps,
+  FilterSearchField,
+  FilterSelectableField,
+} from "./Filter";

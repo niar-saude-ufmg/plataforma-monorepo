@@ -21,6 +21,11 @@ const meta = {
       description: "Opções com value, label e disabled opcional.",
       table: { category: "PROPS" },
     },
+    row: {
+      control: "boolean",
+      description: "Organiza as opções horizontalmente quando true.",
+      table: { category: "PROPS", defaultValue: { summary: "false" } },
+    },
     defaultValue: {
       control: "text",
       description: "Valor selecionado inicialmente.",
@@ -65,6 +70,20 @@ export const Selected: Story = {
       },
       source: {
         code: '<RadioGroup label="Origem dos dados" defaultValue="own" options={[{ value: "own", label: "Base própria" }, { value: "niar", label: "Base do NIAR" }]} />',
+      },
+    },
+  },
+};
+
+export const Row: Story = {
+  args: { row: true },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: { story: "Apresenta as opções lado a lado." },
+      source: {
+        code: '<RadioGroup row label="Origem dos dados" options={[{ value: "own", label: "Base própria" }, { value: "niar", label: "Base do NIAR" }]} />',
       },
     },
   },
