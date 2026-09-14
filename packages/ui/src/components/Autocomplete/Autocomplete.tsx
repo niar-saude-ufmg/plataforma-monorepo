@@ -5,6 +5,7 @@ import MuiAutocomplete, {
 } from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import type { ReactNode, SyntheticEvent } from "react";
+import { niar } from "../../tokens/index";
 
 export type AutocompleteOption = { label: string; value: string };
 export type AutocompleteValue =
@@ -42,7 +43,17 @@ export function Autocomplete({
       onChange={(event, value, reason, details) =>
         onChange?.(event, value, reason, details)
       }
-      renderInput={(params) => <TextField {...params} label={label} />}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label={label}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: niar.colors.surface.card,
+            },
+          }}
+        />
+      )}
     />
   );
 }

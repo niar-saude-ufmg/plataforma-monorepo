@@ -4,7 +4,11 @@ import { Autocomplete, type AutocompleteOption } from "../../components/Autocomp
 import { Checkbox } from "../../components/Checkbox/Checkbox";
 import { RadioGroup, type RadioGroupOption } from "../../components/RadioGroup/RadioGroup";
 import { Select } from "../../components/Select/Select";
-import { filterFieldsStyles, filterRootStyles } from "./Filter.styles";
+import {
+  filterCheckedStyles,
+  filterFieldsStyles,
+  filterRootStyles,
+} from "./Filter.styles";
 
 export type FilterSearchField = {
   key: string;
@@ -44,9 +48,11 @@ export function Filter({
         {search.map((field) => <Autocomplete key={`search-${field.key}`} label={field.label} options={field.options} multiple={field.multiple} disabled={field.disabled} value={normalizeAutocompleteValue(values[field.key])} onChange={(_, value) => emitChange(values, onChange, field.key, value)} />)}
         {selectableOptions.map((field) => <Select key={`select-${field.key}`} label={field.label} options={field.options} disabled={field.disabled} value={String(values[field.key] ?? "")} onChange={(event: ChangeEvent<HTMLInputElement>) => emitChange(values, onChange, field.key, event.target.value)} />)}
         {checkedOptions.map((field) => field.type === "radio" ? (
-          <RadioGroup key={`radio-${field.key}`} label={field.label} options={field.options} row={field.row} value={String(values[field.key] ?? "")} onChange={(event) => emitChange(values, onChange, field.key, event.target.value)} />
+          <Box sx={filterCheckedStyles} key={`radio-${field.key}`}>
+            <RadioGroup key={`radio-${field.key}`} label={field.label} options={field.options} row={field.row} value={String(values[field.key] ?? "")} onChange={(event) => emitChange(values, onChange, field.key, event.target.value)} />
+          </Box>
         ) : (
-          <Box key={`checkbox-${field.key}`} role="group" aria-label={field.label}>
+          <Box sx={filterCheckedStyles} key={`checkbox-${field.key}`} role="group" aria-label={field.label}>
             {field.options.map((option) => {
               const current = Array.isArray(values[field.key]) ? values[field.key] as string[] : [];
               return <Checkbox key={option.value} label={option.label} checked={current.includes(option.value)} disabled={field.disabled || option.disabled} onChange={(event) => emitChange(values, onChange, field.key, event.target.checked ? [...current, option.value] : current.filter((value) => value !== option.value))} />;

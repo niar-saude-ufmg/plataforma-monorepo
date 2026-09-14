@@ -61,6 +61,16 @@ const niarThemeOptions: ThemeOptions = {
   spacing: Number.parseFloat(niar.spacing.xs),
   shape: { borderRadius: Number.parseFloat(niar.radius.small) },
   components: {
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          backgroundColor: niar.colors.surface.card,
+        },
+        input: {
+          backgroundColor: niar.colors.surface.card,
+        },
+      },
+    },
     MuiButton: buttonTheme,
     MuiOutlinedInput: inputTheme,
     MuiCard: cardTheme,

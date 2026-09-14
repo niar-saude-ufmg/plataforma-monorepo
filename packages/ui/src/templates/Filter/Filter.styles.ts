@@ -6,6 +6,10 @@ export const filterRootStyles = {
 
 export const filterFieldsStyles = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, 280px)",
   gap: niar.spacing.md,
+};
+
+export const filterCheckedStyles = {
+  alignSelf: "center",
 };
