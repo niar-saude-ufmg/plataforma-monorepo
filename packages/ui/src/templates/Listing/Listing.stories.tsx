@@ -226,6 +226,7 @@ export const Loading: Story = {
     columns,
     rows: [],
     action: <Button variant="contained">Cadastrar projeto</Button>,
+    filter,
   },
   parameters: {
     controls: { disable: true },

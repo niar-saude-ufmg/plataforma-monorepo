@@ -76,7 +76,11 @@ export function Listing<T extends Record<string, unknown>>({
           ) : null}
         </Box>
       )}
-      {filter}
+      {loading ? (
+        filter ? <Skeleton variant="rounded" lines={1} height={48} /> : null
+      ) : (
+        filter
+      )}
       {loading ? (
         <Box aria-live="polite">
           <Skeleton variant="rounded" lines={5} height={48} />
