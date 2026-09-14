@@ -1,0 +1,51 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Select.stories";
+
+<Meta of={Stories} />
+
+# Select
+
+Seleção simples nativa com estilo outlined e altura consistente com o Input.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+### Filled
+<Description of={Stories.Filled} />
+<Canvas of={Stories.Filled} />
+### Error
+<Description of={Stories.Error} />
+<Canvas of={Stories.Error} />
+### Disabled
+<Description of={Stories.Disabled} />
+<Canvas of={Stories.Disabled} />
+
+### Exemplo de aplicação
+
+```tsx
+import { Select } from "@niar/ui";
+export function ProjectType() {
+  return (
+    <Select
+      label="Tipo de projeto"
+      options={[
+        { value: "own", label: "Base própria" },
+        { value: "niar", label: "Base do NIAR" },
+      ]}
+    />
+  );
+}
+```
+
+### Acessibilidade
+
+- Use um `label` visível para nomear o campo.
+- Forneça opções com rótulos claros e valores estáveis.
