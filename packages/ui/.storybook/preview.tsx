@@ -14,7 +14,10 @@ const preview: Preview = {
   parameters: {
     layout: 'centered',
     controls: { expanded: true },
-    docs: { source: { state: 'open' } },
+    docs: {
+      canvas: { sourceState: 'shown' },
+      source: { state: 'open' },
+    },
     options: {
       storySort: {
         order: ['Fundamentos', ['Identidade Visual', 'Cores', 'Tokens'], 'Componentes'],

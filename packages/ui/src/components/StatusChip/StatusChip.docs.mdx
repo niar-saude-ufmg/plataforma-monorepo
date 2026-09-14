@@ -1,0 +1,45 @@
+import { Canvas, Controls, Description, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./StatusChip.stories";
+
+<Meta of={Stories} />
+
+# StatusChip
+
+Indicador visual para estados de projetos e etapas do fluxo. Use `display="chip"` para a apresentação com fundo suave e `display="text"` em tabelas compactas.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Display
+
+<Description of={Stories.Display} />
+<Canvas of={Stories.Display} />
+
+### States
+
+<Description of={Stories.States} />
+<Canvas of={Stories.States} />
+
+### Exemplo de aplicação
+
+```tsx
+import { StatusChip } from "@niar/ui";
+
+export function ProjectStatus() {
+  return (
+    <>
+      <StatusChip status="success" label="Aprovado" />
+      <StatusChip status="warning" label="Em análise" display="text" />
+    </>
+  );
+}
+```
+
+### Acessibilidade
+
+- O label deve comunicar o estado sem depender apenas da cor.
+- Use textos curtos e consistentes para facilitar a leitura em tabelas.

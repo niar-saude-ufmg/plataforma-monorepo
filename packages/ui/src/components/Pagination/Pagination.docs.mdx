@@ -1,0 +1,66 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Subtitle,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Pagination.stories";
+
+<Meta of={Stories} />
+
+# Pagination
+
+Componente de navegação entre páginas baseado no `Pagination` do Material UI. Use-o quando a pessoa usuária precisar percorrer resultados divididos em páginas, como listagens de projetos, pesquisas e relatórios.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+Estrutura das propriedades do Pagination:
+
+```tsx
+type PaginationProps = {
+  count: number;
+  color?: "primary" | "secondary" | "standard";
+  size?: "small" | "medium" | "large";
+  onChange?: (event: React.ChangeEvent<unknown>, page: number) => void;
+};
+```
+
+### Cores
+
+<Description of={Stories.Colors} />
+<Canvas of={Stories.Colors} />
+
+### Tamanhos
+
+<Description of={Stories.Sizes} />
+<Canvas of={Stories.Sizes} />
+
+### Exemplo de aplicação
+
+```tsx
+import { Pagination } from "@niar/ui";
+
+export function ProjectPagination() {
+  return (
+    <Pagination
+      count={10}
+      color="primary"
+      size="medium"
+      onChange={(_, page) => console.log("Página selecionada:", page)}
+    />
+  );
+}
+```
+
+### Acessibilidade
+
+- Mantenha a paginação em uma área identificável da página quando houver mais de um conjunto de controles.
+- Use `aria-label` para descrever o conjunto quando o contexto visual não for suficiente.
+- A página atual é anunciada pelo componente do MUI com `aria-current`.
+- Garanta que a ordem de foco siga o fluxo da página e que os itens possam ser acionados pelo teclado.

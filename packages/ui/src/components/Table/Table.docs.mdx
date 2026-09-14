@@ -1,0 +1,107 @@
+import { Canvas, Controls, Description, Meta } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Table.stories";
+
+<Meta of={Stories} />
+
+# Table
+
+Tabela para listagens da plataforma. As colunas aceitam `render` para compor StatusChip, ações, seleção e outros conteúdos React. A paginação usa o `TablePagination` do MUI e o Collapsible pode renderizar uma tabela de detalhes.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+Estrutura do objeto `pagination`:
+
+```tsx
+type TablePaginationConfig = {
+  count: number;
+  page: number;
+  rowsPerPage: number;
+  rowsPerPageOptions?: number[];
+  onPageChange: (event: React.MouseEvent | null, page: number) => void;
+  onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+};
+```
+
+Estrutura de uma coluna:
+
+```tsx
+type TableColumn<T> = {
+  key: keyof T & string;
+  label: React.ReactNode;
+  align?: "left" | "center" | "right" | "justify" | "inherit";
+  sortable?: boolean;
+  onClick?: () => void;
+  render?: (value: T[keyof T], row: T) => React.ReactNode;
+};
+```
+
+### Status
+
+<Description of={Stories.Status} />
+<Canvas of={Stories.Status} />
+
+### Small
+
+<Description of={Stories.Small} />
+<Canvas of={Stories.Small} />
+
+### Actions
+
+<Description of={Stories.Actions} />
+<Canvas of={Stories.Actions} />
+
+### Sorting
+
+<Description of={Stories.Sorting} />
+<Canvas of={Stories.Sorting} />
+
+### Selecting
+
+<Description of={Stories.Selecting} />
+<Canvas of={Stories.Selecting} />
+
+### Pagination
+
+<Description of={Stories.Pagination} />
+<Canvas of={Stories.Pagination} />
+
+### Collapsible
+
+<Description of={Stories.Collapsible} />
+<Canvas of={Stories.Collapsible} />
+
+Estrutura da propriedade `collapsible`:
+
+```tsx
+type Collapsible = (row: Row) => React.ReactNode;
+```
+
+### Exemplo de aplicação
+
+```tsx
+import { Table } from "@niar/ui";
+
+const columns = [
+  { key: "name", label: "Projeto" },
+  { key: "status", label: "Status" },
+];
+
+const rows = [
+  { name: "Projeto A", status: "Em análise" },
+];
+
+export function ProjectTable() {
+  return <Table columns={columns} rows={rows} />;
+}
+```
+
+### Acessibilidade
+
+- Use `aria-label` quando o contexto não identificar a tabela.
+- Mantenha labels descritivos nas colunas.
+- Em ações e seleção, forneça um nome acessível para cada controle.
