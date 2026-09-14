@@ -7,10 +7,22 @@ export const statusChipTheme: Components<Theme>["MuiChip"] = {
       fontFamily: niar.fontFamily,
       fontWeight: niar.fontWeight.medium,
       variants: [
-        { props: { color: 'success' }, style: { backgroundColor: '#176b4d', color: '#fff' } },
-        { props: { color: 'warning' }, style: { backgroundColor: '#765400', color: '#fff' } },
-        { props: { color: 'error' }, style: { backgroundColor: '#9b2c2c', color: '#fff' } },
-        { props: { color: 'info' }, style: { backgroundColor: niar.colors.action.primary, color: '#fff' } },
+        {
+          props: { color: "success" },
+          style: { backgroundColor: "#d9f2e6", color: "#176b4d" },
+        },
+        {
+          props: { color: "warning" },
+          style: { backgroundColor: "#fff1c2", color: "#765400" },
+        },
+        {
+          props: { color: "error" },
+          style: { backgroundColor: "#fde2e2", color: "#9b2c2c" },
+        },
+        {
+          props: { color: "info" },
+          style: { backgroundColor: "#dcecf7", color: niar.colors.action.primary },
+        },
       ],
     },
   },

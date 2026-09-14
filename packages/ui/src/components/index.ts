@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 export { Button } from "./Button/Button";
 export type { ButtonProps } from "./Button/Button";
 export { Input } from "./Input/Input";
@@ -61,7 +60,9 @@ export { ListText } from "./ListText/ListText";
 export type { ListTextItem, ListTextProps } from "./ListText/ListText";
 export { Menu } from "./Menu/Menu";
 export type { MenuGroup, MenuItemOption, MenuProps } from "./Menu/Menu";
-=======
-export { Button } from './Button/Button';
-export type { ButtonProps } from './Button/Button';
->>>>>>> 5ddaf0d (Build initial platform administration flow)
+export { Table } from "./Table/Table";
+export type { TableColumn, TableProps } from "./Table/Table";
+export { Pagination } from "./Pagination/Pagination";
+export type { PaginationProps } from "./Pagination/Pagination";
+export { Autocomplete } from "./Autocomplete/Autocomplete";
+export type { AutocompleteOption, AutocompleteProps } from "./Autocomplete/Autocomplete";

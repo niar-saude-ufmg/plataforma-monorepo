@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { createTheme, type ThemeOptions } from "@mui/material/styles";
 import { deepmerge } from "@mui/utils";
 import { inputTheme } from "../components/Input/Input.theme";
@@ -21,6 +20,9 @@ import { sidebarTheme } from "../components/Sidebar/Sidebar.theme";
 import { breadcrumbsTheme } from "../components/Breadcrumbs/Breadcrumbs.theme";
 import { avatarTheme } from "../components/Avatar/Avatar.theme";
 import { menuTheme } from "../components/Menu/Menu.theme";
+import { tableTheme } from "../components/Table/Table.theme";
+import { paginationTheme } from "../components/Pagination/Pagination.theme";
+import { autocompleteTheme } from "../components/Autocomplete/Autocomplete.theme";
 
 const niarThemeOptions: ThemeOptions = {
   palette: {
@@ -40,19 +42,6 @@ const niarThemeOptions: ThemeOptions = {
       primary: niar.colors.text.body,
       secondary: niar.colors.text.subtitle,
     },
-=======
-import { createTheme, type ThemeOptions } from '@mui/material/styles';
-import { deepmerge } from '@mui/utils';
-import { buttonTheme } from '../components/Button/Button.theme';
-import { niar } from '../tokens/index';
-
-const niarThemeOptions: ThemeOptions = {
-  palette: {
-    primary: { main: niar.colors.action.primary, contrastText: niar.colors.action.onPrimary },
-    secondary: { main: niar.colors.action.secondary, contrastText: niar.colors.action.onSecondary },
-    background: { default: niar.colors.surface.page, paper: niar.colors.surface.card },
-    text: { primary: niar.colors.text.body, secondary: niar.colors.text.subtitle },
->>>>>>> 5ddaf0d (Build initial platform administration flow)
     divider: niar.colors.border,
   },
   typography: {
@@ -62,14 +51,10 @@ const niarThemeOptions: ThemeOptions = {
     fontWeightBold: niar.fontWeight.bold,
     body1: { color: niar.colors.text.body, fontSize: niar.fontSize.body },
     body2: { color: niar.colors.text.body, fontSize: niar.fontSize.caption },
-<<<<<<< HEAD
     subtitle1: {
       color: niar.colors.text.subtitle,
       fontSize: niar.fontSize.subtitle,
     },
-=======
-    subtitle1: { color: niar.colors.text.subtitle, fontSize: niar.fontSize.subtitle },
->>>>>>> 5ddaf0d (Build initial platform administration flow)
     h1: { color: niar.colors.text.heading, fontSize: niar.fontSize.heading },
     h2: { color: niar.colors.text.heading, fontSize: niar.fontSize.title },
   },
@@ -77,7 +62,6 @@ const niarThemeOptions: ThemeOptions = {
   shape: { borderRadius: Number.parseFloat(niar.radius.small) },
   components: {
     MuiButton: buttonTheme,
-<<<<<<< HEAD
     MuiOutlinedInput: inputTheme,
     MuiCard: cardTheme,
     MuiAlert: alertTheme,
@@ -96,8 +80,9 @@ const niarThemeOptions: ThemeOptions = {
     MuiBreadcrumbs: breadcrumbsTheme,
     MuiAvatar: avatarTheme,
     MuiMenu: menuTheme,
-=======
->>>>>>> 5ddaf0d (Build initial platform administration flow)
+    MuiTable: tableTheme,
+    MuiPagination: paginationTheme,
+    MuiAutocomplete: autocompleteTheme,
   },
 };
 

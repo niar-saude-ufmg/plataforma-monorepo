@@ -10,11 +10,27 @@ const meta = {
       control: "select",
       options: ["default", "info", "success", "warning", "error"],
     },
+    display: {
+      control: "select",
+      options: ["chip", "text"],
+    },
   },
 } satisfies Meta<typeof StatusChip>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Playground: Story = {};
+export const Display: Story = {
+  render: () => (
+    <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+      <StatusChip status="success" label="Chip" display="chip" />
+      <StatusChip status="success" label="Texto" display="text" />
+    </div>
+  ),
+  parameters: {
+    controls: { disable: true },
+    docs: { description: { story: "Compare a apresentação com fundo e a versão somente texto." } },
+  },
+};
 export const States: Story = {
   render: () => (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
