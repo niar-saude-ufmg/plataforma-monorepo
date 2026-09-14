@@ -1,0 +1,56 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Button.stories";
+
+<Meta of={Stories} />
+
+# Button
+
+Botão MUI configurado pelo NiarProvider, com estilos e variantes definidos junto ao componente.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Primary
+
+<Description of={Stories.Primary} />
+<Canvas of={Stories.Primary} />
+
+### Secondary
+
+<Description of={Stories.Secondary} />
+<Canvas of={Stories.Secondary} />
+
+### Sizes
+
+<Description of={Stories.Sizes} />
+<Canvas of={Stories.Sizes} />
+
+### Disabled
+
+<Description of={Stories.Disabled} />
+<Canvas of={Stories.Disabled} />
+
+### Exemplo de aplicação
+
+```tsx
+import { Button } from "@niar/ui";
+
+export function ContinueButton() {
+  return <Button onClick={() => console.log("continuar")}>Continuar</Button>;
+}
+```
+
+### Acessibilidade
+
+- Use um rótulo que descreva a ação e mantenha o texto visível.
+- Preserve o foco visível ao navegar pelo teclado.
+- Use `disabled` somente quando a ação realmente não puder ser executada.
