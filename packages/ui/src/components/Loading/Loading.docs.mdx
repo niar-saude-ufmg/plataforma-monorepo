@@ -1,0 +1,45 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Loading.stories";
+
+<Meta of={Stories} />
+
+# Loading
+
+Indicador visual de carregamento circular ou linear, sem texto embutido.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Circular
+
+<Description of={Stories.Circular} />
+<Canvas of={Stories.Circular} />
+### Linear
+<Description of={Stories.Linear} />
+<Canvas of={Stories.Linear} />
+### LinearDeterminate
+<Description of={Stories.LinearDeterminate} />
+<Canvas of={Stories.LinearDeterminate} />
+
+### Exemplo de aplicação
+
+```tsx
+import { Loading } from "@niar/ui";
+export function Progress() {
+  return <Loading variant="linear" value={60} />;
+}
+```
+
+### Acessibilidade
+
+- O indicador possui `aria-label="Carregando"` por padrão e permite personalização.
+- Use progresso determinado quando o percentual for conhecido.
