@@ -4,7 +4,13 @@ import { Menu } from "./Menu";
 const meta = {
   title: "Componentes/Menu",
   component: Menu,
-  tags: ["autodocs"],
+  argTypes: {
+    groups: {
+      control: "object",
+      description: "Grupos com label e itens de ação ou navegação.",
+      table: { category: "PROPS" },
+    },
+  },
   parameters: { docs: { codePanel: true } },
 } satisfies Meta<typeof Menu>;
 
