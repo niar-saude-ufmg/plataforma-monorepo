@@ -105,3 +105,38 @@ export const WithoutIcons: Story = {
     },
   },
 };
+
+export const NestedItems: Story = {
+  args: {
+    variant: "permanent",
+    items: [
+      {
+        label: "Projetos",
+        icon: <Icon name="folder" />,
+        selected: true,
+        children: [
+          { label: "Em análise", selected: true },
+          { label: "Aprovados" },
+        ],
+      },
+      {
+        label: "Documentos",
+        icon: <Icon name="description" />,
+        children: [{ label: "Recentes" }, { label: "Arquivados" }],
+      },
+    ],
+  },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story:
+          "Navegação hierárquica com itens pais expansíveis e subitens selecionáveis.",
+      },
+      source: {
+        code: '<Sidebar variant="permanent" items={[{ label: "Projetos", children: [{ label: "Em análise" }, { label: "Aprovados" }] }]} />',
+      },
+    },
+  },
+};

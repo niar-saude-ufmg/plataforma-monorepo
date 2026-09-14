@@ -18,6 +18,16 @@ const meta = {
         "Texto alternativo do logo exibido para tecnologias assistivas.",
       table: { category: "PROPS", defaultValue: { summary: "NIAR" } },
     },
+    logoHref: {
+      control: "text",
+      description: "Destino do link acionado ao clicar no logo.",
+      table: { category: "PROPS", defaultValue: { summary: "/" } },
+    },
+    onLogoClick: {
+      action: "logo clicked",
+      description: "Evento executado quando o logo é acionado.",
+      table: { category: "EVENTS" },
+    },
     children: {
       description:
         "Conteúdo do cabeçalho, como navegação, ações ou identificação da pessoa usuária.",

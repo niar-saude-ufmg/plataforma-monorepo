@@ -12,6 +12,7 @@ import {
 
 export type MenuItemOption = {
   label: ReactNode;
+  value?: string;
   disabled?: boolean;
   href?: string;
   onClick?: MouseEventHandler<HTMLElement>;

@@ -12,5 +12,9 @@ describe("Header", () => {
     );
     expect(screen.getByAltText("Marca NIAR")).toBeInTheDocument();
     expect(screen.getByText("Navegação")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Marca NIAR" })).toHaveAttribute(
+      "href",
+      "/",
+    );
   });
 });
