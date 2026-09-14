@@ -11,6 +11,8 @@ import {
   listingContentStyles,
   listingDescriptionSkeletonStyles,
   listingHeaderStyles,
+  listingDescriptionStyles,
+  listingTitleStyles,
 } from "./Listing.styles";
 
 export type ListingProps<T extends Record<string, unknown>> = {
@@ -32,7 +34,7 @@ export type ListingProps<T extends Record<string, unknown>> = {
 export function Listing<T extends Record<string, unknown>>({
   loading = false,
   title,
-  "aria-level": ariaLevel = 2,
+  "aria-level": ariaLevel = 1,
   description,
   action,
   filter,
@@ -54,7 +56,8 @@ export function Listing<T extends Record<string, unknown>>({
                 component="div"
                 role="heading"
                 aria-level={ariaLevel}
-                variant="h2"
+                sx={listingTitleStyles}
+                variant="h1"
               >
                 {title}
               </Typography>
@@ -64,7 +67,7 @@ export function Listing<T extends Record<string, unknown>>({
                 <Skeleton variant="text" lines={1} height={20} width="100%" />
               </Box>
             ) : description && rows.length > 0 ? (
-              <Typography color="text.secondary">{description}</Typography>
+              <Typography sx={listingDescriptionStyles}>{description}</Typography>
             ) : null}
           </Box>
           {loading ? (
