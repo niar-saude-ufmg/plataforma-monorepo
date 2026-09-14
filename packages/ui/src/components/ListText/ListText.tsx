@@ -26,7 +26,12 @@ export function ListText({
   return (
     <List aria-label="Detalhes" disablePadding>
       {items.map((item, index) => (
-        <ListItem key={index} divider={dividers} disableGutters dense={dense}>
+        <ListItem
+          key={index}
+          divider={dividers && index < items.length - 1}
+          disableGutters
+          dense={dense}
+        >
           <Box
             sx={{
               ...listTextLayoutStyles,

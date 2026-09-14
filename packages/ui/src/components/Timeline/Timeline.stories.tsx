@@ -78,3 +78,35 @@ export const Compact: Story = {
     },
   },
 };
+
+export const Colors: Story = {
+  args: {
+    items: [
+      { title: "Primary", color: "primary" },
+      { title: "Secondary", color: "secondary" },
+      { title: "Success", color: "success" },
+      { title: "Warning", color: "warning" },
+      { title: "Error", color: "error" },
+      { title: "Grey", color: "grey" },
+    ],
+  },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story: "Apresenta as cores disponíveis para os marcadores dos eventos.",
+      },
+      source: {
+        code: `<Timeline
+  items={[
+    { title: "Primary", color: "primary" },
+    { title: "Success", color: "success" },
+    { title: "Warning", color: "warning" },
+    { title: "Error", color: "error" },
+  ]}
+/>`,
+      },
+    },
+  },
+};
