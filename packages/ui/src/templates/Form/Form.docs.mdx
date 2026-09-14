@@ -1,0 +1,29 @@
+import { Canvas, Controls, Description, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Form.stories";
+
+<Meta of={Stories} />
+
+# Form
+
+Template que exibe título e descrição fora de um `Card` e recebe o formulário completo como `children`.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Exemplo de aplicação
+
+<Source dark language="tsx" code={`import { Button, Form, Input } from "@niar/ui";
+
+<Form title="Novo projeto" description="Preencha os dados do projeto.">
+  <Input label="Nome do projeto" />
+  <Button variant="contained">Cadastrar</Button>
+</Form>`} />
+
+### Acessibilidade
+
+- Use `aria-level` para encaixar o título na hierarquia da página.
+- Mantenha labels visíveis nos campos do formulário.

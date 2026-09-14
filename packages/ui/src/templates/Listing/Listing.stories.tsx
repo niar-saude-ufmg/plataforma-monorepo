@@ -40,7 +40,7 @@ const meta = {
     "aria-level": {
       control: "number",
       description: "Nível semântico do título da listagem.",
-      table: { category: "ACCESSIBILITY", defaultValue: { summary: "2" } },
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "1" } },
     },
     description: {
       control: "text",
@@ -113,7 +113,6 @@ export const Playground: Story = {
     description: "Acompanhe os projetos cadastrados na plataforma.",
     columns,
     rows,
-    filter,
   },
   parameters: {
     docs: {

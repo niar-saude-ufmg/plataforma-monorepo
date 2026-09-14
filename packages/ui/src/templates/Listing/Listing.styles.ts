@@ -21,3 +21,11 @@ export const listingActionSkeletonStyles = {
 export const listingDescriptionSkeletonStyles = {
   width: "min(22rem, 60vw)",
 };
+
+export const listingTitleStyles = {
+  fontWeight: niar.fontWeight.bold,
+};
+
+export const listingDescriptionStyles = {
+  color: niar.colors.text.body,
+};

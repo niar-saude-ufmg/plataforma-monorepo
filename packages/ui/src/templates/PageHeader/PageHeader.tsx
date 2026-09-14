@@ -38,7 +38,7 @@ export function PageHeader({
   logoAlt = "NIAR",
   logoHref = "/",
   onLogoClick,
-  navigation = "sidebar",
+  navigation = "tabs",
   sidebarItems = [],
   menuGroups = [],
   tabs,
