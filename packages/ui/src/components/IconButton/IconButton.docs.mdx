@@ -1,0 +1,39 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./IconButton.stories";
+
+<Meta of={Stories} />
+
+# IconButton
+
+Botão compacto que usa um ícone para representar uma ação.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Actions
+
+<Description of={Stories.Actions} />
+<Canvas of={Stories.Actions} />
+
+### Exemplo de aplicação
+
+```tsx
+import { IconButton } from "@niar/ui";
+export function CloseAction() {
+  return <IconButton name="close" aria-label="Fechar" />;
+}
+```
+
+### Acessibilidade
+
+- Sempre forneça `aria-label` descrevendo a ação.
+- Não use apenas o nome visual do ícone como alternativa acessível.
