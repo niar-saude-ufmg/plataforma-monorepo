@@ -1,0 +1,38 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Skeleton.stories";
+
+<Meta of={Stories} />
+
+# Skeleton
+
+Placeholder visual para preservar o layout enquanto o conteúdo é carregado.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Props
+<Controls of={Stories.Playground} sort="alpha" />
+### Text
+<Description of={Stories.Text} />
+<Canvas of={Stories.Text} />
+### Rectangular
+<Description of={Stories.Rectangular} />
+<Canvas of={Stories.Rectangular} />
+### Rounded
+<Description of={Stories.Rounded} />
+<Canvas of={Stories.Rounded} />
+### Circular
+<Description of={Stories.Circular} />
+<Canvas of={Stories.Circular} />
+### Exemplo de aplicação
+```tsx
+import { Skeleton } from "@niar/ui";
+export function LoadingContent() { return <Skeleton variant="text" lines={3} />; }
+```
+### Acessibilidade
+- Use enquanto o conteúdo real ainda está carregando.
+- Preserve o mesmo espaço ocupado pelo conteúdo esperado.
