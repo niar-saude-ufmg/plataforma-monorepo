@@ -4,6 +4,8 @@ export { Listing } from "./Listing";
 export { Filter } from "./Filter";
 export { Form } from "./Form";
 export { Footer } from "./Footer";
+export { PageContainer } from "./PageContainer";
+export { PageIntro } from "./PageIntro";
 export type {
   PageHeaderNavigation,
   PageHeaderProps,
@@ -22,3 +24,5 @@ export type {
 } from "./Filter";
 export type { FormProps } from "./Form";
 export type { FooterProps } from "./Footer";
+export type { PageContainerProps } from "./PageContainer";
+export type { PageIntroProps } from "./PageIntro";

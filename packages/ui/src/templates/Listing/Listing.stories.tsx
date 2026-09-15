@@ -60,7 +60,7 @@ const meta = {
     loading: {
       control: "boolean",
       description: "Exibe Skeleton enquanto os dados estão sendo carregados.",
-      table: { category: "PROPS", defaultValue: { summary: "false" } },
+      table: { category: "PROPS", defaultValue: { summary: "filter-dependent" } },
     },
     "aria-label": {
       control: "text",
@@ -94,6 +94,11 @@ const meta = {
       action: "selection changed",
       description: "Evento disparado com as linhas selecionadas.",
       table: { category: "EVENTS" },
+    },
+    tableBorder: {
+      control: "boolean",
+      description: "Define se a Table terá contorno próprio dentro do Card.",
+      table: { category: "PROPS", defaultValue: { summary: "false" } },
     },
     emptyState: {
       control: "object",

@@ -20,6 +20,7 @@ import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
 import Collapse from "@mui/material/Collapse";
 import Box from "@mui/material/Box";
+import { niar } from "../../tokens/index";
 
 export type TableColumn<T> = {
   key: keyof T & string;
@@ -32,7 +33,7 @@ export type TableColumn<T> = {
 
 export type TableProps<T extends Record<string, unknown>> = Omit<
   MuiTableProps,
-  "children" | "padding" | "stickyHeader"
+  "children" | "padding" | "stickyHeader" | "border"
 > & {
   columns: readonly TableColumn<T>[];
   rows: readonly T[];
@@ -40,6 +41,7 @@ export type TableProps<T extends Record<string, unknown>> = Omit<
   selectable?: boolean;
   onSelectionChange?: (rows: readonly T[]) => void;
   pagination?: Omit<TablePaginationProps, "component">;
+  border?: boolean;
 };
 
 export function Table<T extends Record<string, unknown>>({
@@ -49,6 +51,7 @@ export function Table<T extends Record<string, unknown>>({
   selectable = false,
   onSelectionChange,
   pagination,
+  border = true,
   ...tableProps
 }: TableProps<T>) {
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -84,9 +87,15 @@ export function Table<T extends Record<string, unknown>>({
     });
   };
   return (
-    <TableContainer component={Paper} elevation={0} variant="outlined">
-      <MuiTable {...tableProps}>
-        <TableHead>
+    <TableContainer component={Paper} elevation={0} variant={border ? "outlined" : undefined} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+      <MuiTable
+        {...tableProps}
+        sx={{
+          "& .MuiTableBody-root tr:last-child td": { borderBottom: 0 },
+          ...tableProps.sx,
+        }}
+      >
+        <TableHead sx={{ "& .MuiTableCell-head": { fontWeight: niar.fontWeight.semibold } }}>
           <TableRow>
             {collapsible ? <TableCell>Ações</TableCell> : null}
             {selectable ? (

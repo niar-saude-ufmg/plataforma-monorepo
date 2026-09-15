@@ -1,13 +1,16 @@
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import type { TablePaginationProps } from "@mui/material/TablePagination";
 import type { TableColumn, TableProps } from "../../components/Table/Table";
 import { EmptyState, type EmptyStateProps } from "../../components/EmptyState/EmptyState";
 import { Skeleton } from "../../components/Skeleton/Skeleton";
 import { Table } from "../../components/Table/Table";
+import { Card } from "../../components/Card/Card";
+import { niar } from "../../tokens/index";
+import { PageIntro } from "../PageIntro/PageIntro";
 import {
   listingActionSkeletonStyles,
+  listingCardStyles,
   listingContentStyles,
   listingDescriptionSkeletonStyles,
   listingHeaderStyles,
@@ -29,6 +32,7 @@ export type ListingProps<T extends Record<string, unknown>> = {
   emptyState?: Partial<EmptyStateProps>;
   selectable?: TableProps<T>["selectable"];
   onSelectionChange?: TableProps<T>["onSelectionChange"];
+  tableBorder?: boolean;
 };
 
 export function Listing<T extends Record<string, unknown>>({
@@ -45,31 +49,13 @@ export function Listing<T extends Record<string, unknown>>({
   emptyState,
   selectable,
   onSelectionChange,
+  tableBorder,
 }: ListingProps<T>) {
   return (
     <Box sx={listingContentStyles}>
       {(title || description || action) && (
         <Box sx={listingHeaderStyles}>
-          <Box>
-            {title && (
-              <Typography
-                component="div"
-                role="heading"
-                aria-level={ariaLevel}
-                sx={listingTitleStyles}
-                variant="h1"
-              >
-                {title}
-              </Typography>
-            )}
-            {description && loading ? (
-              <Box sx={listingDescriptionSkeletonStyles}>
-                <Skeleton variant="text" lines={1} height={20} width="100%" />
-              </Box>
-            ) : description && rows.length > 0 ? (
-              <Typography sx={listingDescriptionStyles}>{description}</Typography>
-            ) : null}
-          </Box>
+          <Box>{title && <PageIntro title={title} description={rows.length > 0 ? description : undefined} loading={loading} aria-level={ariaLevel} />}</Box>
           {loading ? (
             <Box sx={listingActionSkeletonStyles}>
               <Skeleton variant="rounded" lines={1} height={40} width="100%" />
@@ -79,16 +65,7 @@ export function Listing<T extends Record<string, unknown>>({
           ) : null}
         </Box>
       )}
-      {loading ? (
-        filter ? <Skeleton variant="rounded" lines={1} height={48} /> : null
-      ) : (
-        filter
-      )}
-      {loading ? (
-        <Box aria-live="polite">
-          <Skeleton variant="rounded" lines={5} height={48} />
-        </Box>
-      ) : rows.length === 0 ? (
+      {rows.length === 0 && !loading ? (
         <Box role="status" aria-label="Lista de registros vazia">
           <EmptyState
             title="Nenhum registro encontrado"
@@ -98,14 +75,12 @@ export function Listing<T extends Record<string, unknown>>({
           />
         </Box>
       ) : (
-        <Table
-          columns={columns}
-          rows={rows}
-          aria-label={ariaLabel}
-          pagination={pagination}
-          selectable={selectable}
-          onSelectionChange={onSelectionChange}
-        />
+        <Card variant="outlined" sx={listingCardStyles}>
+          <Box sx={{ display: "grid", gap: niar.spacing["2xl"] }}>
+            {loading ? filter ? <Skeleton variant="rounded" lines={1} height={48} /> : null : filter}
+            {loading ? <Box aria-live="polite"><Skeleton variant="rounded" lines={5} height={48} /></Box> : <Table columns={columns} rows={rows} aria-label={ariaLabel} pagination={pagination} selectable={selectable} onSelectionChange={onSelectionChange} border={tableBorder ?? Boolean(filter)} />}
+          </Box>
+        </Card>
       )}
     </Box>
   );
