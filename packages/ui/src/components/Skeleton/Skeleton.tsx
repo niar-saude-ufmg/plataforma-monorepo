@@ -6,6 +6,7 @@ export type SkeletonProps = {
   lines?: number;
   height?: number;
   width?: number | string;
+  "aria-label"?: string;
 };
 
 export function Skeleton({
@@ -13,12 +14,13 @@ export function Skeleton({
   lines = 3,
   height = 20,
   width = "100%",
+  "aria-label": ariaLabel = "Carregando conteúdo",
 }: SkeletonProps) {
   return (
     <Box
       sx={{ display: "grid", gap: 1, width: "100%" }}
       role="status"
-      aria-label="Carregando conteúdo"
+      aria-label={ariaLabel}
       aria-busy="true"
     >
       {Array.from({ length: lines }, (_, index) => (

@@ -15,10 +15,11 @@ const defaultInstitutionalTabs = [
 
 export type PageContainerProps = {
   children?: ReactNode | ((state: { activeTab: string }) => ReactNode);
+  tabs?: PageHeaderProps["tabs"];
 };
 
-export function PageContainer({ children }: PageContainerProps) {
-  const [activeTab, setActiveTab] = useState<string>(defaultInstitutionalTabs[0].value);
+export function PageContainer({ children, tabs = defaultInstitutionalTabs }: PageContainerProps) {
+  const [activeTab, setActiveTab] = useState<string>(tabs[0]?.value ?? "");
   const [headerVisible, setHeaderVisible] = useState(true);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export function PageContainer({ children }: PageContainerProps) {
   }, []);
   const defaultHeaderProps: PageHeaderProps = {
     navigation: "tabs",
-    tabs: defaultInstitutionalTabs,
+    tabs,
   };
 
   return (

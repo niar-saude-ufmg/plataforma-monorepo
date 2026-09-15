@@ -15,6 +15,9 @@ export type FileUploadProps = {
   disabled?: boolean;
   onChange?: (files: File[]) => void;
   onRemove?: (file: File) => void;
+  "aria-label"?: string;
+  selectedFilesLabel?: string;
+  removeFileLabel?: (fileName: string) => string;
 };
 
 export function FileUpload({
@@ -25,6 +28,9 @@ export function FileUpload({
   disabled = false,
   onChange,
   onRemove,
+  "aria-label": ariaLabel = "Área para enviar arquivos",
+  selectedFilesLabel = "Arquivos selecionados",
+  removeFileLabel = (fileName) => `Remover ${fileName}`,
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -70,7 +76,7 @@ export function FileUpload({
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           role="region"
-          aria-label="Área para enviar arquivos"
+          aria-label={ariaLabel}
         >
           <UploadFile color="primary" fontSize="large" aria-hidden="true" />
           <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
@@ -97,7 +103,7 @@ export function FileUpload({
         {files.length > 0 && (
           <Box
             component="ul"
-            aria-label="Arquivos selecionados"
+            aria-label={selectedFilesLabel}
             sx={{ listStyle: "none", m: 0, mt: 1, p: 0 }}
           >
             {files.map((file) => (
@@ -126,7 +132,7 @@ export function FileUpload({
                 </Box>
                 <IconButton
                   size="small"
-                  aria-label={`Remover ${file.name}`}
+                  aria-label={removeFileLabel(file.name)}
                   onClick={() => {
                     const remaining = files.filter((item) => item !== file);
                     setFiles(remaining);

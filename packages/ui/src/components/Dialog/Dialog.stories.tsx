@@ -31,6 +31,16 @@ const meta = {
       description: "Largura mínima do painel do dialog.",
       table: { category: "PROPS", defaultValue: { summary: "360" } },
     },
+    closeLabel: {
+      control: "text",
+      description: "Texto acessível do botão que fecha o dialog.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "Fechar" } },
+    },
+    "aria-label": {
+      control: "text",
+      description: "Nome acessível do dialog para tecnologias assistivas.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "Dialog" } },
+    },
     onClose: {
       action: "closed",
       description: "Callback executado ao fechar o dialog.",

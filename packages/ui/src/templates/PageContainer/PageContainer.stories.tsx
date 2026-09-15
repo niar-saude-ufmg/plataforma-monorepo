@@ -15,6 +15,7 @@ const meta = {
   parameters: { layout: "fullscreen", docs: { codePanel: true } },
   argTypes: {
     children: { control: false, description: "Conteúdo da rota renderizado na área principal.", table: { category: "PROPS" } },
+    tabs: { control: "object", description: "Abas exibidas no cabeçalho institucional, com value e label.", table: { category: "PROPS" } },
   },
 } satisfies Meta<typeof PageContainer>;
 

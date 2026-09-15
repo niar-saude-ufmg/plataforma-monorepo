@@ -13,6 +13,8 @@ export type DialogProps = {
   showCloseButton?: boolean;
   actions?: ReactNode;
   minWidth?: number | string;
+  closeLabel?: string;
+  "aria-label"?: string;
 };
 export function Dialog({
   open,
@@ -22,21 +24,24 @@ export function Dialog({
   showCloseButton = true,
   actions,
   minWidth = 360,
+  closeLabel = "Fechar",
+  "aria-label": ariaLabel = "Dialog",
 }: DialogProps) {
   return (
     <MuiDialog
       open={open}
       onClose={onClose}
+      aria-label={ariaLabel}
       slotProps={{ paper: { sx: { minWidth } } }}
     >
       {(title || showCloseButton) && (
         <DialogTitle
           sx={{ position: "relative", pr: showCloseButton ? 7 : undefined }}
         >
-          {title || <span className="visually-hidden">Dialog</span>}
+          {title || <span className="visually-hidden">{ariaLabel}</span>}
           {showCloseButton && (
             <IconButton
-              aria-label="Fechar"
+              aria-label={closeLabel}
               onClick={onClose}
               sx={{ position: "absolute", right: 12, top: 12 }}
             >

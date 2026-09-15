@@ -27,6 +27,11 @@ const meta = {
       description: "Largura dos placeholders.",
       table: { category: "PROPS", defaultValue: { summary: "100%" } },
     },
+    "aria-label": {
+      control: "text",
+      description: "Nome acessível do estado de carregamento.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "Carregando conteúdo" } },
+    },
   },
   decorators: [
     (Story) => (

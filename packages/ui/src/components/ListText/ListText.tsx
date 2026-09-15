@@ -15,6 +15,7 @@ export type ListTextProps = {
   dense?: boolean;
   dividers?: boolean;
   layout?: "stacked" | "inline";
+  "aria-label"?: string;
 };
 
 export function ListText({
@@ -22,9 +23,10 @@ export function ListText({
   dense = false,
   dividers = false,
   layout = "stacked",
+  "aria-label": ariaLabel = "Detalhes",
 }: ListTextProps) {
   return (
-    <List aria-label="Detalhes" disablePadding>
+    <List aria-label={ariaLabel} disablePadding>
       {items.map((item, index) => (
         <ListItem
           key={index}

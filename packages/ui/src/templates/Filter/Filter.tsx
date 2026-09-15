@@ -37,13 +37,14 @@ export type FilterProps = {
   checkedOptions?: readonly FilterCheckedField[];
   values?: Readonly<Record<string, unknown>>;
   onChange?: (values: Readonly<Record<string, unknown>>) => void;
+  "aria-label"?: string;
 };
 
 export function Filter({
-  search = [], selectableOptions = [], checkedOptions = [], values = {}, onChange,
+  search = [], selectableOptions = [], checkedOptions = [], values = {}, onChange, "aria-label": ariaLabel = "Filtros",
 }: FilterProps) {
   return (
-    <Box component="form" aria-label="Filtros" sx={filterRootStyles}>
+    <Box component="form" aria-label={ariaLabel} sx={filterRootStyles}>
       <Box sx={filterFieldsStyles}>
         {search.map((field) => <Autocomplete key={`search-${field.key}`} label={field.label} options={field.options} multiple={field.multiple} disabled={field.disabled} value={normalizeAutocompleteValue(values[field.key])} onChange={(_, value) => emitChange(values, onChange, field.key, value)} />)}
         {selectableOptions.map((field) => <Select key={`select-${field.key}`} label={field.label} options={field.options} disabled={field.disabled} value={String(values[field.key] ?? "")} onChange={(event: ChangeEvent<HTMLInputElement>) => emitChange(values, onChange, field.key, event.target.value)} />)}
