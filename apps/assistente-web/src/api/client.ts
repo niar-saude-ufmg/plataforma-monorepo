@@ -176,7 +176,7 @@ export const api = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `submissao_projeto_${projectId}.zip`;
+    a.download = `projeto_submetido_${projectId}.docx`;
     a.click();
     URL.revokeObjectURL(url);
   },
