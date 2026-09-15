@@ -1,0 +1,37 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Textarea.stories";
+
+<Meta of={Stories} />
+
+# Textarea
+
+Campo multiline outlined para textos longos.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Props
+<Controls of={Stories.Playground} sort="alpha" />
+### Error
+<Description of={Stories.Error} />
+<Canvas of={Stories.Error} />
+### Disabled
+<Description of={Stories.Disabled} />
+<Canvas of={Stories.Disabled} />
+### Exemplo de aplicação
+<Source
+  dark
+  language="tsx"
+  code={`import { Textarea } from "@niar/ui";
+
+export function DescriptionField() {
+    return <Textarea label="Descrição do projeto" />;
+}`}
+/>
+### Acessibilidade - Use um label visível associado ao campo. - Preserve
+mensagens de erro junto ao campo.

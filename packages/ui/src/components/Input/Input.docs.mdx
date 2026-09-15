@@ -1,0 +1,65 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Input.stories";
+
+<Meta of={Stories} />
+
+# Input
+
+Campo outlined de texto, e-mail ou senha, com altura única e controle de visibilidade da senha.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Email
+
+<Description of={Stories.Email} />
+<Canvas of={Stories.Email} />
+
+### Password
+
+<Description of={Stories.Password} />
+<Canvas of={Stories.Password} />
+
+### Filled
+
+<Description of={Stories.Filled} />
+<Canvas of={Stories.Filled} />
+
+### Error
+
+<Description of={Stories.Error} />
+<Canvas of={Stories.Error} />
+
+### Disabled
+
+<Description of={Stories.Disabled} />
+<Canvas of={Stories.Disabled} />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+  code={`import { Input } from "@niar/ui";
+export function Credentials() {
+    return (
+      <Input label="Senha" type="password" autoComplete="current-password" />
+    );
+}`}
+/>
+
+### Acessibilidade
+
+- Mantenha um `label` visível e associado ao campo.
+- Use `type="email"` e `autoComplete` apropriados para o contexto.
+- O botão de visibilidade da senha possui nome acessível e pode ser acionado pelo teclado.

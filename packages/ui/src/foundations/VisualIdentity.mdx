@@ -1,0 +1,80 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { niar } from '../tokens/index.ts';
+
+<Meta title="Fundamentos/Identidade Visual" />
+
+# Identidade Visual
+
+O NIAR-Saúde une tecnologia avançada e cuidado humano ético. O degradê parte do Azul Profundo, associado ao conhecimento e à solidez, e chega ao Azul Ciano, associado à clareza e à inovação.
+
+## Assinatura principal
+
+<div style={{ padding: `${niar.spacing['2xl']} clamp(${niar.spacing.lg}, 5vw, 56px)`, margin: `${niar.spacing.lg} 0 ${niar.spacing['2xl']}`, border: `1px solid ${niar.colors.border}`, borderRadius: niar.radius.medium, background: niar.colors.surface.card }}>
+  <img src="/niar-logo.png" alt="NIAR-Saúde — Núcleo de Inteligência Artificial Responsável para a Saúde" style={{ display: 'block', width: '100%', maxWidth: 760, margin: '0 auto' }} />
+</div>
+
+A assinatura completa, com o descritivo “Núcleo de Inteligência Artificial Responsável para a Saúde”, é a aplicação prioritária. Use-a sobre branco ou fundos neutros muito claros para preservar a leitura do degradê.
+
+## Tipografia
+
+A família institucional é **Montserrat**, escolhida por sua construção geométrica e legibilidade.
+
+<div style={{ display: 'grid', gap: niar.spacing.sm, margin: `${niar.spacing.lg} 0 ${niar.spacing['2xl']}`, padding: niar.spacing.xl, borderRadius: niar.radius.medium, background: niar.colors.surface.page }}>
+  <div style={{ color: niar.colors.text.heading, fontSize: niar.fontSize.heading, fontWeight: niar.fontWeight.bold }}>NIAR-Saúde lança novo estudo</div>
+  <div style={{ color: niar.colors.text.subtitle, fontSize: niar.fontSize.subtitle, fontWeight: niar.fontWeight.semibold }}>Pesquisa foca na ética dos algoritmos.</div>
+  <div style={{ color: niar.colors.text.body, fontSize: niar.fontSize.body, fontWeight: niar.fontWeight.regular }}>O Núcleo apresentou hoje os resultados da pesquisa.</div>
+</div>
+
+<div className="docs-table-wrapper"><table className="docs-table">
+  <thead><tr><th>Nível</th><th>Peso</th><th>Cor</th></tr></thead>
+  <tbody>
+    <tr><td>Títulos e destaques</td><td>Bold ou Extra Bold</td><td>Azul Profundo</td></tr>
+    <tr><td>Subtítulos</td><td>SemiBold</td><td>Azul Descritivo</td></tr>
+    <tr><td>Texto corrido</td><td>Regular ou Light</td><td>Cinza Chumbo</td></tr>
+  </tbody>
+</table></div>
+
+## Área de proteção
+
+Use a altura da letra “N” do logotipo como medida **X**. Nenhum texto, imagem ou outra marca deve entrar na margem de **1X** ao redor da assinatura.
+
+<div style={{ padding: 28, margin: `${niar.spacing.lg} 0 ${niar.spacing['2xl']}`, border: `2px dashed ${niar.colors.accent.digital}`, borderRadius: niar.radius.medium, background: niar.colors.surface.page, textAlign: 'center' }}>
+  <div style={{ marginBottom: niar.spacing.sm, color: niar.colors.text.subtitle, fontWeight: niar.fontWeight.semibold }}>Área livre de 1X em todos os lados</div>
+  <div style={{ padding: niar.spacing.xl, background: niar.colors.surface.card, borderRadius: niar.radius.small }}>
+    <img src="/niar-logo.png" alt="Exemplo da área de proteção do logotipo NIAR-Saúde" style={{ display: 'block', width: '100%', maxWidth: 560, margin: '0 auto' }} />
+  </div>
+</div>
+
+## Redução mínima
+
+<div className="docs-table-wrapper"><table className="docs-table">
+  <thead><tr><th>Meio</th><th>Largura mínima</th><th>Orientação</th></tr></thead>
+  <tbody>
+    <tr><td>Digital</td><td>150px</td><td>Mantenha a assinatura completa enquanto o descritivo permanecer legível</td></tr>
+    <tr><td>Impresso</td><td>35mm</td><td>Respeite a medida física e a área de proteção</td></tr>
+    <tr><td>Abaixo do mínimo</td><td>Uso excepcional</td><td>Use somente o wordmark NIAR-Saúde, sem o descritivo</td></tr>
+  </tbody>
+</table></div>
+
+## Variações permitidas
+
+<div className="docs-table-wrapper"><table className="docs-table">
+  <thead><tr><th>Variação</th><th>Aplicação</th></tr></thead>
+  <tbody>
+    <tr><td>Principal</td><td>Logotipo com degradê sobre fundo branco ou neutro muito claro</td></tr>
+    <tr><td>Negativa</td><td>Marca integral branca sobre fundo escuro ou fotografia escura</td></tr>
+    <tr><td>Monocromática</td><td>Marca integral em Azul Profundo ou preto quando houver limitação de impressão</td></tr>
+  </tbody>
+</table></div>
+
+## Usos incorretos
+
+- Distorcer, esticar ou comprimir o logotipo.
+- Alterar as cores do degradê ou aplicar cores fora da paleta.
+- Colocar a versão colorida sobre fundos que prejudiquem sua leitura.
+- Quebrar o descritivo em mais de uma linha ou alterar sua fonte.
+- Adicionar sombras, contornos ou efeitos tridimensionais.
+
+<div style={{ marginTop: niar.spacing['2xl'], padding: niar.spacing.lg, borderLeft: `4px solid ${niar.colors.accent.digital}`, background: niar.colors.surface.page }}>
+  Esta página reúne as regras de uso recorrente. <a href="/manual-identidade-visual-niar.pdf" target="_blank" rel="noreferrer">Abrir o Manual de Identidade Visual NIAR-Saúde em PDF</a>.
+</div>

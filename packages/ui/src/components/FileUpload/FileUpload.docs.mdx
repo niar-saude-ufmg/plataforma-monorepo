@@ -1,0 +1,43 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./FileUpload.stories";
+
+<Meta of={Stories} />
+
+# FileUpload
+
+Área para selecionar ou arrastar arquivos, exibindo os arquivos escolhidos e permitindo removê-los.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Props
+<Controls of={Stories.Playground} sort="alpha" />
+### Multiple
+<Description of={Stories.Multiple} />
+<Canvas of={Stories.Multiple} />
+### Disabled
+<Description of={Stories.Disabled} />
+<Canvas of={Stories.Disabled} />
+### Exemplo de aplicação
+<Source
+  dark
+  language="tsx"
+  code={`import { FileUpload } from "@niar/ui";
+export function Documents() {
+    return (
+      <FileUpload
+        accept=".pdf"
+        description="Envie o documento em formato PDF"
+        onChange={(files) => console.log(files)}
+      />
+    );
+}`}
+/>
+### Acessibilidade - Mantenha um rótulo acessível para o input. - Indique os
+formatos aceitos no texto da interface. - Ofereça remoção individual para cada
+arquivo selecionado.

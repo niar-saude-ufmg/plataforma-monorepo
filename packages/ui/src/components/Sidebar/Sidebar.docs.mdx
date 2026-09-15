@@ -1,0 +1,48 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Sidebar.stories";
+
+<Meta of={Stories} />
+
+# Sidebar
+
+Navegação lateral baseada no Drawer do MUI, com suporte a ícones e estados.
+
+<Description of={Stories.WithIcons} />
+<Canvas of={Stories.WithIcons} />
+### Props
+<Controls of={Stories.WithIcons} sort="alpha" />
+### WithoutIcons
+<Description of={Stories.WithoutIcons} />
+<Canvas of={Stories.WithoutIcons} />
+
+### NestedItems
+
+<Description of={Stories.NestedItems} />
+<Canvas of={Stories.NestedItems} />
+### Exemplo de aplicação
+<Source
+  dark
+  language="tsx"
+  code={`import { Sidebar } from "@niar/ui";
+
+export function Navigation() {
+    return (
+      <Sidebar
+        variant="permanent"
+        items={[
+          { label: "Início", selected: true },
+          { label: "Projetos" },
+        ]}
+      />
+    );
+}`}
+/>
+### Acessibilidade - Mantenha um nome acessível para a navegação. - Use
+`selected` para comunicar a página atual. - Forneça rótulos para todos os itens,
+mesmo quando houver ícones.

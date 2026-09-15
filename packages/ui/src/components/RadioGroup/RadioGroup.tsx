@@ -1,0 +1,37 @@
+import MuiRadioGroup, {
+  type RadioGroupProps as MuiRadioGroupProps,
+} from "@mui/material/RadioGroup";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormLabel from "@mui/material/FormLabel";
+import Radio from "@mui/material/Radio";
+import { forwardRef } from "react";
+export type RadioGroupOption = {
+  value: string;
+  label: string;
+  disabled?: boolean;
+};
+export type RadioGroupProps = MuiRadioGroupProps & {
+  label?: string;
+  options: readonly RadioGroupOption[];
+};
+export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
+  function RadioGroup({ label, options, ...props }, ref) {
+    return (
+      <FormControl>
+        <FormLabel>{label}</FormLabel>
+        <MuiRadioGroup ref={ref} {...props}>
+          {options.map((o) => (
+            <FormControlLabel
+              key={o.value}
+              value={o.value}
+              disabled={o.disabled}
+              control={<Radio />}
+              label={o.label}
+            />
+          ))}
+        </MuiRadioGroup>
+      </FormControl>
+    );
+  },
+);

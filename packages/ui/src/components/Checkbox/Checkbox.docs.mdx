@@ -1,0 +1,37 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Checkbox.stories";
+
+<Meta of={Stories} />
+
+# Checkbox
+
+Controle booleano para selecionar ou desmarcar uma opção.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Props
+<Controls of={Stories.Playground} sort="alpha" />
+### Checked
+<Description of={Stories.Checked} />
+<Canvas of={Stories.Checked} />
+### Disabled
+<Description of={Stories.Disabled} />
+<Canvas of={Stories.Disabled} />
+### Exemplo de aplicação
+<Source
+  dark
+  language="tsx"
+  code={`import { Checkbox } from "@niar/ui";
+
+export function Terms() {
+    return <Checkbox label="Aceito os termos de uso" />;
+}`}
+/>
+### Acessibilidade - Sempre associe um rótulo visível ou `aria-label` ao
+controle. - Use `disabled` quando a opção não puder ser alterada.
