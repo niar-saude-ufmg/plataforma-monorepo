@@ -1,0 +1,29 @@
+import { Canvas, Controls, Description, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./PageIntro.stories";
+
+<Meta of={Stories} />
+
+# PageIntro
+
+Bloco reutilizável para título e descrição de páginas, com estado de carregamento opcional.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Loading
+
+<Description of={Stories.Loading} />
+<Canvas of={Stories.Loading} />
+
+### Exemplo de aplicação
+
+<Source dark language="tsx" code={'import { PageIntro } from "@niar/ui";\n\n<PageIntro title="Projetos" description="Acompanhe os projetos cadastrados." />'} />
+
+### Acessibilidade
+
+- O título usa `role="heading"` e respeita o `aria-level` informado.
+- Use níveis coerentes com a hierarquia da página.

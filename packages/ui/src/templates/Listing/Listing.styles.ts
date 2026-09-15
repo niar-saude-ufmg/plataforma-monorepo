@@ -1,8 +1,10 @@
 import { niar } from "../../tokens/index";
 
 export const listingContentStyles = {
+  boxSizing: "border-box",
   display: "grid",
-  gap: niar.spacing["2xl"],
+  gap: niar.spacing.xl,
+  minWidth: 0,
   width: "100%",
 };
 
@@ -28,4 +30,12 @@ export const listingTitleStyles = {
 
 export const listingDescriptionStyles = {
   color: niar.colors.text.body,
+};
+
+export const listingCardStyles = {
+  border: `${niar.borderWidth.default} solid ${niar.colors.border}`,
+  "& .MuiCardContent-root": {
+    padding: niar.spacing["2xl"],
+    "&:last-child": { paddingBottom: niar.spacing["2xl"] },
+  },
 };

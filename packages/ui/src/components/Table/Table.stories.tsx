@@ -11,6 +11,7 @@ import { Table } from "./Table";
 const meta = {
   title: "Componentes/Table",
   component: Table,
+  args: { size: "medium", border: true, selectable: false },
   argTypes: {
     columns: {
       description:
@@ -42,6 +43,16 @@ const meta = {
       description:
         "Função que retorna o conteúdo exibido ao expandir uma linha, inclusive uma segunda Table para detalhes relacionados.",
       table: { category: "PROPS", type: { summary: "(row: T) => ReactNode" } },
+    },
+    selectable: {
+      control: "boolean",
+      description: "Exibe checkboxes para selecionar linhas.",
+      table: { category: "PROPS", defaultValue: { summary: "false" } },
+    },
+    border: {
+      control: "boolean",
+      description: "Define se a tabela terá contorno externo próprio.",
+      table: { category: "PROPS", defaultValue: { summary: "true" } },
     },
   },
   parameters: {
@@ -173,6 +184,23 @@ export const Sizes: Story = {
       description: { story: "Comparação entre os tamanhos Small e Medium." },
     },
   },
+};
+
+export const Borders: Story = {
+  args: { columns: plainColumns, rows },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      description: { story: "Compara a tabela com contorno próprio e a tabela integrada a um Card ou container externo." },
+      source: { code: '<Table columns={columns} rows={rows} border />\n<Table columns={columns} rows={rows} border={false} />' },
+    },
+  },
+  render: () => (
+    <div style={{ display: "grid", gap: 24 }}>
+      <Table columns={plainColumns} rows={rows} border />
+      <Table columns={plainColumns} rows={rows} border={false} />
+    </div>
+  ),
 };
 
 export const Actions: Story = {
