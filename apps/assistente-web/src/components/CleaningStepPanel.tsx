@@ -502,7 +502,7 @@ export function CleaningStepPanel({
                 || session.validation_result?.valid === false
               }
             >
-              {submitting ? 'Preparando pacote…' : 'Submeter para avaliação'}
+              {submitting ? 'Registrando projeto…' : 'Submeter para avaliação'}
             </button>
           </div>
           {submitting && <LoadingPanel message="Montando pacote com projeto e script…" />}
