@@ -3,6 +3,7 @@ export { Details } from "./Details";
 export { Listing } from "./Listing";
 export { Filter } from "./Filter";
 export { Form } from "./Form";
+export { Footer } from "./Footer";
 export type {
   PageHeaderNavigation,
   PageHeaderProps,
@@ -20,3 +21,4 @@ export type {
   FilterSelectableField,
 } from "./Filter";
 export type { FormProps } from "./Form";
+export type { FooterProps } from "./Footer";

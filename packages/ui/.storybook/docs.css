@@ -1,3 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap");
+
+body {
+  font-family: "Montserrat", system-ui, sans-serif;
+}
+
 .docs-table-wrapper {
   margin: 20px 0 32px;
   overflow-x: auto;

@@ -1,0 +1,53 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Footer.stories";
+
+<Meta of={Stories} />
+
+# Footer
+
+Template de rodapé institucional com identidade, navegação, informações e parcerias editáveis.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+O logo oficial branco é renderizado pelo próprio Footer quando `logo` está habilitado.
+`navigation`, `information`, `partners` e `language` recebem conteúdo React para que cada aplicação controle links, textos, imagens e eventos.
+
+- `logo`: habilita o logo oficial e o link para a página definida em `logoHref`.
+- `logoAlt`: define o texto alternativo do logo.
+- `navigation`: recebe o `nav` e os links exibidos na área de navegação.
+- `information`: recebe os dados de contato e localização.
+- `partners`: recebe imagens ou qualquer composição React para realização e parcerias.
+- `language`: recebe os links ou controles de idioma da aplicação.
+- `copyright`: define o texto exibido na faixa inferior.
+
+### Conteúdo de navegação
+
+<Source dark language="tsx" code={'navigation={\n  <nav aria-label="Navegação do rodapé">\n    <Link inverse href="/sobre">Sobre</Link>\n    <Link inverse href="/contato">Contato</Link>\n  </nav>\n}'} />
+
+### Logos de parceiros
+
+<Source dark language="tsx" code={'partners={\n  <div className="partners">\n    <img src="/ufmg.png" alt="UFMG" />\n    <img src="/sus.png" alt="SUS 35 Anos" />\n  </div>\n}'} />
+
+### Seletor de idioma
+
+<Source dark language="tsx" code={'language={\n  <>\n    <Link inverse href="/">PT</Link>\n    <span aria-hidden="true">|</span>\n    <Link inverse href="/en">EN</Link>\n  </>\n}'} />
+
+### Exemplo de aplicação
+
+<Source dark language="tsx" code={'import { Footer, Link } from "@niar/ui";\n\n<Footer\n  logo\n  logoHref="/"\n  navigation={\n    <nav aria-label="Navegação do rodapé">\n      <Link inverse href="/sobre">Sobre</Link>\n    </nav>\n  }\n  information={\n    <>\n      <span>niar@dcc.ufmg.br</span>\n      <span>UFMG · Belo Horizonte</span>\n    </>\n  }\n  partners={<img src="/ufmg.png" alt="UFMG" />}\n/>'} />
+
+### Acessibilidade
+
+- Use um `nav` com `aria-label` para identificar o menu do rodapé.
+- Mantenha links inverse legíveis sobre o fundo escuro.

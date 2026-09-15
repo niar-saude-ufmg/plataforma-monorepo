@@ -79,6 +79,9 @@ export const Playground: Story = {
         story:
           "Use o playground para experimentar as propriedades disponíveis antes de escolher a variante da ação.",
       },
+      source: {
+        code: '<Button variant="contained" color="primary">Continuar</Button>',
+      },
     },
   },
 };
