@@ -45,6 +45,9 @@ const meta = {
       description: "Callback executado ao remover um arquivo.",
       table: { category: "EVENTS" },
     },
+    "aria-label": { control: "text", description: "Nome acessível da área de envio.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Área para enviar arquivos" } } },
+    selectedFilesLabel: { control: "text", description: "Nome acessível da lista de arquivos selecionados.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Arquivos selecionados" } } },
+    removeFileLabel: { control: false, description: "Função que cria o nome acessível da ação de remoção.", table: { category: "ACCESSIBILITY" } },
   },
   parameters: {
     docs: {

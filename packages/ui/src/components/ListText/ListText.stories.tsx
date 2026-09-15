@@ -26,6 +26,11 @@ const meta = {
       description: "Define se label e value ficam empilhados ou lado a lado.",
       table: { category: "PROPS", defaultValue: { summary: "stacked" } },
     },
+    "aria-label": {
+      control: "text",
+      description: "Nome acessível da lista de detalhes.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "Detalhes" } },
+    },
   },
   parameters: {
     docs: {

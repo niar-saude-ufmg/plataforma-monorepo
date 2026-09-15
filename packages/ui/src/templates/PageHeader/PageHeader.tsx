@@ -30,6 +30,10 @@ export type PageHeaderProps = {
   navigation?: PageHeaderNavigation;
   sidebarItems?: readonly SidebarItem[];
   menuGroups?: readonly MenuGroup[];
+  openNavigationLabel?: string;
+  closeNavigationLabel?: string;
+  defaultAvatarAlt?: string;
+  defaultAvatarContent?: ReactNode;
 };
 
 export function PageHeader({
@@ -38,13 +42,17 @@ export function PageHeader({
   logoAlt = "NIAR",
   logoHref = "/",
   onLogoClick,
-  navigation = "tabs",
+  navigation = "sidebar",
   sidebarItems = [],
   menuGroups = [],
   tabs,
   tabsValue,
   defaultTabsValue,
   onChange,
+  openNavigationLabel = "Abrir navegação",
+  closeNavigationLabel = "Fechar navegação",
+  defaultAvatarAlt = "Usuário NIAR",
+  defaultAvatarContent = "UN",
 }: PageHeaderProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const withSidebarClose = (items: readonly SidebarItem[]): SidebarItem[] =>
@@ -81,7 +89,7 @@ export function PageHeader({
           {navigation === "sidebar" && (
             <IconButton
               name="menu"
-              aria-label={sidebarOpen ? "Fechar navegação" : "Abrir navegação"}
+              aria-label={sidebarOpen ? closeNavigationLabel : openNavigationLabel}
               onClick={() => setSidebarOpen((open) => !open)}
             />
           )}
@@ -94,7 +102,7 @@ export function PageHeader({
               onChange={(_, value) => onChange?.(value)}
             />
           )}
-          {avatar ?? <Avatar alt="Usuário NIAR">UN</Avatar>}
+          {avatar ?? <Avatar alt={defaultAvatarAlt}>{defaultAvatarContent}</Avatar>}
         </Box>
       </Header>
 

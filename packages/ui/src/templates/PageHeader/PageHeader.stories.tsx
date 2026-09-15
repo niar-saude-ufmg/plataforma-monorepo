@@ -61,6 +61,10 @@ const meta = {
         "Elemento React exibido no lado direito do cabeçalho para identificar a pessoa usuária. Use o componente Avatar para manter o padrão visual do NIAR.",
       table: { category: "PROPS" },
     },
+    openNavigationLabel: { control: "text", description: "Label acessível para abrir a navegação lateral.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Abrir navegação" } } },
+    closeNavigationLabel: { control: "text", description: "Label acessível para fechar a navegação lateral.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Fechar navegação" } } },
+    defaultAvatarAlt: { control: "text", description: "Texto alternativo do avatar padrão.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Usuário NIAR" } } },
+    defaultAvatarContent: { control: "text", description: "Conteúdo exibido dentro do avatar padrão.", table: { category: "PROPS", defaultValue: { summary: "UN" } } },
     tabs: {
       control: "object",
       description: "Opções de abas exibidas quando navigation é tabs.",

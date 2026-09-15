@@ -32,6 +32,16 @@ const meta = {
       description: "Callback executado ao fechar o Drawer.",
       table: { category: "EVENTS" },
     },
+    closeLabel: {
+      control: "text",
+      description: "Texto acessível do botão que fecha o menu lateral.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "Fechar menu" } },
+    },
+    "aria-label": {
+      control: "text",
+      description: "Nome acessível da navegação lateral.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "Navegação principal" } },
+    },
   },
   parameters: {
     docs: {

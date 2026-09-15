@@ -54,6 +54,11 @@ const meta = {
       description: "Define se a tabela terá contorno externo próprio.",
       table: { category: "PROPS", defaultValue: { summary: "true" } },
     },
+    labels: {
+      control: "object",
+      description: "Textos acessíveis e mensagens internas da tabela.",
+      table: { category: "PROPS", defaultValue: { summary: "Português" } },
+    },
   },
   parameters: {
     docs: {

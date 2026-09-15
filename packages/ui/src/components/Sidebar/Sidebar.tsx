@@ -34,6 +34,8 @@ export type SidebarProps = {
   onClose?: () => void;
   variant?: "permanent" | "persistent" | "temporary";
   width?: number;
+  closeLabel?: string;
+  "aria-label"?: string;
 };
 
 export function Sidebar({
@@ -42,6 +44,8 @@ export function Sidebar({
   onClose,
   variant = "temporary",
   width = 280,
+  closeLabel = "Fechar menu",
+  "aria-label": ariaLabel = "Navegação principal",
 }: SidebarProps) {
   return (
     <Drawer
@@ -53,14 +57,14 @@ export function Sidebar({
     >
       {variant !== "permanent" && (
         <IconButton
-          aria-label="Fechar menu"
+          aria-label={closeLabel}
           onClick={onClose}
           sx={{ alignSelf: "flex-end", m: 1 }}
         >
           <ChevronLeft />
         </IconButton>
       )}
-      <List aria-label="Navegação principal">
+      <List aria-label={ariaLabel}>
         {items.map((item) => (
           <SidebarItemView key={item.label} item={item} />
         ))}

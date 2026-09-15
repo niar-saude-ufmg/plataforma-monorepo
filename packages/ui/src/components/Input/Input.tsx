@@ -18,10 +18,12 @@ export type InputProps = Omit<
   | "slotProps"
 > & {
   type?: "text" | "email" | "password";
+  showPasswordLabel?: string;
+  hidePasswordLabel?: string;
 };
 
 export const Input = forwardRef<HTMLDivElement, InputProps>(function Input(
-  { type = "text", disabled, ...props },
+  { type = "text", disabled, showPasswordLabel = "Mostrar senha", hidePasswordLabel = "Ocultar senha", ...props },
   ref,
 ) {
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +45,7 @@ export const Input = forwardRef<HTMLDivElement, InputProps>(function Input(
                 type="button"
                 edge="end"
                 disabled={disabled}
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                aria-label={showPassword ? hidePasswordLabel : showPasswordLabel}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => setShowPassword((visible) => !visible)}
               >

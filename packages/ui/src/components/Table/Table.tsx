@@ -42,6 +42,7 @@ export type TableProps<T extends Record<string, unknown>> = Omit<
   onSelectionChange?: (rows: readonly T[]) => void;
   pagination?: Omit<TablePaginationProps, "component">;
   border?: boolean;
+  labels?: Partial<{ actions: string; selectAll: string; selectRow: string; expand: string; empty: string }>;
 };
 
 export function Table<T extends Record<string, unknown>>({
@@ -52,8 +53,10 @@ export function Table<T extends Record<string, unknown>>({
   onSelectionChange,
   pagination,
   border = true,
+  labels,
   ...tableProps
 }: TableProps<T>) {
+  const tableLabels = { actions: "Ações", selectAll: "Selecionar todas as linhas", selectRow: "Selecionar linha", expand: "Expandir linha", empty: "Nenhum registro encontrado", ...labels };
   const [expanded, setExpanded] = useState<number | null>(null);
   const [sort, setSort] = useState<{
     key: string;
@@ -97,7 +100,7 @@ export function Table<T extends Record<string, unknown>>({
       >
         <TableHead sx={{ "& .MuiTableCell-head": { fontWeight: niar.fontWeight.semibold } }}>
           <TableRow>
-            {collapsible ? <TableCell>Ações</TableCell> : null}
+            {collapsible ? <TableCell>{tableLabels.actions}</TableCell> : null}
             {selectable ? (
               <TableCell>
                 <Checkbox
@@ -111,7 +114,7 @@ export function Table<T extends Record<string, unknown>>({
                     onSelectionChange?.(allSelected ? [] : sortedRows);
                   }}
                   slotProps={{
-                    input: { "aria-label": "Selecionar todas as linhas" },
+                    input: { "aria-label": tableLabels.selectAll },
                   }}
                 />
               </TableCell>
@@ -158,7 +161,7 @@ export function Table<T extends Record<string, unknown>>({
                 }
               >
                 <Typography color="text.secondary" align="center">
-                  Nenhum registro encontrado
+                  {tableLabels.empty}
                 </Typography>
               </TableCell>
             </TableRow>
@@ -170,7 +173,7 @@ export function Table<T extends Record<string, unknown>>({
                     <TableCell>
                       <IconButton
                         size="small"
-                        aria-label="Expandir linha"
+                        aria-label={tableLabels.expand}
                         onClick={() =>
                           setExpanded(expanded === index ? null : index)
                         }
@@ -189,7 +192,7 @@ export function Table<T extends Record<string, unknown>>({
                         checked={selected.has(index)}
                         onChange={() => toggleSelection(index)}
                         slotProps={{
-                          input: { "aria-label": "Selecionar linha" },
+                          input: { "aria-label": tableLabels.selectRow },
                         }}
                       />
                     </TableCell>

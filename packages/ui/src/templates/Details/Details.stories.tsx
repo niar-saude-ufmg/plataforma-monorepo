@@ -47,6 +47,21 @@ const meta = {
       description: "Evento disparado ao fechar o dialog.",
       table: { category: "EVENTS" },
     },
+    closeLabel: {
+      control: "text",
+      description: "Texto acessível do botão que fecha os detalhes.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "Fechar" } },
+    },
+    listAriaLabel: {
+      control: "text",
+      description: "Nome acessível da lista de detalhes.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "Detalhes" } },
+    },
+    timelineAriaLabel: {
+      control: "text",
+      description: "Nome acessível do histórico de alterações.",
+      table: { category: "ACCESSIBILITY", defaultValue: { summary: "Linha do tempo" } },
+    },
   },
 } satisfies Meta<typeof Details>;
 

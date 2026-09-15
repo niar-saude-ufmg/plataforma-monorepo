@@ -33,6 +33,7 @@ export type ListingProps<T extends Record<string, unknown>> = {
   selectable?: TableProps<T>["selectable"];
   onSelectionChange?: TableProps<T>["onSelectionChange"];
   tableBorder?: boolean;
+  emptyStateAriaLabel?: string;
 };
 
 export function Listing<T extends Record<string, unknown>>({
@@ -50,6 +51,7 @@ export function Listing<T extends Record<string, unknown>>({
   selectable,
   onSelectionChange,
   tableBorder,
+  emptyStateAriaLabel = "Lista de registros vazia",
 }: ListingProps<T>) {
   return (
     <Box sx={listingContentStyles}>
@@ -66,7 +68,7 @@ export function Listing<T extends Record<string, unknown>>({
         </Box>
       )}
       {rows.length === 0 && !loading ? (
-        <Box role="status" aria-label="Lista de registros vazia">
+        <Box role="status" aria-label={emptyStateAriaLabel}>
           <EmptyState
             title="Nenhum registro encontrado"
             description="Não há dados para exibir no momento."

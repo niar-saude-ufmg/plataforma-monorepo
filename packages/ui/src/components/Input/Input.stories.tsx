@@ -24,6 +24,8 @@ const meta = {
       description: "Tipo de valor aceito pelo campo.",
       table: { category: "PROPS", defaultValue: { summary: "text" } },
     },
+    showPasswordLabel: { control: "text", description: "Label acessível para exibir a senha.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Mostrar senha" } } },
+    hidePasswordLabel: { control: "text", description: "Label acessível para ocultar a senha.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Ocultar senha" } } },
     error: {
       control: "boolean",
       description: "Indica que o valor precisa de correção.",

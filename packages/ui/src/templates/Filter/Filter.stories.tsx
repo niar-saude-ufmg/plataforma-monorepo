@@ -55,6 +55,7 @@ const meta = {
   component: Filter,
   parameters: { layout: "padded", docs: { codePanel: true } },
   argTypes: {
+    "aria-label": { control: "text", description: "Nome acessível do formulário de filtros.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Filtros" } } },
     search: {
       control: "object",
       description: "Campos de busca baseados no Autocomplete.",

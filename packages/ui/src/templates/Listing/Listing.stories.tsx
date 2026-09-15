@@ -100,6 +100,7 @@ const meta = {
       description: "Define se a Table terá contorno próprio dentro do Card.",
       table: { category: "PROPS", defaultValue: { summary: "false" } },
     },
+    emptyStateAriaLabel: { control: "text", description: "Nome acessível do estado sem registros.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Lista de registros vazia" } } },
     emptyState: {
       control: "object",
       description: "Personalização do EmptyState exibido sem registros.",
