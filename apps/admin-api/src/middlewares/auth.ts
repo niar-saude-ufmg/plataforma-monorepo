@@ -4,12 +4,19 @@ import type { UserRole } from "@niar/contracts";
 import { AppError } from "../errors/app-error.js";
 import { usersRepository } from "../repositories/users-repository.js";
 
+// email/fullName/isActive entraram aqui (além de id/role) para o GET /me não
+// precisar buscar o usuário de novo no banco — authenticate já fez essa
+// consulta, então só reaproveitamos os campos.
 export type AuthenticatedUser = {
   id: number;
+  email: string;
+  fullName: string;
   role: UserRole;
+  isActive: boolean;
 };
 
-declare global {
+declare global 
+{
   namespace Express {
     interface Request {
       user?: AuthenticatedUser;
@@ -17,9 +24,18 @@ declare global {
   }
 }
 
-// Token só carrega "sub" (id) e "exp", sem role. Depois de validado, é
-// preciso buscar o usuário no banco — mesma lógica usada no deps.py
-// do assistente.
+// 480 minutos (8h) é o mesmo tempo de expiração que o assistente já usa
+// (access_token_expire_minutes em app/core/config.py), pra manter a sessão
+// com a mesma duração depois da migração.
+const ACCESS_TOKEN_EXPIRES_IN = "8h";
+
+export const signAccessToken = (userId: number): string =>
+  jwt.sign({ sub: String(userId) }, process.env.SECRET_KEY ?? "", {
+    algorithm: "HS256",
+    expiresIn: ACCESS_TOKEN_EXPIRES_IN
+  });
+
+// Token só carrega "sub" (id) e "exp", sem role. Depois de validado, busca o usuário no banco.
 export const authenticate = async (request: Request, _response: Response, next: NextFunction) => {
   try {
     const authHeader = request.headers.authorization;
@@ -44,7 +60,13 @@ export const authenticate = async (request: Request, _response: Response, next: 
       throw new AppError("Usuário não encontrado", 401);
     }
 
-    request.user = { id: user.id, role: user.role };
+    request.user = {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      isActive: user.isActive
+    };
     next();
   } catch (error) {
     if (error instanceof AppError) {
