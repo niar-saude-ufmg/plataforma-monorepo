@@ -31,6 +31,7 @@ from app.services.llm.json_utils import coerce_section_value
 from app.services.llm.prompts import PROJECT_DOC_SECTIONS
 from app.services.scriptgen.validator import validate_script
 from app.services.submission.bundle import build_submission_zip
+from app.services.submission.materializer import materialize_project
 from app.services.wizards.orchestrator import (
     extract_section_content,
     run_advisory_chat,
@@ -320,7 +321,7 @@ async def import_full_text(
     except RuntimeError as exc:
         raise HTTPException(
             status_code=502,
-            detail={"message": str(exc), "debug": {"stage": "llm_call", "hint": "Execute backend/scripts/debug_import.py ou GET /api/llm/status"}},
+            detail={"message": str(exc), "debug": {"stage": "llm_call", "hint": "Execute backend/scripts/debug_import.py ou GET /api/assistente/llm/status"}},
         ) from exc
 
     filled = sum(1 for v in sections.values() if v.strip())
@@ -630,6 +631,12 @@ async def submit_for_review(
     exports_dir = get_exports_dir()
 
     project = await _get_project_doc_session(db, session_id, current_user.id)
+    await db.execute(
+        select(WizardSession.id)
+        .where(WizardSession.id == project.id)
+        .with_for_update()
+    )
+
     cleaning = await _get_linked_cleaning_session(db, session_id, current_user.id)
     if not cleaning:
         raise HTTPException(
@@ -664,12 +671,34 @@ async def submit_for_review(
     )
     doc_buffer = BytesIO()
     doc.save(doc_buffer)
+    docx_bytes = doc_buffer.getvalue()
+    submitted_at = datetime.now(timezone.utc)
+    docx_filename = f"project_{project.id}_submission_{submitted_at:%Y%m%dT%H%M%S%fZ}.docx"
+    docx_path = os.path.join(exports_dir, docx_filename)
+    with open(docx_path, "wb") as f:
+        f.write(docx_bytes)
+
+    docx_artifact = ExportArtifact(
+        session_id=project.id,
+        filename=docx_filename,
+        file_path=docx_path,
+        artifact_type="project_docx",
+    )
+    db.add(docx_artifact)
+    await db.flush()
+    await materialize_project(
+        db_session=db,
+        session=project,
+        user_id=current_user.id,
+        docx_artifact=docx_artifact,
+    )
+
     zip_bytes = build_submission_zip(
         project_title=project.title,
         project_id=project.id,
         cleaning_session_id=cleaning.id,
         user_email=current_user.email,
-        docx_bytes=doc_buffer.getvalue(),
+        docx_bytes=docx_bytes,
         script_content=cleaning.script_content,
         model_used=cleaning.llm_model_used or settings.llm_model,
     )
@@ -700,11 +729,18 @@ async def submit_for_review(
     )
     await db.commit()
 
-    return Response(
-        content=zip_bytes,
-        media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="{zip_filename}"'},
+    return FileResponse(
+        docx_path,
+        filename=docx_filename,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
+
+    # trecho de código não removido caso seja reutilizado para o envio de um zip bundle ao admin
+    # return Response(
+    #     content=zip_bytes,
+    #     media_type="application/zip",
+    #     headers={"Content-Disposition": f'attachment; filename="{zip_filename}"'},
+    # )
 
 
 @router.get("/{session_id}/cleaning", response_model=WizardSessionOut)

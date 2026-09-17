@@ -32,10 +32,9 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_ADMIN_API_PROXY_TARGET || `http://localhost:${env.ADMIN_API_PORT || 3333}`,
           changeOrigin: true
         },
-        "/assistente-api": {
+        "/api/assistente": {
           target: env.VITE_ASSISTENTE_API_PROXY_TARGET || `http://localhost:${env.ASSISTENTE_API_PORT || 8000}`,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/assistente-api/, "")
+          changeOrigin: true
         }
       }
     },

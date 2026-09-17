@@ -27,23 +27,24 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(auth.router, prefix="/api")
-    app.include_router(admin.router, prefix="/api")
-    app.include_router(projects.router, prefix="/api")
-    app.include_router(cleaning.router, prefix="/api")
+    api_prefix = "/api/assistente"
+    app.include_router(auth.router, prefix=api_prefix)
+    app.include_router(admin.router, prefix=api_prefix)
+    app.include_router(projects.router, prefix=api_prefix)
+    app.include_router(cleaning.router, prefix=api_prefix)
 
-    @app.get("/api/health")
+    @app.get(f"{api_prefix}/health")
     async def health():
         return {"status": "ok", "app": settings.app_name}
 
-    @app.get("/api/settings/public")
+    @app.get(f"{api_prefix}/settings/public")
     async def public_settings():
         return {
             "institution_name": settings.institution_name,
             "max_active_datasets": settings.max_active_datasets,
         }
 
-    @app.get("/api/llm/status")
+    @app.get(f"{api_prefix}/llm/status")
     async def llm_status():
         from app.services.llm.status import check_llm_status
 

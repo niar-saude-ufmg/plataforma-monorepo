@@ -2,7 +2,7 @@ export type UserRole = "researcher" | "admin" | "committee";
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   researcher: "Pesquisador",
-  admin: "Admin",
+  admin: "Gestor",
   committee: "Comissão"
 };
 

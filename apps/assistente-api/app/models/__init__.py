@@ -20,6 +20,7 @@ from app.core.database import Base
 class UserRole(str, enum.Enum):
     researcher = "researcher"
     admin = "admin"
+    committee = "committee"
 
 
 class WizardType(str, enum.Enum):
@@ -315,12 +316,29 @@ class ProjectDocument(Base):
     )
 
 
+class ProjectStatus(str, enum.Enum):
+    submitted_to_committee = "submitted_to_committee"
+    resubmitted_to_committee = "resubmitted_to_committee"
+    under_review = "under_review"
+    needs_changes = "needs_changes"
+    approved = "approved"
+    rejected = "rejected"
+
+
+PROJECT_STATUS_ENUM = Enum(
+    ProjectStatus,
+    name="project_status",
+    schema="shared",
+    create_type=False,
+)
+
+
 class ProjectStatusHistory(Base):
     __tablename__ = "project_status_history"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
-    status: Mapped[str] = mapped_column(String(100))
+    status: Mapped[ProjectStatus] = mapped_column(PROJECT_STATUS_ENUM, nullable=False)
     notes: Mapped[str] = mapped_column(Text, default="")
     actor_user_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
