@@ -321,7 +321,7 @@ async def import_full_text(
     except RuntimeError as exc:
         raise HTTPException(
             status_code=502,
-            detail={"message": str(exc), "debug": {"stage": "llm_call", "hint": "Execute backend/scripts/debug_import.py ou GET /api/llm/status"}},
+            detail={"message": str(exc), "debug": {"stage": "llm_call", "hint": "Execute backend/scripts/debug_import.py ou GET /api/assistente/llm/status"}},
         ) from exc
 
     filled = sum(1 for v in sections.values() if v.strip())

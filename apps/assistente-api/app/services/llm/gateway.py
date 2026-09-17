@@ -174,7 +174,7 @@ class LLMGateway:
             f"Modelo: {self.model}, finish_reason={last_finish_reason}. "
             "Isso costuma ocorrer quando o modelo usa tokens de 'pensamento' e esgota o limite. "
             "O backend já tenta desativar o reasoning automaticamente; se persistir, "
-            "verifique GET /api/llm/status ou ajuste LLM_MODEL no .env."
+            "verifique GET /api/assistente/llm/status ou ajuste LLM_MODEL no .env."
         )
 
     async def stream(

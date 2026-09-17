@@ -2,18 +2,18 @@ import { UserRole } from "@niar/contracts";
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 
-export function getAssistenteApiBaseUrl() {
-  const configuredUrl = import.meta.env.VITE_ASSISTENTE_API_URL?.trim();
+export function getAdminApiBaseUrl() {
+  const configuredUrl = import.meta.env.VITE_ADMIN_API_URL?.trim();
 
   if (configuredUrl) {
     return trimTrailingSlash(configuredUrl);
   }
 
   if (typeof window !== "undefined" && window.location?.origin) {
-    return `${window.location.origin}/assistente-api`;
+    return `${window.location.origin}/api/admin`;
   }
 
-  return "/assistente-api";
+  return "/api/admin";
 }
 
 type TokenResponse = {
@@ -29,7 +29,7 @@ export type AuthenticatedUser = {
 };
 
 async function request<T>(path: string, options: RequestInit = {}) {
-  const response = await fetch(`${getAssistenteApiBaseUrl()}${path}`, {
+  const response = await fetch(`${getAdminApiBaseUrl()}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -39,14 +39,14 @@ async function request<T>(path: string, options: RequestInit = {}) {
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
-    throw new Error(body?.detail ?? "Não foi possível concluir a autenticação.");
+    throw new Error(body?.error ?? body?.detail ?? "Não foi possível concluir a autenticação.");
   }
 
   return response.json() as Promise<T>;
 }
 
 export async function login(email: string, password: string) {
-  const token = await request<TokenResponse>("/api/auth/login/json", {
+  const token = await request<TokenResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password })
   });
@@ -56,7 +56,7 @@ export async function login(email: string, password: string) {
 }
 
 export function getCurrentUser(token: string) {
-  return request<AuthenticatedUser>("/api/auth/me", {
+  return request<AuthenticatedUser>("/auth/me", {
     headers: { Authorization: `Bearer ${token}` }
   });
 }

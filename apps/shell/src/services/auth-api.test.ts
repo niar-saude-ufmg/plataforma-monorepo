@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getAssistenteApiBaseUrl, login } from "./auth-api";
+import { getAdminApiBaseUrl, login } from "./auth-api";
 
 describe("shell auth api", () => {
   afterEach(() => {
@@ -8,20 +8,20 @@ describe("shell auth api", () => {
     window.localStorage.clear();
   });
 
-  it("usa a VITE_ASSISTENTE_API_URL quando estiver definida", () => {
-    vi.stubEnv("VITE_ASSISTENTE_API_URL", "http://localhost:8000/");
+  it("usa a VITE_ADMIN_API_URL quando estiver definida", () => {
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin/");
 
-    expect(getAssistenteApiBaseUrl()).toBe("http://localhost:8000");
+    expect(getAdminApiBaseUrl()).toBe("http://localhost:3333/api/admin");
   });
 
-  it("usa a origem atual quando a VITE_ASSISTENTE_API_URL nao estiver definida", () => {
-    vi.stubEnv("VITE_ASSISTENTE_API_URL", "");
+  it("usa a origem atual quando a VITE_ADMIN_API_URL nao estiver definida", () => {
+    vi.stubEnv("VITE_ADMIN_API_URL", "");
 
-    expect(getAssistenteApiBaseUrl()).toBe(`${window.location.origin}/assistente-api`);
+    expect(getAdminApiBaseUrl()).toBe(`${window.location.origin}/api/admin`);
   });
 
-  it("faz login no endpoint do assistente usando a base resolvida", async () => {
-    vi.stubEnv("VITE_ASSISTENTE_API_URL", "http://localhost:8000/");
+  it("faz login no admin-api usando a base resolvida", async () => {
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin/");
 
     const fetchSpy = vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
@@ -47,7 +47,7 @@ describe("shell auth api", () => {
 
     expect(fetchSpy).toHaveBeenNthCalledWith(
       1,
-      "http://localhost:8000/api/auth/login/json",
+      "http://localhost:3333/api/admin/auth/login",
       {
         method: "POST",
         body: JSON.stringify({ email: "pesquisador@plataforma.local", password: "pesquisador" }),
@@ -59,7 +59,7 @@ describe("shell auth api", () => {
 
     expect(fetchSpy).toHaveBeenNthCalledWith(
       2,
-      "http://localhost:8000/api/auth/me",
+      "http://localhost:3333/api/admin/auth/me",
       {
         headers: {
           "Content-Type": "application/json",
