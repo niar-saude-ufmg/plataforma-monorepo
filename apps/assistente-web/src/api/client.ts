@@ -157,7 +157,7 @@ export const api = {
       });
     } catch {
       throw new Error(
-        'Não foi possível falar com o servidor. Verifique sua conexão e tente novamente. Seu projeto continua salvo.'
+        'Não foi possível falar com o servidor.'
       );
     };
     if (!res.ok) {
