@@ -149,10 +149,17 @@ export const api = {
   },
   submitForReview: async (projectId: number) => {
     const token = getToken();
-    const res = await fetch(`${API_URL}/api/projects/${projectId}/submit-for-review`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/api/projects/${projectId}/submit-for-review`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch {
+      throw new Error(
+        'Não foi possível falar com o servidor. Verifique sua conexão e tente novamente. Seu projeto continua salvo.'
+      );
+    };
     if (!res.ok) {
       const text = await res.text();
       let detail: unknown = res.statusText;

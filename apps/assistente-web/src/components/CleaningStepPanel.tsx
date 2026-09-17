@@ -64,6 +64,7 @@ export function CleaningStepPanel({
   const [versions, setVersions] = useState<CleaningVersion[]>([]);
   const [versionSaving, setVersionSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [initialScriptLoading, setInitialScriptLoading] = useState(false);
   const initialScriptAttempted = useRef(false);
 
@@ -227,14 +228,22 @@ export function CleaningStepPanel({
 
   const submitForReview = async () => {
     if (submitting) return;
+    const reenvio = alreadySubmitted;
     setSubmitting(true);
     onError('');
+    onSaveMessage('');
     try {
       await api.submitForReview(projectId);
       const updated = await api.getCleaning(session.id);
       onSessionChange(updated);
-      onSaveMessage('Pacote enviado para avaliação (projeto.docx + data_clean.py).');
+      setAlreadySubmitted(true);
+      onSaveMessage(
+        reenvio
+          ? 'Projeto reenviado para avaliação. O documento atualizado foi baixado no seu computador.'
+          : 'Projeto enviado para avaliação. O documento foi baixado no seu computador.'
+      );
     } catch (e) {
+      onSaveMessage('');
       onError(e instanceof Error ? e.message : 'Falha na submissão para avaliação');
     } finally {
       setSubmitting(false);
@@ -502,10 +511,14 @@ export function CleaningStepPanel({
                 || session.validation_result?.valid === false
               }
             >
-              {submitting ? 'Registrando projeto…' : 'Submeter para avaliação'}
+              {submitting
+                ? 'Enviando…'
+                : alreadySubmitted
+                  ? 'Reenviar para avaliação'
+                  : 'Enviar para avaliação'}
             </button>
           </div>
-          {submitting && <LoadingPanel message="Montando pacote com projeto e script…" />}
+          {submitting && <LoadingPanel message="Gerando o documento do projeto e registrando a submissão…" />}
         </div>
       )}
     </div>
