@@ -64,7 +64,6 @@ export function CleaningStepPanel({
   const [versions, setVersions] = useState<CleaningVersion[]>([]);
   const [versionSaving, setVersionSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [initialScriptLoading, setInitialScriptLoading] = useState(false);
   const initialScriptAttempted = useRef(false);
 
@@ -228,23 +227,24 @@ export function CleaningStepPanel({
 
   const submitForReview = async () => {
     if (submitting) return;
-    const reenvio = alreadySubmitted;
     setSubmitting(true);
     onError('');
     onSaveMessage('');
     try {
       await api.submitForReview(projectId);
-      const updated = await api.getCleaning(session.id);
-      onSessionChange(updated);
-      setAlreadySubmitted(true);
       onSaveMessage(
-        reenvio
-          ? 'Projeto reenviado para avaliação. O documento atualizado foi baixado no seu computador.'
-          : 'Projeto enviado para avaliação. O documento foi baixado no seu computador.'
+        'Projeto enviado para avaliação. O documento foi baixado no seu computador.'
       );
+
+      try {
+        const updated = await api.getCleaning(session.id);
+        onSessionChange(updated);
+      } catch {
+        console.warn('Não foi possível atualizar a sessão após a submissão.');
+      }
     } catch (e) {
       onSaveMessage('');
-      onError(e instanceof Error ? e.message : 'Falha na submissão para avaliação');
+      onError(e instanceof Error ? e.message : 'Falha na submissão para avaliação, por favor verifique o status do projeto e tente novamente.');
     } finally {
       setSubmitting(false);
     }
@@ -513,9 +513,7 @@ export function CleaningStepPanel({
             >
               {submitting
                 ? 'Enviando…'
-                : alreadySubmitted
-                  ? 'Reenviar para avaliação'
-                  : 'Enviar para avaliação'}
+                : 'Enviar para avaliação'}
             </button>
           </div>
           {submitting && <LoadingPanel message="Gerando o documento do projeto e registrando a submissão…" />}

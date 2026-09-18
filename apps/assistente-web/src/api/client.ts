@@ -157,7 +157,7 @@ export const api = {
       });
     } catch {
       throw new Error(
-        'Não foi possível falar com o servidor.'
+         'Não foi possível confirmar a submissão. Verifique o status do projeto antes de tentar novamente.'
       );
     };
     if (!res.ok) {
