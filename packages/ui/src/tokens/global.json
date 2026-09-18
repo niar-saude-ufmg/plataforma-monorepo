@@ -21,6 +21,14 @@
     "3xl": { "value": "48px", "type": "dimension" },
     "4xl": { "value": "64px", "type": "dimension" }
   },
+  "component": {
+    "switch": {
+      "width": { "value": "44px", "type": "dimension" },
+      "height": { "value": "24px", "type": "dimension" },
+      "thumb": { "value": "20px", "type": "dimension" },
+      "offset": { "value": "20px", "type": "dimension" }
+    }
+  },
   "radius": {
     "small": { "value": "8px", "type": "dimension" },
     "medium": { "value": "12px", "type": "dimension" }

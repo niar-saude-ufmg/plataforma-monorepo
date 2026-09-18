@@ -24,6 +24,10 @@
   --niar-spacing-2xl: 32px;
   --niar-spacing-3xl: 48px;
   --niar-spacing-4xl: 64px;
+  --niar-component-switch-width: 44px;
+  --niar-component-switch-height: 24px;
+  --niar-component-switch-thumb: 20px;
+  --niar-component-switch-offset: 20px;
   --niar-radius-small: 8px;
   --niar-radius-medium: 12px;
   --niar-border-width-default: 1px;

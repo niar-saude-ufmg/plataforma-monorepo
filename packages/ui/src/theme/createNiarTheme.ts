@@ -7,6 +7,7 @@ import { alertTheme } from "../components/Alert/Alert.theme";
 import { iconTheme } from "../components/Icon/Icon.theme";
 import { statusChipTheme } from "../components/StatusChip/StatusChip.theme";
 import { checkboxTheme } from "../components/Checkbox/Checkbox.theme";
+import { switchTheme } from "../components/Switch/Switch.theme";
 import { radioTheme } from "../components/RadioGroup/RadioGroup.theme";
 import { snackbarTheme } from "../components/Snackbar/Snackbar.theme";
 import { dialogTheme } from "../components/Dialog/Dialog.theme";
@@ -78,6 +79,7 @@ const niarThemeOptions: ThemeOptions = {
     MuiSvgIcon: iconTheme,
     MuiChip: statusChipTheme,
     MuiCheckbox: checkboxTheme,
+    MuiSwitch: switchTheme,
     MuiRadio: radioTheme,
     MuiSnackbar: snackbarTheme,
     MuiDialog: dialogTheme,

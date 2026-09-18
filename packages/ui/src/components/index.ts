@@ -19,6 +19,8 @@ export { Textarea } from "./Textarea/Textarea";
 export type { TextareaProps } from "./Textarea/Textarea";
 export { Checkbox } from "./Checkbox/Checkbox";
 export type { CheckboxProps } from "./Checkbox/Checkbox";
+export { Switch } from "./Switch/Switch";
+export type { SwitchProps } from "./Switch/Switch";
 export { RadioGroup } from "./RadioGroup/RadioGroup";
 export type {
   RadioGroupProps,

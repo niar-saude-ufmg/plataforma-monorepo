@@ -61,6 +61,14 @@ export default {
     "3xl": "48px",
     "4xl": "64px",
   },
+  component: {
+    switch: {
+      width: "44px",
+      height: "24px",
+      thumb: "20px",
+      offset: "20px",
+    },
+  },
   radius: {
     small: "8px",
     medium: "12px",
