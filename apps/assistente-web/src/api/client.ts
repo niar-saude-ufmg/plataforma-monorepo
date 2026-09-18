@@ -149,10 +149,17 @@ export const api = {
   },
   submitForReview: async (projectId: number) => {
     const token = getToken();
-    const res = await fetch(`${API_URL}/api/projects/${projectId}/submit-for-review`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/api/projects/${projectId}/submit-for-review`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch {
+      throw new Error(
+         'Não foi possível confirmar a submissão. Verifique o status do projeto antes de tentar novamente.'
+      );
+    };
     if (!res.ok) {
       const text = await res.text();
       let detail: unknown = res.statusText;
@@ -176,7 +183,7 @@ export const api = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `submissao_projeto_${projectId}.zip`;
+    a.download = `projeto_submetido_${projectId}.docx`;
     a.click();
     URL.revokeObjectURL(url);
   },
