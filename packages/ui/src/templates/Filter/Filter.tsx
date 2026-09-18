@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import type { ChangeEvent, ReactNode } from "react";
+import { useState, type ChangeEvent, type ReactNode } from "react";
 import { Autocomplete, type AutocompleteOption } from "../../components/Autocomplete/Autocomplete";
 import { Checkbox } from "../../components/Checkbox/Checkbox";
 import { RadioGroup, type RadioGroupOption } from "../../components/RadioGroup/RadioGroup";
@@ -41,31 +41,39 @@ export type FilterProps = {
 };
 
 export function Filter({
-  search = [], selectableOptions = [], checkedOptions = [], values = {}, onChange, "aria-label": ariaLabel = "Filtros",
+  search = [], selectableOptions = [], checkedOptions = [], values, onChange, "aria-label": ariaLabel = "Filtros",
 }: FilterProps) {
+  const [internalValues, setInternalValues] = useState<Readonly<Record<string, unknown>>>({});
+  const currentValues = values ?? internalValues;
+
+  function handleChange(key: string, value: unknown) {
+    const nextValues = { ...currentValues, [key]: value };
+    if (values === undefined) {
+      setInternalValues(nextValues);
+    }
+    onChange?.(nextValues);
+  }
+
   return (
     <Box component="form" aria-label={ariaLabel} sx={filterRootStyles}>
       <Box sx={filterFieldsStyles}>
-        {search.map((field) => <Autocomplete key={`search-${field.key}`} label={field.label} options={field.options} multiple={field.multiple} disabled={field.disabled} value={normalizeAutocompleteValue(values[field.key])} onChange={(_, value) => emitChange(values, onChange, field.key, value)} />)}
-        {selectableOptions.map((field) => <Select key={`select-${field.key}`} label={field.label} options={field.options} disabled={field.disabled} value={String(values[field.key] ?? "")} onChange={(event: ChangeEvent<HTMLInputElement>) => emitChange(values, onChange, field.key, event.target.value)} />)}
+        {search.map((field) => <Autocomplete key={`search-${field.key}`} label={field.label} options={field.options} multiple={field.multiple} disabled={field.disabled} value={normalizeAutocompleteValue(currentValues[field.key])} onChange={(_, value) => handleChange(field.key, value)} />)}
+        {selectableOptions.map((field) => <Select key={`select-${field.key}`} label={field.label} options={field.options} disabled={field.disabled} value={String(currentValues[field.key] ?? "")} onChange={(event: ChangeEvent<HTMLInputElement>) => handleChange(field.key, event.target.value)} />)}
         {checkedOptions.map((field) => field.type === "radio" ? (
           <Box sx={filterCheckedStyles} key={`radio-${field.key}`}>
-            <RadioGroup key={`radio-${field.key}`} label={field.label} options={field.options} row={field.row} value={String(values[field.key] ?? "")} onChange={(event) => emitChange(values, onChange, field.key, event.target.value)} />
+            <RadioGroup key={`radio-${field.key}`} label={field.label} options={field.options} row={field.row} value={String(currentValues[field.key] ?? "")} onChange={(event) => handleChange(field.key, event.target.value)} />
           </Box>
         ) : (
           <Box sx={filterCheckedStyles} key={`checkbox-${field.key}`} role="group" aria-label={field.label}>
             {field.options.map((option) => {
-              const current = Array.isArray(values[field.key]) ? values[field.key] as string[] : [];
-              return <Checkbox key={option.value} label={option.label} checked={current.includes(option.value)} disabled={field.disabled || option.disabled} onChange={(event) => emitChange(values, onChange, field.key, event.target.checked ? [...current, option.value] : current.filter((value) => value !== option.value))} />;
+              const current = Array.isArray(currentValues[field.key]) ? currentValues[field.key] as string[] : [];
+              return <Checkbox key={option.value} label={option.label} checked={current.includes(option.value)} disabled={field.disabled || option.disabled} onChange={(event) => handleChange(field.key, event.target.checked ? [...current, option.value] : current.filter((value) => value !== option.value))} />;
             })}
           </Box>
         ))}
       </Box>
     </Box>
   );
-}
-function emitChange(values: Readonly<Record<string, unknown>>, onChange: FilterProps["onChange"], key: string, value: unknown) {
-  onChange?.({ ...values, [key]: value });
 }
 function normalizeAutocompleteValue(value: unknown) {
   if (Array.isArray(value)) return [...value] as (AutocompleteOption | string)[];
