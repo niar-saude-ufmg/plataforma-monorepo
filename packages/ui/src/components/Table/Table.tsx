@@ -14,7 +14,7 @@ import TablePagination, {
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
@@ -27,6 +27,7 @@ export type TableColumn<T> = {
   label: ReactNode;
   align?: "left" | "center" | "right" | "justify" | "inherit";
   sortable?: boolean;
+  sortDirection?: "asc" | "desc";
   onClick?: () => void;
   render?: (value: T[keyof T], row: T) => ReactNode;
 };
@@ -38,8 +39,14 @@ export type TableProps<T extends Record<string, unknown>> = Omit<
   columns: readonly TableColumn<T>[];
   rows: readonly T[];
   collapsible?: (row: T) => ReactNode;
+  expandedRows?: readonly T[];
+  onExpandChange?: (row: T) => void;
   selectable?: boolean;
-  onSelectionChange?: (rows: readonly T[]) => void;
+  selectedRows?: readonly T[];
+  selectAllChecked?: boolean;
+  selectAllIndeterminate?: boolean;
+  onSelectionChange?: (row: T, selected: boolean) => void;
+  onSelectAllChange?: (selected: boolean) => void;
   pagination?: Omit<TablePaginationProps, "component">;
   border?: boolean;
   labels?: Partial<{ actions: string; selectAll: string; selectRow: string; expand: string; empty: string }>;
@@ -49,46 +56,23 @@ export function Table<T extends Record<string, unknown>>({
   columns,
   rows,
   collapsible,
+  expandedRows = [],
+  onExpandChange,
   selectable = false,
+  selectedRows = [],
+  selectAllChecked = false,
+  selectAllIndeterminate = false,
   onSelectionChange,
+  onSelectAllChange,
   pagination,
   border = true,
   labels,
   ...tableProps
 }: TableProps<T>) {
   const tableLabels = { actions: "Ações", selectAll: "Selecionar todas as linhas", selectRow: "Selecionar linha", expand: "Expandir linha", empty: "Nenhum registro encontrado", ...labels };
-  const [expanded, setExpanded] = useState<number | null>(null);
-  const [sort, setSort] = useState<{
-    key: string;
-    direction: "asc" | "desc";
-  } | null>(null);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
-  const sortedRows = sort
-    ? [...rows].sort((a, b) => {
-        const aValue = String(a[sort.key] ?? "");
-        const bValue = String(b[sort.key] ?? "");
-        const result = aValue.localeCompare(bValue);
-        return sort.direction === "asc" ? result : -result;
-      })
-    : rows;
-  const visibleRows = pagination
-    ? sortedRows.slice(
-        pagination.page * pagination.rowsPerPage,
-        pagination.page * pagination.rowsPerPage + pagination.rowsPerPage,
-      )
-    : sortedRows;
-  const allSelected =
-    selected.size === sortedRows.length && sortedRows.length > 0;
-  const toggleSelection = (index: number) => {
-    setSelected((current) => {
-      const next = new Set(current);
-      next.has(index) ? next.delete(index) : next.add(index);
-      onSelectionChange?.(
-        sortedRows.filter((_, rowIndex) => next.has(rowIndex)),
-      );
-      return next;
-    });
-  };
+  // Table is presentational: the parent prepares the rows for the current
+  // view and owns sorting, pagination, selection and expansion state.
+  const visibleRows = rows;
   return (
     <TableContainer component={Paper} elevation={0} variant={border ? "outlined" : undefined} sx={{ maxWidth: "100%", overflowX: "auto" }}>
       <MuiTable
@@ -104,15 +88,9 @@ export function Table<T extends Record<string, unknown>>({
             {selectable ? (
               <TableCell>
                 <Checkbox
-                  checked={allSelected}
-                  indeterminate={selected.size > 0 && !allSelected}
-                  onChange={() => {
-                    const next = allSelected
-                      ? new Set<number>()
-                      : new Set(sortedRows.map((_, index) => index));
-                    setSelected(next);
-                    onSelectionChange?.(allSelected ? [] : sortedRows);
-                  }}
+                  checked={selectAllChecked}
+                  indeterminate={selectAllIndeterminate}
+                  onChange={(event) => onSelectAllChange?.(event.target.checked)}
                   slotProps={{
                     input: { "aria-label": tableLabels.selectAll },
                   }}
@@ -123,10 +101,8 @@ export function Table<T extends Record<string, unknown>>({
               <TableCell key={column.key} align={column.align}>
                 {column.sortable ? (
                   <TableSortLabel
-                    active={sort?.key === column.key || column.sortable}
-                    direction={
-                      sort?.key === column.key ? sort.direction : "asc"
-                    }
+                    active={column.sortable}
+                    direction={column.sortDirection ?? "asc"}
                     sx={{
                       color: "text.primary",
                       "& .MuiTableSortLabel-icon": {
@@ -134,14 +110,7 @@ export function Table<T extends Record<string, unknown>>({
                         color: "inherit",
                       },
                     }}
-                    onClick={() => {
-                      const direction =
-                        sort?.key === column.key && sort.direction === "asc"
-                          ? "desc"
-                          : "asc";
-                      setSort({ key: column.key, direction });
-                      column.onClick?.();
-                    }}
+                    onClick={column.onClick}
                   >
                     {column.label}
                   </TableSortLabel>
@@ -166,19 +135,17 @@ export function Table<T extends Record<string, unknown>>({
               </TableCell>
             </TableRow>
           ) : (
-            visibleRows.map((row, index) => (
-              <Fragment key={index}>
-                <TableRow hover key={index}>
+            visibleRows.map((row, rowIndex) => (
+              <Fragment key={rowIndex}>
+                <TableRow hover>
                   {collapsible ? (
                     <TableCell>
                       <IconButton
                         size="small"
                         aria-label={tableLabels.expand}
-                        onClick={() =>
-                          setExpanded(expanded === index ? null : index)
-                        }
+                        onClick={() => onExpandChange?.(row)}
                       >
-                        {expanded === index ? (
+                        {expandedRows.includes(row) ? (
                           <KeyboardArrowUp />
                         ) : (
                           <KeyboardArrowDown />
@@ -189,8 +156,8 @@ export function Table<T extends Record<string, unknown>>({
                   {selectable ? (
                     <TableCell>
                       <Checkbox
-                        checked={selected.has(index)}
-                        onChange={() => toggleSelection(index)}
+                        checked={selectedRows.includes(row)}
+                        onChange={(event) => onSelectionChange?.(row, event.target.checked)}
                         slotProps={{
                           input: { "aria-label": tableLabels.selectRow },
                         }}
@@ -207,8 +174,8 @@ export function Table<T extends Record<string, unknown>>({
                 </TableRow>
                 {collapsible ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length + 1} sx={{ py: 0 }}>
-                      <Collapse in={expanded === index}>
+                    <TableCell colSpan={columns.length + (selectable ? 1 : 0) + 1} sx={{ py: 0 }}>
+                      <Collapse in={expandedRows.includes(row)}>
                         <Box sx={{ py: 2 }}>{collapsible(row)}</Box>
                       </Collapse>
                     </TableCell>

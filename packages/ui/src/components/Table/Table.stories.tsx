@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import Checkbox from "@mui/material/Checkbox";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import MoreVert from "@mui/icons-material/MoreVert";
@@ -36,7 +35,7 @@ const meta = {
     },
     pagination: {
       description:
-        "Configura a paginação oficial do MUI. Quando informada, a Table recorta os registros e renderiza TablePagination no rodapé.",
+        "Configura a paginação oficial do MUI e renderiza TablePagination no rodapé. A aplicação deve controlar page, rowsPerPage e preparar as linhas da página antes de passá-las para a Table.",
       table: { category: "PROPS", type: { summary: "TablePaginationProps" } },
     },
     collapsible: {
@@ -250,18 +249,25 @@ export const Actions: Story = {
 };
 
 function SortingExample() {
+  const [direction, setDirection] = useState<"asc" | "desc">("asc");
+  const sortedRows = [...rows].sort((a, b) => {
+    const result = a.name.localeCompare(b.name);
+    return direction === "asc" ? result : -result;
+  });
+
   return (
     <Table
       columns={[
         {
           ...plainColumns[0],
           sortable: true,
-          onClick: () => console.log("Ordenação alterada"),
+          sortDirection: direction,
+          onClick: () => setDirection((current) => current === "asc" ? "desc" : "asc"),
         },
         plainColumns[1],
         plainColumns[2],
       ]}
-      rows={rows}
+      rows={sortedRows}
     />
   );
 }
@@ -274,71 +280,47 @@ export const Sorting: Story = {
     docs: {
       description: {
         story:
-          "Use sortable na coluna para exibir a seta e alternar a ordem dos registros.",
+          "A ordenação fica fora do Table: a aplicação controla a direção, ordena os dados e passa sortDirection e onClick para a coluna.",
       },
       source: {
-        code: '<Table columns={[{ key: "name", label: "Projeto", sortable: true, onClick: handleSort }]} rows={rows} />',
+        code: `const [direction, setDirection] = useState("asc");
+const sortedRows = [...rows].sort((a, b) => direction === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+
+<Table
+  columns={[{ key: "name", label: "Projeto", sortable: true, sortDirection: direction, onClick: () => setDirection(direction === "asc" ? "desc" : "asc") }]}
+  rows={sortedRows}
+/>`,
       },
     },
   },
 };
 
 function SelectingExample() {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const allSelected = selected.size === rows.length;
-  const toggleAll = () =>
-    setSelected(allSelected ? new Set() : new Set(rows.map((row) => row.name)));
+  const [selected, setSelected] = useState<typeof rows[number][]>([]);
+  const allSelected = selected.length === rows.length;
+  const toggleAll = (checked: boolean) => setSelected(checked ? [...rows] : []);
 
   return (
     <Table
-      columns={[
-        {
-          key: "name",
-          label: (
-            <Checkbox
-              checked={allSelected}
-              onChange={toggleAll}
-              slotProps={{ input: { "aria-label": "Selecionar todos" } }}
-            />
-          ),
-          render: (value: unknown) => {
-            const name = String(value);
-            return (
-              <>
-                <Checkbox
-                  checked={selected.has(name)}
-                  onChange={() =>
-                    setSelected((current) => {
-                      const next = new Set(current);
-                      next.has(name) ? next.delete(name) : next.add(name);
-                      return next;
-                    })
-                  }
-                  slotProps={{ input: { "aria-label": `Selecionar ${name}` } }}
-                />
-                {name}
-              </>
-            );
-          },
-        },
-        plainColumns[1],
-        plainColumns[2],
-      ]}
+      columns={plainColumns}
       rows={rows}
+      selectable
+      selectedRows={selected}
+      selectAllChecked={allSelected}
+      selectAllIndeterminate={selected.length > 0 && !allSelected}
+      onSelectionChange={(row, checked) =>
+        setSelected((current) => checked
+          ? [...current, row]
+          : current.filter((selectedRow) => selectedRow.name !== row.name))
+      }
+      onSelectAllChange={toggleAll}
     />
   );
 }
 
 export const Selecting: Story = {
   args: { columns: plainColumns, rows, selectable: true },
-  render: (args) => (
-    <Table
-      {...args}
-      onSelectionChange={(selectedRows) =>
-        console.log("Linhas selecionadas", selectedRows)
-      }
-    />
-  ),
+  render: () => <SelectingExample />,
   parameters: {
     controls: { disable: true },
     docs: {
@@ -347,7 +329,7 @@ export const Selecting: Story = {
           "A propriedade selectable adiciona seleção individual e seleção de todas as linhas com Checkbox do MUI.",
       },
       source: {
-        code: 'const rows = [{ name: "Projeto A", status: "Aprovado" }];\nconst columns = [{ key: "name", label: "Projeto" }, { key: "status", label: "Status" }];\n\n<Table\n  columns={columns}\n  rows={rows}\n  selectable\n  onSelectionChange={(selectedRows) => setSelectedRows(selectedRows)}\n/>',
+        code: 'const [selectedRows, setSelectedRows] = useState([]);\n\n<Table\n  columns={columns}\n  rows={rows}\n  selectable\n  selectedRows={selectedRows}\n  onSelectionChange={(row, checked) => setSelectedRows(checked ? [...selectedRows, row] : selectedRows.filter((item) => item.name !== row.name))}\n/>',
       },
     },
   },
@@ -360,10 +342,11 @@ function PaginationExample() {
     ...rows[index % rows.length],
     name: `${rows[index % rows.length].name} ${index + 1}`,
   }));
+  const visibleRows = allRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   return (
     <Table
       columns={plainColumns}
-      rows={allRows}
+      rows={visibleRows}
       pagination={{
         count: allRows.length,
         page,
@@ -388,10 +371,10 @@ export const Pagination: Story = {
     docs: {
       description: {
         story:
-          "A Table integra TablePagination controlado; a aplicação informa page, rowsPerPage e atualiza esses valores nos callbacks.",
+          "A aplicação controla page e rowsPerPage, recorta os dados e passa somente as linhas da página atual para a Table.",
       },
       source: {
-        code: "const [page, setPage] = useState(0);\nconst [rowsPerPage, setRowsPerPage] = useState(10);\n\n<Table\n  columns={columns}\n  rows={rows}\n  pagination={{\n    count: total,\n    page,\n    rowsPerPage,\n    onPageChange: (_, nextPage) => setPage(nextPage),\n    onRowsPerPageChange: (event) => setRowsPerPage(Number(event.target.value)),\n  }}\n/>",
+        code: "const [page, setPage] = useState(0);\nconst [rowsPerPage, setRowsPerPage] = useState(10);\nconst visibleRows = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);\n\n<Table\n  columns={columns}\n  rows={visibleRows}\n  pagination={{\n    count: rows.length,\n    page,\n    rowsPerPage,\n    onPageChange: (_, nextPage) => setPage(nextPage),\n    onRowsPerPageChange: (event) => setRowsPerPage(Number(event.target.value)),\n  }}\n/>",
       },
     },
   },
