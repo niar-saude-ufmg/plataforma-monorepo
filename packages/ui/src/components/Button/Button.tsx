@@ -10,11 +10,12 @@ declare module "@mui/material/Button" {
 
   interface ButtonPropsColorOverrides {
     inverse: true;
+    danger: true;
   }
 }
 
 export type ButtonProps = Omit<MuiButtonProps, "color" | "variant"> & {
-  color?: "primary" | "secondary" | "inverse";
+  color?: "primary" | "secondary" | "inverse" | "danger";
   variant?: MuiButtonProps["variant"] | "inverse";
 };
 

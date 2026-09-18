@@ -24,7 +24,7 @@ const meta = {
     },
     color: {
       control: "select",
-      options: ["primary", "secondary", "inverse"],
+      options: ["primary", "secondary", "inverse", "danger"],
       description: "Define a cor semântica do botão a partir do tema NIAR.",
       table: { category: "PROPS", defaultValue: { summary: "primary" } },
     },
@@ -129,6 +129,32 @@ export const Secondary: Story = {
     <div style={rowStyle}>
       {variants.map((variant) => (
         <Button key={variant} color="secondary" variant={variant}>
+          {variant[0].toUpperCase() + variant.slice(1)}
+        </Button>
+      ))}
+    </div>
+  ),
+};
+
+export const Danger: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story: "Apresenta as três variantes para ações destrutivas ou irreversíveis.",
+      },
+      source: {
+        code: `<Button color="danger" variant="contained">Contained</Button>
+<Button color="danger" variant="outlined">Outlined</Button>
+<Button color="danger" variant="text">Text</Button>`,
+      },
+    },
+  },
+  render: () => (
+    <div style={rowStyle}>
+      {variants.map((variant) => (
+        <Button key={variant} color="danger" variant={variant}>
           {variant[0].toUpperCase() + variant.slice(1)}
         </Button>
       ))}

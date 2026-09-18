@@ -23,7 +23,7 @@ export const buttonTheme: Components<Theme>["MuiButton"] = {
             backgroundColor: niar.colors.surface.card,
             border: `${niar.borderWidth.default} solid ${niar.colors.surface.card}`,
             color: niar.colors.brand.deep,
-            "&:hover": { backgroundColor: niar.colors.base.light },
+            "&:hover": { backgroundColor: alpha(niar.colors.surface.card, 0.82) },
           },
         },
         {
@@ -47,7 +47,7 @@ export const buttonTheme: Components<Theme>["MuiButton"] = {
           style: {
             backgroundColor: niar.colors.surface.card,
             color: niar.colors.brand.deep,
-            "&:hover": { backgroundColor: niar.colors.base.light },
+            "&:hover": { backgroundColor: alpha(niar.colors.surface.card, 0.82) },
           },
         },
         {
@@ -57,7 +57,7 @@ export const buttonTheme: Components<Theme>["MuiButton"] = {
             color: niar.colors.action.onPrimary,
             boxShadow: "none",
             "&:hover": {
-              backgroundColor: niar.colors.brand.deep,
+              backgroundColor: alpha(niar.colors.action.primary, 0.85),
               boxShadow: "none",
             },
           },
@@ -69,7 +69,7 @@ export const buttonTheme: Components<Theme>["MuiButton"] = {
             color: niar.colors.action.onSecondary,
             boxShadow: "none",
             "&:hover": {
-              backgroundColor: niar.colors.brand.cyan,
+              backgroundColor: alpha(niar.colors.action.secondary, 0.85),
               boxShadow: "none",
             },
           },
@@ -111,6 +111,38 @@ export const buttonTheme: Components<Theme>["MuiButton"] = {
             color: niar.colors.action.primary,
             "&:hover": {
               backgroundColor: alpha(niar.colors.action.secondary, 0.08),
+            },
+          },
+        },
+        {
+          props: { color: "danger", variant: "contained" },
+          style: {
+            backgroundColor: niar.colors.feedback.error,
+            color: niar.colors.neutral.white,
+            boxShadow: "none",
+            "&:hover": {
+              backgroundColor: alpha(niar.colors.feedback.error, 0.85),
+              boxShadow: "none",
+            },
+          },
+        },
+        {
+          props: { color: "danger", variant: "outlined" },
+          style: {
+            borderColor: alpha(niar.colors.feedback.error, 0.8),
+            color: alpha(niar.colors.feedback.error, 0.8),
+            "&:hover": {
+              backgroundColor: alpha(niar.colors.feedback.error, 0.08),
+              borderColor: alpha(niar.colors.feedback.error, 0.8),
+            },
+          },
+        },
+        {
+          props: { color: "danger", variant: "text" },
+          style: {
+            color: alpha(niar.colors.feedback.error, 0.8),
+            "&:hover": {
+              backgroundColor: alpha(niar.colors.feedback.error, 0.08),
             },
           },
         },
