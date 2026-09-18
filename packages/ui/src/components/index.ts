@@ -49,6 +49,8 @@ export { Timeline } from "./Timeline/Timeline";
 export type { TimelineItem, TimelineProps } from "./Timeline/Timeline";
 export { Header } from "./Header/Header";
 export type { HeaderProps } from "./Header/Header";
+export { Logo } from "./Logo/Logo";
+export type { LogoProps, LogoVariant } from "./Logo/Logo";
 export { Sidebar } from "./Sidebar/Sidebar";
 export type { SidebarItem, SidebarProps } from "./Sidebar/Sidebar";
 export { Breadcrumbs } from "./Breadcrumbs/Breadcrumbs";

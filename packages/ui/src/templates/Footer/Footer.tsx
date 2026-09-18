@@ -10,6 +10,7 @@ import {
   footerPartnerStyles,
   footerStyles,
 } from "./Footer.styles";
+import { Logo } from "../../components/Logo/Logo";
 
 export type FooterProps = {
   logo?: boolean;
@@ -45,16 +46,9 @@ export function Footer({
           <Box component="div" sx={footerLogoStyles}>
             {logo && (
               <a href={logoHref} onClick={onLogoClick} aria-label={logoAlt}>
-                <Box
-                  component="img"
-                  src="/niar-logo-footer.png"
+                <Logo
+                  variant="inverse"
                   alt={logoAlt}
-                  sx={{
-                    display: "block",
-                    filter: "grayscale(1) brightness(0) invert(1)",
-                    maxWidth: 180,
-                    width: "100%",
-                  }}
                 />
               </a>
             )}

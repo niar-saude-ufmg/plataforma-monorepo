@@ -16,7 +16,3 @@ export const headerContentStyles = {
   flex: 1,
   gap: niar.spacing["2xs"],
 };
-export const headerLogoStyles = {
-  height: niar.spacing["2xl"],
-  width: "auto",
-};

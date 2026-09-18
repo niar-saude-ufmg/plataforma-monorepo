@@ -5,10 +5,10 @@ import type { MouseEventHandler, ReactNode } from "react";
 import {
   headerAppBarStyles,
   headerContentStyles,
-  headerLogoStyles,
   headerLogoWrapperStyles,
   headerToolbarStyles,
 } from "./Header.styles";
+import { Logo } from "../Logo/Logo";
 
 export type HeaderProps = {
   children?: ReactNode;
@@ -36,7 +36,7 @@ export function Header({
         {logo && (
           <Box sx={headerLogoWrapperStyles}>
             <a href={logoHref} onClick={onLogoClick} aria-label={logoAlt}>
-              <img src="/niar-logo.png" alt={logoAlt} style={headerLogoStyles} />
+              <Logo alt={logoAlt} />
             </a>
           </Box>
         )}
