@@ -1,0 +1,40 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Snackbar.stories";
+
+<Meta of={Stories} />
+
+# Snackbar
+
+Mensagem temporária para comunicar o resultado de uma ação.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Props
+<Controls of={Stories.Playground} sort="alpha" />
+### Severities
+<Description of={Stories.Severities} />
+<Canvas of={Stories.Severities} />
+### Exemplo de aplicação
+<Source
+  dark
+  language="tsx"
+  code={`import { Snackbar } from "@niar/ui";
+
+export function Saved() {
+    return (
+      <Snackbar
+        open
+        message="Projeto salvo."
+        severity="success"
+      />
+    );
+}`}
+/>
+### Acessibilidade - Use mensagens curtas e claras. - Não dependa apenas da cor
+para comunicar o resultado.

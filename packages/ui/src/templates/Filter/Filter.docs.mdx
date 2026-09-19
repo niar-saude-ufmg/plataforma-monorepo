@@ -1,0 +1,51 @@
+import { Canvas, Controls, Description, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Filter.stories";
+
+<Meta of={Stories} />
+
+# Filter
+
+Template de filtros que combina `Autocomplete`, `Select`, `Checkbox` e `RadioGroup`. Use `search` para busca, `selectableOptions` para selects e `checkedOptions` com `type="checkbox"` ou `type="radio"` para opções marcáveis. Em grupos radio, `row` organiza as opções horizontalmente.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Search
+
+<Description of={Stories.Search} />
+<Canvas of={Stories.Search} />
+
+### Select
+
+<Description of={Stories.Select} />
+<Canvas of={Stories.Select} />
+
+### Checkbox
+
+<Description of={Stories.Checkbox} />
+<Canvas of={Stories.Checkbox} />
+
+### Radio
+
+<Description of={Stories.Radio} />
+<Canvas of={Stories.Radio} />
+
+### Exemplo de aplicação
+
+<Source dark language="tsx" code={`import { Filter } from "@niar/ui";
+
+const fields = [
+  { key: "project", label: "Projeto", options: ["Opção 1", "Opção 2"] },
+  { key: "status", label: "Status", options: ["Em análise", "Aprovado"], multiple: true },
+];
+
+<Filter fields={fields} onChange={(key, value) => setFilters((current) => ({ ...current, [key]: value }))} />`}/>
+
+### Acessibilidade
+
+- Use labels que identifiquem claramente cada filtro.
+- Mantenha os valores controlados quando o filtro precisar ser sincronizado com a listagem; `onChange` recebe um único objeto, como `{ project: "Opção 1" }`.

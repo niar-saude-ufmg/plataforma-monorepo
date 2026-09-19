@@ -1,0 +1,46 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Autocomplete.stories";
+
+<Meta of={Stories} />
+
+# Autocomplete
+
+Campo de busca e seleção baseado no Autocomplete do MUI. É indicado para filtros e seleção de entidades quando a lista de opções pode crescer.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Multiple
+
+<Description of={Stories.Multiple} />
+<Canvas of={Stories.Multiple} />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+  code={`import { Autocomplete } from "@niar/ui";
+
+<Autocomplete
+    label="Projeto"
+    options={["Opção 1", "Opção 2"]}
+    onChange={(value) => console.log(value)}
+/>;`}
+/>
+
+### Acessibilidade
+
+- Use um label descritivo para identificar o campo.
+- Garanta que a seleção possa ser feita pelo teclado.
+- Use `disabled` quando o campo não estiver disponível para interação.

@@ -1,0 +1,129 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./PageHeader.stories";
+
+<Meta of={Stories} />
+
+# PageHeader
+
+Template para estruturar o cabeçalho e a navegação de uma página. A propriedade `navigation` escolhe entre Sidebar lateral, MenuBar horizontal e Tabs.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+Estrutura de `sidebarItems`:
+
+<Source
+  dark
+  language="tsx"
+  code={`const sidebarItems = [
+  {
+    label: "Projetos",
+    icon: <Icon name="folder" />,
+    selected: true,
+    children: [
+      { label: "Meus projetos", selected: true },
+      { label: "Arquivados" },
+    ],
+  },
+];`}
+/>
+
+Estrutura de `menuGroups`:
+
+<Source
+  dark
+  language="tsx"
+  code={`const menuGroups = [
+  {
+    label: "Navegação",
+    items: [
+      { label: "Visão geral", onClick: handleOverview },
+      { label: "Projetos", onClick: handleProjects },
+    ],
+  },
+];`}
+/>
+
+Estrutura de `tabs`:
+
+<Source
+  dark
+  language="tsx"
+  code={`const tabs = [
+  { value: "overview", label: "Visão geral" },
+  { value: "projects", label: "Projetos" },
+  { value: "documents", label: "Documentos" },
+];`}
+/>
+
+Uso de `avatar`:
+
+<Source
+  dark
+  language="tsx"
+  code={`import { Avatar, PageHeader } from "@niar/ui";
+
+<PageHeader
+  avatar={<Avatar alt="Usuário NIAR">UN</Avatar>}
+  navigation="sidebar"
+  sidebarItems={sidebarItems}
+/>`}
+/>
+
+### Sidebar
+
+<Description of={Stories.SidebarNavigation} />
+<Canvas of={Stories.SidebarNavigation} />
+
+### MenuBar
+
+<Description of={Stories.MenuNavigation} />
+<Canvas of={Stories.MenuNavigation} />
+
+### Tabs
+
+<Description of={Stories.TabsNavigation} />
+<Canvas of={Stories.TabsNavigation} />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+code={`import { Avatar, PageHeader } from "@niar/ui";
+
+const items = [
+  { label: "Início", selected: true },
+  { label: "Projetos" },
+];
+
+export function ProjectsPage() {
+  return (
+    <>
+      <PageHeader
+        navigation="sidebar"
+        sidebarItems={items}
+        avatar={<Avatar alt="Usuário NIAR">UN</Avatar>}
+      />
+      <ProjectsContent />
+    </>
+  );
+}`}
+/>
+
+### Acessibilidade
+
+- Forneça labels acessíveis nos itens de Sidebar e MenuBar.
+- Use `logoAlt` quando o contexto exigir outro texto alternativo.
+- Passe as opções de abas pela propriedade `tabs` quando a página tiver abas.
+- Use `onChange` para receber o valor selecionado por Sidebar, MenuBar ou Tabs.

@@ -45,6 +45,16 @@ describe("Shell App", () => {
     expect(await screen.findByRole("heading", { name: "Cadastro de pesquisador" })).toBeInTheDocument();
   });
 
+  it("disponibiliza a identidade visual sem exigir login", () => {
+    render(
+      <MemoryRouter initialEntries={["/identidade-visual"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByTitle("Design System NIAR")).toHaveAttribute("src", "http://localhost:6006");
+  });
+
   it("autentica pela shell e direciona o perfil para sua área", async () => {
     vi.mocked(login).mockResolvedValue({
       token: "token-de-teste",
