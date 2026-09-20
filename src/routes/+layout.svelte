@@ -58,7 +58,7 @@
 
 	// O footer repete o menu menos a Home — quem quer voltar ao início clica na logo,
 	// que já está logo acima da lista. A ordem de navLinks já cai certa na grade de três
-	// colunas: Sobre/Notícias/Publicações na primeira linha, Equipe/Assistente/Contato
+	// colunas: Sobre/Notícias/Publicações na primeira linha, Equipe/LEME/Contato
 	// na segunda.
 	const footerLinks = navLinks.slice(1);
 

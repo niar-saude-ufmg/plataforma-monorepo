@@ -14,7 +14,7 @@ export const SITE_NAME = 'NIAR-Saúde';
 /**
  * Sufixa o título da página com o nome do site.
  *
- * Sem isso, cada aba (e cada resultado de busca) mostra só "Equipe" ou "Assistente",
+ * Sem isso, cada aba (e cada resultado de busca) mostra só "Equipe" ou "LEME",
  * sem dizer de quem é o site. A home não usa este helper: o título dela já começa
  * pelo nome, porque é o resultado que as pessoas veem ao buscar pelo laboratório.
  */

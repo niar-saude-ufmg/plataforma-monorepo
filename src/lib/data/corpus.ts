@@ -1,9 +1,9 @@
 /**
- * Acervo consultado pelo assistente (RAG).
+ * Acervo consultado pelo LEME (RAG).
  *
  * Espelha `rag-api/corpus_manifest.csv`, que é a fonte de verdade e vive no repo
  * `niar-rag-prototype`. Ao reindexar o corpus lá, regenere esta lista para que a
- * página do assistente não anuncie documentos que o modelo não consulta.
+ * página do LEME não anuncie documentos que o modelo não consulta.
  */
 
 export type CorpusDocType = 'legislation' | 'standard' | 'institutional' | 'certification';

@@ -328,7 +328,7 @@
 	</div>
 </section>
 
-<!-- Fechamento: assistente.
+<!-- Fechamento: LEME.
 
      Faixa, e não seção. Não segue o PADRÃO DAS SEÇÕES acima de propósito: as cinco
      seções anteriores apresentam o núcleo (o que acontece, como atua, o que produz,
