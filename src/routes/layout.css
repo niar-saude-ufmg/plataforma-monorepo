@@ -78,4 +78,12 @@ summary::-webkit-details-marker {
 		@apply bg-background text-foreground;
 		font-family: var(--font-sans);
 	}
+
+	html {
+		/* Rolagem para no início e no fim, sem bounce elástico. */
+		overscroll-behavior-y: none;
+
+		/* Fallback para Safari < 16, que ainda faz bounce: branco no topo, azul no fim. */
+		background: linear-gradient(to bottom, var(--branco-puro) 0 50%, var(--azul-profundo) 50% 100%);
+	}
 }
