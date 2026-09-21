@@ -109,7 +109,9 @@
 		aria-label={m.home_news_eyebrow()}
 	>
 		<div class="mx-auto max-w-6xl px-6">
-			<div class="mb-12 flex items-end justify-between">
+			<!-- Empilha abaixo de `sm`: lado a lado numa tela de 390px o título e o link
+			     quebravam os dois em duas linhas e encostavam um no outro. -->
+			<div class="mb-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 				<div>
 					<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
 						{m.home_news_eyebrow()}

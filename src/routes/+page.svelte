@@ -42,6 +42,17 @@
 	// impressão de serem a equipe inteira. Egressos ficam fora: eles têm seção própria
 	// em /team, mas não são equipe atual.
 	const remainingMembers = currentTeam.length - teamAvatars.length;
+
+	// Onde o hero termina, em px desde o topo da página (header + hero). No celular a
+	// foto fixa do hero tem exatamente essa altura — ver o comentário no markup.
+	// `bind:clientHeight` remede a cada mudança de tamanho do hero.
+	let hero = $state<HTMLElement>();
+	let heroHeight = $state(0);
+	let heroBottom = $derived(
+		hero && heroHeight
+			? Math.ceil(hero.getBoundingClientRect().top + window.scrollY + heroHeight)
+			: 0
+	);
 </script>
 
 <svelte:head>
@@ -51,10 +62,41 @@
 </svelte:head>
 
 <!-- Hero -->
+<!-- Foto fixa atrás do conteúdo, que rola por cima dela.
+
+     Não é `bg-fixed`: o Safari do iOS não implementa background-attachment fixed e cai
+     num fallback que dimensiona a foto pela altura do documento inteiro — no celular
+     sobrava um recorte ampliado e imóvel da imagem. Por isso o efeito é montado à mão:
+     a foto é um <img> em `position: fixed` do tamanho da tela, e o `clip-path` da
+     section recorta o que dela aparece. Um ancestral com clip-path recorta até
+     descendentes fixos (ao contrário de `overflow: hidden`), e sem criar para eles um
+     novo bloco de referência — a foto continua presa à tela, só visível pela "janela"
+     do hero. Funciona igual em todas as larguras e navegadores.
+
+     Altura da foto:
+     - A partir de `md`, `h-lvh` (a maior altura possível da tela), que dá o mesmo
+       enquadramento do antigo `bg-fixed`. `lvh` e não `inset-0`: no celular a barra de
+       endereço some e reaparece durante a rolagem, e com a altura acompanhando a barra
+       a foto seria redimensionada — dava um salto a cada vez.
+     - No celular, só até onde o hero termina. A foto é paisagem (3:2) e a tela é
+       retrato: com a altura da tela inteira o `object-cover` ampliava a foto 43% em
+       relação ao hero sem efeito fixo. Menos que isso não dá — ao longo da rolagem o
+       hero passa por toda a faixa entre o topo da tela e o fim dele, e a foto tem de
+       cobri-la inteira. Medida em JS porque depende da altura real do texto; até lá
+       vale a estimativa do CSS (70vh do hero + 77px do header). -->
 <section
-	class="relative flex min-h-[70vh] items-center bg-cover bg-fixed pb-16 text-primary-foreground"
-	style="background-image: url({homeImg}); background-position: center 20%;"
+	bind:this={hero}
+	bind:clientHeight={heroHeight}
+	class="relative flex min-h-[70vh] items-center pb-16 text-primary-foreground [clip-path:inset(0)]"
 >
+	<img
+		src={homeImg}
+		alt=""
+		aria-hidden="true"
+		fetchpriority="high"
+		class="pointer-events-none fixed top-0 left-0 h-[var(--hero-bottom,calc(70lvh+77px))] w-full object-cover md:h-lvh"
+		style="object-position: center 20%;{heroBottom ? ` --hero-bottom: ${heroBottom}px;` : ''}"
+	/>
 	<div class="hero-veil absolute inset-0" aria-hidden="true"></div>
 	<!-- O pb-16 da section encolhe a área de centralização por baixo, então o bloco
 	     assenta ~32px acima do centro geométrico da foto: centro óptico, e o CTA para
@@ -74,7 +116,9 @@
 		<p class="mx-auto mt-6 max-w-2xl text-lg text-white/90">
 			{m.hero_about()}
 		</p>
-		<div class="mt-10 flex items-center justify-center gap-6">
+		<!-- Empilhados abaixo de `sm`: lado a lado numa tela de 390px o link secundário
+		     quebrava em duas linhas e a seta ficava órfã na terceira. -->
+		<div class="mt-10 flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-6">
 			<!-- A variante base do Button é text-sm, e size="lg" trava a altura em h-9: o
 			     CTA primário acabava com rótulo menor que o link secundário ao lado. Daí a
 			     altura e a tipografia explícitas aqui.
@@ -119,9 +163,15 @@
      relaxed, porque a entrelinha maior soma quase 6px acima da primeira linha e afasta
      opticamente o parágrafo do título mesmo com a margem pequena.
 
-     Quando a seção tem link de "ver todos", ele divide uma linha `mt-2 flex items-end
-     justify-between` só com o h2, e o subtítulo vem abaixo dessa linha. Se o link ficar
-     no mesmo flex que o subtítulo, ele alinha pela base do parágrafo e desce demais. -->
+     Quando a seção tem link de "ver todos", o cabeçalho vira uma grade de duas colunas
+     (`sm:grid-cols-[1fr_auto] sm:items-end`): o link divide a segunda linha com o h2 e o
+     subtítulo ocupa a terceira, de ponta a ponta. Não pode ser um flex com o subtítulo
+     dentro — ali o link alinharia pela base do parágrafo e desceria demais.
+
+     Na coluna única do mobile a grade se desfaz e o link, com `order-last`, cai depois do
+     subtítulo: lado a lado numa tela estreita, título e link quebravam os dois em duas
+     linhas. É por isso que cada elemento carrega `sm:col-start`/`sm:row-start` explícito —
+     com posições automáticas o link não teria como andar sozinho. -->
 
 <!-- Pilares -->
 <section class="relative z-10 bg-gradient-to-b from-white to-muted pt-14 pb-20">
@@ -170,24 +220,33 @@
 <!-- Publicações -->
 <section class="relative z-10 bg-gradient-to-b from-white to-muted pt-14 pb-20">
 	<div class="mx-auto max-w-6xl px-6">
-		<div class="mb-12">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+		<!-- Abaixo de `sm` o link de "ver todos" sai da linha do título e vai para o fim do
+		     bloco: lado a lado numa tela de 390px os dois quebravam em duas linhas cada, e o
+		     link acabava encavalado no título. A grade é o que deixa reordenar só ele sem
+		     separar o subtítulo do h2 — `order-last` age na coluna única do mobile, e as
+		     posições explícitas de `sm` refazem a linha título | link de antes. -->
+		<div class="mb-12 grid sm:grid-cols-[1fr_auto] sm:items-end sm:gap-x-6">
+			<p
+				class="text-sm font-semibold tracking-widest text-secondary uppercase sm:col-span-2 sm:col-start-1 sm:row-start-1"
+			>
 				{m.home_pub_eyebrow()}
 			</p>
-			<div class="mt-2 flex items-end justify-between gap-6">
-				<h2 class="text-[1.75rem] font-bold tracking-tight text-primary sm:text-[2rem]">
-					{m.home_pub_heading()}
-				</h2>
-				<a
-					href={localizeHref(resolve('/publications'))}
-					class="inline-flex shrink-0 items-center gap-1 text-base font-medium text-secondary hover:underline"
-				>
-					{m.home_pub_link()} <span aria-hidden="true">&rarr;</span>
-				</a>
-			</div>
-			<p class="mt-2 max-w-2xl text-lg leading-normal text-muted-foreground">
+			<h2
+				class="mt-2 text-[1.75rem] font-bold tracking-tight text-primary sm:col-start-1 sm:row-start-2 sm:text-[2rem]"
+			>
+				{m.home_pub_heading()}
+			</h2>
+			<p
+				class="mt-2 max-w-2xl text-lg leading-normal text-muted-foreground sm:col-span-2 sm:col-start-1 sm:row-start-3"
+			>
 				{m.home_pub_text()}
 			</p>
+			<a
+				href={localizeHref(resolve('/publications'))}
+				class="order-last mt-4 inline-flex shrink-0 items-center gap-1 justify-self-start text-base font-medium text-secondary hover:underline sm:order-none sm:col-start-2 sm:row-start-2 sm:mt-0 sm:justify-self-end"
+			>
+				{m.home_pub_link()} <span aria-hidden="true">&rarr;</span>
+			</a>
 		</div>
 
 		<!-- Lista editorial, não cards: sem fundo, moldura ou sombra. A separação é um
@@ -257,40 +316,59 @@
 <section id="equipe" class="relative z-10 bg-gradient-to-b from-white to-muted pt-14 pb-20">
 	<div class="mx-auto max-w-6xl px-6">
 		<!-- Mesmo cabeçalho das seções de Publicações e Contato. -->
-		<div class="mb-12">
-			<p class="text-sm font-semibold tracking-widest text-secondary uppercase">
+		<!-- Abaixo de `sm` o link de "ver todos" sai da linha do título e vai para o fim do
+		     bloco: lado a lado numa tela de 390px os dois quebravam em duas linhas cada, e o
+		     link acabava encavalado no título. A grade é o que deixa reordenar só ele sem
+		     separar o subtítulo do h2 — `order-last` age na coluna única do mobile, e as
+		     posições explícitas de `sm` refazem a linha título | link de antes. -->
+		<div class="mb-12 grid sm:grid-cols-[1fr_auto] sm:items-end sm:gap-x-6">
+			<p
+				class="text-sm font-semibold tracking-widest text-secondary uppercase sm:col-span-2 sm:col-start-1 sm:row-start-1"
+			>
 				{m.home_team_eyebrow()}
 			</p>
-			<div class="mt-2 flex items-end justify-between gap-6">
-				<h2 class="text-[1.75rem] font-bold tracking-tight text-primary sm:text-[2rem]">
-					{m.home_team_heading()}
-				</h2>
-				<a
-					href={localizeHref(resolve('/team'))}
-					class="inline-flex shrink-0 items-center gap-1 text-base font-medium text-secondary hover:underline"
-				>
-					{m.home_team_link()} <span aria-hidden="true">&rarr;</span>
-				</a>
-			</div>
-			<p class="mt-2 max-w-2xl text-lg leading-normal text-muted-foreground">
+			<h2
+				class="mt-2 text-[1.75rem] font-bold tracking-tight text-primary sm:col-start-1 sm:row-start-2 sm:text-[2rem]"
+			>
+				{m.home_team_heading()}
+			</h2>
+			<p
+				class="mt-2 max-w-2xl text-lg leading-normal text-muted-foreground sm:col-span-2 sm:col-start-1 sm:row-start-3"
+			>
 				{m.home_team_text()}
 			</p>
+			<a
+				href={localizeHref(resolve('/team'))}
+				class="order-last mt-4 inline-flex shrink-0 items-center gap-1 justify-self-start text-base font-medium text-secondary hover:underline sm:order-none sm:col-start-2 sm:row-start-2 sm:mt-0 sm:justify-self-end"
+			>
+				{m.home_team_link()} <span aria-hidden="true">&rarr;</span>
+			</a>
 		</div>
 
 		<!-- Faixa, não card: sem borda e com um véu de ciano a 5% no lugar do branco. Branco
 		     sobre branco só se distinguia pelo anel cinza, e era esse anel que devolvia a
 		     linguagem de componente depois de Pilares e Publicações terem perdido a moldura.
 		     O tom vem da paleta em vez de um hex avulso, então acompanha o tema. -->
-		<div class="flex items-center gap-6 rounded-xl bg-secondary/5 px-7 py-6">
+		<!-- Empilha abaixo de `sm`, e com menos padding: mesmo encolhidos, os seis retratos
+		     ocupam quase toda a largura de um celular e não sobra coluna para o texto ao lado.
+		     Era essa fileira que deixava a home rolando de lado. -->
+		<div
+			class="flex flex-col items-start gap-5 rounded-xl bg-secondary/5 px-5 py-5 sm:flex-row sm:items-center sm:gap-6 sm:px-7 sm:py-6"
+		>
 			<!-- Sobreposição de 10px em retratos de 80px, ou 12,5% do diâmetro. A sobreposição
 			     forte de pilha de avatares ("+32 usuários") esconde parte de cada rosto; aqui
-			     as pessoas são o conteúdo, então o encaixe só sugere o grupo. -->
+			     as pessoas são o conteúdo, então o encaixe só sugere o grupo.
+
+			     No celular os retratos caem para 56px: seis de 80px pedem 430px de linha, e a
+			     faixa tem ~300px por dentro. A sobreposição continua os mesmos 10px, então lá
+			     ela pesa 18% do diâmetro — o encaixe fica um pouco mais fechado, que é o que
+			     mantém a fileira lendo como grupo mesmo miúda. -->
 			<div class="flex shrink-0">
 				{#each teamAvatars as member, i (member.name)}
 					<img
 						src={member.photo}
 						alt={member.name}
-						class="h-20 w-20 shrink-0 rounded-full object-cover ring-[3px] ring-white"
+						class="h-14 w-14 shrink-0 rounded-full object-cover ring-[3px] ring-white sm:h-20 sm:w-20"
 						style="object-position: {member.photoPos ?? 'center 20%'}; margin-left: {i > 0
 							? '-10px'
 							: '0'}"
@@ -306,7 +384,7 @@
 				     z-10 garante a ordem de pintura mesmo se a estrutura mudar. -->
 				{#if remainingMembers > 0}
 					<div
-						class="relative z-10 -ml-[10px] flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-full bg-muted leading-none text-primary ring-[3px] ring-white"
+						class="relative z-10 -ml-[10px] flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full bg-muted leading-none text-primary ring-[3px] ring-white sm:h-20 sm:w-20"
 					>
 						<span class="text-sm font-semibold">+{remainingMembers}</span>
 						<span class="mt-1 text-[10px] font-medium">{m.home_team_more_label()}</span>

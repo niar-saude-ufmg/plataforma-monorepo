@@ -161,9 +161,13 @@
 			<p class="min-w-0 flex-1 text-base leading-relaxed text-muted-foreground">
 				{m.contact_team_hint()}
 			</p>
+			<!-- `basis-full sm:basis-auto`: abaixo de `sm` os três itens não cabem na mesma
+			     linha, e como o link é `shrink-0` quem cedia era o parágrafo — sobravam ~170px
+			     para ele e o texto virava uma coluninha de duas palavras. Mandando o link para
+			     a linha de baixo, o parágrafo divide a primeira só com o ícone. -->
 			<a
 				href={localizeHref(resolve('/team'))}
-				class="inline-flex shrink-0 items-center gap-1 text-base font-medium text-secondary hover:underline"
+				class="inline-flex shrink-0 basis-full items-center gap-1 text-base font-medium text-secondary hover:underline sm:basis-auto"
 			>
 				{m.contact_team_link()} <span aria-hidden="true">&rarr;</span>
 			</a>

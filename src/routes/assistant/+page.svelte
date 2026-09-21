@@ -358,7 +358,9 @@
 				<Info class="mt-0.5 size-5 shrink-0 text-secondary" aria-hidden="true" />
 				<div class="min-w-0 flex-1">
 					{#if !showNotice}
-						<div class="flex items-start justify-between gap-4">
+						<!-- Empilha abaixo de `sm`: com o botão `shrink-0` ao lado, o texto ficava
+						     com ~170px numa tela de celular e quebrava a cada duas palavras. -->
+						<div class="flex flex-col items-start gap-1 sm:flex-row sm:justify-between sm:gap-4">
 							<p class="max-w-[680px] text-muted-foreground">{m.assistant_notice_short()}</p>
 							<button
 								type="button"
@@ -370,7 +372,7 @@
 							</button>
 						</div>
 					{:else}
-						<div class="flex items-start justify-between gap-4">
+						<div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
 							<h2 class="font-semibold text-primary">{m.assistant_notice_title()}</h2>
 							<button
 								type="button"

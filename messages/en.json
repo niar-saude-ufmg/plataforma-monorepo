@@ -5,6 +5,8 @@
 	"nav_news": "News",
 	"nav_publications": "Publications",
 	"nav_team": "Team",
+	"nav_menu_open": "Open menu",
+	"nav_menu_close": "Close menu",
 	"nav_contact": "Contact",
 	"back_home": "Back to home",
 	"meta_label": "Goal {meta}",

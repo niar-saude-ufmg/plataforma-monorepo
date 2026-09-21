@@ -13,6 +13,9 @@
 	import governoLogo from '$lib/assets/footer/sponsors/governo-brasil.png';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { afterNavigate } from '$app/navigation';
+	import Menu from 'lucide-svelte/icons/menu';
+	import X from 'lucide-svelte/icons/x';
 	import { Separator } from '$lib/components/ui/separator';
 	import { m } from '$lib/paraglide/messages';
 	import { SITE_URL, SITE_NAME, ensureSlash } from '$lib/seo';
@@ -31,6 +34,28 @@
 	let lastScrollY = $state(0);
 	let headerHidden = $state(false);
 
+	// Gaveta de navegação do mobile. Os sete itens do menu somam ~690px de largura — mais
+	// que a tela inteira de um celular —, então abaixo de `lg` a navegação horizontal dá
+	// lugar a um botão que abre a mesma lista numa gaveta lateral.
+	let menuOpen = $state(false);
+	let menuButton = $state<HTMLButtonElement>();
+	let closeButton = $state<HTMLButtonElement>();
+
+	// A gaveta sobrepõe a página, então a página por baixo não pode rolar enquanto ela
+	// estiver aberta. O foco entra no botão de fechar ao abrir e volta ao ☰ ao fechar,
+	// para quem navega por teclado ou leitor de tela não se perder atrás do véu.
+	$effect(() => {
+		if (!menuOpen) return;
+		const root = document.documentElement;
+		const previous = root.style.overflow;
+		root.style.overflow = 'hidden';
+		closeButton?.focus();
+		return () => {
+			root.style.overflow = previous;
+			menuButton?.focus();
+		};
+	});
+
 	function handleScroll() {
 		const currentY = window.scrollY;
 		if (currentY <= 0) {
@@ -45,6 +70,12 @@
 		}
 		lastScrollY = currentY;
 	}
+
+	// Fecha a gaveta ao trocar de página: os links são navegação client-side, então sem
+	// isso ela continuaria aberta sobre o conteúdo novo.
+	afterNavigate(() => {
+		menuOpen = false;
+	});
 
 	const navLinks = [
 		{ href: '/' as const, label: () => m.nav_home() },
@@ -127,7 +158,12 @@
 	{@html `<script type="application/ld+json">${structuredDataJson}</scr` + `ipt>`}
 </svelte:head>
 
-<svelte:window onscroll={handleScroll} />
+<svelte:window
+	onscroll={handleScroll}
+	onkeydown={(e) => {
+		if (e.key === 'Escape') menuOpen = false;
+	}}
+/>
 
 <div class="flex min-h-screen flex-col">
 	<header
@@ -138,10 +174,15 @@
 		<!-- data-nosnippet: sem isso o Google monta o resumo do resultado de busca com o
 		     texto do menu, já que é o primeiro conteúdo do HTML. -->
 		<div data-nosnippet class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-			<a href={resolve('/')} class="relative z-10">
-				<img src={logo} alt="NIAR" class="h-11" />
+			<!-- `shrink-0`: como item de um flex, a logo encolhia até sumir quando o menu ao
+			     lado não cabia — era isso que deixava o celular sem marca nenhuma no topo. -->
+			<a href={resolve('/')} class="relative z-10 shrink-0">
+				<img src={logo} alt="NIAR" class="h-9 sm:h-11" />
 			</a>
-			<nav class="flex items-center gap-6">
+
+			<!-- Só a partir de `lg`: a lista horizontal precisa de ~690px, e com a logo e as
+			     margens o header inteiro só cabe a partir de ~900px. -->
+			<nav class="hidden items-center gap-6 lg:flex">
 				{#each navLinks as link (link.href)}
 					{@const active = isActive(link)}
 					<!-- O item ativo é o único em semibold e na cor cheia; os demais ficam em
@@ -174,9 +215,116 @@
 					{/each}
 				</div>
 			</nav>
+
+			<!-- Botão do menu mobile. 44×44 é o alvo mínimo de toque; o `-mr-2.5` devolve o
+			     ícone ao eixo direito do contêiner, já que o alvo é maior que o desenho. -->
+			<button
+				bind:this={menuButton}
+				type="button"
+				onclick={() => (menuOpen = true)}
+				aria-expanded={menuOpen}
+				aria-controls="mobile-nav"
+				aria-label={m.nav_menu_open()}
+				class="-mr-2.5 flex h-11 w-11 items-center justify-center rounded-lg text-primary transition-colors hover:bg-muted lg:hidden"
+			>
+				<Menu class="h-6 w-6" aria-hidden="true" />
+			</button>
 		</div>
+
 		<Separator />
 	</header>
+
+	<!-- Gaveta do menu mobile: entra pela direita e sobrepõe a página, sem empurrar nada.
+
+	     Fica fora do <header> de propósito: o header tem `transform` (é o que o faz sumir
+	     ao rolar), e um ancestral com transform vira a referência do `position: fixed` —
+	     dentro dele a gaveta ficaria presa à altura do header em vez de cobrir a tela.
+
+	     Sempre montada e só deslocada para fora da tela quando fechada, para a transição
+	     funcionar nos dois sentidos; `inert` tira os links do teclado e da leitura de tela
+	     enquanto ela está escondida. -->
+	<div class="lg:hidden" inert={!menuOpen}>
+		<!-- Véu: escurece a página por baixo e fecha a gaveta ao toque. É só um alvo de
+		     clique — quem usa teclado fecha pelo botão ou pelo Esc —, por isso fica fora da
+		     árvore de acessibilidade. -->
+		<div
+			class="fixed inset-0 z-[60] bg-primary/40 transition-opacity duration-300 motion-reduce:transition-none {menuOpen
+				? 'opacity-100'
+				: 'pointer-events-none opacity-0'}"
+			aria-hidden="true"
+			onclick={() => (menuOpen = false)}
+		></div>
+
+		<!-- 20rem, mas nunca mais que 85% da tela: sobra sempre uma faixa da página à
+		     esquerda, que é o que avisa que isto é uma camada por cima e não uma página
+		     nova — e é onde o dedo toca para fechar. -->
+		<div
+			id="mobile-nav"
+			role="dialog"
+			aria-modal="true"
+			aria-label={m.nav_menu_open()}
+			data-nosnippet
+			class="fixed inset-y-0 right-0 z-[70] flex w-80 max-w-[85vw] flex-col bg-background shadow-2xl transition-transform duration-300 ease-out motion-reduce:transition-none {menuOpen
+				? 'translate-x-0'
+				: 'translate-x-full'}"
+		>
+			<!-- Mesma altura da barra do header (py-4 + logo h-9), para o ✕ cair exatamente
+			     onde estava o ☰ que abriu a gaveta. -->
+			<div class="flex items-center justify-end px-6 py-4">
+				<button
+					bind:this={closeButton}
+					type="button"
+					onclick={() => (menuOpen = false)}
+					aria-label={m.nav_menu_close()}
+					class="-mr-2.5 flex h-11 w-11 items-center justify-center rounded-lg text-primary transition-colors hover:bg-muted"
+				>
+					<X class="h-6 w-6" aria-hidden="true" />
+				</button>
+			</div>
+
+			<!-- Cada item ocupa a linha inteira e tem 44px de altura de toque; o ativo ganha
+			     um filete à esquerda no lugar do sublinhado do desktop, com o mesmo degradê
+			     azul-profundo → ciano, só que correndo de cima para baixo. É um pseudo-elemento
+			     e não `border-l`, porque borda não aceita degradê. O `pl-[1.125rem]` repõe os
+			     2px que a borda ocupava, para o texto não sair do lugar. -->
+			<nav class="flex-1 overflow-y-auto border-t border-border" aria-label={m.nav_menu_open()}>
+				<ul class="px-6 py-2">
+					{#each navLinks as link (link.href)}
+						{@const active = isActive(link)}
+						<li>
+							<a
+								href={localizeHref(resolve(link.href))}
+								aria-current={active ? 'page' : undefined}
+								class="relative flex min-h-11 items-center py-2.5 pl-[1.125rem] text-base transition-colors before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:rounded-full before:bg-gradient-to-b before:from-primary before:to-secondary {active
+									? 'font-semibold text-primary before:opacity-100'
+									: 'font-medium text-primary/70 before:opacity-0'}"
+							>
+								{link.label()}
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</nav>
+
+			<!-- Idioma no pé da gaveta: é configuração, não destino, então fica separado da
+			     lista de páginas. -->
+			<div class="flex items-center gap-3 border-t border-border px-10 py-5 text-sm font-semibold">
+				{#each locales as locale, i (locale)}
+					{#if i > 0}<span class="text-primary/30">|</span>{/if}
+					<a
+						href={localizeHref(currentPath, { locale })}
+						data-sveltekit-reload
+						aria-current={getLocale() === locale ? 'true' : undefined}
+						class="px-1 py-1 transition-colors {getLocale() === locale
+							? 'text-primary'
+							: 'text-primary/40'}"
+					>
+						{localeLabels[locale]}
+					</a>
+				{/each}
+			</div>
+		</div>
+	</div>
 
 	<main class="relative z-10 flex flex-1 flex-col">
 		{@render children()}
@@ -322,9 +470,13 @@
 					     é normal precisarem de um ajuste fino na tela.
 
 					     `md:justify-between` distribui as quatro no vão inteiro da régua; o
-					     `gap-x-8` é só o piso para quando a linha apertar e elas quebrarem. -->
+					     `gap-x-8` é só o piso para quando a linha apertar e elas quebrarem.
+
+					     No celular a fileira vira grade 2×2. Em flex-wrap, as quatro caíam três
+					     em cima e uma sozinha embaixo — uma das instituições ficava destacada
+					     das outras sem motivo, e são todas do mesmo nível. -->
 					<div
-						class="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 rounded-lg bg-white px-8 py-2.5 md:justify-between"
+						class="mt-4 grid grid-cols-2 items-center justify-items-center gap-x-8 gap-y-5 rounded-lg bg-white px-8 py-4 sm:flex sm:flex-wrap sm:justify-center sm:gap-y-4 sm:py-2.5 md:justify-between"
 					>
 						{#each [{ src: ufmgLogo, alt: 'UFMG', h: 'max-h-4' }, { src: susLogo, alt: 'SUS 35 Anos', h: 'max-h-6' }, { src: ministerioLogo, alt: 'Ministério da Saúde', h: 'max-h-5' }, { src: governoLogo, alt: 'Governo do Brasil', h: 'max-h-6' }] as seal (seal.alt)}
 							<img src={seal.src} alt={seal.alt} class="{seal.h} object-contain" />
