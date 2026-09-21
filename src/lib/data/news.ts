@@ -86,12 +86,89 @@ export type NewsItem = {
 	body?: Localized[];
 };
 
+/** Foto dos cards, com o `object-position` que o recorte 16:9 precisa. */
+export function cardPhoto(item: NewsItem): { src: string; position?: string; alt: Localized } {
+	const primeira = item.photos[0];
+	return {
+		src: item.cover?.src ?? primeira.src,
+		position: item.cover ? item.cover.position : primeira.position,
+		alt: primeira.alt
+	};
+}
+
 /** Whether the item links to an internally-hosted article page (`/news/<id>`). */
 export function isInternalArticle(item: NewsItem): boolean {
 	return Array.isArray(item.body) && item.body.length > 0;
 }
 
 const items: NewsItem[] = [
+	{
+		id: 'niar-na-data-for-policy-2026',
+		date: '2026-09-17',
+		category: 'event',
+		title: {
+			pt: 'NIAR-Saúde apresenta framework de governança de IA na Data for Policy 2026',
+			en: 'NIAR-Saúde presents AI governance framework at Data for Policy 2026'
+		},
+		excerpt: {
+			pt: 'Na 10ª edição da conferência, em Barcelona, o grupo apresentou o FIAR, que traduz princípios de IA responsável em evidências e níveis de maturidade para o acompanhamento contínuo de sistemas.',
+			en: 'At the conference’s 10th edition, in Barcelona, the group presented FIAR, which turns responsible AI principles into evidence and maturity levels for the continuous oversight of systems.'
+		},
+		gallery: 'duo-float-right',
+		photos: [
+			{
+				src: marisaDfp,
+				alt: {
+					pt: 'Marisa Vasconcelos apresenta o trabalho do NIAR-Saúde na Data for Policy 2026, com o slide do FIAR projetado ao fundo',
+					en: 'Marisa Vasconcelos presents NIAR-Saúde’s work at Data for Policy 2026, with the FIAR slide projected behind her'
+				},
+				caption: {
+					pt: 'Marisa Vasconcelos apresenta o trabalho do NIAR-Saúde na Data for Policy 2026.',
+					en: 'Marisa Vasconcelos presents NIAR-Saúde’s work at Data for Policy 2026.'
+				},
+				position: 'center 70%'
+			},
+			{
+				src: marisaDfpCover,
+				alt: {
+					pt: 'Slide de abertura da sessão “Participatory AI and Public Perception”, com a lista de palestrantes',
+					en: 'Opening slide of the “Participatory AI and Public Perception” session, listing the speakers'
+				},
+				caption: {
+					pt: 'A sessão “Participatory AI and Public Perception”, no primeiro dia da conferência, em Barcelona (Espanha).',
+					en: 'The “Participatory AI and Public Perception” session, on the conference’s first day, in Barcelona, Spain.'
+				},
+				position: 'center 25%'
+			}
+		],
+		cover: { src: marisaDfpCover, position: 'center 25%' },
+		body: [
+			{
+				pt: 'O NIAR-Saúde participou da 10ª edição da Data for Policy, realizada entre 8 e 10 de setembro de 2026 na Universitat Pompeu Fabra, em Barcelona, na Espanha. Com o tema “Governance of/with AI: Implications for Data, Infrastructure, and Tech Sovereignty”, a conferência reuniu pesquisadores, formuladores de políticas públicas e profissionais de diferentes países para discutir os impactos da inteligência artificial sobre a governança e a tomada de decisão.',
+				en: 'NIAR-Saúde took part in the 10th edition of Data for Policy, held from 8 to 10 September 2026 at Universitat Pompeu Fabra in Barcelona, Spain. Under the theme “Governance of/with AI: Implications for Data, Infrastructure, and Tech Sovereignty”, the conference brought together researchers, policymakers and practitioners from different countries to discuss the impacts of artificial intelligence on governance and decision-making.'
+			},
+			{
+				pt: 'Durante o evento, o grupo apresentou o trabalho “From Principles to Longitudinal AI Governance: An Evidence-Based Framework for Continuous Oversight”, que investiga como princípios de IA responsável podem ser traduzidos em práticas concretas de governança e acompanhamento contínuo de sistemas de inteligência artificial.',
+				en: 'During the event, the group presented the work “From Principles to Longitudinal AI Governance: An Evidence-Based Framework for Continuous Oversight”, which investigates how responsible AI principles can be translated into concrete practices of governance and continuous oversight of artificial intelligence systems.'
+			},
+			{
+				pt: 'O artigo apresenta o FIAR (Framework for Institutional AI Responsibility), uma proposta que organiza a governança de IA a partir da produção e da avaliação de evidências relacionadas a diferentes dimensões de responsabilidade. O framework também estabelece níveis de maturidade que representam a evolução dessas práticas, desde iniciativas pontuais até processos institucionalizados de acompanhamento contínuo.',
+				en: 'The paper introduces FIAR (Framework for Institutional AI Responsibility), a proposal that organizes AI governance around the production and assessment of evidence related to different dimensions of responsibility. The framework also establishes maturity levels representing how these practices evolve, from isolated initiatives to institutionalized processes of continuous oversight.'
+			},
+			{
+				pt: 'A aplicação é ilustrada por meio de um modelo de previsão de internações por doenças respiratórias desenvolvido com dados do SUS. O estudo de caso demonstra como evidências relacionadas a aspectos como desempenho, justiça e explicabilidade podem ser incorporadas à governança do sistema, em conjunto com a definição de responsabilidades institucionais e mecanismos de monitoramento ao longo de seu ciclo de vida.',
+				en: 'Its application is illustrated through a model for forecasting hospitalizations due to respiratory diseases, developed with data from Brazil’s Unified Health System (SUS). The case study shows how evidence on aspects such as performance, fairness and explainability can be incorporated into the system’s governance, together with the definition of institutional responsibilities and monitoring mechanisms throughout its lifecycle.'
+			},
+			{
+				pt: 'Com isso, o trabalho busca aproximar os princípios de IA responsável da prática institucional, oferecendo uma abordagem estruturada e baseada em evidências para acompanhar sistemas de IA desde seu desenvolvimento e avaliação até sua utilização e eventuais modificações.',
+				en: 'In doing so, the work seeks to bring responsible AI principles closer to institutional practice, offering a structured, evidence-based approach to monitoring AI systems from development and evaluation through to use and any subsequent changes.'
+			},
+			{
+				pt: 'A versão completa do trabalho está disponível nos anais da Data for Policy 2026 e pode ser acessada na página de publicações do NIAR-Saúde.',
+				en: 'The full version of the work is available in the Data for Policy 2026 proceedings and can be accessed on NIAR-Saúde’s publications page.'
+			}
+		]
+	},
 	{
 		id: 'sala-segura-primeira-do-pais',
 		date: '2026-03-10',

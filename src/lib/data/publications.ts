@@ -16,7 +16,8 @@ export const publications: Publication[] = [
 			'From Principles to Longitudinal AI Governance: An Evidence-Based Framework for Continuous Oversight',
 		authors:
 			'Vasconcelos, M., Pereira, R.G., Brito, L.E., Brandão, M.A., Marques-Neto, H.T., Almeida, J.M., Silva, A.P.C., Meira Jr, W., Almeida, V.',
-		journal: 'Proceedings of the Data for Policy 2026 Conference'
+		journal: 'Proceedings of the Data for Policy 2026 Conference',
+		doi: 'https://doi.org/10.5281/zenodo.22638537'
 	},
 	{
 		year: '2026',
