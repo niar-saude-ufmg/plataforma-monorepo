@@ -7,6 +7,7 @@
 	import { t } from '$lib/i18n';
 	import { formatNewsDate } from '$lib/date';
 	import type { NewsCategory } from '$lib/data/news';
+	import NewsArticleBody from '$lib/components/NewsArticleBody.svelte';
 
 	let { data } = $props();
 	const item = $derived(data.item);
@@ -60,29 +61,6 @@
 			{t(item.title)}
 		</h1>
 
-		<figure class="mt-8">
-			<div class="relative aspect-video overflow-hidden rounded-2xl ring-1 ring-border">
-				<img
-					src={item.image}
-					alt={t(item.imageAlt)}
-					class="absolute inset-0 h-full w-full object-cover"
-					style:object-position={item.imagePosition}
-					loading="eager"
-					decoding="async"
-					fetchpriority="high"
-				/>
-			</div>
-			{#if item.caption}
-				<figcaption class="mt-3 text-sm text-foreground/60 italic">
-					{t(item.caption)}
-				</figcaption>
-			{/if}
-		</figure>
-
-		<div class="mt-8 flex flex-col gap-6">
-			{#each item.body ?? [] as paragraph, i (i)}
-				<p class="text-lg leading-relaxed text-foreground/90">{t(paragraph)}</p>
-			{/each}
-		</div>
+		<NewsArticleBody photos={item.photos} gallery={item.gallery} body={item.body} />
 	</div>
 </section>

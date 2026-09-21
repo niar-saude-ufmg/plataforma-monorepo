@@ -9,7 +9,7 @@
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { t } from '$lib/i18n';
 	import { formatNewsDate } from '$lib/date';
-	import { isInternalArticle, type NewsItem, type NewsCategory } from '$lib/data/news';
+	import { isInternalArticle, cardPhoto, type NewsItem, type NewsCategory } from '$lib/data/news';
 
 	let { news }: { news: NewsItem[] } = $props();
 
@@ -131,7 +131,7 @@
 				     e o card visível preenche exatamente ela. Só a sombra e o contraste da
 				     borda mudam — colorir o card inteiro seria pesado demais para a identidade. -->
 				<div
-					class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-border transition-shadow duration-200 hover:shadow-md hover:ring-primary/20"
+					class="overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-border transition duration-200 hover:-translate-y-[3px] hover:shadow-xl hover:ring-primary/20"
 					bind:this={viewportRef}
 				>
 					<div class="flex">
@@ -149,10 +149,10 @@
 								     originais para o card não ficar monumental. -->
 								<div class="relative aspect-video md:aspect-auto md:min-h-[340px]">
 									<img
-										src={item.image}
-										alt={t(item.imageAlt)}
+										src={cardPhoto(item).src}
+										alt={t(cardPhoto(item).alt)}
 										class="absolute inset-0 h-full w-full object-cover"
-										style:object-position={item.imagePosition}
+										style:object-position={cardPhoto(item).position}
 										loading={i === 0 ? 'eager' : 'lazy'}
 										decoding="async"
 										fetchpriority={i === 0 ? 'high' : 'auto'}

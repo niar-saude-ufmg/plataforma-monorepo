@@ -2,8 +2,63 @@ import type { Localized } from '$lib/i18n';
 import salaSeguraPais from '$lib/assets/news/sala-segura-primeira-do-pais.jpg';
 import salaSeguraInaugurada from '$lib/assets/news/sala-segura-inaugurada.jpg';
 import ramonSbcas from '$lib/assets/news/ramon_sbcas.jpeg';
+import marisaDfp from '$lib/assets/news/marisa_dataforpolicy.png';
+import marisaDfpCover from '$lib/assets/news/marisa_dataforpolicy_cover.png';
 
 export type NewsCategory = 'event' | 'award' | 'media' | 'post' | 'publication' | 'partnership';
+
+/** Uma foto da notícia, com seu texto alternativo e legenda próprios. */
+export type NewsPhoto = {
+	src: string;
+	/** Descrição para leitores de tela. Obrigatória. */
+	alt: Localized;
+	/**
+	 * Legenda visível sob a foto na página da matéria. Opcional — use em fotos
+	 * editoriais (eventos, pessoas), não em imagens decorativas. O `alt` é para
+	 * quem não vê a foto; a legenda é para todo mundo.
+	 */
+	caption?: Localized;
+	/**
+	 * CSS `object-position` (ex.: 'left', 'center 25%'), para manter o assunto
+	 * no enquadramento quando o template recorta a foto. Padrão: centralizado.
+	 */
+	position?: string;
+};
+
+/**
+ * Template da galeria na página da matéria. O nome diz a quantidade de fotos e
+ * o arranjo; `galleryOptions` lista as opções válidas para cada quantidade, que
+ * é o que a futura tela de cadastro vai oferecer depois que a pessoa escolher
+ * quantas fotos quer enviar.
+ */
+export type NewsGallery =
+	/** 1 foto horizontal, largura inteira, recortada em 16:9. */
+	| 'wide'
+	/** 1 foto vertical, inteira e sem recorte, em coluna estreita centralizada. */
+	| 'tall'
+	/** 2 fotos lado a lado, mesma altura, recorte 4:5 (bom para verticais). */
+	| 'duo'
+	/** 2 fotos empilhadas, cada uma em 16:9 (bom para horizontais). */
+	| 'duo-stacked'
+	/**
+	 * 2 fotos verticais escalonadas dentro do texto: a primeira à direita, no
+	 * alto, e a segunda à esquerda, mais abaixo, com os parágrafos contornando
+	 * as duas. No celular viram blocos de largura inteira, em ordem.
+	 */
+	| 'duo-float-right'
+	/** Igual ao anterior, começando pela esquerda. */
+	| 'duo-float-left'
+	/** 3 fotos lado a lado, recorte 4:5. */
+	| 'trio'
+	/** 3 fotos: uma em 16:9 no topo e duas menores abaixo. */
+	| 'trio-lead';
+
+/** Templates disponíveis para cada quantidade de fotos. */
+export const galleryOptions: Record<1 | 2 | 3, NewsGallery[]> = {
+	1: ['wide', 'tall'],
+	2: ['duo', 'duo-stacked', 'duo-float-right', 'duo-float-left'],
+	3: ['trio', 'trio-lead']
+};
 
 export type NewsItem = {
 	id: string;
@@ -11,20 +66,16 @@ export type NewsItem = {
 	category: NewsCategory;
 	title: Localized;
 	excerpt: Localized;
-	image: string;
-	imageAlt: Localized;
+	/** De 1 a 3 fotos. A primeira também alimenta os cards, salvo se houver `cover`. */
+	photos: NewsPhoto[];
+	/** Arranjo das fotos na matéria. Precisa constar de `galleryOptions[photos.length]`. */
+	gallery?: NewsGallery;
 	/**
-	 * Visible caption shown below the image on the internal article page.
-	 * Optional — use for editorial photos (events, people), not for
-	 * decorative images. `alt` is for screen readers; this is for everyone.
+	 * Imagem dos cards (lista e carrossel), que recortam sempre em 16:9. Use
+	 * quando nenhuma foto da galeria sobrevive ao recorte — uma vertical, por
+	 * exemplo. Sem isso, vale a primeira foto.
 	 */
-	caption?: Localized;
-	/**
-	 * CSS `object-position` for the image (e.g. 'left', '15% center').
-	 * Use to keep the subject in frame when the card crops a wide photo.
-	 * Defaults to centered.
-	 */
-	imagePosition?: string;
+	cover?: { src: string; position?: string };
 	/** External URL, opened in a new tab. Ignored when `body` is present. */
 	link?: string;
 	/**
@@ -53,11 +104,15 @@ const items: NewsItem[] = [
 			pt: 'Ambiente inédito no país viabiliza o tratamento de dados sensíveis e o desenvolvimento de soluções de IA para aprimorar diagnósticos, prognósticos e tratamentos.',
 			en: 'The country’s first such environment enables sensitive-data processing and AI solutions to improve diagnoses, prognoses and treatments.'
 		},
-		image: salaSeguraPais,
-		imageAlt: {
-			pt: 'Sala segura da UFMG para uso de dados sensíveis em saúde',
-			en: 'UFMG’s secure room for handling sensitive health data'
-		},
+		photos: [
+			{
+				src: salaSeguraPais,
+				alt: {
+					pt: 'Sala segura da UFMG para uso de dados sensíveis em saúde',
+					en: 'UFMG’s secure room for handling sensitive health data'
+				}
+			}
+		],
 		link: 'https://www.ufmg.br/comunicacao/noticias/saude/ufmg-e-a-primeira-universidade-do-pais-a-contar-com-sala-segura-para-uso-de-dados-sensiveis-em-saude/'
 	},
 	{
@@ -72,11 +127,15 @@ const items: NewsItem[] = [
 			pt: 'Novo espaço na Faculdade de Medicina da UFMG permite desenvolver análises e modelos de IA aplicados à saúde em um ambiente controlado, monitorado e auditável.',
 			en: 'New space at UFMG’s Medical School lets AI analyses and models for health be developed in a controlled, monitored and auditable environment.'
 		},
-		image: salaSeguraInaugurada,
-		imageAlt: {
-			pt: 'Inauguração da Sala Segura do NIAR-Saúde na Faculdade de Medicina da UFMG',
-			en: 'Inauguration of NIAR-Saúde’s Secure Room at UFMG’s Medical School'
-		},
+		photos: [
+			{
+				src: salaSeguraInaugurada,
+				alt: {
+					pt: 'Inauguração da Sala Segura do NIAR-Saúde na Faculdade de Medicina da UFMG',
+					en: 'Inauguration of NIAR-Saúde’s Secure Room at UFMG’s Medical School'
+				}
+			}
+		],
 		link: 'https://dcc.ufmg.br/sala-segura-do-niar-saude-e-inaugurada-para-ampliar-pesquisas-com-ia-e-dados-de-saude/'
 	},
 	{
@@ -91,16 +150,21 @@ const items: NewsItem[] = [
 			pt: 'O grupo levou ao Simpósio Brasileiro de Computação Aplicada à Saúde um trabalho sobre previsão de internações respiratórias com dados do SUS e uso responsável de inteligência artificial.',
 			en: 'The group brought to the Brazilian Symposium on Computing Applied to Health a study on forecasting respiratory hospitalizations with SUS data and the responsible use of artificial intelligence.'
 		},
-		image: ramonSbcas,
-		imagePosition: '15% center',
-		imageAlt: {
-			pt: 'Ramon Pereira apresenta o artigo do NIAR-Saúde no SBCAS 2026, em Ouro Preto',
-			en: 'Ramon Pereira presents NIAR-Saúde’s paper at SBCAS 2026 in Ouro Preto'
-		},
-		caption: {
-			pt: 'Ramon G. Pereira apresenta o artigo do NIAR-Saúde no SBCAS 2026, em Ouro Preto (MG).',
-			en: 'Ramon G. Pereira presents NIAR-Saúde’s paper at SBCAS 2026 in Ouro Preto (MG).'
-		},
+		gallery: 'wide',
+		photos: [
+			{
+				src: ramonSbcas,
+				alt: {
+					pt: 'Ramon Pereira apresenta o artigo do NIAR-Saúde no SBCAS 2026, em Ouro Preto',
+					en: 'Ramon Pereira presents NIAR-Saúde’s paper at SBCAS 2026 in Ouro Preto'
+				},
+				caption: {
+					pt: 'Ramon G. Pereira apresenta o artigo do NIAR-Saúde no SBCAS 2026, em Ouro Preto (MG).',
+					en: 'Ramon G. Pereira presents NIAR-Saúde’s paper at SBCAS 2026 in Ouro Preto (MG).'
+				},
+				position: '15% center'
+			}
+		],
 		body: [
 			{
 				pt: 'O NIAR-Saúde marcou presença no XXVI Simpósio Brasileiro de Computação Aplicada à Saúde (SBCAS 2026), realizado de 1º a 4 de junho de 2026 em Ouro Preto (MG), no Centro de Artes e Convenções da UFOP. O SBCAS é um dos principais fóruns de encontro entre pesquisadores das áreas de computação e saúde no país.',

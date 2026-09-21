@@ -100,7 +100,8 @@
 </section>
 
 <!-- Notícias -->
-<HomeNewsCarousel {news} />
+<!-- Só as três mais recentes: a home é vitrine, a lista completa mora em /news. -->
+<HomeNewsCarousel news={news.slice(0, 3)} />
 
 <!-- PADRÃO DAS SEÇÕES DA HOME — repetir ao criar uma seção nova, aqui ou em componente.
 

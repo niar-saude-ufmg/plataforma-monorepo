@@ -8,7 +8,7 @@
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { t } from '$lib/i18n';
 	import { formatNewsDate } from '$lib/date';
-	import { news, isInternalArticle, type NewsCategory } from '$lib/data/news';
+	import { news, isInternalArticle, cardPhoto, type NewsCategory } from '$lib/data/news';
 
 	// Canonical order; only categories actually present in the data become chips.
 	const CATEGORY_ORDER: NewsCategory[] = [
@@ -113,15 +113,18 @@
 
 			<!-- Destaque: notícia mais recente -->
 			{#if featured}
+				<!-- Card inteiro clicável, como no carrossel da home: o `after:inset-0` do link
+				     estica a área de clique sobre todo o <article>, que é o `relative` de
+				     referência. Não aninha âncoras, e o rótulo segue visível como pista. -->
 				<article
-					class="mt-10 grid overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-border md:grid-cols-2"
+					class="group/card relative mt-10 grid overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-border transition duration-200 hover:-translate-y-[3px] hover:shadow-xl hover:ring-primary/20 md:grid-cols-2"
 				>
 					<div class="relative aspect-video md:aspect-auto md:min-h-[420px]">
 						<img
-							src={featured.image}
-							alt={t(featured.imageAlt)}
+							src={cardPhoto(featured).src}
+							alt={t(cardPhoto(featured).alt)}
 							class="absolute inset-0 h-full w-full object-cover"
-							style:object-position={featured.imagePosition}
+							style:object-position={cardPhoto(featured).position}
 							loading="eager"
 							decoding="async"
 							fetchpriority="high"
@@ -146,9 +149,15 @@
 						{#if isInternalArticle(featured)}
 							<a
 								href={localizeHref(resolve('/news/[slug]', { slug: featured.id }))}
-								class="mt-1 inline-flex items-center gap-1.5 text-base font-medium text-secondary hover:underline"
+								aria-label="{m.news_read_more()}: {t(featured.title)}"
+								class="mt-1 inline-flex items-center gap-1.5 text-base font-medium text-secondary after:absolute after:inset-0 after:content-[''] hover:underline"
 							>
-								{m.news_read_more()} <span aria-hidden="true">&rarr;</span>
+								{m.news_read_more()}
+								<span
+									aria-hidden="true"
+									class="transition-transform duration-200 group-hover/card:translate-x-1"
+									>&rarr;</span
+								>
 							</a>
 						{:else if featured.link}
 							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
@@ -156,10 +165,14 @@
 								href={featured.link}
 								target="_blank"
 								rel="noopener noreferrer"
-								class="mt-1 inline-flex items-center gap-1.5 text-base font-medium text-secondary hover:underline"
+								aria-label="{m.news_read_more()}: {t(featured.title)}"
+								class="mt-1 inline-flex items-center gap-1.5 text-base font-medium text-secondary after:absolute after:inset-0 after:content-[''] hover:underline"
 							>
 								{m.news_read_more()}
-								<ExternalLink class="h-4 w-4" aria-hidden="true" />
+								<ExternalLink
+									class="h-4 w-4 transition-transform duration-200 group-hover/card:translate-x-1"
+									aria-hidden="true"
+								/>
 							</a>
 						{/if}
 					</div>
@@ -171,14 +184,14 @@
 				<div class="mt-8 grid gap-8 sm:grid-cols-2">
 					{#each rest as item (item.id)}
 						<article
-							class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-border"
+							class="group/card relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-border transition duration-200 hover:-translate-y-[3px] hover:shadow-xl hover:ring-primary/20"
 						>
 							<div class="relative aspect-video">
 								<img
-									src={item.image}
-									alt={t(item.imageAlt)}
+									src={cardPhoto(item).src}
+									alt={t(cardPhoto(item).alt)}
 									class="absolute inset-0 h-full w-full object-cover"
-									style:object-position={item.imagePosition}
+									style:object-position={cardPhoto(item).position}
 									loading="lazy"
 									decoding="async"
 								/>
@@ -202,9 +215,15 @@
 								{#if isInternalArticle(item)}
 									<a
 										href={localizeHref(resolve('/news/[slug]', { slug: item.id }))}
-										class="mt-auto inline-flex items-center gap-1.5 text-base font-medium text-secondary hover:underline"
+										aria-label="{m.news_read_more()}: {t(item.title)}"
+										class="mt-auto inline-flex items-center gap-1.5 text-base font-medium text-secondary after:absolute after:inset-0 after:content-[''] hover:underline"
 									>
-										{m.news_read_more()} <span aria-hidden="true">&rarr;</span>
+										{m.news_read_more()}
+										<span
+											aria-hidden="true"
+											class="transition-transform duration-200 group-hover/card:translate-x-1"
+											>&rarr;</span
+										>
 									</a>
 								{:else if item.link}
 									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
@@ -212,10 +231,14 @@
 										href={item.link}
 										target="_blank"
 										rel="noopener noreferrer"
-										class="mt-auto inline-flex items-center gap-1.5 text-base font-medium text-secondary hover:underline"
+										aria-label="{m.news_read_more()}: {t(item.title)}"
+										class="mt-auto inline-flex items-center gap-1.5 text-base font-medium text-secondary after:absolute after:inset-0 after:content-[''] hover:underline"
 									>
 										{m.news_read_more()}
-										<ExternalLink class="h-4 w-4" aria-hidden="true" />
+										<ExternalLink
+											class="h-4 w-4 transition-transform duration-200 group-hover/card:translate-x-1"
+											aria-hidden="true"
+										/>
 									</a>
 								{/if}
 							</div>
