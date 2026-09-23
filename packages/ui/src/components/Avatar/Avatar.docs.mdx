@@ -1,0 +1,54 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Avatar.stories";
+
+<Meta of={Stories} />
+
+# Avatar
+
+Avatar para representar uma pessoa usuária por imagem, iniciais ou ícone, usando os estilos do tema NIAR.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Initials
+
+<Description of={Stories.Initials} />
+<Canvas of={Stories.Initials} />
+
+### Icon
+
+<Description of={Stories.Icon} />
+<Canvas of={Stories.Icon} />
+
+### Image
+
+<Description of={Stories.Image} />
+<Canvas of={Stories.Image} />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+  code={`import { Avatar } from "@niar/ui";
+
+export function UserAvatar() {
+    return <Avatar alt="Usuário NIAR">UN</Avatar>;
+}`}
+/>
+
+### Acessibilidade
+
+- Forneça `alt` quando o avatar usar uma imagem.
+- Use um texto alternativo que identifique a pessoa, evitando informações redundantes.
+- Quando o avatar for interativo, envolva-o em um controle com nome acessível.

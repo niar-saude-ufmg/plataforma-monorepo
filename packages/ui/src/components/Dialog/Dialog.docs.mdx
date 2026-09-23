@@ -1,0 +1,43 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Dialog.stories";
+
+<Meta of={Stories} />
+
+# Dialog
+
+Painel modal para confirmar ações ou exibir informações que exigem atenção.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Props
+<Controls of={Stories.Playground} sort="alpha" />
+### Playground
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Exemplo de aplicação
+<Source
+  dark
+  language="tsx"
+  code={`import { Button, Dialog } from "@niar/ui";
+export function Confirmation() {
+    return (
+      <Dialog
+        open
+        title="Confirmar envio"
+        onClose={() => undefined}
+        actions={<Button variant="contained">Confirmar</Button>}
+      >
+        Deseja enviar este projeto?
+      </Dialog>
+    );
+}`}
+/>
+### Acessibilidade - Mantenha um título ou nome acessível para identificar o
+dialog. - Permita fechar pelo botão de fechar e pela ação de escape. - Use ações
+com rótulos claros para confirmar ou cancelar.

@@ -43,5 +43,10 @@ export default defineConfig(({ mode }) => {
     build: {
       target: "esnext",
     },
+    test: {
+      globals: true,
+      environment: "jsdom",
+      setupFiles: "./src/test-setup.ts"
+    }
   };
 });

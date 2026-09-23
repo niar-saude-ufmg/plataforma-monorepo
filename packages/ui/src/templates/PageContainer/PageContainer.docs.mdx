@@ -1,0 +1,33 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./PageContainer.stories";
+
+<Meta of={Stories} />
+
+# PageContainer
+
+Template de composição que mantém o `PageHeader` institucional com tabs no topo e recebe toda a composição da página em `children`.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+- `children` recebe a composição da página, como `Listing`, `Form` e `Footer`.
+
+### Exemplo de aplicação
+
+<Source dark language="tsx" code={'import { Footer, Listing, PageContainer } from "@niar/ui";\n\n<PageContainer>\n  <Listing title="Projetos" columns={columns} rows={rows} />\n  <Footer />\n</PageContainer>'} />
+
+### Acessibilidade
+
+- O conteúdo é renderizado em um elemento semântico `main`.
+- Configure o `PageHeader` com labels acessíveis para a navegação.
+- Mantenha apenas um header principal e um `main` por página.

@@ -1,0 +1,32 @@
+import { Meta, Canvas, Controls, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Switch.stories";
+
+<Meta of={Stories} />
+
+# Switch
+
+O `Switch` representa uma configuração binária e segue a API de eventos do MUI.
+
+## Playground
+
+<Canvas of={Stories.Playground} />
+<Controls />
+
+## States
+
+<Canvas of={Stories.States} />
+
+### Props
+
+- `label`: texto associado ao controle.
+- `checked`: valor controlado pelo componente pai.
+- `disabled`: impede a interação.
+- `slotProps`: props nativas das partes internas do MUI, incluindo atributos de acessibilidade do input.
+
+### Exemplo de aplicação
+
+<Source dark language="tsx" code={'import { Switch } from "@niar/ui";\n\n<Switch\n  label="Ativar notificações"\n  checked={notificationsEnabled}\n  onChange={(_, checked) => setNotificationsEnabled(checked)}\n/>'} />
+
+### Acessibilidade
+
+Use `label` ou forneça um nome acessível em `inputProps`. O estado deve ser comunicado pelo valor controlado de `checked`.

@@ -12,6 +12,7 @@ import {
 } from "@niar/auth";
 import { APP_ROUTES, APP_TITLES } from "@niar/config";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { DesignSystemPage } from "./pages/DesignSystemPage";
 import { AuthenticatedUser, getCurrentUser, login as loginRequest } from "./services/auth-api";
 
 type SessionUser = PlatformSessionUser;
@@ -207,6 +208,8 @@ export default function App() {
 
       {!isRestoringSession && <Routes>
         <Route path={APP_ROUTES.login} element={<LoginPage onLogin={login} />} />
+        <Route path={`${APP_ROUTES.visualIdentity}/*`} element={<DesignSystemPage />} />
+        <Route path="/design-system/*" element={<Navigate replace to={APP_ROUTES.visualIdentity} />} />
         <Route
           path={APP_ROUTES.researcherSignup}
           element={

@@ -1,0 +1,38 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Card.stories";
+
+<Meta of={Stories} />
+
+# Card
+
+Superfície para agrupar conteúdo relacionado em dashboards e formulários.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+### Props
+<Controls of={Stories.Playground} sort="alpha" />
+### Project
+<Description of={Stories.Project} />
+<Canvas of={Stories.Project} />
+### Variants
+<Description of={Stories.Variants} />
+<Canvas of={Stories.Variants} />
+### Exemplo de aplicação
+<Source
+  dark
+  language="tsx"
+  code={`import { Card } from "@niar/ui";
+
+export function ProjectCard() {
+    return <Card variant="outlined">Projeto de pesquisa</Card>;
+}`}
+/>
+### Acessibilidade - Mantenha uma hierarquia de títulos clara no conteúdo
+agrupado. - Não use o card como controle interativo sem fornecer foco e nome
+acessível.
