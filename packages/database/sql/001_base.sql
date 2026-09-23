@@ -200,6 +200,8 @@ BEGIN
   END IF;
 END $$;
 
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'resubmitted_to_committee';
+
 CREATE TABLE IF NOT EXISTS shared.project_status_history (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_id INTEGER NOT NULL REFERENCES admin.projects(id) ON DELETE CASCADE,

@@ -29,32 +29,52 @@ declare global
 // com a mesma duração depois da migração.
 const ACCESS_TOKEN_EXPIRES_IN = "8h";
 
+// Falha alto e cedo (na subida do servidor) se a variável não estiver
+// configurada, em vez de cair num fallback silencioso ("") que faria login
+// virar 500 genérico e authenticate virar 401 em tudo, sem indicar a causa.
+const SECRET_KEY = process.env.SECRET_KEY;
+if (!SECRET_KEY) {
+  throw new Error("SECRET_KEY não configurada");
+}
+
 export const signAccessToken = (userId: number): string =>
-  jwt.sign({ sub: String(userId) }, process.env.SECRET_KEY ?? "", {
+  jwt.sign({ sub: String(userId) }, SECRET_KEY, {
     algorithm: "HS256",
     expiresIn: ACCESS_TOKEN_EXPIRES_IN
   });
 
 // Token só carrega "sub" (id) e "exp", sem role. Depois de validado, busca o usuário no banco.
 export const authenticate = async (request: Request, _response: Response, next: NextFunction) => {
-  try {
-    const authHeader = request.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
-      throw new AppError("Token não informado", 401);
-    }
+  const authHeader = request.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    next(new AppError("Token não informado", 401));
+    return;
+  }
 
-    const token = authHeader.slice("Bearer ".length);
-    const payload = jwt.verify(token, process.env.SECRET_KEY ?? "", { algorithms: ["HS256"] });
+  const token = authHeader.slice("Bearer ".length);
+  let userId: number;
+
+  // Só a decodificação do token fica neste try/catch: qualquer problema
+  // aqui (assinatura errada, expirado, formato inesperado) é mesmo "token
+  // inválido". A busca no banco, abaixo, tem seu próprio tratamento — se
+  // ela falhar, não deve virar "token inválido" também.
+  try {
+    const payload = jwt.verify(token, SECRET_KEY, { algorithms: ["HS256"] });
 
     if (typeof payload !== "object" || payload === null) {
-      throw new AppError("Token inválido", 401);
+      throw new Error("payload sem o formato esperado");
     }
 
-    const userId = Number(payload.sub);
+    userId = Number(payload.sub);
     if (!Number.isInteger(userId)) {
-      throw new AppError("Token inválido", 401);
+      throw new Error("sub inválido");
     }
+  } catch {
+    next(new AppError("Token inválido", 401));
+    return;
+  }
 
+  try {
     const user = await usersRepository.findById(userId);
     if (!user || !user.isActive) {
       throw new AppError("Usuário não encontrado", 401);
@@ -69,12 +89,10 @@ export const authenticate = async (request: Request, _response: Response, next: 
     };
     next();
   } catch (error) {
-    if (error instanceof AppError) {
-      next(error);
-      return;
-    }
-
-    next(new AppError("Token inválido", 401));
+    // AppError ("Usuário não encontrado") segue com seu próprio status;
+    // um erro real de banco vira 500 pelo handler central, honesto sobre
+    // o que de fato falhou.
+    next(error);
   }
 };
 

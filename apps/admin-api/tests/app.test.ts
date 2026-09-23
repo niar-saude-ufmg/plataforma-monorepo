@@ -1,6 +1,8 @@
 import { jest } from "@jest/globals";
 import request from "supertest";
 
+process.env.SECRET_KEY = "test-secret";
+
 jest.unstable_mockModule("../src/repositories/users-repository.js", () => ({
   usersRepository: {
     findAll: jest.fn(),
