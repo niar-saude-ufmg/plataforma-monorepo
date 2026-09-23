@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { UserRole } from '@niar/contracts';
 import { UsersPage } from './pages/users-page';
 import './styles/niar.css';
 
@@ -14,13 +15,18 @@ const queryClient = new QueryClient({
 
 type AppProps = {
   mode?: 'admin' | 'public';
+  currentUser?: {
+    name: string;
+    email: string;
+    role: UserRole;
+  };
 };
 
 /**
  * Casca do admin. Substitui o placeholder anterior.
  * Quando entrar roteamento (react-router), o <main> vira o outlet das rotas.
  */
-export default function App({ mode = 'admin' }: AppProps) {
+export default function App({ mode = 'admin', currentUser }: AppProps) {
   const isPublicMode = mode === 'public';
 
   return (
@@ -43,7 +49,7 @@ export default function App({ mode = 'admin' }: AppProps) {
         ) : null}
 
         <main className={isPublicMode ? 'app-main app-main--public' : 'app-main'}>
-          <UsersPage mode={mode} />
+          <UsersPage mode={mode} currentUser={currentUser} />
         </main>
       </div>
     </QueryClientProvider>

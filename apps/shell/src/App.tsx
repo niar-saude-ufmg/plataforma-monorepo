@@ -19,8 +19,15 @@ type SessionUser = PlatformSessionUser;
 
 const AdminRemote = import.meta.env.MODE === "test"
   ? lazy(async () => ({
-      default: function AdminRemoteTestStub() {
-        return <h1>Cadastro de pesquisador</h1>;
+      default: function AdminRemoteTestStub({ currentUser }: { currentUser?: SessionUser }) {
+        return currentUser ? (
+          <>
+            <h1>Gerenciamento do usuário</h1>
+            <p>{currentUser.name}</p>
+            <p>{currentUser.email}</p>
+            <p>{currentUser.role}</p>
+          </>
+        ) : <h1>Cadastro de pesquisador</h1>;
       }
     }))
   : lazy(() => import("admin/App"));
@@ -223,7 +230,7 @@ export default function App() {
           element={
             <ProtectedRoute userRole={user?.role}>
               <Suspense fallback={<RemoteLoading label="área administrativa" />}>
-                <AdminRemote />
+                <AdminRemote currentUser={user ?? undefined} />
               </Suspense>
             </ProtectedRoute>
           }

@@ -37,6 +37,25 @@ def added_objects(db):
     return [call.args[0] for call in db.add.call_args_list]
 
 
+@pytest.mark.asyncio
+async def test_quality_check_returns_actionable_error_when_llm_is_unavailable():
+    session = SimpleNamespace(id=42, user_id=7)
+    db = MagicMock()
+    db.execute = AsyncMock(return_value=query_result(session))
+    current_user = SimpleNamespace(id=7)
+
+    with patch.object(
+        projects_module,
+        "run_quality_check",
+        new=AsyncMock(side_effect=RuntimeError("GEMINI_API_KEY não está configurada")),
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await projects_module.quality_check(42, current_user, db)
+
+    assert exc_info.value.status_code == 503
+    assert "GEMINI_API_KEY" in str(exc_info.value.detail)
+
+
 # =============================================================================
 # Fixtures
 # =============================================================================

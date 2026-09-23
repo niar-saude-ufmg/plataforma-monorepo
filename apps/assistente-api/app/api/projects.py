@@ -560,7 +560,13 @@ async def quality_check(
     session = result.scalar_one_or_none()
     if not session:
         raise HTTPException(status_code=404, detail="Sessão não encontrada")
-    checklist = await run_quality_check(session)
+    try:
+        checklist = await run_quality_check(session)
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Não foi possível executar a revisão do projeto: {exc}",
+        ) from exc
     session.quality_checklist = json.dumps(checklist)
     session.current_step = "review"
     await db.commit()

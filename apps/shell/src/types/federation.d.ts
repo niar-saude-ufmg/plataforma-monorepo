@@ -7,8 +7,12 @@ declare module "institucional/App" {
 
 declare module "admin/App" {
   import { ComponentType } from "react";
+  import type { UserRole } from "@niar/contracts";
 
-  const AdminApp: ComponentType<{ mode?: "admin" | "public" }>;
+  const AdminApp: ComponentType<{
+    mode?: "admin" | "public";
+    currentUser?: { name: string; email: string; role: UserRole };
+  }>;
   export default AdminApp;
 }
 
