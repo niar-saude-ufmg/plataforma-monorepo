@@ -160,6 +160,47 @@ export function isInternalArticle(item: NewsItem): boolean {
 
 const items: NewsInput[] = [
 	{
+		id: 'niar-no-iv-simposio-ci-ia-saude',
+		date: '2026-09-17',
+		category: 'event',
+		title: {
+			pt: 'NIAR-Saúde apresenta o núcleo no IV Simpósio do CI-IA Saúde',
+			en: 'NIAR-Saúde introduces the centre at the IV CI-IA Saúde Symposium'
+		},
+		excerpt: {
+			pt: 'Em palestra na UFMG, Mariangela Leal Cherchiglia, Michele Amaral Brandão e Ramon Gonçalves Pereira apresentaram o núcleo a estudantes, pesquisadores e profissionais de saúde reunidos para discutir como avançar com IA na saúde brasileira.',
+			en: 'In a talk at UFMG, Mariangela Leal Cherchiglia, Michele Amaral Brandão and Ramon Gonçalves Pereira introduced the centre to students, researchers and health professionals gathered to discuss how to advance AI in Brazilian healthcare.'
+		},
+		gallery: 'tall',
+		photos: [
+			{
+				alt: {
+					pt: 'Michele Amaral Brandão, Ramon Gonçalves Pereira e Mariangela Leal Cherchiglia, lado a lado, segurando as sacolas do CI-IA Saúde',
+					en: 'Michele Amaral Brandão, Ramon Gonçalves Pereira and Mariangela Leal Cherchiglia side by side, holding CI-IA Saúde bags'
+				},
+				caption: {
+					pt: 'Michele Amaral Brandão, Ramon Gonçalves Pereira e Mariangela Leal Cherchiglia no IV Simpósio do CI-IA Saúde, no Campus Pampulha da UFMG.',
+					en: 'Michele Amaral Brandão, Ramon Gonçalves Pereira and Mariangela Leal Cherchiglia at the IV CI-IA Saúde Symposium, on UFMG’s Pampulha campus.'
+				}
+			}
+		],
+		cover: {},
+		body: [
+			{
+				pt: 'O NIAR-Saúde participou do IV Simpósio do CI-IA Saúde, realizado em 17 de setembro de 2026 no Centro de Atividades Didáticas (CAD 3), no Campus Pampulha da UFMG. Sob o tema “IA e Saúde no Brasil: como avançar?”, o encontro reuniu estudantes, pesquisadores, profissionais de saúde, gestores e especialistas em tecnologia para discutir não só os avanços científicos, mas os caminhos práticos para levar a inteligência artificial da pesquisa ao uso clínico seguro e efetivo.',
+				en: 'NIAR-Saúde took part in the IV CI-IA Saúde Symposium, held on 17 September 2026 at the Teaching Activities Centre (CAD 3), on UFMG’s Pampulha campus. Under the theme “AI and Health in Brazil: how to advance?”, the meeting brought together students, researchers, health professionals, managers and technology specialists to discuss not only scientific advances but the practical paths for taking artificial intelligence from research to safe, effective clinical use.'
+			},
+			{
+				pt: 'Na parte da tarde, o núcleo foi apresentado na palestra “Apresentação NIAR-Saúde (Núcleo de Inteligência Artificial Responsável para a Saúde)”, conduzida pelas professoras Mariangela Leal Cherchiglia, coordenadora da Meta 6 e professora titular do Departamento de Medicina Preventiva e Social, e Michele Amaral Brandão, coordenadora da Meta 1 e professora adjunta do Departamento de Ciência da Computação, e pelo doutorando Ramon Gonçalves Pereira, que pesquisa IA aplicada à saúde no núcleo.',
+				en: 'In the afternoon, the centre was introduced in the talk “Apresentação NIAR-Saúde (Centre for Responsible Artificial Intelligence for Health)”, presented by professors Mariangela Leal Cherchiglia, coordinator of Goal 6 and full professor in the Department of Preventive and Social Medicine, and Michele Amaral Brandão, coordinator of Goal 1 and associate professor in the Department of Computer Science, together with PhD student Ramon Gonçalves Pereira, who researches AI applied to health at the centre.'
+			},
+			{
+				pt: 'A programação do CI-IA Saúde seguiu no dia 18 com o Desafio CI-IA Saúde 2026, voltado a estudantes do ensino médio, que propôs o desenvolvimento de protótipos de soluções baseadas em inteligência artificial para a área da saúde.',
+				en: 'The CI-IA Saúde programme continued on the 18th with the CI-IA Saúde 2026 Challenge, aimed at high-school students, which called for prototypes of artificial-intelligence-based solutions for healthcare.'
+			}
+		]
+	},
+	{
 		id: 'niar-na-data-for-policy-2026',
 		date: '2026-09-17',
 		category: 'event',
