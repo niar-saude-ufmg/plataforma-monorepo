@@ -1,0 +1,33 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (rag-api)
+__pycache__/
+*.py[oc]
+rag-api/.venv/
+rag-api/.langgraph_api/
+
+# rag-api corpus: PDFs and chunks live in the niar-rag-prototype repo.
+rag-api/docs/
+rag-api/data/
+
+# Env
+.env
+.env.*
+!.env.example
+# Local rag-api URL only, no secrets. Vite loads it in dev mode only.
+!.env.development
+
+# Vite
+vite.config.ts.timestamp-*
