@@ -305,6 +305,144 @@ Resumo das automações:
 
 Essas automações existem para facilitar o uso, mas o fluxo manual continua documentado separadamente.
 
+## 9. Adicionar um novo projeto ao monorepo
+
+Esta seção é o procedimento de referência para incorporar um novo frontend, backend ou módulo fullstack. Antes de criar arquivos, execute o projeto de origem e faça um inventário de suas rotas, variáveis de ambiente, chamadas HTTP, assets, persistência e dependências. Decida quais responsabilidades continuam no módulo e quais pertencem à shell, ao `admin-api` ou ao banco compartilhado.
+
+### 9.1. Decidir a fronteira do módulo
+
+Use uma aplicação frontend quando o projeto for uma SPA, site estático ou microfrontend que possa ser composto pela shell. Crie uma API apenas quando houver regras de negócio, persistência, processamento ou integração HTTP que não pertençam ao frontend.
+
+Não crie uma API própria para um site institucional estático só porque ele é um projeto separado. O Institucional atual é um exemplo de remote frontend em `apps/institucional/`, sem uma API correspondente.
+
+Mantenha estas fronteiras:
+
+- `/assistente/*` e outras rotas semelhantes são rotas de microfrontend na shell.
+- `/api/assistente/*` e `/api/admin/*` são prefixos HTTP de APIs.
+- Usuários, sessão, projetos e demais entidades centrais devem reutilizar os contratos, a autenticação e o banco compartilhado quando pertencerem ao mesmo domínio.
+- O módulo novo não deve duplicar login, usuário, banco ou proxy de outro módulo sem uma justificativa arquitetural registrada.
+
+### 9.2. Incorporar um novo frontend
+
+Crie o app em `apps/<modulo>-web/` e registre-o no workspace com um `package.json` próprio. O pacote deve possuir os scripts mínimos de desenvolvimento, build e teste usados pelo monorepo.
+
+Configure o Vite Module Federation seguindo os remotes existentes. Por exemplo, `apps/admin-web/vite.config.ts` usa `name: "admin"`, gera `remoteEntry.js`, expõe `./App` e compartilha React. O novo frontend deve definir:
+
+```ts
+federation({
+  name: "meu-modulo",
+  filename: "remoteEntry.js",
+  exposes: { "./App": "./src/App.tsx" },
+  shared: ["react", "react-dom"]
+})
+```
+
+Se o módulo depender de navegação compartilhada, avalie também `react-router-dom` em `shared`. A entrada exposta deve ser uma composição independente, sem assumir que a shell conhece detalhes internos do módulo.
+
+Reserve uma porta local exclusiva e defina uma variável de remote. As portas atuais são:
+
+| Aplicação | Porta local | Variável/uso |
+| --- | ---: | --- |
+| shell | 5173 | aplicação principal |
+| admin-web | 5174 | `VITE_ADMIN_REMOTE_URL` |
+| assistente-web | 5175 | `VITE_ASSISTENTE_REMOTE_URL` |
+| institucional | 5176 | `VITE_INSTITUCIONAL_REMOTE_URL` |
+
+Para o novo módulo, registre o remote em `apps/shell/vite.config.ts`:
+
+```ts
+remotes: {
+  meuModulo: env.VITE_MEUMODULO_REMOTE_URL || "http://localhost:4177/assets/remoteEntry.js"
+}
+```
+
+Adicione a variável ao `.env.example`, ao `apps/shell/Dockerfile.prod` e aos argumentos de build do serviço `shell` em `docker-compose.prod.yml`. Em produção, a URL deve usar o caminho publicado, por exemplo `/remotes/meu-modulo/assets/remoteEntry.js`, e não uma porta local.
+
+Declare o contrato TypeScript em `apps/shell/src/types/federation.d.ts`, usando as props públicas realmente suportadas pelo remote. Depois:
+
+1. carregue o remote por `lazy import` em `apps/shell/src/App.tsx`;
+2. inclua a rota no contrato de `packages/config`;
+3. defina se a rota é pública ou protegida;
+4. aplique as regras de acesso da shell, sem criar um segundo login dentro do microfrontend;
+5. configure o remote no `dev:remotes` e no `dev:apps` quando ele precisar subir junto do fluxo raiz;
+6. valide carregamento, refresh direto da rota, assets, CSS isolado e navegação pelo shell.
+
+Se o frontend tiver API, configure o proxy local no `vite.config.ts` do próprio app e, quando necessário, na shell. O proxy deve apontar para o prefixo da API correspondente, nunca para a API de outro módulo por conveniência.
+
+Para produção, crie `apps/<modulo>-web/Dockerfile.prod`, use `VITE_REMOTE_BASE=/remotes/<modulo>/` e adicione o serviço em `docker-compose.prod.yml`. Publique os assets no `infra/Caddyfile`:
+
+```caddyfile
+handle_path /remotes/meu-modulo/* {
+    reverse_proxy meu-modulo-web:80
+}
+```
+
+O remote precisa responder a `remoteEntry.js`, carregar seus chunks e suportar a URL publicada com a base configurada. Teste também um refresh direto em uma rota interna do módulo.
+
+### 9.3. Incorporar uma nova API
+
+Crie o app em `apps/<modulo>-api/` com seu `package.json`, entrypoint e uma separação clara entre rotas, controllers, services, schemas e repositórios quando o domínio exigir. O `admin-api` atual é a referência TypeScript; o `assistente-api` é a referência Python/FastAPI.
+
+Reserve uma porta local e um prefixo HTTP exclusivo. Por exemplo:
+
+- `admin-api`: porta `3333`, prefixo `/api/admin/*`;
+- `assistente-api`: porta `8000`, prefixo `/api/assistente/*`;
+- novo módulo: escolha outra porta e use `/api/<modulo>/*`.
+
+Não confunda o prefixo HTTP da API com a rota do microfrontend. Uma tela em `/meu-modulo/*` pode consumir a API em `/api/meu-modulo/*`, mas são superfícies distintas.
+
+Reutilize, quando aplicável:
+
+- `packages/auth` para sessão, token e regras de acesso;
+- `packages/contracts` para papéis, status e contratos compartilhados;
+- `packages/config` para rotas e configuração comum;
+- `packages/database` e o banco compartilhado para entidades do domínio central.
+
+Não copie tabelas de usuários ou sessões para uma nova API. Se o módulo realmente precisar de armazenamento separado, documente a justificativa, os limites de responsabilidade e a estratégia de consistência antes de implementá-lo.
+
+Inclua um healthcheck, contratos de erro acionáveis, validação de entrada e configuração de ambiente. O `admin-api` publica documentação Swagger em `/api/admin/docs`; uma nova API deve oferecer uma forma equivalente de descobrir e validar seus contratos quando isso for útil para o time.
+
+Atualize o desenvolvimento local e os testes:
+
+- script `dev` do novo app;
+- `pnpm dev:apps` e os comandos de build/test do workspace;
+- proxy local somente quando o frontend precisar chamar a API pela origem da shell;
+- testes de autenticação, autorização, validação, isolamento por usuário e erros de infraestrutura.
+
+Para produção, crie `apps/<modulo>-api/Dockerfile.prod`, adicione o serviço em `docker-compose.prod.yml` e configure o proxy no `infra/Caddyfile`:
+
+```caddyfile
+handle /api/meu-modulo/* {
+    reverse_proxy meu-modulo-api:8080
+}
+```
+
+O serviço deve usar a URL do banco e os secrets pelo `.env.production`, nunca por valores sensíveis versionados. Valide o healthcheck, autenticação, autorização, CORS/proxy, logs e a URL publicada.
+
+### 9.4. Validar o módulo antes de considerar a integração pronta
+
+Faça a validação em camadas:
+
+1. rode o módulo isoladamente;
+2. rode a shell com os remotes ativos;
+3. confirme o carregamento do `remoteEntry.js` e dos assets;
+4. valide rotas públicas e protegidas com mais de um perfil;
+5. teste a API diretamente e pelo proxy da shell;
+6. execute `pnpm build` e `pnpm test`;
+7. para mudanças que serão publicadas, valide a URL de produção, refresh de SPA, healthchecks e logs.
+
+Confira sempre os arquivos reais de referência antes de copiar uma configuração:
+
+- `apps/shell/vite.config.ts` e `apps/shell/src/types/federation.d.ts`;
+- `apps/institucional/vite.config.ts` para um remote frontend sem API própria;
+- `apps/admin-web/vite.config.ts` para um remote com formulário e API;
+- `apps/admin-api/src/app.ts` para rotas e documentação de uma API Express;
+- `apps/assistente-api/app/main.py` para prefixos e healthcheck em FastAPI;
+- `apps/shell/Dockerfile.prod` e `docker-compose.prod.yml` para build e serviços;
+- `infra/Caddyfile` para as rotas públicas de remotes e APIs.
+
+Uma integração está pronta quando uma pessoa nova consegue repetir esse procedimento sem depender de configuração informal, quando os módulos mantêm suas fronteiras e quando nenhum passo incentiva duplicar autenticação, banco ou contrato central.
+
 ## 8. Fallback com Node
 
 Se necessário:
