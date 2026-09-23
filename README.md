@@ -4,6 +4,8 @@ Estrutura inicial do monorepo da plataforma do NIAR.
 
 Para um passo a passo complementar, ver [GUIA-DE-USO-MONOREPO.md](./GUIA-DE-USO-MONOREPO.md).
 
+Para incorporar um novo frontend, backend ou módulo fullstack, siga a seção [Adicionar um novo projeto ao monorepo](./GUIA-DE-USO-MONOREPO.md#9-adicionar-um-novo-projeto-ao-monorepo), que descreve as fronteiras de microfrontend, API, autenticação, banco compartilhado, desenvolvimento local e publicação.
+
 ## Visão geral
 
 Esta base foi organizada para separar responsabilidades:
