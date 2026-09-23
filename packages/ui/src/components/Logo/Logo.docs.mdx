@@ -1,0 +1,30 @@
+import { Meta, Canvas, Controls, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Logo.stories";
+
+<Meta of={Stories} />
+
+# Logo
+
+O `Logo` centraliza a marca do NIAR para uso em superfícies claras e escuras. O Header usa a variante `default` e o Footer usa `inverse`.
+
+## Playground
+
+<Canvas of={Stories.Playground} />
+<Controls />
+
+## Variants
+
+<Canvas of={Stories.Variants} />
+
+### Props
+
+- `variant`: define `default` ou `inverse`.
+- `alt`: texto alternativo da marca.
+
+### Exemplo de aplicação
+
+<Source dark language="tsx" code={'import { Logo } from "@niar/ui";\n\n<Logo variant="inverse" alt="NIAR-Saúde" />'} />
+
+### Acessibilidade
+
+Sempre informe um `alt` que identifique a marca. Quando o logo estiver dentro de um link, o link também deve ter um destino e um nome acessível.

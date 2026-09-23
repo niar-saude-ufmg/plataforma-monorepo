@@ -1,0 +1,47 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Breadcrumbs.stories";
+
+<Meta of={Stories} />
+
+# Breadcrumbs
+
+Navegação estrutural que mostra o caminho até a página atual e diferencia o último item dos links anteriores.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+  code={`import { Breadcrumbs } from "@niar/ui";
+
+export function ProjectBreadcrumbs() {
+    return (
+      <Breadcrumbs
+        items={[
+          { label: "Início", href: "/" },
+          { label: "Projetos", href: "/projetos" },
+          { label: "Detalhes" },
+        ]}
+      />
+    );
+}`}
+/>
+
+### Acessibilidade
+
+- Mantenha um único item atual como o último elemento da lista.
+- Use `aria-label` para identificar a região de navegação quando houver mais de uma navegação na página.
+- Forneça rótulos claros para cada item e não dependa apenas da cor para indicar a página atual.

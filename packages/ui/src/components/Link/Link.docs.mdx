@@ -1,0 +1,50 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./Link.stories";
+
+<Meta of={Stories} />
+
+# Link
+
+Link acessível para navegação, com ícones opcionais, sublinhado configurável e versão inverse para fundos escuros.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Inverse
+
+<Description of={Stories.Inverse} />
+<Canvas of={Stories.Inverse} />
+
+### Icons
+
+<Description of={Stories.Icons} />
+<Canvas of={Stories.Icons} />
+
+### Underline
+
+<Description of={Stories.Underline} />
+<Canvas of={Stories.Underline} />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+  code={'import { Link } from "@niar/ui";\n\n<Link href="/projetos">Ver projetos</Link>'}
+ />
+
+### Acessibilidade
+
+- Use um texto que descreva o destino ou a ação do link.
+- Mantenha o foco visível durante a navegação pelo teclado.
+- Forneça `aria-label` quando o conteúdo for apenas um ícone.

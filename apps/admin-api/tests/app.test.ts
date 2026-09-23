@@ -1,6 +1,8 @@
 import { jest } from "@jest/globals";
 import request from "supertest";
 
+process.env.SECRET_KEY = "test-secret";
+
 jest.unstable_mockModule("../src/repositories/users-repository.js", () => ({
   usersRepository: {
     findAll: jest.fn(),
@@ -27,7 +29,16 @@ describe("admin api", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.module).toBe("admin");
-    expect(response.body.userRoles.admin).toBe("Admin");
     expect(response.body.projectStatuses.draft).toBe("Rascunho");
+  });
+  
+  it("expõe os três papéis do domínio, com admin rotulado como Gestor", async () => {
+    const response = await request(app).get("/api/admin/meta");
+
+    expect(response.body.userRoles).toEqual({
+      researcher: "Pesquisador",
+      admin: "Gestor",
+      committee: "Comissão"
+    });
   });
 });

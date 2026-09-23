@@ -2,21 +2,35 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", "build/**", "coverage/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        "build/**",
+        "coverage/**"
+      ]
     },
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": [],
       "cache": false
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "dependsOn": [
+        "^build"
+      ]
     },
     "dev:remote": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "dependsOn": [
+        "^build"
+      ]
     },
     "check": {
       "outputs": [],
@@ -25,6 +39,28 @@
     "prisma:generate": {
       "outputs": [],
       "cache": false
+    },
+    "@niar/ui#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!src/tokens/styles/tokens.ts",
+        "!src/tokens/styles/tokens.css"
+      ],
+      "outputs": [
+        "dist/**",
+        "src/tokens/styles/**"
+      ]
+    },
+    "storybook:build": {
+      "dependsOn": [
+        "build"
+      ],
+      "outputs": [
+        "storybook-static/**"
+      ]
     }
   }
 }

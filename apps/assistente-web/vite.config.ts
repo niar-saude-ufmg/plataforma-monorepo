@@ -33,9 +33,20 @@ export default defineConfig(({ mode }) => {
         ".duckdns.org",
         "163.176.194.146",
       ],
+      proxy: {
+        "/api/assistente": {
+          target: env.VITE_ASSISTENTE_API_PROXY_TARGET || `http://localhost:${env.ASSISTENTE_API_PORT || 8000}`,
+          changeOrigin: true,
+        },
+      },
     },
     build: {
       target: "esnext",
     },
+    test: {
+      globals: true,
+      environment: "jsdom",
+      setupFiles: "./src/test-setup.ts"
+    }
   };
 });

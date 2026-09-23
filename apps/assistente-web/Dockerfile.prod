@@ -10,7 +10,7 @@ COPY scripts ./scripts
 
 RUN corepack enable && pnpm install --frozen-lockfile
 
-ARG VITE_API_URL=/assistente-api
+ARG VITE_API_URL=/api/assistente
 ARG VITE_REMOTE_BASE=/remotes/assistente/
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_REMOTE_BASE=$VITE_REMOTE_BASE

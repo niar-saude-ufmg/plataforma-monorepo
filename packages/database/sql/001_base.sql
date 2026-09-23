@@ -12,9 +12,11 @@ BEGIN
     JOIN pg_namespace n ON n.oid = t.typnamespace
     WHERE t.typname = 'user_role' AND n.nspname = 'shared'
   ) THEN
-    CREATE TYPE shared.user_role AS ENUM ('researcher', 'admin');
+    CREATE TYPE shared.user_role AS ENUM ('researcher', 'admin', 'committee');
   END IF;
 END $$;
+
+ALTER TYPE shared.user_role ADD VALUE IF NOT EXISTS 'committee';
 
 DO $$
 BEGIN
@@ -179,10 +181,31 @@ CREATE INDEX IF NOT EXISTS idx_admin_project_documents_project_id
 CREATE INDEX IF NOT EXISTS idx_admin_project_documents_source_export_artifact_id
   ON admin.project_documents (source_export_artifact_id);
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'project_status' AND n.nspname = 'shared'
+  ) THEN
+    CREATE TYPE shared.project_status AS ENUM (
+      'submitted_to_committee',
+      'under_review',
+      'needs_changes',
+      'approved',
+      'rejected',
+      'resubmitted_to_committee'
+    );
+  END IF;
+END $$;
+
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'resubmitted_to_committee';
+
 CREATE TABLE IF NOT EXISTS shared.project_status_history (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_id INTEGER NOT NULL REFERENCES admin.projects(id) ON DELETE CASCADE,
-  status VARCHAR(100) NOT NULL,
+  status shared.project_status NOT NULL,
   notes TEXT NULL,
   actor_user_id INTEGER NULL REFERENCES shared.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

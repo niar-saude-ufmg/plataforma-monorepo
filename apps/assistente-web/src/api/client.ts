@@ -1,13 +1,4 @@
-// Empty string = same origin (production behind Caddy). Use ?? so "" is kept.
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
-
-export interface User {
-  id: number;
-  email: string;
-  full_name: string;
-  role: string;
-  is_active: boolean;
-}
+const API_URL = (import.meta.env.VITE_API_URL || '/api/assistente').replace(/\/+$/, '');
 
 export interface WizardSession {
   id: number;
@@ -84,57 +75,56 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  me: () => request<User>('/api/auth/me'),
-  listProjects: () => request<WizardSession[]>('/api/projects'),
+  listProjects: () => request<WizardSession[]>('/projects'),
   createProject: (title: string) =>
-    request<WizardSession>('/api/projects', {
+    request<WizardSession>('/projects', {
       method: 'POST',
       body: JSON.stringify({ wizard_type: 'project_doc', title }),
     }),
-  getProject: (id: number) => request<WizardSession>(`/api/projects/${id}`),
+  getProject: (id: number) => request<WizardSession>(`/projects/${id}`),
   updateProject: (id: number, data: Record<string, unknown>) =>
-    request<WizardSession>(`/api/projects/${id}`, {
+    request<WizardSession>(`/projects/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
   saveProjectDraft: (id: number, data: Record<string, unknown>) =>
-    request<WizardSession>(`/api/projects/${id}/save-draft`, {
+    request<WizardSession>(`/projects/${id}/save-draft`, {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   importFullText: (id: number, fullText: string) =>
-    request<WizardSession>(`/api/projects/${id}/import-text`, {
+    request<WizardSession>(`/projects/${id}/import-text`, {
       method: 'POST',
       body: JSON.stringify({ full_text: fullText }),
     }),
   importDocx: (id: number, file: File) => {
     const form = new FormData();
     form.append('file', file);
-    return request<WizardSession>(`/api/projects/${id}/import-docx`, {
+    return request<WizardSession>(`/projects/${id}/import-docx`, {
       method: 'POST',
       body: form,
     });
   },
   projectChat: (id: number, content: string) =>
     request<{ id: number; role: string; content: string; created_at: string; channel?: string }>(
-      `/api/projects/${id}/chat`,
+      `/projects/${id}/chat`,
       { method: 'POST', body: JSON.stringify({ content }) }
     ),
   advisoryChat: (id: number, content: string) =>
     request<{ id: number; role: string; content: string; created_at: string; channel?: string }>(
-      `/api/projects/${id}/advisory-chat`,
+      `/projects/${id}/advisory-chat`,
       { method: 'POST', body: JSON.stringify({ content }) }
     ),
   extractSection: (id: number, sectionKey: string) =>
-    request<Record<string, unknown>>(`/api/projects/${id}/extract/${sectionKey}`, { method: 'POST' }),
+    request<Record<string, unknown>>(`/projects/${id}/extract/${sectionKey}`, { method: 'POST' }),
   qualityCheck: (id: number) =>
     request<{ items: Array<{ id?: string; item: string; passed: boolean; note: string; step?: string }> }>(
-      `/api/projects/${id}/quality-check`,
+      `/projects/${id}/quality-check`,
       { method: 'POST' }
     ),
   exportProject: async (id: number) => {
     const token = getToken();
-    const res = await fetch(`${API_URL}/api/projects/${id}/export`, {
+    const res = await fetch(`${API_URL}/projects/${id}/export`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
@@ -149,10 +139,17 @@ export const api = {
   },
   submitForReview: async (projectId: number) => {
     const token = getToken();
-    const res = await fetch(`${API_URL}/api/projects/${projectId}/submit-for-review`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/projects/${projectId}/submit-for-review`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch {
+      throw new Error(
+        'Não foi possível confirmar a submissão. Verifique o status do projeto antes de tentar novamente.'
+      );
+    }
     if (!res.ok) {
       const text = await res.text();
       let detail: unknown = res.statusText;
@@ -176,36 +173,36 @@ export const api = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `submissao_projeto_${projectId}.zip`;
+    a.download = `projeto_submetido_${projectId}.docx`;
     a.click();
     URL.revokeObjectURL(url);
   },
   getProjectCleaning: (projectId: number) =>
-    request<WizardSession>(`/api/projects/${projectId}/cleaning`),
+    request<WizardSession>(`/projects/${projectId}/cleaning`),
   createProjectCleaning: (projectId: number) =>
-    request<WizardSession>(`/api/projects/${projectId}/cleaning`, { method: 'POST' }),
-  listCleaning: () => request<WizardSession[]>('/api/cleaning'),
+    request<WizardSession>(`/projects/${projectId}/cleaning`, { method: 'POST' }),
+  listCleaning: () => request<WizardSession[]>('/cleaning'),
   createCleaning: (title: string) =>
-    request<WizardSession>('/api/cleaning', {
+    request<WizardSession>('/cleaning', {
       method: 'POST',
       body: JSON.stringify({ wizard_type: 'data_clean', title }),
     }),
-  getCleaning: (id: number) => request<WizardSession>(`/api/cleaning/${id}`),
+  getCleaning: (id: number) => request<WizardSession>(`/cleaning/${id}`),
   updateCleaning: (id: number, data: Record<string, unknown>) =>
-    request<WizardSession>(`/api/cleaning/${id}`, {
+    request<WizardSession>(`/cleaning/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
-  listDatasets: () => request<Array<{ id: number; name: string; description: string }>>('/api/cleaning/datasets'),
-  getSchema: (datasetId: number) => request<Record<string, unknown>>(`/api/cleaning/datasets/${datasetId}/schema`),
+  listDatasets: () => request<Array<{ id: number; name: string; description: string }>>('/cleaning/datasets'),
+  getSchema: (datasetId: number) => request<Record<string, unknown>>(`/cleaning/datasets/${datasetId}/schema`),
   cleaningChat: (id: number, content: string) =>
     request<{ id: number; role: string; content: string; created_at: string }>(
-      `/api/cleaning/${id}/chat`,
+      `/cleaning/${id}/chat`,
       { method: 'POST', body: JSON.stringify({ content }) }
     ),
   cleaningKickoff: (id: number) =>
     request<{ id: number; role: string; content: string; created_at: string }>(
-      `/api/cleaning/${id}/kickoff`,
+      `/cleaning/${id}/kickoff`,
       { method: 'POST' }
     ),
   generateInitialScript: (id: number) =>
@@ -213,14 +210,14 @@ export const api = {
       script_content: string;
       validation_result: Record<string, unknown>;
       already_exists?: boolean;
-    }>(`/api/cleaning/${id}/initial-script`, { method: 'POST' }),
+    }>(`/cleaning/${id}/initial-script`, { method: 'POST' }),
   generateScript: (id: number) =>
     request<{ script_content: string; validation_result: Record<string, unknown> }>(
-      `/api/cleaning/${id}/generate-script`,
+      `/cleaning/${id}/generate-script`,
       { method: 'POST' }
     ),
   validateScript: (id: number) =>
-    request<Record<string, unknown>>(`/api/cleaning/${id}/validate`, { method: 'POST' }),
+    request<Record<string, unknown>>(`/cleaning/${id}/validate`, { method: 'POST' }),
   listCleaningVersions: (id: number) =>
     request<Array<{
       id: number;
@@ -232,16 +229,16 @@ export const api = {
       messages_snapshot: Array<{ role: string; content: string }>;
       notes: string;
       created_at: string;
-    }>>(`/api/cleaning/${id}/versions`),
+    }>>(`/cleaning/${id}/versions`),
   saveCleaningVersion: (id: number, data: { label?: string; notes?: string }) =>
-    request(`/api/cleaning/${id}/versions`, { method: 'POST', body: JSON.stringify(data) }),
+    request(`/cleaning/${id}/versions`, { method: 'POST', body: JSON.stringify(data) }),
   startNewCleaningVersion: (id: number, data: { save_current?: boolean; current_label?: string; notes?: string }) =>
-    request<WizardSession>(`/api/cleaning/${id}/versions/new`, { method: 'POST', body: JSON.stringify(data) }),
+    request<WizardSession>(`/cleaning/${id}/versions/new`, { method: 'POST', body: JSON.stringify(data) }),
   restoreCleaningVersion: (id: number, versionId: number) =>
-    request<WizardSession>(`/api/cleaning/${id}/versions/${versionId}/restore`, { method: 'POST' }),
+    request<WizardSession>(`/cleaning/${id}/versions/${versionId}/restore`, { method: 'POST' }),
   exportCleaningVersion: async (id: number, versionId: number) => {
     const token = getToken();
-    const res = await fetch(`${API_URL}/api/cleaning/${id}/versions/${versionId}/export`, {
+    const res = await fetch(`${API_URL}/cleaning/${id}/versions/${versionId}/export`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
@@ -256,7 +253,7 @@ export const api = {
   },
   exportCleaning: async (id: number) => {
     const token = getToken();
-    const res = await fetch(`${API_URL}/api/cleaning/${id}/export`, {
+    const res = await fetch(`${API_URL}/cleaning/${id}/export`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
@@ -269,29 +266,29 @@ export const api = {
     a.click();
     URL.revokeObjectURL(url);
   },
-  adminDatasets: () => request<Array<{ id: number; name: string; description: string; enabled: boolean }>>('/api/admin/datasets'),
+  adminDatasets: () => request<Array<{ id: number; name: string; description: string; enabled: boolean }>>('/admin/datasets'),
   createDataset: (data: { name: string; description: string; enabled: boolean }) =>
-    request('/api/admin/datasets', { method: 'POST', body: JSON.stringify(data) }),
+    request('/admin/datasets', { method: 'POST', body: JSON.stringify(data) }),
   updateDataset: (id: number, data: Record<string, unknown>) =>
-    request(`/api/admin/datasets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteDataset: (id: number) => request(`/api/admin/datasets/${id}`, { method: 'DELETE' }),
-  listTables: (datasetId: number) => request<Array<Record<string, unknown>>>(`/api/admin/datasets/${datasetId}/tables`),
+    request(`/admin/datasets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteDataset: (id: number) => request(`/admin/datasets/${id}`, { method: 'DELETE' }),
+  listTables: (datasetId: number) => request<Array<Record<string, unknown>>>(`/admin/datasets/${datasetId}/tables`),
   createTable: (datasetId: number, data: { name: string; description: string }) =>
-    request(`/api/admin/datasets/${datasetId}/tables`, { method: 'POST', body: JSON.stringify(data) }),
+    request(`/admin/datasets/${datasetId}/tables`, { method: 'POST', body: JSON.stringify(data) }),
   createColumn: (tableId: number, data: Record<string, unknown>) =>
-    request(`/api/admin/tables/${tableId}/columns`, { method: 'POST', body: JSON.stringify(data) }),
-  deleteColumn: (columnId: number) => request(`/api/admin/columns/${columnId}`, { method: 'DELETE' }),
-  listSettings: () => request<Array<{ key: string; value: string }>>('/api/admin/settings'),
+    request(`/admin/tables/${tableId}/columns`, { method: 'POST', body: JSON.stringify(data) }),
+  deleteColumn: (columnId: number) => request(`/admin/columns/${columnId}`, { method: 'DELETE' }),
+  listSettings: () => request<Array<{ key: string; value: string }>>('/admin/settings'),
   updateSetting: (key: string, value: string) =>
-    request(`/api/admin/settings/${key}`, { method: 'PUT', body: JSON.stringify({ value }) }),
-  listAudit: () => request<Array<Record<string, unknown>>>('/api/admin/audit'),
+    request(`/admin/settings/${key}`, { method: 'PUT', body: JSON.stringify({ value }) }),
+  listAudit: () => request<Array<Record<string, unknown>>>('/admin/audit'),
   listUsers: () =>
     request<Array<{ id: number; email: string; full_name: string; role: string; is_active: boolean }>>(
-      '/api/admin/users',
+      '/admin/users',
     ),
   createUser: (data: { email: string; full_name: string; password: string; role: string }) =>
     request<{ id: number; email: string; full_name: string; role: string; is_active: boolean }>(
-      '/api/admin/users',
+      '/admin/users',
       { method: 'POST', body: JSON.stringify(data) },
     ),
 };

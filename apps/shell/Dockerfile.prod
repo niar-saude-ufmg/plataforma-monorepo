@@ -9,22 +9,24 @@ COPY scripts ./scripts
 
 RUN corepack enable && pnpm install --frozen-lockfile
 
-ARG VITE_ASSISTENTE_API_URL=/assistente-api
+ARG VITE_ADMIN_API_URL=/api/admin
 ARG VITE_INSTITUCIONAL_REMOTE_URL=/remotes/institucional/assets/remoteEntry.js
 ARG VITE_ADMIN_REMOTE_URL=/remotes/admin/assets/remoteEntry.js
 ARG VITE_ASSISTENTE_REMOTE_URL=/remotes/assistente/assets/remoteEntry.js
 
-ENV VITE_ASSISTENTE_API_URL=$VITE_ASSISTENTE_API_URL
+ENV VITE_ADMIN_API_URL=$VITE_ADMIN_API_URL
 ENV VITE_INSTITUCIONAL_REMOTE_URL=$VITE_INSTITUCIONAL_REMOTE_URL
 ENV VITE_ADMIN_REMOTE_URL=$VITE_ADMIN_REMOTE_URL
 ENV VITE_ASSISTENTE_REMOTE_URL=$VITE_ASSISTENTE_REMOTE_URL
 
 RUN pnpm --filter @niar/shell build
+RUN pnpm --filter @niar/ui storybook:build
 
 FROM docker.io/library/nginx:1.27-alpine
 
 COPY apps/shell/nginx.prod.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /workspace/apps/shell/dist /usr/share/nginx/html
+COPY --from=build /workspace/packages/ui/storybook-static /usr/share/nginx/html/storybook
 
 EXPOSE 80
 

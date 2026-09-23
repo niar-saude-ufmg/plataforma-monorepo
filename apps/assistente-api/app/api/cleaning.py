@@ -235,7 +235,7 @@ async def create_cleaning_session(
 ):
     raise HTTPException(
         status_code=400,
-        detail="Crie a limpeza a partir de um projeto: POST /api/projects/{id}/cleaning",
+        detail="Crie a limpeza a partir de um projeto: POST /api/assistente/projects/{id}/cleaning",
     )
 
 

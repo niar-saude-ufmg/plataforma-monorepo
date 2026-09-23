@@ -1,0 +1,48 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./RadioGroup.stories";
+
+<Meta of={Stories} />
+
+# RadioGroup
+
+Grupo de opções mutuamente exclusivas com rótulos acessíveis.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+### Selected
+<Description of={Stories.Selected} />
+<Canvas of={Stories.Selected} />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+  code={`import { RadioGroup } from "@niar/ui";
+export function DataOrigin() {
+    return (
+      <RadioGroup
+        label="Origem"
+        options={[
+          { value: "own", label: "Base própria" },
+          { value: "niar", label: "Base do NIAR" },
+        ]}
+      />
+    );
+}`}
+/>
+
+### Acessibilidade
+
+- Use um `label` que descreva o grupo.
+- Mantenha rótulos distintos para cada opção.

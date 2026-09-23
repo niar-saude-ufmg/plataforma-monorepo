@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, vi } from "vitest";
+import { ACCESS_TOKEN_STORAGE_KEY, SESSION_STORAGE_KEY } from "@niar/auth";
 import App from "./App";
-import { login } from "./services/auth-api";
+import { getCurrentUser, login } from "./services/auth-api";
 
 vi.mock("./services/auth-api", () => ({
   getCurrentUser: vi.fn(),
@@ -35,6 +36,33 @@ describe("Shell App", () => {
     expect(screen.getByRole("heading", { name: "Login da Plataforma" })).toBeInTheDocument();
   });
 
+  it("retorna ao assistente quando o pesquisador iniciou o login por essa rota", async () => {
+    vi.mocked(login).mockResolvedValue({
+      token: "token-de-teste",
+      user: {
+        id: 4,
+        email: "pesquisador@niar.local",
+        full_name: "Pesquisador NIAR",
+        role: "researcher",
+        is_active: true
+      }
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/assistente"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "pesquisador@niar.local" } });
+    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "senha-segura" } });
+    fireEvent.click(screen.getByRole("button", { name: "Entrar na plataforma" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Assistente de Pesquisa" })).toBeInTheDocument();
+    });
+  });
+
   it("permite abrir o cadastro público de pesquisador sem login", async () => {
     render(
       <MemoryRouter initialEntries={["/cadastro/pesquisador"]}>
@@ -45,14 +73,24 @@ describe("Shell App", () => {
     expect(await screen.findByRole("heading", { name: "Cadastro de pesquisador" })).toBeInTheDocument();
   });
 
-  it("autentica pela shell e direciona o perfil para sua área", async () => {
+  it("disponibiliza a identidade visual sem exigir login", () => {
+    render(
+      <MemoryRouter initialEntries={["/identidade-visual"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByTitle("Design System NIAR")).toHaveAttribute("src", "http://localhost:6006");
+  });
+
+  it("direciona o pesquisador autenticado para o admin", async () => {
     vi.mocked(login).mockResolvedValue({
       token: "token-de-teste",
       user: {
-        id: 3,
-        email: "comissao@niar.local",
-        full_name: "Comissão NIAR",
-        role: "committee",
+        id: 4,
+        email: "pesquisador@niar.local",
+        full_name: "Pesquisador NIAR",
+        role: "researcher",
         is_active: true
       }
     });
@@ -63,16 +101,73 @@ describe("Shell App", () => {
       </MemoryRouter>
     );
 
-    fireEvent.change(screen.getByLabelText("E-mail"), {
-      target: { value: "comissao@niar.local" }
-    });
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "pesquisador@niar.local" } });
     fireEvent.change(screen.getByLabelText("Senha"), {
       target: { value: "senha-segura" }
     });
     fireEvent.click(screen.getByRole("button", { name: "Entrar na plataforma" }));
 
     await waitFor(() => {
-      expect(login).toHaveBeenCalledWith("comissao@niar.local", "senha-segura");
+      expect(login).toHaveBeenCalledWith("pesquisador@niar.local", "senha-segura");
+      expect(screen.getByRole("heading", { name: "Gerenciamento do usuário" })).toBeInTheDocument();
+    });
+  });
+
+  it("direciona o administrador autenticado para a área administrativa", async () => {
+    vi.mocked(login).mockResolvedValue({
+      token: "token-de-teste",
+      user: {
+        id: 1,
+        email: "admin@niar.local",
+        full_name: "Administrador NIAR",
+        role: "admin",
+        is_active: true
+      }
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "admin@niar.local" } });
+    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "senha-segura" } });
+    fireEvent.click(screen.getByRole("button", { name: "Entrar na plataforma" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Gerenciamento do usuário" })).toBeInTheDocument();
+    });
+  });
+
+  it("restaura a sessão pelo admin-api após refresh", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "token-de-teste");
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      id: 4,
+      email: "pesquisador@niar.local",
+      full_name: "Pesquisador NIAR",
+      role: "researcher",
+      is_active: true
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/assistente"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Carregando sessão...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(getCurrentUser).toHaveBeenCalledWith("token-de-teste");
+      expect(screen.getByRole("heading", { name: "Assistente de Pesquisa" })).toBeInTheDocument();
+    });
+
+    expect(JSON.parse(window.localStorage.getItem(SESSION_STORAGE_KEY) ?? "null")).toEqual({
+      id: 4,
+      email: "pesquisador@niar.local",
+      name: "Pesquisador NIAR",
+      role: "researcher"
     });
   });
 });

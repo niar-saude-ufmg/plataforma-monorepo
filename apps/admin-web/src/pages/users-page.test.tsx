@@ -66,6 +66,24 @@ afterEach(() => {
 });
 
 describe('UsersPage — cadastro de pesquisador', () => {
+  it('exibe o gerenciamento do usuário autenticado', () => {
+    render(
+      <UsersPage
+        currentUser={{
+          name: 'Pesquisador NIAR',
+          email: 'pesquisador@niar.local',
+          role: 'researcher',
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Gerenciamento do usuário' })).toBeInTheDocument();
+    expect(screen.getByText('Pesquisador NIAR')).toBeInTheDocument();
+    expect(screen.getByText('pesquisador@niar.local')).toBeInTheDocument();
+    expect(screen.getByText('Pesquisador')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cadastrar pesquisador' })).not.toBeInTheDocument();
+  });
+
   it('renderiza a tela e o formulário com os campos visíveis do escopo', () => {
     render(<UsersPage />);
 

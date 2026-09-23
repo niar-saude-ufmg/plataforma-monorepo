@@ -4,7 +4,8 @@ export const APP_ROUTES = {
   researcherSignup: "/cadastro/pesquisador",
   login: "/login",
   admin: "/admin",
-  assistant: "/assistente"
+  assistant: "/assistente",
+  visualIdentity: "/identidade-visual"
 } as const;
 
 export const APP_TITLES = {

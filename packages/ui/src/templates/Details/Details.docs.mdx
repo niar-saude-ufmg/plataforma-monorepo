@@ -1,0 +1,80 @@
+import { Canvas, Controls, Description, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Details.stories";
+
+<Meta of={Stories} />
+
+# Details
+
+Template que combina `Dialog` com `ListText` ou `Timeline`. Use `variant="list"` (padrão) com itens `label`/`value`, ou `variant="timeline"` com itens `title`, `description` e `date`.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+Use `variant="timeline"` com `items` contendo `title`, `description` e `date` para exibir o histórico de status no mesmo dialog.
+
+### Texto
+
+<Description of={Stories.TextVariant} />
+<Canvas of={Stories.TextVariant} />
+
+### Histórico de status
+
+<Description of={Stories.TimelineVariant} />
+<Canvas of={Stories.TimelineVariant} />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+  code={`import { Details } from "@niar/ui";
+
+const projectDetails = [
+  { label: "Projeto", value: "Estudo NIAR" },
+  { label: "Status", value: "Em análise" },
+];
+
+<Details
+  open={open}
+  title="Detalhes do projeto"
+  items={projectDetails}
+  onClose={() => setOpen(false)}
+/>`}
+/>
+
+Para histórico de status, reutilize a mesma propriedade `items` com `variant="timeline"`:
+
+<Source
+  dark
+  language="tsx"
+  code={`<Details
+  open={open}
+  title="Histórico do projeto"
+  variant="timeline"
+  items={[
+    {
+      title: "Projeto criado",
+      description: "O projeto foi cadastrado na plataforma.",
+      date: "10/09/2026",
+      color: "primary",
+    },
+    {
+      title: "Em análise",
+      description: "A comissão iniciou a avaliação.",
+      date: "12/09/2026",
+      color: "success",
+    },
+  ]}
+  onClose={() => setOpen(false)}
+/>`}
+/>
+
+### Acessibilidade
+
+- O dialog mantém o botão de fechar com o nome acessível `Fechar`.
+- Forneça um `title` descritivo para identificar o conteúdo do dialog.
+- Use labels claros nos itens de texto e datas compreensíveis no histórico.

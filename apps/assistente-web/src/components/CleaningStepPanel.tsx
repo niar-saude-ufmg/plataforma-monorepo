@@ -229,13 +229,22 @@ export function CleaningStepPanel({
     if (submitting) return;
     setSubmitting(true);
     onError('');
+    onSaveMessage('');
     try {
       await api.submitForReview(projectId);
-      const updated = await api.getCleaning(session.id);
-      onSessionChange(updated);
-      onSaveMessage('Pacote enviado para avaliação (projeto.docx + data_clean.py).');
+      onSaveMessage(
+        'Projeto enviado para avaliação. O documento foi baixado no seu computador.'
+      );
+
+      try {
+        const updated = await api.getCleaning(session.id);
+        onSessionChange(updated);
+      } catch {
+        console.warn('Não foi possível atualizar a sessão após a submissão.');
+      }
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Falha na submissão para avaliação');
+      onSaveMessage('');
+      onError(e instanceof Error ? e.message : 'Falha na submissão para avaliação, por favor verifique o status do projeto e tente novamente.');
     } finally {
       setSubmitting(false);
     }
@@ -502,10 +511,12 @@ export function CleaningStepPanel({
                 || session.validation_result?.valid === false
               }
             >
-              {submitting ? 'Preparando pacote…' : 'Submeter para avaliação'}
+              {submitting
+                ? 'Enviando…'
+                : 'Enviar para avaliação'}
             </button>
           </div>
-          {submitting && <LoadingPanel message="Montando pacote com projeto e script…" />}
+          {submitting && <LoadingPanel message="Gerando o documento do projeto e registrando a submissão…" />}
         </div>
       )}
     </div>

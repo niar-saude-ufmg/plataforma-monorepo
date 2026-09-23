@@ -1,0 +1,30 @@
+import { ColorItem, ColorPalette, Meta } from '@storybook/addon-docs/blocks';
+import { niar } from '../tokens/index.ts';
+
+<Meta title="Fundamentos/Cores" />
+
+# Cores
+
+A paleta mantém os valores oficiais da marca e usa tokens de marca para definir seu papel na interface.
+
+<ColorPalette>
+  <ColorItem title="Azul Profundo" subtitle="colors.brand.deep · #0F1F5B" colors={{ "Títulos e texto institucional escuro": niar.colors.brand.deep }} />
+  <ColorItem title="Azul Descritivo" subtitle="colors.brand.descriptive · #1C355E" colors={{ "Ação primary e subtítulos": niar.colors.brand.descriptive }} />
+  <ColorItem title="Azul Ciano" subtitle="colors.brand.cyan · #3FA9D9" colors={{ "Ação secondary e destaques digitais": niar.colors.brand.cyan }} />
+  <ColorItem title="Cores neutras" colors={{ "Branco": niar.colors.neutral.white, "Cinza Chumbo": niar.colors.neutral.charcoal, "Cinza Claro": niar.colors.neutral.light }} />
+</ColorPalette>
+
+## Aplicação na interface
+
+<div className="docs-table-wrapper">
+  <table className="docs-table">
+    <thead><tr><th>Papel</th><th>Cor</th><th>Uso</th></tr></thead>
+    <tbody>
+      <tr><td><code>colors.text.heading</code></td><td>Azul Profundo</td><td>Títulos e hierarquia institucional</td></tr>
+      <tr><td><code>colors.text.subtitle</code></td><td>Azul Descritivo</td><td>Subtítulos e textos de apoio destacados</td></tr>
+      <tr><td><code>colors.text.body</code></td><td>Cinza Chumbo</td><td>Texto corrido</td></tr>
+      <tr><td><code>colors.action.primary</code></td><td>Azul Descritivo</td><td>Ação principal</td></tr>
+      <tr><td><code>colors.action.secondary</code></td><td>Azul Ciano</td><td>Ação secundária e destaque digital</td></tr>
+    </tbody>
+  </table>
+</div>
