@@ -1,22 +1,21 @@
-# niar-rag-prototype
+# rag-api
 
-API de perguntas e respostas (RAG) sobre documentos médico-jurídicos brasileiros.
-O núcleo usa **LangGraph** (LLM Groq `openai/gpt-oss-120b`), embeddings **Gemini** e busca
+API de perguntas e respostas (RAG) sobre documentos médico-jurídicos brasileiros, usada
+pelo assistente LEME do site institucional (`apps/site-institucional`, rota `/assistant`).
+O núcleo usa **LangGraph** (LLM Gemini `gemini-3.7-flash`), embeddings **Gemini** e busca
 vetorial no **Qdrant**.
 
-> **Esta pasta é uma cópia parcial** do repositório
-> [`niar-rag-prototype`](https://github.com/), mantida aqui para o site institucional
-> conseguir rodar e implantar a API. Só o **código** é espelhado — o corpus (PDFs em
-> `docs/raw/`) e os chunks processados (`data/processed/`) ficam apenas no repo original,
-> que é o lugar canônico para mexer no corpus. As alterações devem ser feitas lá e
-> re-copiadas para cá.
+> **Fonte oficial do RAG da plataforma NIAR.** O código da API e do agente é mantido
+> aqui, em `apps/rag-api` do monorepo. O repositório `niar-rag-prototype` guarda apenas
+> o corpus bruto (PDFs em `docs/raw/`) e os chunks processados (`data/processed/`),
+> necessários para rodar os scripts de indexação em `src/`.
 
 ## Estrutura
 
 ```
 api/    # API FastAPI (camada de apresentação)
 agent/  # agente LangGraph + retrieval (núcleo RAG)
-src/    # scripts de indexação (offline; precisam do corpus do repo original)
+src/    # scripts de indexação (offline; precisam do corpus do niar-rag-prototype)
 ```
 
 ## Configuração
@@ -24,7 +23,7 @@ src/    # scripts de indexação (offline; precisam do corpus do repo original)
 Crie um arquivo `.env` na raiz com:
 
 ```
-GROQ_API_KEY=...
+GOOGLE_API_KEY=...
 GOOGLE_GENAI_API_KEY=...
 QDRANT_URL=...
 QDRANT_API_KEY=...
@@ -76,8 +75,9 @@ documento) para o front renderizar como cards com link clicável.
 
 ## Indexação (rodar ao mudar o corpus)
 
-Estes scripts esperam `docs/raw/` e `data/raw/html/`, que **não estão nesta cópia** —
-rode-os no repo `niar-rag-prototype`. Ficam aqui só para referência do pipeline:
+Estes scripts esperam `docs/raw/` e `data/raw/html/`, que **não são versionados no
+monorepo**. Copie o corpus do repo `niar-rag-prototype` para `apps/rag-api/docs/` e
+`apps/rag-api/data/` (ignorados pelo git) antes de rodá-los:
 
 ```bash
 python src/validate_corpus_manifest.py  # confere corpus_manifest.csv vs. PDFs e HTML

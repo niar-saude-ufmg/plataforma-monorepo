@@ -14,3 +14,7 @@ wheels/
 *.pkl
 .venv/
 .venv_wsl/
+
+# Corpus bruto (PDFs e chunks) fica no repo niar-rag-prototype.
+docs/
+data/
