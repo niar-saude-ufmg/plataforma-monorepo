@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, vi } from "vitest";
+import { ACCESS_TOKEN_STORAGE_KEY, SESSION_STORAGE_KEY } from "@niar/auth";
 import App from "./App";
-import { login } from "./services/auth-api";
+import { getCurrentUser, login } from "./services/auth-api";
 
 vi.mock("./services/auth-api", () => ({
   getCurrentUser: vi.fn(),
@@ -83,6 +84,37 @@ describe("Shell App", () => {
 
     await waitFor(() => {
       expect(login).toHaveBeenCalledWith("comissao@niar.local", "senha-segura");
+    });
+  });
+
+  it("restaura a sessão pelo admin-api após refresh", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "token-de-teste");
+    vi.mocked(getCurrentUser).mockResolvedValue({
+      id: 4,
+      email: "pesquisador@niar.local",
+      full_name: "Pesquisador NIAR",
+      role: "researcher",
+      is_active: true
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/assistente"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Carregando sessão...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(getCurrentUser).toHaveBeenCalledWith("token-de-teste");
+      expect(screen.getByRole("heading", { name: "Assistente de Pesquisa" })).toBeInTheDocument();
+    });
+
+    expect(JSON.parse(window.localStorage.getItem(SESSION_STORAGE_KEY) ?? "null")).toEqual({
+      id: 4,
+      email: "pesquisador@niar.local",
+      name: "Pesquisador NIAR",
+      role: "researcher"
     });
   });
 });

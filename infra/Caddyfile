@@ -11,15 +11,11 @@ niarplataforma.duckdns.org {
 		reverse_proxy assistente-web:80
 	}
 
-	handle_path /assistente-api/* {
+	handle /api/assistente/* {
 		reverse_proxy assistente-api:8000
 	}
 
 	handle /api/admin/* {
-		reverse_proxy admin-api:3333
-	}
-
-	handle_path /admin-api/* {
 		reverse_proxy admin-api:3333
 	}
 

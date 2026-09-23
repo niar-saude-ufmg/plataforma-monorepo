@@ -5,22 +5,17 @@ import {
   clearPlatformSession,
   hasAccessToRoute,
   isProtectedRoute,
-  notifySessionChanged,
+  PlatformSessionUser,
+  readPlatformSession,
   SESSION_CHANGED_EVENT,
-  SESSION_STORAGE_KEY
+  writePlatformSession
 } from "@niar/auth";
 import { APP_ROUTES, APP_TITLES } from "@niar/config";
-import { UserRole } from "@niar/contracts";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DesignSystemPage } from "./pages/DesignSystemPage";
 import { AuthenticatedUser, getCurrentUser, login as loginRequest } from "./services/auth-api";
 
-type SessionUser = {
-  id: number;
-  email: string;
-  name: string;
-  role: UserRole;
-};
+type SessionUser = PlatformSessionUser;
 
 const AdminRemote = import.meta.env.MODE === "test"
   ? lazy(async () => ({
@@ -46,28 +41,13 @@ const InstitutionalRemote = import.meta.env.MODE === "test"
     }))
   : lazy(() => import("institucional/App"));
 
-const readSession = (): SessionUser | null => {
-  const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(raw) as SessionUser;
-  } catch {
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
-    return null;
-  }
-};
-
 const writeSession = (user: SessionUser | null) => {
   if (!user) {
     clearPlatformSession();
     return;
   }
 
-  window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
-  notifySessionChanged();
+  writePlatformSession(user);
 };
 
 const toSessionUser = (user: AuthenticatedUser): SessionUser => ({
@@ -174,7 +154,7 @@ function RemoteLoading({ label }: { label: string }) {
 
 export default function App() {
   const location = useLocation();
-  const [user, setUser] = useState<SessionUser | null>(() => readSession());
+  const [user, setUser] = useState<SessionUser | null>(() => readPlatformSession());
   const [isRestoringSession, setIsRestoringSession] = useState(() =>
     Boolean(window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY))
   );
@@ -189,7 +169,7 @@ export default function App() {
     getCurrentUser(token)
       .then((currentUser) => {
         const sessionUser = toSessionUser(currentUser);
-        window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+        writePlatformSession(sessionUser);
         setUser(sessionUser);
       })
       .catch(() => writeSession(null))
@@ -197,7 +177,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const refreshSession = () => setUser(readSession());
+    const refreshSession = () => setUser(readPlatformSession());
     window.addEventListener(SESSION_CHANGED_EVENT, refreshSession);
     return () => window.removeEventListener(SESSION_CHANGED_EVENT, refreshSession);
   }, []);

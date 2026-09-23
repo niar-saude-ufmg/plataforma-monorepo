@@ -30,7 +30,7 @@ describe('submitForReview', () => {
     await api.submitForReview(42);
 
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/projects/42/submit-for-review'),
+      expect.stringContaining('/api/assistente/projects/42/submit-for-review'),
       expect.objectContaining({ method: 'POST' })
     );
     expect(URL.createObjectURL).toHaveBeenCalledWith(mockBlob);
