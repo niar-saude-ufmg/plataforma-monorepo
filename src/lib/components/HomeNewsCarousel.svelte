@@ -73,7 +73,7 @@
 		const options: EmblaOptionsType = { loop: canLoop, align: 'start' };
 		const plugins = reduceMotion
 			? []
-			: [Autoplay({ delay: 7000, stopOnMouseEnter: true, stopOnInteraction: false })];
+			: [Autoplay({ delay: 4500, stopOnMouseEnter: true, stopOnInteraction: false })];
 
 		const instance = EmblaCarousel(viewportRef, options, plugins);
 		embla = instance;

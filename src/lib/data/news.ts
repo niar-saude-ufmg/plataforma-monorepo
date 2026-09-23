@@ -1,9 +1,41 @@
 import type { Localized } from '$lib/i18n';
-import salaSeguraPais from '$lib/assets/news/sala-segura-primeira-do-pais.jpg';
-import salaSeguraInaugurada from '$lib/assets/news/sala-segura-inaugurada.jpg';
-import ramonSbcas from '$lib/assets/news/ramon_sbcas.jpeg';
-import marisaDfp from '$lib/assets/news/marisa_dataforpolicy.png';
-import marisaDfpCover from '$lib/assets/news/marisa_dataforpolicy_cover.png';
+
+/**
+ * As imagens de cada notícia moram em `src/lib/assets/news/<id>/`, com nomes
+ * fixos: `foto-1`, `foto-2`, `foto-3` (na ordem em que aparecem na matéria) e,
+ * opcionalmente, `cover` — um recorte só para os cards. A extensão é livre.
+ * Por isso nenhuma notícia aqui escreve caminho de imagem: a pasta é o `id` e a
+ * posição na lista `photos` dá o nome do arquivo.
+ *
+ * Arquivos que não vão ao ar (enquadramentos alternativos, originais) ficam em
+ * uma subpasta, ex.: `<id>/nao-usadas/`, fora do alcance deste glob — senão
+ * entrariam no build sem nunca serem exibidos.
+ */
+const arquivos = import.meta.glob('$lib/assets/news/*/*.{jpg,jpeg,png,webp,avif}', {
+	eager: true,
+	query: '?url',
+	import: 'default'
+}) as Record<string, string>;
+
+/** `<id>/<nome sem extensão>` → URL final do asset. */
+const porNome = new Map(
+	Object.entries(arquivos).map(([caminho, url]) => {
+		const chave = caminho.match(/\/news\/([^/]+\/[^/]+)\.[^.]+$/)?.[1];
+		return [chave ?? caminho, url];
+	})
+);
+
+/**
+ * URL da imagem `<nome>` da notícia `<id>`. Explode na carga do módulo — ou
+ * seja, no build, já que o site é pré-renderizado — se o arquivo não existir.
+ */
+function asset(id: string, nome: string): string {
+	const url = porNome.get(`${id}/${nome}`);
+	if (!url) {
+		throw new Error(`Notícia “${id}”: falta o arquivo src/lib/assets/news/${id}/${nome}.*`);
+	}
+	return url;
+}
 
 export type NewsCategory = 'event' | 'award' | 'media' | 'post' | 'publication' | 'partnership';
 
@@ -66,7 +98,11 @@ export type NewsItem = {
 	category: NewsCategory;
 	title: Localized;
 	excerpt: Localized;
-	/** De 1 a 3 fotos. A primeira também alimenta os cards, salvo se houver `cover`. */
+	/**
+	 * De 1 a 3 fotos, na ordem dos arquivos `foto-1`, `foto-2`, `foto-3` da
+	 * pasta da notícia. A primeira também alimenta os cards, salvo se houver
+	 * `cover`.
+	 */
 	photos: NewsPhoto[];
 	/** Arranjo das fotos na matéria. Precisa constar de `galleryOptions[photos.length]`. */
 	gallery?: NewsGallery;
@@ -86,6 +122,27 @@ export type NewsItem = {
 	body?: Localized[];
 };
 
+/**
+ * A notícia como se escreve na lista abaixo: sem caminho nenhum. Cada foto vira
+ * `<id>/foto-<n>` pela posição, e `cover` aponta para uma das fotos (`photo`,
+ * contando de 1) ou, sem isso, para o arquivo `<id>/cover.*`.
+ */
+type NewsInput = Omit<NewsItem, 'photos' | 'cover'> & {
+	photos: Omit<NewsPhoto, 'src'>[];
+	cover?: { photo?: number; position?: string };
+};
+
+/** Preenche os `src` de uma notícia a partir da convenção de nomes. */
+function resolver({ cover, ...item }: NewsInput): NewsItem {
+	const photos = item.photos.map((photo, i) => ({
+		...photo,
+		src: asset(item.id, `foto-${i + 1}`)
+	}));
+	if (!cover) return { ...item, photos };
+	const src = cover.photo ? photos[cover.photo - 1].src : asset(item.id, 'cover');
+	return { ...item, photos, cover: { src, position: cover.position } };
+}
+
 /** Foto dos cards, com o `object-position` que o recorte 16:9 precisa. */
 export function cardPhoto(item: NewsItem): { src: string; position?: string; alt: Localized } {
 	const primeira = item.photos[0];
@@ -101,7 +158,7 @@ export function isInternalArticle(item: NewsItem): boolean {
 	return Array.isArray(item.body) && item.body.length > 0;
 }
 
-const items: NewsItem[] = [
+const items: NewsInput[] = [
 	{
 		id: 'niar-na-data-for-policy-2026',
 		date: '2026-09-17',
@@ -117,7 +174,6 @@ const items: NewsItem[] = [
 		gallery: 'duo-float-right',
 		photos: [
 			{
-				src: marisaDfp,
 				alt: {
 					pt: 'Marisa Vasconcelos apresenta o trabalho do NIAR-Saúde na Data for Policy 2026, com o slide do FIAR projetado ao fundo',
 					en: 'Marisa Vasconcelos presents NIAR-Saúde’s work at Data for Policy 2026, with the FIAR slide projected behind her'
@@ -129,7 +185,6 @@ const items: NewsItem[] = [
 				position: 'center 70%'
 			},
 			{
-				src: marisaDfpCover,
 				alt: {
 					pt: 'Slide de abertura da sessão “Participatory AI and Public Perception”, com a lista de palestrantes',
 					en: 'Opening slide of the “Participatory AI and Public Perception” session, listing the speakers'
@@ -141,7 +196,7 @@ const items: NewsItem[] = [
 				position: 'center 25%'
 			}
 		],
-		cover: { src: marisaDfpCover, position: 'center 25%' },
+		cover: { photo: 2, position: 'center 25%' },
 		body: [
 			{
 				pt: 'O NIAR-Saúde participou da 10ª edição da Data for Policy, realizada entre 8 e 10 de setembro de 2026 na Universitat Pompeu Fabra, em Barcelona, na Espanha. Com o tema “Governance of/with AI: Implications for Data, Infrastructure, and Tech Sovereignty”, a conferência reuniu pesquisadores, formuladores de políticas públicas e profissionais de diferentes países para discutir os impactos da inteligência artificial sobre a governança e a tomada de decisão.',
@@ -183,7 +238,6 @@ const items: NewsItem[] = [
 		},
 		photos: [
 			{
-				src: salaSeguraPais,
 				alt: {
 					pt: 'Sala segura da UFMG para uso de dados sensíveis em saúde',
 					en: 'UFMG’s secure room for handling sensitive health data'
@@ -206,7 +260,6 @@ const items: NewsItem[] = [
 		},
 		photos: [
 			{
-				src: salaSeguraInaugurada,
 				alt: {
 					pt: 'Inauguração da Sala Segura do NIAR-Saúde na Faculdade de Medicina da UFMG',
 					en: 'Inauguration of NIAR-Saúde’s Secure Room at UFMG’s Medical School'
@@ -230,7 +283,6 @@ const items: NewsItem[] = [
 		gallery: 'wide',
 		photos: [
 			{
-				src: ramonSbcas,
 				alt: {
 					pt: 'Ramon Pereira apresenta o artigo do NIAR-Saúde no SBCAS 2026, em Ouro Preto',
 					en: 'Ramon Pereira presents NIAR-Saúde’s paper at SBCAS 2026 in Ouro Preto'
@@ -267,9 +319,9 @@ const items: NewsItem[] = [
 	}
 ];
 
-export const news: NewsItem[] = items.sort((a, b) => b.date.localeCompare(a.date));
+export const news: NewsItem[] = items.map(resolver).sort((a, b) => b.date.localeCompare(a.date));
 
 /** Looks up a news item by its id (used by the internal article route). */
 export function getNewsItem(id: string): NewsItem | undefined {
-	return items.find((item) => item.id === id);
+	return news.find((item) => item.id === id);
 }
