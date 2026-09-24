@@ -38,43 +38,36 @@ Site institucional do **NIAR-Saúde** (Núcleo de Inteligência Artificial Respo
 
 As informações exibidas no site — membros da equipe (página `/team`), artigos publicados (página `/publications`) e conteúdo da página "Sobre" — são em grande parte provenientes de uma [planilha interna](https://docs.google.com/spreadsheets/d/1EmYRtFD77KmTbtb34yPHnVO-BeSld9ws5sgHQ2-TtXI/edit?usp=sharing) do grupo e mantidas manualmente nos arquivos de dados e nos componentes Svelte.
 
-## Pré-requisitos
+## Como rodar
 
-- [Node.js](https://nodejs.org/) 20 ou superior
-- npm (vem com o Node)
-
-## Instalação
+Este app faz parte do monorepo da plataforma (`@niar/site-institucional`). Instale e
+configure pelo fluxo da raiz (Node 22, pnpm 11); veja o `README.md` do monorepo.
 
 ```sh
-npm install
+pnpm setup                                    # na raiz: instala o workspace e cria o .env
+pnpm --filter @niar/site-institucional dev    # http://localhost:5176
+pnpm --filter @niar/site-institucional build  # gera o site estático em build/
+pnpm --filter @niar/site-institucional check  # svelte-check
 ```
 
-## Desenvolvimento
+O `pnpm dev` da raiz também sobe o site junto com o resto da plataforma.
 
-Inicia o servidor de desenvolvimento em `http://localhost:5173`:
+## Assistente LEME (`/assistant`)
 
-```sh
-npm run dev
-```
+O chat chama o `rag-api` (`apps/rag-api`) pelo navegador, em `PUBLIC_RAG_API_URL`,
+lida do `.env` da raiz do monorepo (`kit.env.dir` em `svelte.config.js`):
 
-Para abrir o navegador automaticamente:
+- dev: `http://localhost:8001/api/rag` (suba também `pnpm --filter @niar/rag-api dev`);
+- produção: `/api/rag`, na mesma origem, repassado pelo Caddy ao container `rag-api`.
 
-```sh
-npm run dev -- --open
-```
+Sem a variável no build de produção, a página entra em modo "em breve" e não faz
+nenhuma requisição.
+
+`src/lib/data/corpus.ts` é uma cópia manual de `apps/rag-api/corpus_manifest.csv`, usada
+na lista "documentos consultados": atualize os dois juntos.
 
 ## Produção
 
-Gera a versão otimizada para produção em `.svelte-kit/output`:
-
-```sh
-npm run build
-```
-
-Para testar localmente a build de produção:
-
-```sh
-npm run preview
-```
-
-> O deploy depende do [adapter](https://svelte.dev/docs/kit/adapters) configurado para o ambiente alvo.
+O build (`adapter-static`, pt e en prerenderizados) é servido por um container nginx
+(`Dockerfile.prod`), e o Caddy da plataforma encaminha para ele tudo que não é rota da
+shell nem de API. Veja `docker-compose.prod.yml` e `infra/Caddyfile` na raiz.

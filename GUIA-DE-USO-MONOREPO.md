@@ -76,8 +76,9 @@ pnpm dev
 
 Observacao:
 
-- o `pnpm dev` agora tambem tenta subir `assistente-web` e `assistente-api`;
-- a `.venv` do `assistente-api` e preparada automaticamente pelo `pnpm setup` e tambem pelo proprio `pnpm dev`, se necessario.
+- o `pnpm dev` agora tambem tenta subir `assistente-web`, `assistente-api`, `site-institucional` (`http://localhost:5176`) e `rag-api` (`http://localhost:8001`);
+- as `.venv` do `assistente-api` e do `rag-api` sao preparadas automaticamente pelo `pnpm setup` e tambem pelo proprio `pnpm dev`, se necessario;
+- o `rag-api` precisa de `GOOGLE_API_KEY`, `GOOGLE_GENAI_API_KEY`, `QDRANT_URL` e `QDRANT_API_KEY` no `.env` para o chat do site responder.
 
 ### 1.10. Rodar testes
 
@@ -111,7 +112,8 @@ pnpm --filter @niar/shell dev
 
 Observacao:
 
-- a shell so consegue carregar os micros se `admin-web`, `assistente-web` e `institucional` tambem estiverem ativos como remotes
+- a shell so consegue carregar os micros se `admin-web` e `assistente-web` tambem estiverem ativos como remotes
+- a rota `/` da shell redireciona para o site institucional (`VITE_SITE_URL`)
 
 ### 3.2. Só o admin-web
 
@@ -146,6 +148,26 @@ pnpm --filter @niar/assistente-api dev
 Observacao:
 
 - esse comando usa o fluxo centralizado do `infra.mjs` para garantir a `.venv` e a inicializacao correta do backend Python
+
+### 3.6. Só o site institucional
+
+```bash
+pnpm --filter @niar/site-institucional dev
+```
+
+Observacao:
+
+- abre em `http://localhost:5176`; o site le o `.env` da raiz (`PUBLIC_RAG_API_URL`) e o chat do `/assistant` precisa do `rag-api` ativo
+
+### 3.7. Só o rag-api
+
+```bash
+pnpm --filter @niar/rag-api dev
+```
+
+Observacao:
+
+- usa o mesmo fluxo do `infra.mjs` do `assistente-api`, na porta `8001` e com prefixo `/api/rag`; docs em `http://localhost:8001/api/rag/docs`
 
 ## 4. Banco, SQL e Prisma
 
@@ -297,7 +319,6 @@ Resumo das automações:
 - `pnpm db:down`
 - `pnpm db:logs`
 - `pnpm dev`
-- `pnpm dev:assistente-web`
 - `pnpm prisma:db:pull`
 - `pnpm prisma:generate`
 - `pnpm db:apply:sql`
@@ -313,12 +334,12 @@ Esta seção é o procedimento de referência para incorporar um novo frontend, 
 
 Use uma aplicação frontend quando o projeto for uma SPA, site estático ou microfrontend que possa ser composto pela shell. Crie uma API apenas quando houver regras de negócio, persistência, processamento ou integração HTTP que não pertençam ao frontend.
 
-Não crie uma API própria para um site institucional estático só porque ele é um projeto separado. O Institucional atual é um exemplo de remote frontend em `apps/institucional/`, sem uma API correspondente.
+Não crie uma API própria para um site institucional estático só porque ele é um projeto separado. O `apps/site-institucional/` é um exemplo de frontend que não é remote: um SvelteKit estático com container próprio, servido pelo Caddy em `/`, fora da Module Federation (que só compõe remotes React). A `rag-api` que ele consome existe por ter processamento próprio (busca vetorial e LLM), não por ser um projeto separado.
 
 Mantenha estas fronteiras:
 
 - `/assistente/*` e outras rotas semelhantes são rotas de microfrontend na shell.
-- `/api/assistente/*` e `/api/admin/*` são prefixos HTTP de APIs.
+- `/api/assistente/*`, `/api/admin/*` e `/api/rag/*` são prefixos HTTP de APIs.
 - Usuários, sessão, projetos e demais entidades centrais devem reutilizar os contratos, a autenticação e o banco compartilhado quando pertencerem ao mesmo domínio.
 - O módulo novo não deve duplicar login, usuário, banco ou proxy de outro módulo sem uma justificativa arquitetural registrada.
 
@@ -346,7 +367,7 @@ Reserve uma porta local exclusiva e defina uma variável de remote. As portas at
 | shell | 5173 | aplicação principal |
 | admin-web | 5174 | `VITE_ADMIN_REMOTE_URL` |
 | assistente-web | 5175 | `VITE_ASSISTENTE_REMOTE_URL` |
-| institucional | 5176 | `VITE_INSTITUCIONAL_REMOTE_URL` |
+| site-institucional | 5176 | app próprio, não é remote; a shell leva a ele por `VITE_SITE_URL` |
 
 Para o novo módulo, registre o remote em `apps/shell/vite.config.ts`:
 
@@ -387,6 +408,7 @@ Reserve uma porta local e um prefixo HTTP exclusivo. Por exemplo:
 
 - `admin-api`: porta `3333`, prefixo `/api/admin/*`;
 - `assistente-api`: porta `8000`, prefixo `/api/assistente/*`;
+- `rag-api`: porta `8001`, prefixo `/api/rag/*`;
 - novo módulo: escolha outra porta e use `/api/<modulo>/*`.
 
 Não confunda o prefixo HTTP da API com a rota do microfrontend. Uma tela em `/meu-modulo/*` pode consumir a API em `/api/meu-modulo/*`, mas são superfícies distintas.
@@ -434,10 +456,10 @@ Faça a validação em camadas:
 Confira sempre os arquivos reais de referência antes de copiar uma configuração:
 
 - `apps/shell/vite.config.ts` e `apps/shell/src/types/federation.d.ts`;
-- `apps/institucional/vite.config.ts` para um remote frontend sem API própria;
+- `apps/site-institucional/` e `apps/site-institucional/Dockerfile.prod` para um frontend estático fora da Module Federation;
 - `apps/admin-web/vite.config.ts` para um remote com formulário e API;
 - `apps/admin-api/src/app.ts` para rotas e documentação de uma API Express;
-- `apps/assistente-api/app/main.py` para prefixos e healthcheck em FastAPI;
+- `apps/assistente-api/app/main.py` e `apps/rag-api/api/main.py` para prefixos e healthcheck em FastAPI;
 - `apps/shell/Dockerfile.prod` e `docker-compose.prod.yml` para build e serviços;
 - `infra/Caddyfile` para as rotas públicas de remotes e APIs.
 
