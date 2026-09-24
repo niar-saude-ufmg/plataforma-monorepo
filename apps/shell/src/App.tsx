@@ -1,5 +1,5 @@
 import { FormEvent, lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
   ACCESS_TOKEN_STORAGE_KEY,
   clearPlatformSession,
@@ -13,6 +13,9 @@ import {
 import { APP_ROUTES, APP_TITLES } from "@niar/config";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DesignSystemPage } from "./pages/DesignSystemPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
+import { SalaSeguraPage } from "./pages/SalaSeguraPage";
+import { SITE_URL } from "./site";
 import { AuthenticatedUser, getCurrentUser, login as loginRequest } from "./services/auth-api";
 
 type SessionUser = PlatformSessionUser;
@@ -39,14 +42,6 @@ const AssistantRemote = import.meta.env.MODE === "test"
       }
     }))
   : lazy(() => import("assistant/App"));
-
-const InstitutionalRemote = import.meta.env.MODE === "test"
-  ? lazy(async () => ({
-      default: function InstitutionalRemoteTestStub() {
-        return <h1>Site Institucional</h1>;
-      }
-    }))
-  : lazy(() => import("institucional/App"));
 
 const writeSession = (user: SessionUser | null) => {
   if (!user) {
@@ -111,9 +106,9 @@ function LoginPage({
       </section>
       <section className="login-form-panel" aria-labelledby="login-title">
         <div className="login-form-content">
-          <Link className="back-to-site" to={APP_ROUTES.home}>
+          <a className="back-to-site" href={SITE_URL}>
             {"< Voltar ao site institucional"}
-          </Link>
+          </a>
           <p className="eyebrow">Acesso à plataforma</p>
           <h1 id="login-title">{APP_TITLES.login}</h1>
           <p className="muted">Use suas credenciais para continuar.</p>
@@ -147,6 +142,16 @@ function LoginPage({
       </section>
     </main>
   );
+}
+
+// Em produção o Caddy serve o site em "/" e esta rota nunca chega à shell;
+// em dev (shell em :5173) ela leva ao site, que roda em outra porta.
+function RedirectToSite() {
+  useEffect(() => {
+    window.location.replace(SITE_URL);
+  }, []);
+
+  return <RemoteLoading label="site institucional" />;
 }
 
 function RemoteLoading({ label }: { label: string }) {
@@ -245,14 +250,9 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/*"
-          element={
-            <Suspense fallback={<RemoteLoading label="site institucional" />}>
-              <InstitutionalRemote />
-            </Suspense>
-          }
-        />
+        <Route path={APP_ROUTES.salaSegura} element={<SalaSeguraPage />} />
+        <Route path={APP_ROUTES.home} element={<RedirectToSite />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>}
     </div>
   );

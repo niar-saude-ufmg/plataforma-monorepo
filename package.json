@@ -16,8 +16,8 @@
     "wait-on": "^8.0.3"
   },
   "scripts": {
-    "dev:remotes": "pnpm exec turbo run dev:remote --continue=always --filter=@niar/institucional --filter=@niar/admin-web --filter=@niar/assistente-web",
-    "dev:apps": "pnpm exec wait-on tcp:4174 tcp:4175 tcp:4176 && pnpm exec turbo run dev --continue=always --filter=@niar/shell --filter=@niar/admin-api --filter=@niar/assistente-api",
+    "dev:remotes": "pnpm exec turbo run dev:remote --continue=always --filter=@niar/admin-web --filter=@niar/assistente-web",
+    "dev:apps": "pnpm exec wait-on tcp:4174 tcp:4175 && pnpm exec turbo run dev --continue=always --filter=@niar/shell --filter=@niar/admin-api --filter=@niar/assistente-api",
     "dev": "pnpm exec turbo run build --filter=@niar/ui && pnpm exec concurrently -k -n ui,storybook,remotes,apps -c magenta,blue,yellow,cyan \"pnpm dev:ui\" \"pnpm dev:storybook\" \"pnpm dev:remotes\" \"pnpm dev:apps\"",
     "setup": "node ./scripts/infra.mjs setup",
     "db:up": "node ./scripts/infra.mjs db:up",
