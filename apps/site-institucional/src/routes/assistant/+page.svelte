@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dev } from '$app/environment';
 	import { resolve } from '$app/paths';
 	import { pageTitle } from '$lib/seo';
 	import { localizeHref } from '$lib/paraglide/runtime';
@@ -13,26 +14,17 @@
 	import Sparkles from 'lucide-svelte/icons/sparkles';
 	import Info from 'lucide-svelte/icons/info';
 
-	// Base URL da API Python (rag-api). Em dev cai no default local; em produção
-	// defina PUBLIC_RAG_API_URL no ambiente de build.
-	const API_BASE = env.PUBLIC_RAG_API_URL ?? 'http://localhost:8000';
-
-	// Sem PUBLIC_RAG_API_URL definida, a página entra em modo "em breve": campo e
-	// sugestões desabilitados e NENHUMA requisição sai do navegador.
+	// Base URL do rag-api (apps/rag-api), já com o prefixo /api/rag. Vem do .env da
+	// raiz do monorepo (kit.env.dir) ou do build arg do Docker:
+	//   dev      -> http://localhost:8001/api/rag (fallback abaixo se não houver .env)
+	//   produção -> /api/rag (mesma origem; o Caddy repassa para rag-api:8001)
 	//
-	// Na prática isso separa dev de produção. O `.env.development` define a variável
-	// e o Vite só o carrega em modo dev, então:
-	//   npm run dev   -> variável definida  -> chat normal contra localhost:8000
-	//   npm run build -> variável ausente   -> modo "em breve"
-	//
-	// O motivo é o adapter estático: sem essa trava, o fallback localhost:8000 acima
-	// seria embutido no bundle publicado, e cada visitante mandaria a própria pergunta
-	// para a porta 8000 da MÁQUINA DELE — que falha sempre e, se houver algo escutando
-	// ali, entrega o texto digitado a esse serviço.
-	//
-	// Quando a API for publicada, defina PUBLIC_RAG_API_URL no ambiente de build
-	// apontando para ela: o modo normal volta sozinho, sem mexer no código.
-	const apiConfigured = Boolean(env.PUBLIC_RAG_API_URL);
+	// O fallback localhost só vale em dev. No build de produção, sem a variável, a
+	// página entra em modo "em breve": campo e sugestões desabilitados e NENHUMA
+	// requisição sai do navegador. Com o adapter estático, um localhost embutido no
+	// bundle faria cada visitante mandar a pergunta para a PRÓPRIA máquina.
+	const API_BASE = env.PUBLIC_RAG_API_URL ?? (dev ? 'http://localhost:8001/api/rag' : '');
+	const apiConfigured = Boolean(API_BASE);
 
 	type Fonte = {
 		titulo: string;

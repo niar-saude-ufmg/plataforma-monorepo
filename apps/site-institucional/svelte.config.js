@@ -16,7 +16,11 @@ const config = {
 			// Required by Paraglide's URL strategy so locale-prefixed routes
 			// (/en/...) resolve assets correctly when prerendered.
 			relative: false
-		}
+		},
+        env: {
+            // Reads .env from the repo root, with Vite (envDir: workspaceRoot).
+            dir: '../..'
+        }
 	},
 	vitePlugin: {
 		dynamicCompileOptions: ({ filename }) =>
