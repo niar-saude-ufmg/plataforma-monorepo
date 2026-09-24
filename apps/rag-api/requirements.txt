@@ -6,8 +6,6 @@ uvicorn[standard]
 langchain
 langchain-core
 langgraph
-langgraph-cli
-langgraph-api
 
 # LLM e embeddings
 langchain_groq

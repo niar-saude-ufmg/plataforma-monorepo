@@ -1,7 +1,8 @@
+import os
 import re
 import unicodedata
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_core.messages import HumanMessage
 
@@ -38,25 +39,39 @@ app = FastAPI(
     title="NIAR RAG API",
     description="API de perguntas e respostas sobre documentos médico-jurídicos (RAG).",
     version="1.0.0",
+    # Docs sob o prefixo do módulo, para ficarem acessíveis também via Caddy.
+    docs_url="/api/rag/docs",
+    openapi_url="/api/rag/openapi.json",
+    redoc_url=None,
 )
 
-# CORS liberado para o front (ex.: app Svelte em outra porta).
-# Em produção, restrinja `allow_origins` ao domínio do front.
+# Origens do front, separadas por vírgula (RAG_CORS_ORIGINS no .env da raiz).
+# Em dev o site roda em outra porta (localhost:5176); em produção a chamada é
+# same-origin via Caddy, então basta o domínio publicado.
+_cors_origins = [
+    origem.strip()
+    for origem in os.getenv("RAG_CORS_ORIGINS", "http://localhost:5176").split(",")
+    if origem.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
+# Prefixo HTTP do módulo, na convenção /api/<modulo>/* do monorepo
+# (GUIA-DE-USO-MONOREPO.md, seção 9.3). O Caddy repassa o caminho sem cortar.
+router = APIRouter(prefix="/api/rag")
 
-@app.get("/health")
+
+@router.get("/health")
 def health():
     """Healthcheck simples."""
     return {"status": "ok"}
 
 
-@app.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
     """Recebe uma pergunta, recupera os documentos relevantes e responde com o agente.
 
@@ -110,3 +125,6 @@ Instruções:
         fontes = []
 
     return ChatResponse(resposta=resposta, fontes=fontes)
+
+
+app.include_router(router)

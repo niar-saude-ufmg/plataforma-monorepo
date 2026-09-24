@@ -265,6 +265,8 @@ importers:
         specifier: ^2.1.5
         version: 2.1.9(@types/node@22.20.1)(jsdom@25.0.1(supports-color@8.1.1))(lightningcss@1.32.0)(supports-color@8.1.1)
 
+  apps/rag-api: {}
+
   apps/shell:
     dependencies:
       '@niar/auth':

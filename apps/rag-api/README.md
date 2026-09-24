@@ -20,20 +20,21 @@ src/    # scripts de indexação (offline; precisam do corpus do niar-rag-protot
 
 ## Configuração
 
-Crie um arquivo `.env` na raiz com:
+As variáveis ficam no `.env` da **raiz do monorepo** (o `load_dotenv()` sobe os
+diretórios até encontrá-lo). Veja `.env.example`:
 
 ```
+RAG_API_PORT=8001
+RAG_CORS_ORIGINS=http://localhost:5176
 GOOGLE_API_KEY=...
 GOOGLE_GENAI_API_KEY=...
 QDRANT_URL=...
 QDRANT_API_KEY=...
 ```
 
-Instale as dependências:
-
-```bash
-pip install -r requirements.txt
-```
+A `.venv` e as dependências são criadas automaticamente pelo `pnpm setup` (ou na
+primeira execução de `dev`/`check`). Para o LangGraph Studio (`langgraph dev`),
+instale também `requirements-dev.txt`.
 
 ## Rodar a API
 
@@ -41,15 +42,21 @@ Em produção a API só precisa do código acima e das credenciais do Qdrant —
 vetorial já está indexada, então nada de `docs/` ou `data/` é necessário para servir.
 
 ```bash
-uvicorn api.main:app --reload
+pnpm --filter @niar/rag-api dev      # uvicorn com --reload na porta 8001
+pnpm --filter @niar/rag-api check    # compileall (usado pelo build do turbo)
 ```
 
-- Docs interativas: http://127.0.0.1:8000/docs
-- Healthcheck: `GET /health`
+Todas as rotas ficam sob o prefixo `/api/rag` (convenção `/api/<modulo>/*` do monorepo):
+
+- Docs interativas: http://localhost:8001/api/rag/docs
+- Healthcheck: `GET /api/rag/health`
+
+Em produção roda no container `rag-api` (`Dockerfile.prod`), e o Caddy repassa
+`/api/rag/*` do domínio público para ele.
 
 ### Endpoint principal
 
-`POST /chat`
+`POST /api/rag/chat`
 
 ```json
 // request

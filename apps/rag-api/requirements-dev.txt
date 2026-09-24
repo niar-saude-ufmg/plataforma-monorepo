@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# LangGraph Studio local (`langgraph dev`, usa langgraph.json). Não é necessário
+# para servir a API.
+langgraph-cli
+langgraph-api

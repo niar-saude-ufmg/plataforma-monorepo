@@ -5,10 +5,18 @@ import { spawn, spawnSync } from "node:child_process";
 
 import pg from "pg";
 
-import { ensureAssistenteApiReady } from "./lib/assistente-api-python.mjs";
 import { loadEnvFile } from "./lib/load-env.mjs";
 import { getLocalBin, runCommand, runStreamingCommand } from "./lib/run-command.mjs";
-import { databaseBinDir, databaseDir, envExamplePath, envPath, rootDir } from "./lib/workspace-paths.mjs";
+import { ensurePythonAppReady } from "./lib/python-app.mjs";
+import {
+  assistenteApiDir,
+  databaseBinDir,
+  databaseDir,
+  envExamplePath,
+  envPath,
+  ragApiDir,
+  rootDir
+} from "./lib/workspace-paths.mjs";
 
 const { Client } = pg;
 const isWindows = process.platform === "win32";
@@ -21,8 +29,8 @@ function usage() {
 
 Comandos:
   setup
-  assistente-api:dev
-  assistente-api:check
+  assistente-api:dev | assistente-api:check
+  rag-api:dev | rag-api:check
   db:up | db:down | db:logs | db:apply:sql
   prisma:generate | prisma:db:pull
   prod:build | prod:up | prod:down | prod:logs | prod:deploy`);
@@ -251,14 +259,36 @@ async function applySql(args) {
   }
 }
 
-async function runAssistenteApiDev() {
-  const { assistenteApiDir, uvicornBin } = ensureAssistenteApiReady();
+// Apps Python do workspace: diretorio, modulo ASGI, porta padrao e pacotes
+// compilados no check (que gera o artefato de build esperado pelo turbo).
+const pythonApps = {
+  "assistente-api": {
+    dir: assistenteApiDir,
+    asgi: "app.main:app",
+    portEnv: "ASSISTENTE_API_PORT",
+    defaultPort: "8000",
+    packages: ["app"]
+  },
+  "rag-api": {
+    dir: ragApiDir,
+    asgi: "api.main:app",
+    portEnv: "RAG_API_PORT",
+    defaultPort: "8001",
+    packages: ["api", "agent"]
+  }
+};
+
+async function runPythonAppDev(name) {
+  const app = pythonApps[name];
+  const { uvicornBin } = ensurePythonAppReady(app.dir, name);
+  loadEnvFile(envPath);
+  const port = process.env[app.portEnv] || app.defaultPort;
 
   const child = spawn(
     uvicornBin,
-    ["app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
+    [app.asgi, "--reload", "--host", "0.0.0.0", "--port", port],
     {
-      cwd: assistenteApiDir,
+      cwd: app.dir,
       stdio: "inherit",
       shell: isWindows
     }
@@ -274,15 +304,13 @@ async function runAssistenteApiDev() {
   });
 }
 
-function checkAssistenteApi() {
-  const { assistenteApiDir } = ensureAssistenteApiReady();
-  const pythonBin = process.platform === "win32"
-    ? path.join(assistenteApiDir, ".venv", "Scripts", "python.exe")
-    : path.join(assistenteApiDir, ".venv", "bin", "python");
+function checkPythonApp(name) {
+  const app = pythonApps[name];
+  const { pythonBin } = ensurePythonAppReady(app.dir, name);
 
-  runCommand(pythonBin, ["-m", "compileall", "app"], { cwd: assistenteApiDir });
-  fs.mkdirSync(path.join(assistenteApiDir, "build"), { recursive: true });
-  fs.writeFileSync(path.join(assistenteApiDir, "build", "assistente-api.compile"), new Date().toISOString());
+  runCommand(pythonBin, ["-m", "compileall", ...app.packages], { cwd: app.dir });
+  fs.mkdirSync(path.join(app.dir, "build"), { recursive: true });
+  fs.writeFileSync(path.join(app.dir, "build", `${name}.compile`), new Date().toISOString());
 }
 
 async function main() {
@@ -296,18 +324,22 @@ async function main() {
     case "setup":
       await withInfraLock(() => {
         runCommand("pnpm", ["install"], { cwd: rootDir });
-        ensureAssistenteApiReady();
+        for (const [name, app] of Object.entries(pythonApps)) {
+          ensurePythonAppReady(app.dir, name);
+        }
         ensureEnvFile();
         runPrisma(["generate", "--schema", "./prisma/schema.prisma"]);
       });
       return;
 
     case "assistente-api:dev":
-      await runAssistenteApiDev();
+    case "rag-api:dev":
+      await runPythonAppDev(command.replace(/:dev$/, ""));
       return;
 
     case "assistente-api:check":
-      checkAssistenteApi();
+    case "rag-api:check":
+      checkPythonApp(command.replace(/:check$/, ""));
       return;
 
     case "db:up":
