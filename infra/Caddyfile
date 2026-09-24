@@ -15,7 +15,19 @@ niarplataforma.duckdns.org {
 		reverse_proxy admin-api:3333
 	}
 
-	handle {
+	handle /api/rag/* {
+		reverse_proxy rag-api:8001
+	}
+
+	# Rotas e assets da shell (APP_ROUTES em packages/config + build do Vite).
+	# Ao criar uma rota nova na shell, inclua-a aqui.
+	@shell path /login /login/* /sala-segura /sala-segura/* /cadastro/* /admin /admin/* /assistente /assistente/* /identidade-visual /identidade-visual/* /design-system /design-system/* /storybook /storybook/* /assets/*
+	handle @shell {
 		reverse_proxy shell:80
+	}
+
+	# Todo o resto é o site institucional (/, /en/, /about/, /news/..., /_app/, /sitemap.xml).
+	handle {
+		reverse_proxy site-institucional-web:80
 	}
 }
