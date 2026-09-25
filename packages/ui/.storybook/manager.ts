@@ -5,7 +5,7 @@ addons.setConfig({
   theme: create({
     base: "light",
     brandTitle: "NIAR UI",
-    brandImage: "/niar-logo.png",
+    brandImage: "./niar-logo.png",
     brandTarget: "_self",
   }),
 });
