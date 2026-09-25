@@ -1,19 +1,19 @@
 # API
-fastapi
-uvicorn[standard]
+fastapi==0.128.8
+uvicorn[standard]==0.39.0
 
 # Agente / LangGraph
-langchain
-langchain-core
-langgraph
+langchain==0.3.30
+langchain-core==0.3.86
+langgraph==0.6.11
 
 # LLM e embeddings
-langchain_groq
-langchain_google_genai
-google-genai
+langchain_groq==0.3.8
+langchain_google_genai==2.1.12
+google-genai==1.47.0
 
 # Banco vetorial
-qdrant_client
+qdrant_client==1.16.1
 # numpy<2: as wheels do 2.x são compiladas exigindo CPU x86-64-v2, e o servidor do
 # DCC não tem esse conjunto de instruções (RuntimeError na importação). O 1.26 usa
 # baseline SSE3 e roda. No Python 3.11 o qdrant-client aceita numpy>=1.21, sem teto.
@@ -22,12 +22,12 @@ qdrant_client
 numpy<2
 
 # Utilitários
-pydantic
-python-dotenv
+pydantic==2.13.5
+python-dotenv==1.2.1
 
 # Indexação de PDFs (scripts em src/)
-PyMuPDF
-tqdm
+PyMuPDF==1.26.5
+tqdm==4.70.1
 
 # Embedding local opcional (GEMINI_EMBEDD=False em agent/utils/tools.py):
 # sentence-transformers

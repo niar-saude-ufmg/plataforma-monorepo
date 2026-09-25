@@ -3,7 +3,12 @@ from pydantic import BaseModel, Field
 
 
 class ChatRequest(BaseModel):
-    pergunta: str = Field(..., min_length=1, description="Pergunta do usuário")
+    pergunta: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+        description="Pergunta do usuário (até 1000 caracteres)",
+    )
 
 
 class Fonte(BaseModel):

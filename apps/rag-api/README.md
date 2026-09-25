@@ -33,8 +33,8 @@ QDRANT_API_KEY=...
 ```
 
 A `.venv` e as dependências são criadas automaticamente pelo `pnpm setup` (ou na
-primeira execução de `dev`/`check`). Para o LangGraph Studio (`langgraph dev`),
-instale também `requirements-dev.txt`.
+primeira execução de `dev`/`check`). Os testes usam `requirements-dev.txt`. Para o
+LangGraph Studio (`langgraph dev`), instale opcionalmente `requirements-studio.txt`.
 
 ## Rodar a API
 
@@ -44,6 +44,7 @@ vetorial já está indexada, então nada de `docs/` ou `data/` é necessário pa
 ```bash
 pnpm --filter @niar/rag-api dev      # uvicorn com --reload na porta 8001
 pnpm --filter @niar/rag-api check    # compileall (usado pelo build do turbo)
+pnpm --filter @niar/rag-api test     # testes de contrato da API
 ```
 
 Todas as rotas ficam sob o prefixo `/api/rag` (convenção `/api/<modulo>/*` do monorepo):
@@ -79,6 +80,11 @@ Em produção roda no container `rag-api` (`Dockerfile.prod`), e o Caddy repassa
 
 O campo `resposta` vem em markdown; `fontes` é uma lista estruturada (deduplicada por
 documento) para o front renderizar como cards com link clicável.
+
+O campo `pergunta` aceita entre 1 e 1000 caracteres. O limite evita que uma entrada
+malformada ou excessivamente grande seja enviada ao modelo; proteção de abuso e
+limitação de chamadas em produção devem continuar sendo aplicadas na infraestrutura
+de borda quando o endpoint estiver exposto publicamente.
 
 ## Indexação (rodar ao mudar o corpus)
 

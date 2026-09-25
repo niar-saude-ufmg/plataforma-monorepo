@@ -31,6 +31,7 @@
     "prod:deploy": "node ./scripts/infra.mjs prod:deploy",
     "prisma:db:pull": "node ./scripts/infra.mjs prisma:db:pull",
     "prisma:generate": "node ./scripts/infra.mjs prisma:generate",
+    "check": "pnpm exec turbo run check",
     "build": "pnpm exec turbo run build",
     "test": "pnpm exec turbo run test",
     "dev:ui": "pnpm --filter @niar/ui dev",

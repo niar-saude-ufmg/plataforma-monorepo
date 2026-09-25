@@ -157,7 +157,7 @@ pnpm --filter @niar/site-institucional dev
 
 Observacao:
 
-- abre em `http://localhost:5176`; o site le o `.env` da raiz (`PUBLIC_RAG_API_URL`) e o chat do `/assistant` precisa do `rag-api` ativo
+- abre em `http://localhost:5176`; o site le o `.env` da raiz (`PUBLIC_RAG_API_URL`) e o chat do `/leme` precisa do `rag-api` ativo
 
 ### 3.7. Só o rag-api
 
@@ -258,6 +258,27 @@ Dependências principais:
 - `@prisma/client`
 - `pg`
 
+### Site institucional
+
+Pacote:
+
+- `apps/site-institucional/package.json`
+
+O site institucional é um app SvelteKit estático servido em `/`. Ele não é um
+remote da Module Federation. O assistente da rota `/leme` consome a API
+`@niar/rag-api` por `PUBLIC_RAG_API_URL`.
+
+### RAG API
+
+Pacote:
+
+- `apps/rag-api/package.json`
+- `apps/rag-api/requirements.txt`
+
+A API é um app FastAPI independente, com prefixo `/api/rag`, porta local `8001`
+e container próprio em produção. As dependências de produção ficam pinadas em
+`requirements.txt`; as ferramentas de teste ficam em `requirements-dev.txt`.
+
 ## 6. Problemas comuns
 
 ### 6.1. `ERR_PNPM_IGNORED_BUILDS`
@@ -312,6 +333,12 @@ Para testes:
 pnpm test
 ```
 
+Para verificações estáticas:
+
+```bash
+pnpm check
+```
+
 Resumo das automações:
 
 - `pnpm setup`
@@ -323,6 +350,7 @@ Resumo das automações:
 - `pnpm prisma:generate`
 - `pnpm db:apply:sql`
 - `pnpm test`
+- `pnpm check`
 
 Essas automações existem para facilitar o uso, mas o fluxo manual continua documentado separadamente.
 

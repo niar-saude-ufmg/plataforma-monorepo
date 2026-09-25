@@ -52,7 +52,7 @@ pnpm --filter @niar/site-institucional check  # svelte-check
 
 O `pnpm dev` da raiz também sobe o site junto com o resto da plataforma.
 
-## Assistente LEME (`/assistant`)
+## Assistente LEME (`/leme`)
 
 O chat chama o `rag-api` (`apps/rag-api`) pelo navegador, em `PUBLIC_RAG_API_URL`,
 lida do `.env` da raiz do monorepo (`kit.env.dir` em `svelte.config.js`):

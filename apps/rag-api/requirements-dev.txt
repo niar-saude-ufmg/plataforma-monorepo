@@ -1,6 +1,4 @@
 -r requirements.txt
 
-# LangGraph Studio local (`langgraph dev`, usa langgraph.json). Não é necessário
-# para servir a API.
-langgraph-cli
-langgraph-api
+pytest==8.3.4
+httpx==0.28.1

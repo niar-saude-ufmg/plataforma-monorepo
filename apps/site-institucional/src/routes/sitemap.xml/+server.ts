@@ -7,7 +7,7 @@ import { absoluteUrl } from '$lib/seo';
 export const prerender = true;
 
 /** Rotas fixas. As notícias internas entram abaixo, a partir de `news`. */
-const staticPaths = ['/', '/about', '/news', '/publications', '/team', '/assistant', '/contact'];
+const staticPaths = ['/', '/about', '/news', '/publications', '/team', '/leme', '/contact'];
 
 export function GET() {
 	const paths = [

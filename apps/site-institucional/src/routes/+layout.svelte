@@ -83,7 +83,7 @@
 		{ href: '/news' as const, label: () => m.nav_news() },
 		{ href: '/publications' as const, label: () => m.nav_publications() },
 		{ href: '/team' as const, label: () => m.nav_team() },
-		{ href: '/assistant' as const, label: () => m.nav_assistant() },
+		{ href: '/leme' as const, label: () => m.nav_assistant() },
 		{ href: '/contact' as const, label: () => m.nav_contact() }
 	];
 

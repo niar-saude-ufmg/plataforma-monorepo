@@ -447,7 +447,7 @@
 		<!-- Pílula cheia, como o CTA primário do hero: é a única ação da faixa, então não
 		     precisa dividir atenção com um secundário. -->
 		<a
-			href={localizeHref(resolve('/assistant'))}
+					href={localizeHref(resolve('/leme'))}
 			class="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-primary px-8 py-4 text-base font-semibold text-white transition-transform duration-200 hover:-translate-y-[3px] sm:self-auto"
 		>
 			{m.home_assistant_cta()}

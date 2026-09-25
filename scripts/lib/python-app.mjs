@@ -35,14 +35,19 @@ function findPythonCommand(label) {
   process.exit(1);
 }
 
-function requirementsChanged(requirementsPath, stampPath) {
+function requirementsChanged(requirementsPath, requirementsDevPath, stampPath, includeDevDependencies) {
   if (!fs.existsSync(stampPath)) {
     return true;
   }
 
   const requirementsStat = fs.statSync(requirementsPath);
   const stampStat = fs.statSync(stampPath);
-  return requirementsStat.mtimeMs > stampStat.mtimeMs;
+  const requirementsDevStat = fs.existsSync(requirementsDevPath)
+    ? fs.statSync(requirementsDevPath)
+    : null;
+
+  return requirementsStat.mtimeMs > stampStat.mtimeMs
+    || (includeDevDependencies && requirementsDevStat && requirementsDevStat.mtimeMs > stampStat.mtimeMs);
 }
 
 export function getPythonAppPaths(appDir) {
@@ -55,12 +60,23 @@ export function getPythonAppPaths(appDir) {
     pythonBin: path.join(venvBinDir, isWindows ? "python.exe" : "python"),
     uvicornBin: path.join(venvBinDir, isWindows ? "uvicorn.exe" : "uvicorn"),
     requirementsPath: path.join(appDir, "requirements.txt"),
+    requirementsDevPath: path.join(appDir, "requirements-dev.txt"),
     stampPath: path.join(venvDir, ".requirements-installed"),
+    devStampPath: path.join(venvDir, ".requirements-dev-installed"),
   };
 }
 
-export function ensurePythonAppReady(appDir, label) {
-  const { venvDir, pipBin, pythonBin, uvicornBin, requirementsPath, stampPath } = getPythonAppPaths(appDir);
+export function ensurePythonAppReady(appDir, label, { devDependencies = false } = {}) {
+  const {
+    venvDir,
+    pipBin,
+    pythonBin,
+    uvicornBin,
+    requirementsPath,
+    requirementsDevPath,
+    stampPath,
+    devStampPath,
+  } = getPythonAppPaths(appDir);
   const pythonCommand = findPythonCommand(label);
   const createVenvArgs = pythonCommand === "py" ? ["-3", "-m", "venv", ".venv"] : ["-m", "venv", ".venv"];
 
@@ -74,10 +90,15 @@ export function ensurePythonAppReady(appDir, label) {
     runChecked(pythonCommand, createVenvArgs, { cwd: appDir });
   }
 
-  if (requirementsChanged(requirementsPath, stampPath) || !fs.existsSync(uvicornBin)) {
+  const dependencyFile = devDependencies && fs.existsSync(requirementsDevPath)
+    ? requirementsDevPath
+    : requirementsPath;
+  const dependencyStamp = devDependencies ? devStampPath : stampPath;
+
+  if (requirementsChanged(requirementsPath, requirementsDevPath, dependencyStamp, devDependencies) || !fs.existsSync(uvicornBin)) {
     console.log(`Instalando dependencias Python do ${label}...`);
-    runChecked(pipBin, ["install", "-r", "requirements.txt"], { cwd: appDir });
-    fs.writeFileSync(stampPath, new Date().toISOString());
+    runChecked(pipBin, ["install", "-r", path.basename(dependencyFile)], { cwd: appDir });
+    fs.writeFileSync(dependencyStamp, new Date().toISOString());
   }
 
   return { appDir, pythonBin, uvicornBin };

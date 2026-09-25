@@ -10,7 +10,7 @@ COPY scripts ./scripts
 RUN corepack enable && pnpm install --frozen-lockfile
 
 # URL do rag-api vista pelo navegador. Em produção é a mesma origem, e o Caddy
-# repassa /api/rag/* ao container rag-api. Sem ela o /assistant fica "em breve".
+# repassa /api/rag/* ao container rag-api. Sem ela o /leme fica "em breve".
 ARG PUBLIC_RAG_API_URL=/api/rag
 ENV PUBLIC_RAG_API_URL=$PUBLIC_RAG_API_URL
 

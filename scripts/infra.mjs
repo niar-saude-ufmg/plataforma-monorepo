@@ -313,6 +313,13 @@ function checkPythonApp(name) {
   fs.writeFileSync(path.join(app.dir, "build", `${name}.compile`), new Date().toISOString());
 }
 
+async function runPythonAppTests(name) {
+  const app = pythonApps[name];
+  const { pythonBin } = ensurePythonAppReady(app.dir, name, { devDependencies: true });
+
+  runCommand(pythonBin, ["-m", "pytest", "tests"], { cwd: app.dir });
+}
+
 async function main() {
   const [command, ...args] = process.argv.slice(2);
 
@@ -340,6 +347,10 @@ async function main() {
     case "assistente-api:check":
     case "rag-api:check":
       checkPythonApp(command.replace(/:check$/, ""));
+      return;
+
+    case "rag-api:test":
+      await runPythonAppTests("rag-api");
       return;
 
     case "db:up":

@@ -318,6 +318,40 @@ Dependências principais:
 - `@prisma/client`
 - `pg`
 
+### Site institucional
+
+Local:
+
+- `apps/site-institucional/package.json`
+
+Tecnologias principais:
+
+- `SvelteKit` com `adapter-static`
+- `Paraglide` para pt/en
+- `Vite`, `Tailwind CSS` e `bits-ui`
+
+O site é um app estático independente, não um remote federado. Em produção ele é
+servido pelo nginx do próprio container e publicado pelo Caddy na rota `/`.
+
+### RAG API
+
+Local:
+
+- `apps/rag-api/package.json`
+- `apps/rag-api/requirements.txt`
+- `apps/rag-api/requirements-dev.txt`
+
+Tecnologias principais:
+
+- `FastAPI` e `Uvicorn`
+- `LangGraph` e `LangChain`
+- `Google Gemini` para geração e embeddings
+- `Qdrant` para busca vetorial
+
+A API é um serviço Python separado, publicado pelo Caddy em `/api/rag/*` e
+executado em produção no container `rag-api`. Ela usa a coleção já indexada no
+Qdrant configurado por ambiente.
+
 ## Desenvolvimento local
 
 ### Fluxo normal
@@ -339,11 +373,11 @@ Os fluxos reais ficam acessíveis por:
 | shell | `http://localhost:5173` | `/login`, `/sala-segura`, `/admin`, `/assistente`, `/identidade-visual` |
 | `admin-api` | `http://localhost:3333` | prefixo `/api/admin` |
 | `assistente-api` | `http://localhost:8000` | prefixo `/api/assistente` |
-| `rag-api` | `http://localhost:8001` | prefixo `/api/rag`, usado pelo assistente LEME do site (`/assistant`) |
+| `rag-api` | `http://localhost:8001` | prefixo `/api/rag`, usado pelo assistente LEME do site (`/leme`) |
 
 As portas próprias dos remotos (`4174` e `4175`) são internas ao desenvolvimento. O acesso funcional à plataforma deve ser feito pela shell, e não abrindo cada microfrontend separadamente. O site institucional não é um remote: é um app próprio, e a shell leva a ele pelo `VITE_SITE_URL`.
 
-O `rag-api` precisa das chaves `GOOGLE_API_KEY`, `GOOGLE_GENAI_API_KEY`, `QDRANT_URL` e `QDRANT_API_KEY` no `.env` da raiz. Sem elas o site sobe normalmente, mas o chat do `/assistant` falha ao responder.
+O `rag-api` precisa das chaves `GOOGLE_API_KEY`, `GOOGLE_GENAI_API_KEY`, `QDRANT_URL` e `QDRANT_API_KEY` no `.env` da raiz. Sem elas o site sobe normalmente, mas o chat do `/leme` falha ao responder.
 
 ### Desenvolvimento isolado
 
@@ -407,7 +441,7 @@ pnpm --filter @niar/assistente-api dev
 pnpm --filter @niar/site-institucional dev
 ```
 
-Abre em `http://localhost:5176`. Para o chat do `/assistant` responder, suba também o `rag-api`.
+Abre em `http://localhost:5176`. Para o chat do `/leme` responder, suba também o `rag-api`.
 
 ### Rodar só o rag-api
 
@@ -496,6 +530,15 @@ pnpm prisma:generate
 ```bash
 pnpm test
 ```
+
+## Verificações estáticas
+
+```bash
+pnpm check
+```
+
+Esse comando executa os checks dos pacotes que os expõem, incluindo `svelte-check`
+do site institucional e a compilação Python do `rag-api` e do `assistente-api`.
 
 ## Automação disponível
 

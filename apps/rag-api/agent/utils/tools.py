@@ -1,10 +1,9 @@
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain.tools import tool, ToolRuntime
+from langchain.tools import tool
 from qdrant_client import QdrantClient
 from google import genai
 import numpy as np
-from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 
 load_dotenv()
