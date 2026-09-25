@@ -1,18 +1,14 @@
 import os
 import re
-import logging
 import unicodedata
 
-from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain_core.messages import HumanMessage
 
-from agent.agent import get_agent_graph
+from agent.agent import graph
 from agent.utils.tools import search_documents, format_context, extract_sources
 from api.schemas import ChatRequest, ChatResponse
-
-
-logger = logging.getLogger(__name__)
 
 
 # Marcadores que o agente usa quando os documentos não sustentam a resposta.
@@ -84,16 +80,15 @@ def chat(req: ChatRequest):
     """
     pergunta = req.pergunta
 
-    try:
-        # 1. Recupera os chunks relevantes no Qdrant (uma única busca).
-        points = search_documents(pergunta)
+    # 1. Recupera os chunks relevantes no Qdrant (uma única busca).
+    points = search_documents(pergunta)
 
-        # 2. Monta o contexto textual para o LLM e as fontes estruturadas para o front.
-        contexto = format_context(points, pergunta)
-        fontes = extract_sources(points)
+    # 2. Monta o contexto textual para o LLM e as fontes estruturadas para o front.
+    contexto = format_context(points, pergunta)
+    fontes = extract_sources(points)
 
-        # 3. Monta a pergunta com o contexto obrigatório (mesmo fluxo do antigo app.py).
-        pergunta_com_contexto = f"""
+    # 3. Monta a pergunta com o contexto obrigatório (mesmo fluxo do antigo app.py).
+    pergunta_com_contexto = f"""
 Use exclusivamente os documentos recuperados abaixo para responder.
 
 Pergunta do usuário:
@@ -108,34 +103,28 @@ Instruções:
 - Ao final, inclua uma seção "Fontes utilizadas".
 """
 
-        # 4. Chama o agente (stateless: cada request é independente).
-        result = get_agent_graph().invoke({
-            "messages": [HumanMessage(content=pergunta_com_contexto)],
-            "confirmation": False,
-            "route": None,
-            "user_data": None,
-            "debug": None,
-        })
+    # 4. Chama o agente (stateless: cada request é independente).
+    result = graph.invoke({
+        "messages": [HumanMessage(content=pergunta_com_contexto)],
+        "confirmation": False,
+        "route": None,
+        "user_data": None,
+        "debug": None,
+    })
 
-        # .text (e não .content): o Gemini devolve o conteúdo como lista de blocos
-        # (texto + assinaturas de raciocínio), enquanto o Groq devolvia string pura.
-        # O .text concatena só as partes de texto, que é o que o front espera.
-        resposta = result["messages"][-1].text
+    # .text (e não .content): o Gemini devolve o conteúdo como lista de blocos
+    # (texto + assinaturas de raciocínio), enquanto o Groq devolvia string pura.
+    # O .text concatena só as partes de texto, que é o que o front espera.
+    resposta = result["messages"][-1].text
 
-        # 5. Se o agente disse que não encontrou base nos documentos, não devolve fonte
-        # nenhuma. Os chunks passaram no score_threshold da busca vetorial, mas passar
-        # no limiar de similaridade não significa que sustentam a resposta — e exibir
-        # cards de fonte embaixo de um "não encontrei" sugere um respaldo que não existe.
-        if _sem_suporte_nas_fontes(resposta):
-            fontes = []
+    # 5. Se o agente disse que não encontrou base nos documentos, não devolve fonte
+    # nenhuma. Os chunks passaram no score_threshold da busca vetorial, mas passar
+    # no limiar de similaridade não significa que sustentam a resposta — e exibir
+    # cards de fonte embaixo de um "não encontrei" sugere um respaldo que não existe.
+    if _sem_suporte_nas_fontes(resposta):
+        fontes = []
 
-        return ChatResponse(resposta=resposta, fontes=fontes)
-    except Exception as error:
-        logger.exception("Falha ao processar pergunta no RAG")
-        raise HTTPException(
-            status_code=503,
-            detail="O assistente LEME está temporariamente indisponível.",
-        ) from error
+    return ChatResponse(resposta=resposta, fontes=fontes)
 
 
 app.include_router(router)

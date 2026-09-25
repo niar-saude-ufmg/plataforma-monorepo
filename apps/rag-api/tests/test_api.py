@@ -1,6 +1,7 @@
 import os
 from types import SimpleNamespace
 
+import pytest
 from fastapi.testclient import TestClient
 
 # A API constrói o grafo no import. A chave fictícia impede que o cliente Gemini
@@ -39,7 +40,7 @@ def test_chat_retorna_resposta_e_fontes(monkeypatch):
     monkeypatch.setattr(main, "search_documents", lambda pergunta: [ponto])
     monkeypatch.setattr(
         main,
-        "get_agent_graph",
+        "graph",
         SimpleNamespace(invoke=lambda payload: {"messages": [mensagem]}),
     )
 
@@ -66,12 +67,8 @@ def test_chat_rejeita_pergunta_acima_do_limite():
     assert response.status_code == 422
 
 
-def test_chat_retorna_503_quando_integracoes_estao_indisponiveis(monkeypatch):
+def test_chat_propaga_erro_quando_integracoes_estao_indisponiveis(monkeypatch):
     monkeypatch.setattr(main, "search_documents", lambda pergunta: (_ for _ in ()).throw(RuntimeError("sem Qdrant")))
 
-    response = client.post("/api/rag/chat", json={"pergunta": "Pergunta sem integrações"})
-
-    assert response.status_code == 503
-    assert response.json() == {
-        "detail": "O assistente LEME está temporariamente indisponível."
-    }
+    with pytest.raises(RuntimeError, match="sem Qdrant"):
+        client.post("/api/rag/chat", json={"pergunta": "Pergunta sem integrações"})

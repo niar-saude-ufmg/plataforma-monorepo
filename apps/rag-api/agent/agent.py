@@ -16,7 +16,7 @@ def create_agent_graph(checkpointer=None):
         model="gemini-3.7-flash",
         temperature=0,
         max_tokens=20000,
-        timeout=60,
+        timeout=None,
         max_retries=3,
     )
     # Groq desativado (migração para Gemini):
@@ -83,16 +83,4 @@ def create_agent_graph(checkpointer=None):
     return graph.compile(checkpointer=checkpointer)
 
 
-_graph = None
-
-
-def get_agent_graph():
-    """Cria o grafo sob demanda para permitir healthchecks sem credenciais."""
-    global _graph
-
-    if _graph is None:
-        if not os.getenv("GOOGLE_API_KEY"):
-            raise RuntimeError("GOOGLE_API_KEY não configurada")
-        _graph = create_agent_graph()
-
-    return _graph
+graph = create_agent_graph()
