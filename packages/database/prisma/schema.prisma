@@ -116,17 +116,17 @@ model AuditLog {
 }
 
 model ProjectStatusHistory {
-  id          Int            @id @default(autoincrement())
-  projectId   Int            @map("project_id")
-  status      project_status
-  notes       String?
-  actorUserId Int?           @map("actor_user_id")
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  actorUser   User?          @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
-  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id               Int            @id @default(autoincrement())
+  projectVersionId Int            @map("project_version_id")
+  status           project_status
+  notes            String?
+  actorUserId      Int?           @map("actor_user_id")
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  actorUser        User?          @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
+  projectVersion   ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([projectId], map: "idx_shared_project_status_history_project_id")
   @@index([actorUserId], map: "idx_shared_project_status_history_actor_user_id")
+  @@index([projectVersionId], map: "idx_shared_project_status_history_project_version_id")
   @@map("project_status_history")
   @@schema("shared")
 }
@@ -146,7 +146,7 @@ model WizardSession {
   llmModelUsed     String            @default("") @map("llm_model_used") @db.VarChar(100)
   createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
-  projects         Project?          @relation("ProjectSourceWizardSession")
+  projectVersions  ProjectVersion[]
   messages         ChatMessage[]
   cleaningVersions CleaningVersion[]
   exports          ExportArtifact[]
@@ -207,15 +207,12 @@ model CleaningVersion {
 model Project {
   id                    Int                    @id @default(autoincrement())
   ownerUserId           Int                    @map("owner_user_id")
-  sourceWizardSessionId Int                    @unique @map("source_wizard_session_id")
   title                 String                 @db.VarChar(255)
   submittedAt           DateTime?              @map("submitted_at") @db.Timestamptz(6)
   createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt             DateTime               @default(now()) @map("updated_at") @db.Timestamptz(6)
-  documents             ProjectDocument[]
+  versions              ProjectVersion[]
   owner                 User                   @relation("ProjectOwner", fields: [ownerUserId], references: [id], onUpdate: NoAction)
-  sourceWizardSession   WizardSession          @relation("ProjectSourceWizardSession", fields: [sourceWizardSessionId], references: [id], onUpdate: NoAction)
-  statusHistory         ProjectStatusHistory[]
 
   @@index([ownerUserId], map: "idx_admin_projects_owner_user_id")
   @@map("projects")
@@ -223,20 +220,56 @@ model Project {
 }
 
 model ProjectDocument {
-  id                     Int             @id @default(autoincrement())
-  projectId              Int             @map("project_id")
-  sourceExportArtifactId Int?            @map("source_export_artifact_id")
-  documentType           String          @map("document_type") @db.VarChar(100)
-  originalFilename       String          @map("original_filename") @db.VarChar(255)
-  storagePath            String          @map("storage_path")
-  isCurrent              Boolean         @default(true) @map("is_current")
-  createdAt              DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  project                Project         @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  sourceExportArtifact   ExportArtifact? @relation(fields: [sourceExportArtifactId], references: [id], onUpdate: NoAction)
+  id                    Int            @id @default(autoincrement())
+  projectVersionId      Int            @map("project_version_id")
+  sourceExportArtifactId Int?          @map("source_export_artifact_id")
+  documentType          String         @map("document_type") @db.VarChar(100)
+  originalFilename      String         @map("original_filename") @db.VarChar(255)
+  storagePath           String         @map("storage_path")
+  createdAt             DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  projectVersion        ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sourceExportArtifact  ExportArtifact? @relation(fields: [sourceExportArtifactId], references: [id], onUpdate: NoAction)
 
-  @@index([projectId], map: "idx_admin_project_documents_project_id")
+  @@index([projectVersionId], map: "idx_admin_project_documents_project_version_id")
   @@index([sourceExportArtifactId], map: "idx_admin_project_documents_source_export_artifact_id")
   @@map("project_documents")
+  @@schema("admin")
+}
+
+model Specialty {
+  id              Int      @id @default(autoincrement())
+  code            String   @unique @db.VarChar(100)
+  name            String   @db.VarChar(255)
+  nameNormalized  String   @unique @map("name_normalized") @db.VarChar(255)
+  description     String   @default("")
+  guidanceContext String   @default("") @map("guidance_context")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive], map: "idx_admin_specialties_is_active")
+  @@map("specialties")
+  @@schema("admin")
+}
+
+model ProjectVersion {
+  id                     Int                    @id @default(autoincrement())
+  projectId              Int                    @map("project_id")
+  versionNumber          Int                    @map("version_number")
+  sourceWizardSessionId  Int                    @map("source_wizard_session_id")
+  characterizationSnapshot Json                 @default("{}") @map("characterization_snapshot")
+  status                 project_status
+  submittedAt            DateTime?              @map("submitted_at") @db.Timestamptz(6)
+  createdAt              DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  project                Project                @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sourceWizardSession    WizardSession          @relation(fields: [sourceWizardSessionId], references: [id], onUpdate: NoAction)
+  documents              ProjectDocument[]
+  statusHistory          ProjectStatusHistory[]
+
+  @@unique([projectId, versionNumber], map: "uq_admin_project_versions_project_number")
+  @@index([projectId], map: "idx_admin_project_versions_project_id")
+  @@index([sourceWizardSessionId], map: "idx_admin_project_versions_source_wizard_session_id")
+  @@map("project_versions")
   @@schema("admin")
 }
 
