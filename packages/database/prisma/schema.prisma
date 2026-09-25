@@ -10,20 +10,58 @@ datasource db {
 }
 
 model User {
-  id             Int                    @id @default(autoincrement())
-  email          String                 @unique @db.VarChar(255)
-  fullName       String                 @map("full_name") @db.VarChar(255)
-  hashedPassword String                 @map("hashed_password") @db.VarChar(255)
-  role           user_role              @default(researcher)
-  isActive       Boolean                @default(true) @map("is_active")
-  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
-  projects       Project[]              @relation("ProjectOwner")
-  wizardSessions WizardSession[]
-  auditLogs      AuditLog[]
-  statusChanges  ProjectStatusHistory[] @relation("StatusActor")
+  id                Int                     @id @default(autoincrement())
+  email             String                  @unique @db.VarChar(255)
+  fullName          String                  @map("full_name") @db.VarChar(255)
+  hashedPassword    String                  @map("hashed_password") @db.VarChar(255)
+  role              user_role               @default(researcher)
+  createdAt         DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  accountStatus     user_account_status     @default(active) @map("account_status")
+  committeeProfile  CommitteeMemberProfile?
+  projects          Project[]               @relation("ProjectOwner")
+  researcherProfile ResearcherProfile?
+  coepData          UserCoepData[]
+  wizardSessions    WizardSession[]
+  auditLogs         AuditLog[]
+  statusChanges     ProjectStatusHistory[]  @relation("StatusActor")
+  evaluationsMade   UserAuthEvaluation[]    @relation("AuthEvaluationEvaluator")
+  authEvaluations   UserAuthEvaluation[]    @relation("AuthEvaluationUser")
+  profile           UserProfile?
 
   @@index([email], map: "idx_shared_users_email")
   @@map("users")
+  @@schema("shared")
+}
+
+model UserProfile {
+  userId             Int      @id @map("user_id")
+  phone              String?  @db.VarChar(50)
+  institution        String?  @db.VarChar(255)
+  organizationalUnit String?  @map("organizational_unit") @db.VarChar(255)
+  contactAddress     String?  @map("contact_address")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("user_profiles")
+  @@schema("shared")
+}
+
+model UserAuthEvaluation {
+  id                Int                 @id @default(autoincrement())
+  userId            Int                 @map("user_id")
+  status            user_account_status
+  justification     String?
+  evaluatedByUserId Int?                @map("evaluated_by_user_id")
+  evaluatedAt       DateTime?           @map("evaluated_at") @db.Timestamptz(6)
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  userCoepDataId    Int?                @map("user_coep_data_id")
+  coepData          UserCoepData?       @relation(fields: [userCoepDataId], references: [id], onUpdate: NoAction, map: "fk_shared_user_auth_evaluations_coep")
+  evaluatedBy       User?               @relation("AuthEvaluationEvaluator", fields: [evaluatedByUserId], references: [id], onUpdate: NoAction)
+  user              User                @relation("AuthEvaluationUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId], map: "idx_shared_user_auth_evaluations_user_id")
+  @@map("user_auth_evaluations")
   @@schema("shared")
 }
 
@@ -116,17 +154,20 @@ model AuditLog {
 }
 
 model ProjectStatusHistory {
-  id               Int            @id @default(autoincrement())
-  projectVersionId Int            @map("project_version_id")
-  status           project_status
-  notes            String?
-  actorUserId      Int?           @map("actor_user_id")
-  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  actorUser        User?          @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
-  projectVersion   ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                    Int                  @id @default(autoincrement())
+  status                project_status
+  notes                 String?
+  actorUserId           Int?                 @map("actor_user_id")
+  createdAt             DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  projectVersionId      Int                  @map("project_version_id")
+  committeeEvaluationId Int?                 @map("committee_evaluation_id")
+  projectVersion        ProjectVersion       @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_shared_project_status_history_project_version")
+  committeeEvaluation   CommitteeEvaluation? @relation(fields: [committeeEvaluationId], references: [id], onUpdate: NoAction, map: "fk_shared_status_history_committee_evaluation")
+  actorUser             User?                @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
 
   @@index([actorUserId], map: "idx_shared_project_status_history_actor_user_id")
   @@index([projectVersionId], map: "idx_shared_project_status_history_project_version_id")
+  @@index([committeeEvaluationId], map: "idx_shared_status_history_committee_evaluation_id")
   @@map("project_status_history")
   @@schema("shared")
 }
@@ -205,14 +246,14 @@ model CleaningVersion {
 }
 
 model Project {
-  id                    Int                    @id @default(autoincrement())
-  ownerUserId           Int                    @map("owner_user_id")
-  title                 String                 @db.VarChar(255)
-  submittedAt           DateTime?              @map("submitted_at") @db.Timestamptz(6)
-  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt             DateTime               @default(now()) @map("updated_at") @db.Timestamptz(6)
-  versions              ProjectVersion[]
-  owner                 User                   @relation("ProjectOwner", fields: [ownerUserId], references: [id], onUpdate: NoAction)
+  id          Int              @id @default(autoincrement())
+  ownerUserId Int              @map("owner_user_id")
+  title       String           @db.VarChar(255)
+  submittedAt DateTime?        @map("submitted_at") @db.Timestamptz(6)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  versions    ProjectVersion[]
+  owner       User             @relation("ProjectOwner", fields: [ownerUserId], references: [id], onUpdate: NoAction)
 
   @@index([ownerUserId], map: "idx_admin_projects_owner_user_id")
   @@map("projects")
@@ -220,15 +261,15 @@ model Project {
 }
 
 model ProjectDocument {
-  id                    Int            @id @default(autoincrement())
-  projectVersionId      Int            @map("project_version_id")
-  sourceExportArtifactId Int?          @map("source_export_artifact_id")
-  documentType          String         @map("document_type") @db.VarChar(100)
-  originalFilename      String         @map("original_filename") @db.VarChar(255)
-  storagePath           String         @map("storage_path")
-  createdAt             DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  projectVersion        ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  sourceExportArtifact  ExportArtifact? @relation(fields: [sourceExportArtifactId], references: [id], onUpdate: NoAction)
+  id                     Int             @id @default(autoincrement())
+  sourceExportArtifactId Int?            @map("source_export_artifact_id")
+  documentType           String          @map("document_type") @db.VarChar(100)
+  originalFilename       String          @map("original_filename") @db.VarChar(255)
+  storagePath            String          @map("storage_path")
+  createdAt              DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  projectVersionId       Int             @map("project_version_id")
+  projectVersion         ProjectVersion  @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_admin_project_documents_project_version")
+  sourceExportArtifact   ExportArtifact? @relation(fields: [sourceExportArtifactId], references: [id], onUpdate: NoAction)
 
   @@index([projectVersionId], map: "idx_admin_project_documents_project_version_id")
   @@index([sourceExportArtifactId], map: "idx_admin_project_documents_source_export_artifact_id")
@@ -236,40 +277,106 @@ model ProjectDocument {
   @@schema("admin")
 }
 
+model ProjectVersion {
+  id                       Int                    @id @default(autoincrement())
+  projectId                Int                    @map("project_id")
+  versionNumber            Int                    @map("version_number")
+  sourceWizardSessionId    Int                    @map("source_wizard_session_id")
+  userCoepDataId           Int                    @map("user_coep_data_id")
+  characterizationSnapshot Json                   @default("{}") @map("characterization_snapshot")
+  status                   project_status
+  submittedAt              DateTime?              @map("submitted_at") @db.Timestamptz(6)
+  createdAt                DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  committeeEvaluation      CommitteeEvaluation?
+  documents                ProjectDocument[]
+  userCoepData             UserCoepData           @relation(fields: [userCoepDataId], references: [id], onUpdate: NoAction, map: "fk_admin_project_versions_user_coep")
+  project                  Project                @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sourceWizardSession      WizardSession          @relation(fields: [sourceWizardSessionId], references: [id], onUpdate: NoAction)
+  statusHistory            ProjectStatusHistory[]
+
+  @@unique([projectId, versionNumber], map: "uq_admin_project_versions_project_number")
+  @@index([projectId], map: "idx_admin_project_versions_project_id")
+  @@index([sourceWizardSessionId], map: "idx_admin_project_versions_source_wizard_session_id")
+  @@index([userCoepDataId], map: "idx_admin_project_versions_user_coep_data_id")
+  @@map("project_versions")
+  @@schema("admin")
+}
+
 model Specialty {
-  id              Int      @id @default(autoincrement())
-  code            String   @unique @db.VarChar(100)
-  name            String   @db.VarChar(255)
-  nameNormalized  String   @unique @map("name_normalized") @db.VarChar(255)
-  description     String   @default("")
-  guidanceContext String   @default("") @map("guidance_context")
-  isActive        Boolean  @default(true) @map("is_active")
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  id               Int                      @id @default(autoincrement())
+  code             String                   @unique @db.VarChar(100)
+  name             String                   @unique(map: "uq_admin_specialties_name") @db.VarChar(255)
+  nameNormalized   String                   @unique @map("name_normalized") @db.VarChar(255)
+  description      String                   @default("")
+  guidanceContext  String                   @default("") @map("guidance_context")
+  isActive         Boolean                  @default(true) @map("is_active")
+  createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime                 @default(now()) @map("updated_at") @db.Timestamptz(6)
+  committeeMembers CommitteeMemberProfile[]
 
   @@index([isActive], map: "idx_admin_specialties_is_active")
   @@map("specialties")
   @@schema("admin")
 }
 
-model ProjectVersion {
-  id                     Int                    @id @default(autoincrement())
-  projectId              Int                    @map("project_id")
-  versionNumber          Int                    @map("version_number")
-  sourceWizardSessionId  Int                    @map("source_wizard_session_id")
-  characterizationSnapshot Json                 @default("{}") @map("characterization_snapshot")
-  status                 project_status
-  submittedAt            DateTime?              @map("submitted_at") @db.Timestamptz(6)
-  createdAt              DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
-  project                Project                @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  sourceWizardSession    WizardSession          @relation(fields: [sourceWizardSessionId], references: [id], onUpdate: NoAction)
-  documents              ProjectDocument[]
-  statusHistory          ProjectStatusHistory[]
+model ResearcherProfile {
+  userId       Int      @id @map("user_id")
+  researchArea String?  @map("research_area") @db.VarChar(255)
+  position     String?  @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@unique([projectId, versionNumber], map: "uq_admin_project_versions_project_number")
-  @@index([projectId], map: "idx_admin_project_versions_project_id")
-  @@index([sourceWizardSessionId], map: "idx_admin_project_versions_source_wizard_session_id")
-  @@map("project_versions")
+  @@map("researcher_profiles")
+  @@schema("admin")
+}
+
+model CommitteeMemberProfile {
+  userId      Int                   @id @map("user_id")
+  specialtyId Int                   @map("specialty_id")
+  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
+  evaluations CommitteeEvaluation[] @relation("ResponsibleMember")
+  specialty   Specialty             @relation(fields: [specialtyId], references: [id], onUpdate: NoAction)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("committee_member_profiles")
+  @@schema("admin")
+}
+
+model UserCoepData {
+  id                  Int                  @id @default(autoincrement())
+  userId              Int                  @map("user_id")
+  caae                String               @db.VarChar(50)
+  opinionNumber       String               @map("opinion_number") @db.VarChar(50)
+  approvalDate        DateTime             @map("approval_date") @db.Date
+  documentFilename    String               @map("document_filename") @db.VarChar(255)
+  documentStoragePath String               @map("document_storage_path")
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
+  projectVersions     ProjectVersion[]
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  authEvaluations     UserAuthEvaluation[]
+
+  @@unique([userId, caae], map: "uq_admin_user_coep_data_user_caae")
+  @@map("user_coep_data")
+  @@schema("admin")
+}
+
+model CommitteeEvaluation {
+  id                      Int                         @id @default(autoincrement())
+  projectVersionId        Int                         @unique @map("project_version_id")
+  responsibleMemberUserId Int                         @map("responsible_member_user_id")
+  result                  committee_evaluation_result
+  justification           String
+  evaluatedAt             DateTime?                   @map("evaluated_at") @db.Timestamptz(6)
+  createdAt               DateTime                    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime                    @default(now()) @map("updated_at") @db.Timestamptz(6)
+  projectVersion          ProjectVersion              @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  responsibleMember       CommitteeMemberProfile      @relation("ResponsibleMember", fields: [responsibleMemberUserId], references: [userId], onUpdate: NoAction)
+  statusHistory           ProjectStatusHistory[]
+
+  @@map("committee_evaluations")
   @@schema("admin")
 }
 
@@ -288,13 +395,44 @@ enum user_role {
   @@schema("shared")
 }
 
+enum user_account_status {
+  pending
+  active
+  rejected
+  disabled
+
+  @@schema("shared")
+}
+
+enum committee_evaluation_result {
+  approved
+  needs_changes
+  rejected
+
+  @@schema("admin")
+}
+
 enum project_status {
   submitted_to_committee
+  resubmitted_to_committee
   under_review
   needs_changes
   approved
   rejected
-  resubmitted_to_committee
 
   @@schema("shared")
+}
+
+enum userrole {
+  researcher
+  admin
+
+  @@schema("assistant")
+}
+
+enum wizardtype {
+  project_doc
+  data_clean
+
+  @@schema("assistant")
 }

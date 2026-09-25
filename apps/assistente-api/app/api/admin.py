@@ -262,7 +262,7 @@ async def create_user(
         full_name=body.full_name.strip(),
         hashed_password=get_password_hash(body.password),
         role=role,
-        is_active=True,
+        account_status="active",
     )
     db.add(user)
     await db.flush()

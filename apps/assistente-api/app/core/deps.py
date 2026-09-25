@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.security import decode_access_token
-from app.models import User, UserRole
+from app.models import User, UserAccountStatus, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/admin/auth/login")
 
@@ -22,7 +22,7 @@ async def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
-    if user is None or not user.is_active:
+    if user is None or user.account_status != UserAccountStatus.active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuário não encontrado")
     return user
 

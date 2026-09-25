@@ -20,8 +20,8 @@ export const authService = {
       throw new AppError("Credenciais incorretas", 401);
     }
 
-    if (!user.isActive) {
-      throw new AppError("Conta desativada", 403);
+    if (user.accountStatus !== "active") {
+      throw new AppError("Conta não está ativa", 403);
     }
 
     return {
