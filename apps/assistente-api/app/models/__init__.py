@@ -197,7 +197,9 @@ class WizardSession(Base):
     cleaning_versions: Mapped[list["CleaningVersion"]] = relationship(
         back_populates="session", cascade="all, delete-orphan", order_by="CleaningVersion.version_number"
     )
-    projects: Mapped[list["Project"]] = relationship(back_populates="source_session")
+    project_versions: Mapped[list["ProjectVersion"]] = relationship(
+        back_populates="source_session"
+    )
 
 
 class ChatMessage(Base):
@@ -290,9 +292,6 @@ class Project(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     owner_user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
-    source_wizard_session_id: Mapped[int] = mapped_column(
-        ForeignKey("wizard_sessions.id", ondelete="RESTRICT"), unique=True
-    )
     title: Mapped[str] = mapped_column(String(255))
     submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -303,13 +302,6 @@ class Project(Base):
     )
 
     owner: Mapped["User"] = relationship(back_populates="owned_projects")
-    source_session: Mapped["WizardSession"] = relationship(back_populates="projects")
-    documents: Mapped[list["ProjectDocument"]] = relationship(
-        back_populates="project", cascade="all, delete-orphan"
-    )
-    status_history: Mapped[list["ProjectStatusHistory"]] = relationship(
-        back_populates="project", cascade="all, delete-orphan"
-    )
     versions: Mapped[list["ProjectVersion"]] = relationship(
         back_populates="project", cascade="all, delete-orphan"
     )
@@ -319,13 +311,12 @@ class ProjectVersion(Base):
     __tablename__ = "project_versions"
     __table_args__ = (
         UniqueConstraint("project_id", "version_number", name="uq_admin_project_versions_project_number"),
-        UniqueConstraint("source_wizard_session_id", name="uq_admin_project_versions_source_session"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
     source_wizard_session_id: Mapped[int] = mapped_column(
-        ForeignKey("wizard_sessions.id", ondelete="RESTRICT"), unique=True
+        ForeignKey("wizard_sessions.id", ondelete="RESTRICT")
     )
     version_number: Mapped[int] = mapped_column(Integer)
     characterization_snapshot: Mapped[dict] = mapped_column(JSONB, default=dict)
@@ -336,7 +327,9 @@ class ProjectVersion(Base):
     )
 
     project: Mapped["Project"] = relationship(back_populates="versions")
-    source_session: Mapped["WizardSession"] = relationship()
+    source_session: Mapped["WizardSession"] = relationship(
+        back_populates="project_versions"
+    )
     documents: Mapped[list["ProjectDocument"]] = relationship(back_populates="version")
     status_history: Mapped[list["ProjectStatusHistory"]] = relationship(back_populates="version")
 
@@ -345,7 +338,6 @@ class ProjectDocument(Base):
     __tablename__ = "project_documents"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
     source_export_artifact_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("export_artifacts.id", ondelete="SET NULL"), nullable=True
     )
@@ -355,12 +347,10 @@ class ProjectDocument(Base):
     document_type: Mapped[str] = mapped_column(String(100))
     original_filename: Mapped[str] = mapped_column(String(255))
     storage_path: Mapped[str] = mapped_column(Text)
-    is_current: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
-    project: Mapped["Project"] = relationship(back_populates="documents")
     source_export_artifact: Mapped[Optional["ExportArtifact"]] = relationship(
         back_populates="project_documents"
     )
@@ -371,7 +361,6 @@ class ProjectStatusHistory(Base):
     __tablename__ = "project_status_history"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
     project_version_id: Mapped[int] = mapped_column(
         ForeignKey("project_versions.id", ondelete="CASCADE"), nullable=False
     )
@@ -384,6 +373,5 @@ class ProjectStatusHistory(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
-    project: Mapped["Project"] = relationship(back_populates="status_history")
     actor: Mapped[Optional["User"]] = relationship(back_populates="status_changes")
     version: Mapped["ProjectVersion"] = relationship(back_populates="status_history")
