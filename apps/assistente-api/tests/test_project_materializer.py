@@ -10,6 +10,7 @@ from app.api import projects as projects_module
 from app.models import (
     ExportArtifact,
     Project,
+    ProjectVersion,
     ProjectDocument,
     ProjectStatus,
     ProjectStatusHistory,
@@ -23,12 +24,14 @@ from app.services.submission.materializer import materialize_project
 # Funções utilitárias
 # =============================================================================
 
-def query_result(value=None, *, scalars=None):
+def query_result(value=None, *, scalars=None, scalar_one=None):
     """Cria um mock de resultado de db.execute."""
     result = MagicMock()
     result.scalar_one_or_none.return_value = value
     if scalars is not None:
         result.scalars.return_value.all.return_value = scalars
+    if scalar_one is not None:
+        result.scalar_one.return_value = scalar_one
     return result
 
 
@@ -37,8 +40,7 @@ def added_objects(db):
     return [call.args[0] for call in db.add.call_args_list]
 
 
-@pytest.mark.asyncio
-async def test_quality_check_returns_actionable_error_when_llm_is_unavailable():
+def test_quality_check_returns_actionable_error_when_llm_is_unavailable():
     session = SimpleNamespace(id=42, user_id=7)
     db = MagicMock()
     db.execute = AsyncMock(return_value=query_result(session))
@@ -50,7 +52,9 @@ async def test_quality_check_returns_actionable_error_when_llm_is_unavailable():
         new=AsyncMock(side_effect=RuntimeError("GEMINI_API_KEY não está configurada")),
     ):
         with pytest.raises(HTTPException) as exc_info:
-            await projects_module.quality_check(42, current_user, db)
+            asyncio.run(
+                projects_module.quality_check(42, current_user, db) # type: ignore[call-arg]
+            )
 
     assert exc_info.value.status_code == 503
     assert "GEMINI_API_KEY" in str(exc_info.value.detail)
@@ -103,6 +107,7 @@ def make_db():
         db.flush = AsyncMock()
         db.commit = AsyncMock()
         db.add = MagicMock()
+        db.delete = AsyncMock()
         return db
 
     return _factory
@@ -145,7 +150,18 @@ class TestMaterializeProject:
         assert history.status == ProjectStatus.submitted_to_committee
         assert history.actor_user_id == session.user_id
         assert history.notes == "Primeira submissão"
-        db.flush.assert_awaited_once()
+        assert db.flush.await_count == 2
+
+        version = next(
+            item for item in added_objects(db) if isinstance(item, ProjectVersion)
+        )
+        assert version.version_number == 1
+        assert version.project_id == project.id
+        assert version.source_wizard_session_id == session.id
+        assert version.status == ProjectStatus.submitted_to_committee
+        assert version.submitted_at is not None
+        assert version.characterization_snapshot["title"] == session.title
+
         db.commit.assert_not_awaited()
 
     def test_resubmission_reuses_project_and_replaces_current_document(
@@ -188,11 +204,20 @@ class TestMaterializeProject:
             actor_user_id=10,
             notes="Ajustar projeto",
         )
+        old_version = ProjectVersion(
+            id=1,
+            project_id=existing_project.id,
+            version_number=1,
+            source_wizard_session_id=session.id,
+            status=ProjectStatus.needs_changes,
+            characterization_snapshot={"title": "v1"},
+        )
         db = make_db(
             query_result(),
             query_result(existing_project),
             query_result(scalars=old_documents),
             query_result(last_status),
+            query_result(scalar_one=1)
         )
 
         result = asyncio.run(
@@ -216,7 +241,28 @@ class TestMaterializeProject:
         assert document.original_filename == artifact.filename
         assert history.status == ProjectStatus.resubmitted_to_committee
         assert history.notes == "Reenvio com ajustes solicitados"
-        db.flush.assert_not_awaited()
+
+        assert old_version.version_number == 1
+        assert old_version.status == ProjectStatus.needs_changes
+
+        assert len(old_documents) == 2
+        assert all(d.is_current is False for d in old_documents)
+
+        version = next(
+            item for item in added_objects(db) if isinstance(item, ProjectVersion)
+        )
+        assert version.version_number == 2
+        assert version.project_id == existing_project.id
+        assert version.status == ProjectStatus.resubmitted_to_committee
+        assert version.source_wizard_session_id == session.id
+        new_docs = [
+            item for item in added_objects(db) if isinstance(item, ProjectDocument)
+        ]
+        assert len(new_docs) == 1
+        assert new_docs[0].is_current is True
+
+        assert db.flush.await_count == 1
+        db.delete.assert_not_awaited()
         db.commit.assert_not_awaited()
 
     def test_existing_project_without_history_is_treated_as_first_submission(
@@ -237,6 +283,7 @@ class TestMaterializeProject:
             query_result(existing_project),
             query_result(scalars=[]),
             query_result(None),
+            query_result(scalar_one=0)
         )
 
         result = asyncio.run(

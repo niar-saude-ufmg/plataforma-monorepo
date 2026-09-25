@@ -13,6 +13,7 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import JSONB
 
 from app.core.database import Base
 
@@ -267,6 +268,23 @@ class AuditLog(Base):
     )
 
 
+class ProjectStatus(str, enum.Enum):
+    submitted_to_committee = "submitted_to_committee"
+    resubmitted_to_committee = "resubmitted_to_committee"
+    under_review = "under_review"
+    needs_changes = "needs_changes"
+    approved = "approved"
+    rejected = "rejected"
+
+
+PROJECT_STATUS_ENUM = Enum(
+    ProjectStatus,
+    name="project_status",
+    schema="shared",
+    create_type=False,
+)
+
+
 class Project(Base):
     __tablename__ = "projects"
 
@@ -292,6 +310,35 @@ class Project(Base):
     status_history: Mapped[list["ProjectStatusHistory"]] = relationship(
         back_populates="project", cascade="all, delete-orphan"
     )
+    versions: Mapped[list["ProjectVersion"]] = relationship(
+        back_populates="project", cascade="all, delete-orphan"
+    )
+
+
+class ProjectVersion(Base):
+    __tablename__ = "project_versions"
+    __table_args__ = (
+        UniqueConstraint("project_id", "version_number", name="uq_admin_project_versions_project_number"),
+        UniqueConstraint("source_wizard_session_id", name="uq_admin_project_versions_source_session"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    source_wizard_session_id: Mapped[int] = mapped_column(
+        ForeignKey("wizard_sessions.id", ondelete="RESTRICT"), unique=True
+    )
+    version_number: Mapped[int] = mapped_column(Integer)
+    characterization_snapshot: Mapped[dict] = mapped_column(JSONB, default=dict)
+    status: Mapped[ProjectStatus] = mapped_column(PROJECT_STATUS_ENUM, nullable=False)
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    project: Mapped["Project"] = relationship(back_populates="versions")
+    source_session: Mapped["WizardSession"] = relationship()
+    documents: Mapped[list["ProjectDocument"]] = relationship(back_populates="version")
+    status_history: Mapped[list["ProjectStatusHistory"]] = relationship(back_populates="version")
 
 
 class ProjectDocument(Base):
@@ -301,6 +348,9 @@ class ProjectDocument(Base):
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
     source_export_artifact_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("export_artifacts.id", ondelete="SET NULL"), nullable=True
+    )
+    project_version_id: Mapped[int] = mapped_column(
+        ForeignKey("project_versions.id", ondelete="CASCADE"), nullable=False
     )
     document_type: Mapped[str] = mapped_column(String(100))
     original_filename: Mapped[str] = mapped_column(String(255))
@@ -314,23 +364,7 @@ class ProjectDocument(Base):
     source_export_artifact: Mapped[Optional["ExportArtifact"]] = relationship(
         back_populates="project_documents"
     )
-
-
-class ProjectStatus(str, enum.Enum):
-    submitted_to_committee = "submitted_to_committee"
-    resubmitted_to_committee = "resubmitted_to_committee"
-    under_review = "under_review"
-    needs_changes = "needs_changes"
-    approved = "approved"
-    rejected = "rejected"
-
-
-PROJECT_STATUS_ENUM = Enum(
-    ProjectStatus,
-    name="project_status",
-    schema="shared",
-    create_type=False,
-)
+    version: Mapped["ProjectVersion"] = relationship(back_populates="documents")
 
 
 class ProjectStatusHistory(Base):
@@ -338,6 +372,9 @@ class ProjectStatusHistory(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    project_version_id: Mapped[int] = mapped_column(
+        ForeignKey("project_versions.id", ondelete="CASCADE"), nullable=False
+    )
     status: Mapped[ProjectStatus] = mapped_column(PROJECT_STATUS_ENUM, nullable=False)
     notes: Mapped[str] = mapped_column(Text, default="")
     actor_user_id: Mapped[Optional[int]] = mapped_column(
@@ -349,3 +386,4 @@ class ProjectStatusHistory(Base):
 
     project: Mapped["Project"] = relationship(back_populates="status_history")
     actor: Mapped[Optional["User"]] = relationship(back_populates="status_changes")
+    version: Mapped["ProjectVersion"] = relationship(back_populates="status_history")
