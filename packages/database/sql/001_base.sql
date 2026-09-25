@@ -16,7 +16,40 @@ BEGIN
   END IF;
 END $$;
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'user_account_status' AND n.nspname = 'shared'
+  ) THEN
+    CREATE TYPE shared.user_account_status AS ENUM (
+      'pending',
+      'active',
+      'rejected',
+      'disabled'
+    );
+  END IF;
+END $$;
+
 ALTER TYPE shared.user_role ADD VALUE IF NOT EXISTS 'committee';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'committee_evaluation_result' AND n.nspname = 'admin'
+  ) THEN
+    CREATE TYPE admin.committee_evaluation_result AS ENUM (
+      'approved',
+      'needs_changes',
+      'rejected'
+    );
+  END IF;
+END $$;
 
 DO $$
 BEGIN
@@ -36,11 +69,63 @@ CREATE TABLE IF NOT EXISTS shared.users (
   full_name VARCHAR(255) NOT NULL,
   hashed_password VARCHAR(255) NOT NULL,
   role shared.user_role NOT NULL DEFAULT 'researcher',
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  account_status shared.user_account_status NOT NULL DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE shared.users
+  ADD COLUMN IF NOT EXISTS account_status shared.user_account_status;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'shared' AND table_name = 'users'
+      AND column_name = 'is_active'
+  ) THEN
+    UPDATE shared.users
+    SET account_status = CASE
+      WHEN is_active THEN 'active'::shared.user_account_status
+      ELSE 'disabled'::shared.user_account_status
+    END
+    WHERE account_status IS NULL;
+
+    ALTER TABLE shared.users DROP COLUMN is_active;
+  END IF;
+END $$;
+
+UPDATE shared.users
+SET account_status = 'active'::shared.user_account_status
+WHERE account_status IS NULL;
+
+ALTER TABLE shared.users
+  ALTER COLUMN account_status SET DEFAULT 'active',
+  ALTER COLUMN account_status SET NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_shared_users_email ON shared.users (email);
+
+CREATE TABLE IF NOT EXISTS shared.user_profiles (
+  user_id INTEGER PRIMARY KEY REFERENCES shared.users(id) ON DELETE CASCADE,
+  phone VARCHAR(50),
+  institution VARCHAR(255),
+  organizational_unit VARCHAR(255),
+  contact_address TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS shared.user_auth_evaluations (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES shared.users(id) ON DELETE CASCADE,
+  status shared.user_account_status NOT NULL,
+  justification TEXT,
+  evaluated_by_user_id INTEGER REFERENCES shared.users(id) ON DELETE SET NULL,
+  evaluated_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_shared_user_auth_evaluations_user_id
+  ON shared.user_auth_evaluations (user_id);
 
 CREATE TABLE IF NOT EXISTS shared.app_settings (
   key VARCHAR(100) PRIMARY KEY,
@@ -188,6 +273,7 @@ CREATE TABLE IF NOT EXISTS admin.project_versions (
   version_number INTEGER NOT NULL,
   source_wizard_session_id INTEGER NOT NULL
     REFERENCES assistant.wizard_sessions(id) ON DELETE RESTRICT,
+  user_coep_data_id INTEGER NOT NULL,
   characterization_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
   status shared.project_status NOT NULL,
   submitted_at TIMESTAMPTZ NULL,
@@ -197,12 +283,17 @@ CREATE TABLE IF NOT EXISTS admin.project_versions (
 );
 
 ALTER TABLE admin.project_versions
+  ADD COLUMN IF NOT EXISTS user_coep_data_id INTEGER;
+
+ALTER TABLE admin.project_versions
   DROP CONSTRAINT IF EXISTS uq_admin_project_versions_source_session;
 
 CREATE INDEX IF NOT EXISTS idx_admin_project_versions_project_id
   ON admin.project_versions (project_id);
 CREATE INDEX IF NOT EXISTS idx_admin_project_versions_source_wizard_session_id
   ON admin.project_versions (source_wizard_session_id);
+CREATE INDEX IF NOT EXISTS idx_admin_project_versions_user_coep_data_id
+  ON admin.project_versions (user_coep_data_id);
 CREATE INDEX IF NOT EXISTS idx_admin_projects_owner_user_id
   ON admin.projects (owner_user_id);
 
@@ -354,12 +445,6 @@ ALTER TABLE admin.projects
   DROP CONSTRAINT IF EXISTS projects_source_wizard_session_id_key;
 ALTER TABLE admin.projects
   DROP COLUMN IF EXISTS source_wizard_session_id;
-ALTER TABLE admin.project_documents
-  DROP COLUMN IF EXISTS project_id;
-ALTER TABLE admin.project_documents
-  DROP COLUMN IF EXISTS is_current;
-ALTER TABLE shared.project_status_history
-  DROP COLUMN IF EXISTS project_id;
 
 CREATE TABLE IF NOT EXISTS admin.specialties (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -375,5 +460,116 @@ CREATE TABLE IF NOT EXISTS admin.specialties (
 
 CREATE INDEX IF NOT EXISTS idx_admin_specialties_is_active
   ON admin.specialties (is_active);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'uq_admin_specialties_name'
+      AND conrelid = 'admin.specialties'::regclass
+  ) THEN
+    ALTER TABLE admin.specialties
+      ADD CONSTRAINT uq_admin_specialties_name UNIQUE (name);
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS admin.researcher_profiles (
+  user_id INTEGER PRIMARY KEY REFERENCES shared.users(id) ON DELETE CASCADE,
+  research_area VARCHAR(255),
+  position VARCHAR(255),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS admin.committee_member_profiles (
+  user_id INTEGER PRIMARY KEY REFERENCES shared.users(id) ON DELETE CASCADE,
+  specialty_id INTEGER NOT NULL REFERENCES admin.specialties(id) ON DELETE RESTRICT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS admin.user_coep_data (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES shared.users(id) ON DELETE CASCADE,
+  caae VARCHAR(50) NOT NULL,
+  opinion_number VARCHAR(50) NOT NULL,
+  approval_date DATE NOT NULL,
+  document_filename VARCHAR(255) NOT NULL,
+  document_storage_path TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_admin_user_coep_data_user_caae UNIQUE (user_id, caae)
+);
+
+ALTER TABLE shared.user_auth_evaluations
+  ADD COLUMN IF NOT EXISTS user_coep_data_id INTEGER;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_shared_user_auth_evaluations_coep'
+  ) THEN
+    ALTER TABLE shared.user_auth_evaluations
+      ADD CONSTRAINT fk_shared_user_auth_evaluations_coep
+      FOREIGN KEY (user_coep_data_id)
+      REFERENCES admin.user_coep_data(id)
+      ON DELETE SET NULL;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_admin_project_versions_user_coep'
+  ) THEN
+    ALTER TABLE admin.project_versions
+      ADD CONSTRAINT fk_admin_project_versions_user_coep
+      FOREIGN KEY (user_coep_data_id)
+      REFERENCES admin.user_coep_data(id)
+      ON DELETE RESTRICT;
+  END IF;
+END $$;
+
+ALTER TABLE admin.project_versions
+  ALTER COLUMN user_coep_data_id SET NOT NULL;
+
+CREATE TABLE IF NOT EXISTS admin.committee_evaluations (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  project_version_id INTEGER NOT NULL UNIQUE
+    REFERENCES admin.project_versions(id) ON DELETE CASCADE,
+  responsible_member_user_id INTEGER NOT NULL
+    REFERENCES admin.committee_member_profiles(user_id) ON DELETE RESTRICT,
+  result admin.committee_evaluation_result NOT NULL,
+  justification TEXT NOT NULL,
+  evaluated_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE shared.project_status_history
+  ADD COLUMN IF NOT EXISTS committee_evaluation_id INTEGER;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_shared_status_history_committee_evaluation'
+  ) THEN
+    ALTER TABLE shared.project_status_history
+      ADD CONSTRAINT fk_shared_status_history_committee_evaluation
+      FOREIGN KEY (committee_evaluation_id)
+      REFERENCES admin.committee_evaluations(id)
+      ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_shared_status_history_committee_evaluation_id
+  ON shared.project_status_history (committee_evaluation_id);
+ALTER TABLE admin.project_documents
+  DROP COLUMN IF EXISTS project_id;
+ALTER TABLE admin.project_documents
+  DROP COLUMN IF EXISTS is_current;
+ALTER TABLE shared.project_status_history
+  DROP COLUMN IF EXISTS project_id;
 
 COMMIT;

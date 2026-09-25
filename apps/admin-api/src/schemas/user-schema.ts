@@ -38,6 +38,7 @@ export type UserResponse = {
   email: string;
   full_name: string;
   role: UserRole;
+  account_status: "pending" | "active" | "rejected" | "disabled";
   is_active: boolean;
   created_at: string;
 };

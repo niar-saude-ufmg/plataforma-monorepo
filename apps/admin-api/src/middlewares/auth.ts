@@ -4,7 +4,7 @@ import type { UserRole } from "@niar/contracts";
 import { AppError } from "../errors/app-error.js";
 import { usersRepository } from "../repositories/users-repository.js";
 
-// email/fullName/isActive entraram aqui (além de id/role) para o GET /me não
+// email/fullName/accountStatus entraram aqui (além de id/role) para o GET /me não
 // precisar buscar o usuário de novo no banco — authenticate já fez essa
 // consulta, então só reaproveitamos os campos.
 export type AuthenticatedUser = {
@@ -12,7 +12,7 @@ export type AuthenticatedUser = {
   email: string;
   fullName: string;
   role: UserRole;
-  isActive: boolean;
+  accountStatus: "pending" | "active" | "rejected" | "disabled";
 };
 
 declare global 
@@ -76,7 +76,7 @@ export const authenticate = async (request: Request, _response: Response, next: 
 
   try {
     const user = await usersRepository.findById(userId);
-    if (!user || !user.isActive) {
+    if (!user || user.accountStatus !== "active") {
       throw new AppError("Usuário não encontrado", 401);
     }
 
@@ -85,7 +85,7 @@ export const authenticate = async (request: Request, _response: Response, next: 
       email: user.email,
       fullName: user.fullName,
       role: user.role,
-      isActive: user.isActive
+      accountStatus: user.accountStatus
     };
     next();
   } catch (error) {

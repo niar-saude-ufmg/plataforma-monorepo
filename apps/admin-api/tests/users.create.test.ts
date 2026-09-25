@@ -11,7 +11,7 @@ type StoredUser = {
   fullName: string;
   hashedPassword: string;
   role: UserRole;
-  isActive: boolean;
+  accountStatus: "pending" | "active" | "rejected" | "disabled";
   createdAt: Date;
 };
 
@@ -33,7 +33,7 @@ const buildStoredUser = (overrides: Partial<StoredUser> = {}): StoredUser => ({
   fullName: "Teste",
   hashedPassword: "hash-fake",
   role: "researcher",
-  isActive: true,
+  accountStatus: "active",
   createdAt: new Date("2026-08-25T15:00:00.000Z"),
   ...overrides
 });
@@ -48,7 +48,7 @@ describe("POST /api/admin/users (público)", () => {
 
   it("cria um usuário com dados válidos e retorna 201", async () => {
     findByEmail.mockResolvedValueOnce(null);
-    create.mockResolvedValueOnce(buildStoredUser());
+    create.mockResolvedValueOnce(buildStoredUser({ accountStatus: "pending" }));
 
     const response = await request(app).post("/api/admin/users").send({
       full_name: "Teste",
@@ -61,7 +61,8 @@ describe("POST /api/admin/users (público)", () => {
       full_name: "Teste",
       email: "teste@niar.local.test",
       role: "researcher",
-      is_active: true
+      account_status: "pending",
+      is_active: false
     });
     expect(response.body).toHaveProperty("id");
     expect(response.body).toHaveProperty("created_at");

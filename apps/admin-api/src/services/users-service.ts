@@ -7,7 +7,11 @@ import { CreatePublicUserInput, CreateUserByAdminInput, ListUsersQuery, UserResp
 
 // Parte comum aos dois cadastros: checa duplicidade, faz o hash, grava.
 // Só muda quem decide a role.
-const saveUser = async (data: CreatePublicUserInput, role: UserRole): Promise<UserResponse> => {
+const saveUser = async (
+  data: CreatePublicUserInput,
+  role: UserRole,
+  accountStatus: "pending" | "active"
+): Promise<UserResponse> => {
   const existing = await usersRepository.findByEmail(data.email);
 
   if (existing) {
@@ -21,7 +25,8 @@ const saveUser = async (data: CreatePublicUserInput, role: UserRole): Promise<Us
     fullName: data.full_name,
     email: data.email,
     hashedPassword,
-    role
+    role,
+    accountStatus
   });
 
   return {
@@ -29,7 +34,8 @@ const saveUser = async (data: CreatePublicUserInput, role: UserRole): Promise<Us
     email: user.email,
     full_name: user.fullName,
     role: user.role,
-    is_active: user.isActive,
+    account_status: user.accountStatus,
+    is_active: user.accountStatus === "active",
     created_at: user.createdAt.toISOString()
   };
 };
@@ -55,14 +61,15 @@ export const usersService = {
       email: user.email,
       full_name: user.fullName,
       role: user.role,
-      is_active: user.isActive,
+      account_status: user.accountStatus,
+      is_active: user.accountStatus === "active",
       created_at: user.createdAt.toISOString()
     }));
   },
 
   // Cadastro público: role nunca vem do cliente, é sempre researcher.
-  createUser: (data: CreatePublicUserInput) => saveUser(data, "researcher"),
+  createUser: (data: CreatePublicUserInput) => saveUser(data, "researcher", "pending"),
 
   // A rota já garantiu que quem chama é admin, então aceita a role enviada.
-  createUserByAdmin: (data: CreateUserByAdminInput) => saveUser(data, data.role)
+  createUserByAdmin: (data: CreateUserByAdminInput) => saveUser(data, data.role, "active")
 };

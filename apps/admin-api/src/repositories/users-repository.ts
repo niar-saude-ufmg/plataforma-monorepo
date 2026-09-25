@@ -8,7 +8,7 @@ const userListSelect = {
   email: true,
   fullName: true,
   role: true,
-  isActive: true,
+  accountStatus: true,
   createdAt: true
 };
 
@@ -17,7 +17,7 @@ export type UserListRecord = {
   email: string;
   fullName: string;
   role: UserRole; // O papel vem do UserRole de @niar/contracts, nao de uma lista escrita a mao acho que fica mais fácil
-  isActive: boolean;
+  accountStatus: "pending" | "active" | "rejected" | "disabled";
   createdAt: Date;
 };
 
@@ -44,6 +44,21 @@ export const usersRepository = {
   // O middleware de auth usa isso: token só tem o id, precisa buscar a role.
   findById: (id: number) => prisma.user.findUnique({ where: { id } }),
 
-  create: (data: { fullName: string; email: string; hashedPassword: string; role?: UserRole }) =>
-    prisma.user.create({ data })
+  create: async (data: {
+    fullName: string;
+    email: string;
+    hashedPassword: string;
+    role?: UserRole;
+    accountStatus: "pending" | "active";
+  }) =>
+    prisma.$transaction(async (transaction) => {
+      const user = await transaction.user.create({ data });
+      await transaction.userAuthEvaluation.create({
+        data: {
+          userId: user.id,
+          status: data.accountStatus
+        }
+      });
+      return user;
+    })
 };

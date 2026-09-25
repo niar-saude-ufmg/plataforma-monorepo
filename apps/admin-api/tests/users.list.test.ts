@@ -9,7 +9,7 @@ process.env.SECRET_KEY = "test-secret";
 type StoredUser = {
   id: number;
   role: UserRole;
-  isActive: boolean;
+  accountStatus: "pending" | "active" | "rejected" | "disabled";
 };
 
 const findAll = jest.fn<(filter: UserListFilter) => Promise<UserListRecord[]>>();
@@ -30,7 +30,7 @@ const buildUserRecord = (overrides: Partial<UserListRecord> = {}): UserListRecor
   email: "pesquisador1@niar.local",
   fullName: "Pesquisador Um",
   role: "researcher",
-  isActive: true,
+  accountStatus: "active",
   createdAt: new Date("2026-08-25T15:00:00.000Z"),
   ...overrides
 });
@@ -38,7 +38,7 @@ const buildUserRecord = (overrides: Partial<UserListRecord> = {}): UserListRecor
 const buildAuthUser = (overrides: Partial<StoredUser> = {}): StoredUser => ({
   id: 10,
   role: "admin",
-  isActive: true,
+  accountStatus: "active",
   ...overrides
 });
 
@@ -78,6 +78,7 @@ describe("GET /api/admin/users", () => {
         email: "pesquisador1@niar.local",
         full_name: "Pesquisador Um",
         role: "researcher",
+        account_status: "active",
         is_active: true,
         created_at: "2026-08-25T15:00:00.000Z"
       }
