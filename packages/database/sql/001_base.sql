@@ -217,4 +217,19 @@ CREATE INDEX IF NOT EXISTS idx_shared_project_status_history_project_id
 CREATE INDEX IF NOT EXISTS idx_shared_project_status_history_actor_user_id
   ON shared.project_status_history (actor_user_id);
 
+CREATE TABLE IF NOT EXISTS admin.specialties (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  code VARCHAR(100) NOT NULL UNIQUE,
+  name VARCHAR(255) NOT NULL,
+  name_normalized VARCHAR(255) NOT NULL UNIQUE,
+  description TEXT NOT NULL DEFAULT '',
+  guidance_context TEXT NOT NULL DEFAULT '',
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_specialties_is_active
+  ON admin.specialties (is_active);
+
 COMMIT;
