@@ -151,36 +151,6 @@ CREATE TABLE IF NOT EXISTS shared.audit_logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS admin.projects (
-  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  owner_user_id INTEGER NOT NULL REFERENCES shared.users(id) ON DELETE RESTRICT,
-  source_wizard_session_id INTEGER NOT NULL UNIQUE REFERENCES assistant.wizard_sessions(id) ON DELETE RESTRICT,
-  title VARCHAR(255) NOT NULL,
-  submitted_at TIMESTAMPTZ NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_admin_projects_owner_user_id
-  ON admin.projects (owner_user_id);
-
-CREATE TABLE IF NOT EXISTS admin.project_documents (
-  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  project_id INTEGER NOT NULL REFERENCES admin.projects(id) ON DELETE CASCADE,
-  source_export_artifact_id INTEGER NULL REFERENCES assistant.export_artifacts(id) ON DELETE SET NULL,
-  document_type VARCHAR(100) NOT NULL,
-  original_filename VARCHAR(255) NOT NULL,
-  storage_path TEXT NOT NULL,
-  is_current BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_admin_project_documents_project_id
-  ON admin.project_documents (project_id);
-
-CREATE INDEX IF NOT EXISTS idx_admin_project_documents_source_export_artifact_id
-  ON admin.project_documents (source_export_artifact_id);
-
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -200,21 +170,129 @@ BEGIN
   END IF;
 END $$;
 
-ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'resubmitted_to_committee';
+CREATE TABLE IF NOT EXISTS admin.projects (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  owner_user_id INTEGER NOT NULL REFERENCES shared.users(id) ON DELETE RESTRICT,
+  source_wizard_session_id INTEGER NOT NULL UNIQUE REFERENCES assistant.wizard_sessions(id) ON DELETE RESTRICT,
+  title VARCHAR(255) NOT NULL,
+  submitted_at TIMESTAMPTZ NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS admin.project_versions (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  project_id INTEGER NOT NULL
+    REFERENCES admin.projects(id) ON DELETE CASCADE,
+  version_number INTEGER NOT NULL,
+  source_wizard_session_id INTEGER NOT NULL
+    REFERENCES assistant.wizard_sessions(id) ON DELETE RESTRICT,
+  characterization_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
+  status shared.project_status NOT NULL,
+  submitted_at TIMESTAMPTZ NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_admin_project_versions_project_number
+    UNIQUE (project_id, version_number),
+  CONSTRAINT uq_admin_project_versions_source_session
+     UNIQUE (source_wizard_session_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_project_versions_project_id
+  ON admin.project_versions (project_id);
+CREATE INDEX IF NOT EXISTS idx_admin_projects_owner_user_id
+  ON admin.projects (owner_user_id);
+
+CREATE TABLE IF NOT EXISTS admin.project_documents (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  project_id INTEGER NOT NULL REFERENCES admin.projects(id) ON DELETE CASCADE,
+  project_version_id INTEGER NOT NULL REFERENCES admin.project_versions(id) ON DELETE CASCADE,
+  source_export_artifact_id INTEGER NULL REFERENCES assistant.export_artifacts(id) ON DELETE SET NULL,
+  document_type VARCHAR(100) NOT NULL,
+  original_filename VARCHAR(255) NOT NULL,
+  storage_path TEXT NOT NULL,
+  is_current BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE admin.project_documents
+  ADD COLUMN IF NOT EXISTS project_version_id INTEGER;
+
+CREATE INDEX IF NOT EXISTS idx_admin_project_documents_project_version_id
+  ON admin.project_documents (project_version_id);
+CREATE INDEX IF NOT EXISTS idx_admin_project_documents_project_id
+  ON admin.project_documents (project_id);
+CREATE INDEX IF NOT EXISTS idx_admin_project_documents_source_export_artifact_id
+  ON admin.project_documents (source_export_artifact_id);
 
 CREATE TABLE IF NOT EXISTS shared.project_status_history (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_id INTEGER NOT NULL REFERENCES admin.projects(id) ON DELETE CASCADE,
+  project_version_id INTEGER NOT NULL REFERENCES admin.project_versions(id) ON DELETE CASCADE,
   status shared.project_status NOT NULL,
   notes TEXT NULL,
   actor_user_id INTEGER NULL REFERENCES shared.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE shared.project_status_history
+  ADD COLUMN IF NOT EXISTS project_version_id INTEGER;
+
 CREATE INDEX IF NOT EXISTS idx_shared_project_status_history_project_id
   ON shared.project_status_history (project_id);
-
 CREATE INDEX IF NOT EXISTS idx_shared_project_status_history_actor_user_id
   ON shared.project_status_history (actor_user_id);
+CREATE INDEX IF NOT EXISTS idx_shared_project_status_history_project_version_id
+  ON shared.project_status_history (project_version_id);
+
+DO $$
+BEGIN
+IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'shared'
+    AND table_name = 'project_status_history'
+    AND column_name = 'status'
+    AND data_type <> 'USER-DEFINED'
+) THEN
+    ALTER TABLE shared.project_status_history
+    ALTER COLUMN status TYPE shared.project_status
+    USING status::shared.project_status;
+END IF;
+END $$;
+
+INSERT INTO admin.project_versions (
+  project_id, version_number, source_wizard_session_id,
+  characterization_snapshot, status, submitted_at
+)
+SELECT
+  p.id, 1, p.source_wizard_session_id,
+  '{}'::jsonb,
+  COALESCE(
+    (SELECT status FROM shared.project_status_history
+     WHERE project_id = p.id ORDER BY created_at DESC LIMIT 1),
+    'submitted_to_committee'::shared.project_status
+  ),
+  p.submitted_at
+FROM admin.projects p
+WHERE p.source_wizard_session_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM admin.project_versions v WHERE v.project_id = p.id);
+
+UPDATE admin.project_documents d
+SET project_version_id = v.id
+FROM admin.project_versions v
+WHERE v.project_id = d.project_id
+  AND v.version_number = 1
+  AND d.project_version_id IS NULL;
+
+UPDATE shared.project_status_history h
+SET project_version_id = v.id
+FROM admin.project_versions v
+WHERE v.project_id = h.project_id
+  AND v.version_number = 1
+  AND h.project_version_id IS NULL;
+
+ALTER TABLE admin.project_documents
+  ALTER COLUMN project_version_id SET NOT NULL;
+ALTER TABLE shared.project_status_history
+  ALTER COLUMN project_version_id SET NOT NULL;
 
 COMMIT;

@@ -116,17 +116,19 @@ model AuditLog {
 }
 
 model ProjectStatusHistory {
-  id          Int            @id @default(autoincrement())
-  projectId   Int            @map("project_id")
-  status      project_status
-  notes       String?
-  actorUserId Int?           @map("actor_user_id")
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  actorUser   User?          @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
-  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                 Int            @id @default(autoincrement())
+  projectId          Int            @map("project_id")
+  status             project_status
+  notes              String?
+  actorUserId        Int?           @map("actor_user_id")
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  project_version_id Int
+  actorUser          User?          @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
+  project            Project        @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([projectId], map: "idx_shared_project_status_history_project_id")
   @@index([actorUserId], map: "idx_shared_project_status_history_actor_user_id")
+  @@index([project_version_id], map: "idx_shared_project_status_history_project_version_id")
   @@map("project_status_history")
   @@schema("shared")
 }
@@ -146,6 +148,7 @@ model WizardSession {
   llmModelUsed     String            @default("") @map("llm_model_used") @db.VarChar(100)
   createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
+  project_versions project_versions?
   projects         Project?          @relation("ProjectSourceWizardSession")
   messages         ChatMessage[]
   cleaningVersions CleaningVersion[]
@@ -213,6 +216,7 @@ model Project {
   createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt             DateTime               @default(now()) @map("updated_at") @db.Timestamptz(6)
   documents             ProjectDocument[]
+  project_versions      project_versions[]
   owner                 User                   @relation("ProjectOwner", fields: [ownerUserId], references: [id], onUpdate: NoAction)
   sourceWizardSession   WizardSession          @relation("ProjectSourceWizardSession", fields: [sourceWizardSessionId], references: [id], onUpdate: NoAction)
   statusHistory         ProjectStatusHistory[]
@@ -231,12 +235,31 @@ model ProjectDocument {
   storagePath            String          @map("storage_path")
   isCurrent              Boolean         @default(true) @map("is_current")
   createdAt              DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  project_version_id     Int
   project                Project         @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sourceExportArtifact   ExportArtifact? @relation(fields: [sourceExportArtifactId], references: [id], onUpdate: NoAction)
 
   @@index([projectId], map: "idx_admin_project_documents_project_id")
   @@index([sourceExportArtifactId], map: "idx_admin_project_documents_source_export_artifact_id")
+  @@index([project_version_id], map: "idx_admin_project_documents_project_version_id")
   @@map("project_documents")
+  @@schema("admin")
+}
+
+model project_versions {
+  id                        Int            @id @default(autoincrement())
+  project_id                Int
+  version_number            Int
+  source_wizard_session_id  Int            @unique(map: "uq_admin_project_versions_source_session")
+  characterization_snapshot Json           @default("{}")
+  status                    project_status
+  submitted_at              DateTime?      @db.Timestamptz(6)
+  created_at                DateTime       @default(now()) @db.Timestamptz(6)
+  projects                  Project        @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  wizard_sessions           WizardSession  @relation(fields: [source_wizard_session_id], references: [id], onUpdate: NoAction)
+
+  @@unique([project_id, version_number], map: "uq_admin_project_versions_project_number")
+  @@index([project_id], map: "idx_admin_project_versions_project_id")
   @@schema("admin")
 }
 
