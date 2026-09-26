@@ -1,0 +1,20 @@
+__pycache__/
+.ipynb_checkpoints/
+vectorstore/
+outputs/
+*.faiss
+.env*
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.venv
+.langgraph_api/*
+*.pkl
+.venv/
+.venv_wsl/
+
+# Corpus bruto (PDFs e chunks) fica no repo niar-rag-prototype.
+docs/
+data/

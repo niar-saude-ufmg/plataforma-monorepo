@@ -16,6 +16,8 @@ Esta base foi organizada para separar responsabilidades:
 - `packages/database`: camada central do banco compartilhado; o SQL versionado fica aqui e o `schema.prisma` e derivado para consumo do admin
 - `apps/assistente-api`: backend real do assistente incorporado ao monorepo
 - `apps/assistente-web`: frontend real do assistente incorporado ao monorepo
+- `apps/site-institucional`: site institucional do NIAR (SvelteKit estático, pt/en), servido em `/`
+- `apps/rag-api`: API RAG (FastAPI + LangGraph + Qdrant) do assistente LEME do site institucional
 
 O objetivo e que a base funcione de forma consistente localmente e tambem na VM, mantendo os mesmos micros, as mesmas APIs e o mesmo banco compartilhado.
 
@@ -36,6 +38,8 @@ apps/
   admin-api/
   assistente-web/
   assistente-api/
+  site-institucional/
+  rag-api/
 packages/
   auth/
   config/
@@ -314,6 +318,40 @@ Dependências principais:
 - `@prisma/client`
 - `pg`
 
+### Site institucional
+
+Local:
+
+- `apps/site-institucional/package.json`
+
+Tecnologias principais:
+
+- `SvelteKit` com `adapter-static`
+- `Paraglide` para pt/en
+- `Vite`, `Tailwind CSS` e `bits-ui`
+
+O site é um app estático independente, não um remote federado. Em produção ele é
+servido pelo nginx do próprio container e publicado pelo Caddy na rota `/`.
+
+### RAG API
+
+Local:
+
+- `apps/rag-api/package.json`
+- `apps/rag-api/requirements.txt`
+- `apps/rag-api/requirements-dev.txt`
+
+Tecnologias principais:
+
+- `FastAPI` e `Uvicorn`
+- `LangGraph` e `LangChain`
+- `Google Gemini` para geração e embeddings
+- `Qdrant` para busca vetorial
+
+A API é um serviço Python separado, publicado pelo Caddy em `/api/rag/*` e
+executado em produção no container `rag-api`. Ela usa a coleção já indexada no
+Qdrant configurado por ambiente.
+
 ## Desenvolvimento local
 
 ### Fluxo normal
@@ -324,16 +362,22 @@ pnpm dev
 
 Esse é o comando padrão para trabalhar na plataforma. Ele usa `turbo` para orquestrar o monorepo e sobe o ambiente em duas frentes:
 
-- remotos federados de `institucional`, `admin-web` e `assistente-web`;
-- shell, `admin-api` e `assistente-api` depois que os remotos ficam disponíveis.
+- remotos federados de `admin-web` e `assistente-web`;
+- shell, `admin-api`, `assistente-api`, `site-institucional` e `rag-api` depois que os remotos ficam disponíveis.
 
 Os fluxos reais ficam acessíveis por:
 
-- shell em `http://localhost:5173`;
-- remotos `institucional`, `admin-web` e `assistente-web` carregados pela shell;
-- `admin-api` e `assistente-api`.
+| Aplicação | Endereço local | Observação |
+| --- | --- | --- |
+| site institucional | `http://localhost:5176` | SvelteKit estático; em produção responde em `/` |
+| shell | `http://localhost:5173` | `/login`, `/sala-segura`, `/admin`, `/assistente`, `/identidade-visual` |
+| `admin-api` | `http://localhost:3333` | prefixo `/api/admin` |
+| `assistente-api` | `http://localhost:8000` | prefixo `/api/assistente` |
+| `rag-api` | `http://localhost:8001` | prefixo `/api/rag`, usado pelo assistente LEME do site (`/leme`) |
 
-As portas próprias dos remotos são internas ao desenvolvimento. O acesso funcional deve ser feito pela shell, e não abrindo cada microfrontend separadamente.
+As portas próprias dos remotos (`4174` e `4175`) são internas ao desenvolvimento. O acesso funcional à plataforma deve ser feito pela shell, e não abrindo cada microfrontend separadamente. O site institucional não é um remote: é um app próprio, e a shell leva a ele pelo `VITE_SITE_URL`.
+
+O `rag-api` precisa das chaves `GOOGLE_API_KEY`, `GOOGLE_GENAI_API_KEY`, `QDRANT_URL` e `QDRANT_API_KEY` no `.env` da raiz. Sem elas o site sobe normalmente, mas o chat do `/leme` falha ao responder.
 
 ### Desenvolvimento isolado
 
@@ -391,11 +435,26 @@ pnpm --filter @niar/assistente-web dev
 pnpm --filter @niar/assistente-api dev
 ```
 
+### Rodar só o site institucional
+
+```bash
+pnpm --filter @niar/site-institucional dev
+```
+
+Abre em `http://localhost:5176`. Para o chat do `/leme` responder, suba também o `rag-api`.
+
+### Rodar só o rag-api
+
+```bash
+pnpm --filter @niar/rag-api dev
+```
+
+Docs interativas em `http://localhost:8001/api/rag/docs`. Detalhes do corpus e da indexação em `apps/rag-api/README.md`.
+
 ### Rodar só um remoto federado em modo shell
 
 ```bash
 pnpm --filter @niar/admin-web dev:remote
-pnpm --filter @niar/institucional dev:remote
 pnpm --filter @niar/assistente-web dev:remote
 ```
 
@@ -471,6 +530,15 @@ pnpm prisma:generate
 ```bash
 pnpm test
 ```
+
+## Verificações estáticas
+
+```bash
+pnpm check
+```
+
+Esse comando executa os checks dos pacotes que os expõem, incluindo `svelte-check`
+do site institucional e a compilação Python do `rag-api` e do `assistente-api`.
 
 ## Automação disponível
 

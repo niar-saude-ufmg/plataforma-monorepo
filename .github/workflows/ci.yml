@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies and prepare workspace
         run: pnpm setup
 
+      - name: Check monorepo
+        run: pnpm check
+
       - name: Build monorepo
         run: pnpm build
 
