@@ -6,7 +6,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from agent.utils.prompt import CHAT_SYSTEM_PROMPT, WELCOME_MESSAGE
 from agent.utils.state import StateSchema
-from agent.utils.tools import TOOLS_CHAT
+from agent.utils.tools import GOOGLE_API_KEY, TOOLS_CHAT
 
 
 LLM_MODEL = "gemini-3.7-flash"
@@ -15,7 +15,7 @@ LLM_MODEL = "gemini-3.7-flash"
 def create_agent_graph(checkpointer=None):
 
     llm = ChatGoogleGenerativeAI(
-        api_key=os.getenv("GOOGLE_API_KEY"),
+        api_key=GOOGLE_API_KEY,
         model=LLM_MODEL,
         temperature=0,
         max_tokens=20000,

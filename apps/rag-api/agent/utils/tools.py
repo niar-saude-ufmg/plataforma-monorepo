@@ -10,6 +10,9 @@ load_dotenv()
 
 # --- Configurações Globais ---
 GEMINI_EMBEDD = True
+# GOOGLE_API_KEY is the canonical name used by langchain-google-genai. Keep
+# the previous name as a fallback while the production secret is migrated.
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY") or os.getenv("GOOGLE_GENAI_API_KEY")
 # Coleção do corpus da Fase 0 (perfil context-v1) embutido com gemini-embedding-001.
 # O padrão fica no código porque a coleção está presa ao modelo e ao EMBED_DIM
 # abaixo; o env só serve para apontar para uma coleção versionada nova sem deploy.
@@ -51,6 +54,7 @@ def get_embedding_model():
             _embedding_instance = GoogleGenerativeAIEmbeddings(
                 model="gemini-embedding-001",
                 task_type="retrieval_query",
+                google_api_key=GOOGLE_API_KEY,
             )
         else:
             # Modelo SentenceTransformer (import lazy: só necessário no modo local)
@@ -68,7 +72,7 @@ def get_llm():
     if _llm_instance is None:
         print("[SISTEMA] Iniciando LLM Gemini...")
         _llm_instance = ChatGoogleGenerativeAI(
-            api_key=os.getenv("GOOGLE_API_KEY"),
+            api_key=GOOGLE_API_KEY,
             model=MODEL_NAME,
             temperature=0,
             max_tokens=20000,
