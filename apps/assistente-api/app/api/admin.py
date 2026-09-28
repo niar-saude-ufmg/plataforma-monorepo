@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +16,6 @@ from app.models import (
     Dataset,
     TableRelationship,
     User,
-    UserAuthEvaluation,
     UserRole,
 )
 from app.schemas import (
@@ -278,14 +275,6 @@ async def create_user(
     )
     db.add(user)
     await db.flush()
-    db.add(
-        UserAuthEvaluation(
-            user_id=user.id,
-            status=user.account_status,
-            evaluated_by_user_id=admin.id,
-            evaluated_at=datetime.now(timezone.utc),
-        )
-    )
     await log_audit(
         db,
         user_id=admin.id,

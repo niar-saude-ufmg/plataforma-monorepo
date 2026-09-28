@@ -10,8 +10,7 @@ import { CreatePublicUserInput, CreateUserByAdminInput, ListUsersQuery, UserResp
 const saveUser = async (
   data: CreatePublicUserInput,
   role: UserRole,
-  accountStatus: "pending" | "active",
-  evaluatedByUserId?: number
+  accountStatus: "pending" | "active"
 ): Promise<UserResponse> => {
   const existing = await usersRepository.findByEmail(data.email);
 
@@ -27,9 +26,7 @@ const saveUser = async (
     email: data.email,
     hashedPassword,
     role,
-    accountStatus,
-    evaluatedByUserId,
-    evaluatedAt: evaluatedByUserId ? new Date() : undefined
+    accountStatus
   });
 
   return {
@@ -74,6 +71,5 @@ export const usersService = {
   createUser: (data: CreatePublicUserInput) => saveUser(data, "researcher", "pending"),
 
   // A rota já garantiu que quem chama é admin, então aceita a role enviada.
-  createUserByAdmin: (data: CreateUserByAdminInput, adminUserId: number) =>
-    saveUser(data, data.role, "active", adminUserId)
+  createUserByAdmin: (data: CreateUserByAdminInput) => saveUser(data, data.role, "active")
 };
