@@ -11,7 +11,7 @@ type StoredUser = {
   fullName: string;
   hashedPassword: string;
   role: UserRole;
-  accountStatus: "pending" | "active" | "rejected" | "disabled";
+  isActive: boolean;
   createdAt: Date;
 };
 
@@ -33,7 +33,7 @@ const buildStoredUser = (overrides: Partial<StoredUser> = {}): StoredUser => ({
   fullName: "Teste",
   hashedPassword: "hash-fake",
   role: "researcher",
-  accountStatus: "active",
+  isActive: true,
   createdAt: new Date("2026-08-25T15:00:00.000Z"),
   ...overrides
 });

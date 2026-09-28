@@ -9,7 +9,7 @@ process.env.SECRET_KEY = "test-secret";
 type StoredUser = {
   id: number;
   role: UserRole;
-  accountStatus: "pending" | "active" | "rejected" | "disabled";
+  isActive: boolean;
 };
 
 const findAll = jest.fn<(filter: SpecialtyListFilter) => Promise<SpecialtyRecord[]>>();
@@ -49,7 +49,7 @@ const buildSpecialty = (overrides: Partial<SpecialtyRecord> = {}): SpecialtyReco
 const buildAuthUser = (overrides: Partial<StoredUser> = {}): StoredUser => ({
   id: 10,
   role: "admin",
-  accountStatus: "active",
+  isActive: true,
   ...overrides
 });
 

@@ -12,7 +12,7 @@ type StoredUser = {
   fullName: string;
   hashedPassword: string;
   role: UserRole;
-  accountStatus: "pending" | "active" | "rejected" | "disabled";
+  isActive: boolean;
   createdAt: Date;
 };
 
@@ -37,7 +37,7 @@ const buildStoredUser = async (overrides: Partial<StoredUser> = {}): Promise<Sto
   fullName: "Pesquisador Um",
   hashedPassword: await hash(PASSWORD, 10),
   role: "researcher",
-  accountStatus: "active",
+  isActive: true,
   createdAt: new Date("2026-08-25T15:00:00.000Z"),
   ...overrides
 });
@@ -84,14 +84,14 @@ describe("POST /api/admin/auth/login", () => {
   });
 
   it("retorna 403 quando o usuário está desativado", async () => {
-    findByEmail.mockResolvedValueOnce(await buildStoredUser({ accountStatus: "disabled" }));
+    findByEmail.mockResolvedValueOnce(await buildStoredUser({ isActive: false }));
 
     const response = await request(app)
       .post("/api/admin/auth/login")
       .send({ email: "pesquisador@niar.local", password: PASSWORD });
 
     expect(response.status).toBe(403);
-    expect(response.body.error).toBe("Conta não está ativa");
+    expect(response.body.error).toBe("Conta desativada");
   });
 
   it("retorna 400 para email em formato inválido", async () => {

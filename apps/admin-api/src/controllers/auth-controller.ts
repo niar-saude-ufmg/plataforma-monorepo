@@ -25,7 +25,7 @@ export const authController = {
         email: request.user.email,
         full_name: request.user.fullName,
         role: request.user.role,
-        is_active: request.user.accountStatus === "active"
+        is_active: request.user.isActive
       });
     } catch (error) {
       next(error);
