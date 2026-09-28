@@ -57,19 +57,28 @@ services:
       dockerfile: apps/shell/Dockerfile.prod
       args:
         VITE_ADMIN_API_URL: /api/admin
-        VITE_INSTITUCIONAL_REMOTE_URL: /remotes/institucional/assets/remoteEntry.js
+        VITE_SITE_URL: /
         VITE_ADMIN_REMOTE_URL: /remotes/admin/assets/remoteEntry.js
         VITE_ASSISTENTE_REMOTE_URL: /remotes/assistente/assets/remoteEntry.js
     restart: unless-stopped
 
-  institucional-web:
-    image: localhost/niar-plataforma-institucional-web:latest
+  site-institucional-web:
+    image: localhost/niar-plataforma-site-institucional-web:latest
     build:
       context: .
-      dockerfile: apps/institucional/Dockerfile.prod
+      dockerfile: apps/site-institucional/Dockerfile.prod
       args:
-        VITE_REMOTE_BASE: /remotes/institucional/
+        PUBLIC_RAG_API_URL: /api/rag
     restart: unless-stopped
+
+  rag-api:
+    image: localhost/niar-plataforma-rag-api:latest
+    build:
+      context: apps/rag-api
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    env_file:
+      - .env.production
 
   admin-web:
     image: localhost/niar-plataforma-admin-web:latest
@@ -103,7 +112,8 @@ services:
       - caddy-config:/config
     depends_on:
       - shell
-      - institucional-web
+      - site-institucional-web
+      - rag-api
       - admin-web
       - assistente-web
       - admin-api

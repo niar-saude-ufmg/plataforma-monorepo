@@ -1,0 +1,4 @@
+-r requirements.txt
+
+# Opcional: necessário apenas para usar `langgraph dev` localmente.
+langgraph-cli==0.4.3

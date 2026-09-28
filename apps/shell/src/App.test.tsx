@@ -83,6 +83,28 @@ describe("Shell App", () => {
     expect(screen.getByTitle("Design System NIAR")).toHaveAttribute("src", "http://localhost:6006");
   });
 
+  it("renderiza a Sala Segura sem exigir login", () => {
+    render(
+      <MemoryRouter initialEntries={["/sala-segura"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("heading", { name: /pesquisas que exigem governança/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Cadastrar-se como pesquisador" })).toHaveAttribute("href", "/cadastro/pesquisador");
+    expect(screen.getByRole("link", { name: "Usar o assistente" })).toHaveAttribute("href", "/assistente");
+  });
+
+  it("mostra 404 em rotas desconhecidas da shell", () => {
+    render(
+      <MemoryRouter initialEntries={["/rota-inexistente"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("heading", { name: "Página não encontrada" })).toBeInTheDocument();
+  });
+
   it("direciona o pesquisador autenticado para o admin", async () => {
     vi.mocked(login).mockResolvedValue({
       token: "token-de-teste",

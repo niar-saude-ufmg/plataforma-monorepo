@@ -1,5 +1,4 @@
-import { Link } from "react-router-dom";
-import { APP_ROUTES } from "@niar/config";
+import { SITE_URL } from "../site";
 
 export function NotFoundPage() {
   return (
@@ -7,9 +6,9 @@ export function NotFoundPage() {
       <section className="card">
         <p className="eyebrow">404</p>
         <h1>Página não encontrada</h1>
-        <Link className="button-link" to={APP_ROUTES.home}>
+        <a className="button-link" href={SITE_URL}>
           Voltar ao início
-        </Link>
+        </a>
       </section>
     </main>
   );
