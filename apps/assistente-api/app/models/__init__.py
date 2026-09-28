@@ -1,9 +1,10 @@
 import enum
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     Enum,
     ForeignKey,
@@ -24,6 +25,13 @@ class UserRole(str, enum.Enum):
     committee = "committee"
 
 
+class UserAccountStatus(str, enum.Enum):
+    pending = "pending"
+    active = "active"
+    rejected = "rejected"
+    disabled = "disabled"
+
+
 class WizardType(str, enum.Enum):
     project_doc = "project_doc"
     data_clean = "data_clean"
@@ -32,6 +40,13 @@ class WizardType(str, enum.Enum):
 USER_ROLE_ENUM = Enum(
     UserRole,
     name="user_role",
+    schema="shared",
+    create_type=False,
+)
+
+USER_ACCOUNT_STATUS_ENUM = Enum(
+    UserAccountStatus,
+    name="user_account_status",
     schema="shared",
     create_type=False,
 )
@@ -70,7 +85,9 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(255))
     hashed_password: Mapped[str] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(USER_ROLE_ENUM, default=UserRole.researcher)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    account_status: Mapped[UserAccountStatus] = mapped_column(
+        USER_ACCOUNT_STATUS_ENUM, default=UserAccountStatus.active
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
@@ -78,6 +95,77 @@ class User(Base):
     wizard_sessions: Mapped[list["WizardSession"]] = relationship(back_populates="user")
     owned_projects: Mapped[list["Project"]] = relationship(back_populates="owner")
     status_changes: Mapped[list["ProjectStatusHistory"]] = relationship(back_populates="actor")
+    profile: Mapped[Optional["UserProfile"]] = relationship(back_populates="user")
+    auth_evaluations: Mapped[list["UserAuthEvaluation"]] = relationship(
+        back_populates="user", foreign_keys="UserAuthEvaluation.user_id"
+    )
+    evaluations_made: Mapped[list["UserAuthEvaluation"]] = relationship(
+        back_populates="evaluated_by", foreign_keys="UserAuthEvaluation.evaluated_by_user_id"
+    )
+    researcher_profile: Mapped[Optional["ResearcherProfile"]] = relationship(back_populates="user")
+    committee_profile: Mapped[Optional["CommitteeMemberProfile"]] = relationship(back_populates="user")
+    coep_data: Mapped[list["UserCoepData"]] = relationship(back_populates="user")
+
+    @property
+    def is_active(self) -> bool:
+        """Compatibilidade temporária com consumidores antigos da API."""
+        return self.account_status == UserAccountStatus.active
+
+    @is_active.setter
+    def is_active(self, value: bool) -> None:
+        """Traduz o campo legado para o status persistido atual."""
+        self.account_status = (
+            UserAccountStatus.active if value else UserAccountStatus.disabled
+        )
+
+
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    institution: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    organizational_unit: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    contact_address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    user: Mapped["User"] = relationship(back_populates="profile")
+
+
+class UserAuthEvaluation(Base):
+    __tablename__ = "user_auth_evaluations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    status: Mapped[UserAccountStatus] = mapped_column(USER_ACCOUNT_STATUS_ENUM)
+    justification: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    evaluated_by_user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    evaluated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    user_coep_data_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("user_coep_data.id", ondelete="SET NULL"), nullable=True
+    )
+
+    user: Mapped["User"] = relationship(
+        back_populates="auth_evaluations", foreign_keys=[user_id]
+    )
+    evaluated_by: Mapped[Optional["User"]] = relationship(
+        back_populates="evaluations_made", foreign_keys=[evaluated_by_user_id]
+    )
+    coep_data: Mapped[Optional["UserCoepData"]] = relationship(
+        back_populates="auth_evaluations"
+    )
 
 
 class AppSetting(Base):
@@ -87,6 +175,90 @@ class AppSetting(Base):
     value: Mapped[str] = mapped_column(Text)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class Specialty(Base):
+    __tablename__ = "specialties"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[str] = mapped_column(String(100), unique=True)
+    name: Mapped[str] = mapped_column(String(255), unique=True)
+    name_normalized: Mapped[str] = mapped_column(String(255), unique=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    guidance_context: Mapped[str] = mapped_column(Text, default="")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    committee_members: Mapped[list["CommitteeMemberProfile"]] = relationship(
+        back_populates="specialty"
+    )
+
+
+class ResearcherProfile(Base):
+    __tablename__ = "researcher_profiles"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    research_area: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    position: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    user: Mapped["User"] = relationship(back_populates="researcher_profile")
+
+
+class CommitteeMemberProfile(Base):
+    __tablename__ = "committee_member_profiles"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    specialty_id: Mapped[int] = mapped_column(ForeignKey("specialties.id", ondelete="RESTRICT"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    user: Mapped["User"] = relationship(back_populates="committee_profile")
+    specialty: Mapped["Specialty"] = relationship(back_populates="committee_members")
+    evaluations: Mapped[list["CommitteeEvaluation"]] = relationship(
+        back_populates="responsible_member"
+    )
+
+
+class UserCoepData(Base):
+    __tablename__ = "user_coep_data"
+    __table_args__ = (UniqueConstraint("user_id", "caae", name="uq_user_coep_data_user_caae"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    caae: Mapped[str] = mapped_column(String(50))
+    opinion_number: Mapped[str] = mapped_column(String(50))
+    approval_date: Mapped[date] = mapped_column(Date)
+    document_filename: Mapped[str] = mapped_column(String(255))
+    document_storage_path: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    user: Mapped["User"] = relationship(back_populates="coep_data")
+    auth_evaluations: Mapped[list["UserAuthEvaluation"]] = relationship(
+        back_populates="coep_data"
+    )
+    project_versions: Mapped[list["ProjectVersion"]] = relationship(
+        back_populates="coep_data"
     )
 
 
@@ -318,6 +490,9 @@ class ProjectVersion(Base):
     source_wizard_session_id: Mapped[int] = mapped_column(
         ForeignKey("wizard_sessions.id", ondelete="RESTRICT")
     )
+    user_coep_data_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("user_coep_data.id", ondelete="RESTRICT"), nullable=True
+    )
     version_number: Mapped[int] = mapped_column(Integer)
     characterization_snapshot: Mapped[dict] = mapped_column(JSONB, default=dict)
     status: Mapped[ProjectStatus] = mapped_column(PROJECT_STATUS_ENUM, nullable=False)
@@ -330,8 +505,14 @@ class ProjectVersion(Base):
     source_session: Mapped["WizardSession"] = relationship(
         back_populates="project_versions"
     )
+    coep_data: Mapped[Optional["UserCoepData"]] = relationship(
+        back_populates="project_versions"
+    )
     documents: Mapped[list["ProjectDocument"]] = relationship(back_populates="version")
     status_history: Mapped[list["ProjectStatusHistory"]] = relationship(back_populates="version")
+    committee_evaluation: Mapped[Optional["CommitteeEvaluation"]] = relationship(
+        back_populates="project_version", uselist=False
+    )
 
 
 class ProjectDocument(Base):
@@ -369,9 +550,64 @@ class ProjectStatusHistory(Base):
     actor_user_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
+    committee_evaluation_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("committee_evaluations.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     actor: Mapped[Optional["User"]] = relationship(back_populates="status_changes")
     version: Mapped["ProjectVersion"] = relationship(back_populates="status_history")
+    committee_evaluation: Mapped[Optional["CommitteeEvaluation"]] = relationship(
+        back_populates="status_history"
+    )
+
+
+class CommitteeEvaluationResult(str, enum.Enum):
+    approved = "approved"
+    needs_changes = "needs_changes"
+    rejected = "rejected"
+
+
+COMMITTEE_EVALUATION_RESULT_ENUM = Enum(
+    CommitteeEvaluationResult,
+    name="committee_evaluation_result",
+    schema="admin",
+    create_type=False,
+)
+
+
+class CommitteeEvaluation(Base):
+    __tablename__ = "committee_evaluations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_version_id: Mapped[int] = mapped_column(
+        ForeignKey("project_versions.id", ondelete="CASCADE"), unique=True
+    )
+    responsible_member_user_id: Mapped[int] = mapped_column(
+        ForeignKey("committee_member_profiles.user_id", ondelete="RESTRICT")
+    )
+    result: Mapped[CommitteeEvaluationResult] = mapped_column(
+        COMMITTEE_EVALUATION_RESULT_ENUM
+    )
+    justification: Mapped[str] = mapped_column(Text)
+    evaluated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    project_version: Mapped["ProjectVersion"] = relationship(
+        back_populates="committee_evaluation"
+    )
+    responsible_member: Mapped["CommitteeMemberProfile"] = relationship(
+        back_populates="evaluations"
+    )
+    status_history: Mapped[list["ProjectStatusHistory"]] = relationship(
+        back_populates="committee_evaluation"
+    )
