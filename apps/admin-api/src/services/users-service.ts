@@ -29,7 +29,7 @@ const saveUser = async (data: CreatePublicUserInput, role: UserRole): Promise<Us
     email: user.email,
     full_name: user.fullName,
     role: user.role,
-    is_active: user.isActive,
+    is_active: user.accountStatus === "active",
     created_at: user.createdAt.toISOString()
   };
 };
@@ -55,7 +55,7 @@ export const usersService = {
       email: user.email,
       full_name: user.fullName,
       role: user.role,
-      is_active: user.isActive,
+      is_active: user.accountStatus === "active",
       created_at: user.createdAt.toISOString()
     }));
   },

@@ -8,7 +8,7 @@ const userListSelect = {
   email: true,
   fullName: true,
   role: true,
-  isActive: true,
+  accountStatus: true,
   createdAt: true
 };
 
@@ -17,7 +17,7 @@ export type UserListRecord = {
   email: string;
   fullName: string;
   role: UserRole; // O papel vem do UserRole de @niar/contracts, nao de uma lista escrita a mao acho que fica mais fácil
-  isActive: boolean;
+  accountStatus: "pending" | "active" | "rejected" | "disabled";
   createdAt: Date;
 };
 
