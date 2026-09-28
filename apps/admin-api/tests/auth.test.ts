@@ -12,7 +12,7 @@ type StoredUser = {
   fullName: string;
   hashedPassword: string;
   role: UserRole;
-  isActive: boolean;
+  accountStatus: "pending" | "active" | "rejected" | "disabled";
   createdAt: Date;
 };
 
@@ -37,7 +37,7 @@ const buildStoredUser = async (overrides: Partial<StoredUser> = {}): Promise<Sto
   fullName: "Pesquisador Um",
   hashedPassword: await hash(PASSWORD, 10),
   role: "researcher",
-  isActive: true,
+  accountStatus: "active",
   createdAt: new Date("2026-08-25T15:00:00.000Z"),
   ...overrides
 });
@@ -84,7 +84,7 @@ describe("POST /api/admin/auth/login", () => {
   });
 
   it("retorna 403 quando o usuário está desativado", async () => {
-    findByEmail.mockResolvedValueOnce(await buildStoredUser({ isActive: false }));
+    findByEmail.mockResolvedValueOnce(await buildStoredUser({ accountStatus: "disabled" }));
 
     const response = await request(app)
       .post("/api/admin/auth/login")
