@@ -30,6 +30,8 @@ GOOGLE_API_KEY=...
 GOOGLE_GENAI_API_KEY=...
 QDRANT_URL=...
 QDRANT_API_KEY=...
+QDRANT_GEMINI_COLLECTION=leme_gemini   # opcional; padrão no código (agent/utils/tools.py)
+QDRANT_LOG_COLLECTION=leme_logs        # opcional; log das conversas (api/chat_log.py)
 ```
 
 A `.venv` e as dependências são criadas automaticamente pelo `pnpm setup` (ou na
@@ -80,6 +82,24 @@ Em produção roda no container `rag-api` (`Dockerfile.prod`), e o Caddy repassa
 
 O campo `resposta` vem em markdown; `fontes` é uma lista estruturada (deduplicada por
 documento) para o front renderizar como cards com link clicável.
+
+### Log das conversas
+
+Cada chamada ao `/chat`, com sucesso ou erro, vira um ponto na coleção `leme_logs`
+(sem vetor, só payload) do mesmo Qdrant. A coleção é criada na primeira gravação.
+A gravação roda em segundo plano e uma falha nela não afeta a resposta.
+
+```json
+{
+  "pergunta": "...", "resposta": "...", "momento": "2026-09-28T11:34:44.576694-03:00",
+  "duracao_s": 12.3, "erro": null,
+  "buscas": [{ "consulta": "...", "trechos": [{ "id": "...", "documento": "...", "titulo": "...", "pagina": "3", "score": 0.81, "texto": "..." }] }],
+  "modelo": "gemini-3.7-flash", "indice": "leme_gemini", "app_versao": "2026-09-28"
+}
+```
+
+A primeira busca é sempre a pergunta crua. As seguintes são as buscas complementares que o agente
+fez pela tool. `app_versao` é a constante `APP_VERSION` em `api/chat_log.py`: atualize a cada deploy.
 
 O campo `pergunta` aceita entre 1 e 1000 caracteres. O limite evita que uma entrada
 malformada ou excessivamente grande seja enviada ao modelo; proteção de abuso e

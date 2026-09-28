@@ -1,13 +1,21 @@
 import os
 import re
+import time
 import unicodedata
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, ToolMessage
 
-from agent.agent import graph
-from agent.utils.tools import search_documents, format_context, extract_sources
+from agent.agent import LLM_MODEL, graph
+from agent.utils.tools import (
+    COLLECTION_NAME,
+    extract_sources,
+    format_context,
+    search_documents,
+    summarize_chunks,
+)
+from api.chat_log import APP_VERSION, log_chat, now
 from api.schemas import ChatRequest, ChatResponse
 
 
@@ -76,12 +84,41 @@ def chat(req: ChatRequest):
     """Recebe uma pergunta, recupera os documentos relevantes e responde com o agente.
 
     Retorna a resposta em markdown e as fontes como dados estruturados,
-    para o front renderizar (ex.: cards com link clicável).
+    para o front renderizar (ex.: cards com link clicável). Cada chamada, com
+    sucesso ou erro, vira um registro no log da conversa (api/chat_log.py).
     """
-    pergunta = req.pergunta
+    started_at = now()
+    start = time.perf_counter()
+    searches: list[dict] = []
+    resposta = None
+    error = None
 
-    # 1. Recupera os chunks relevantes no Qdrant (uma única busca).
+    try:
+        resposta, fontes = _answer(req.pergunta, searches)
+        return ChatResponse(resposta=resposta, fontes=fontes)
+    except Exception as e:
+        error = f"{type(e).__name__}: {e}"
+        raise
+    finally:
+        log_chat({
+            "pergunta": req.pergunta,
+            "resposta": resposta,
+            "momento": started_at,
+            "duracao_s": round(time.perf_counter() - start, 2),
+            "erro": error,
+            "buscas": searches,
+            "modelo": LLM_MODEL,
+            "indice": COLLECTION_NAME,
+            "app_versao": APP_VERSION,
+        })
+
+
+def _answer(pergunta: str, searches: list[dict]) -> tuple[str, list[dict]]:
+    """Fluxo do /chat. Vai acrescentando em `searches` cada busca feita, para o log."""
+
+    # 1. Recupera os chunks relevantes no Qdrant (busca inicial, com a pergunta crua).
     points = search_documents(pergunta)
+    searches.append({"consulta": pergunta, "trechos": summarize_chunks(points)})
 
     # 2. Monta o contexto textual para o LLM e as fontes estruturadas para o front.
     contexto = format_context(points, pergunta)
@@ -112,19 +149,28 @@ Instruções:
         "debug": None,
     })
 
-    # .text (e não .content): o Gemini devolve o conteúdo como lista de blocos
+    # Buscas complementares que o agente fez pela tool retrieve_information.
+    searches.extend(
+        msg.artifact
+        for msg in result["messages"]
+        if isinstance(msg, ToolMessage) and msg.artifact
+    )
+
+    # .text() (e não .content): o Gemini devolve o conteúdo como lista de blocos
     # (texto + assinaturas de raciocínio), enquanto o Groq devolvia string pura.
-    # O .text concatena só as partes de texto, que é o que o front espera.
-    resposta = result["messages"][-1].text
+    # O .text() concatena só as partes de texto, que é o que o front espera.
+    # Com parênteses: no langchain-core 0.3.x (fixado no requirements.txt) é
+    # método; sem chamar, a API recebia o método e quebrava logo abaixo.
+    resposta = result["messages"][-1].text()
 
     # 5. Se o agente disse que não encontrou base nos documentos, não devolve fonte
-    # nenhuma. Os chunks passaram no score_threshold da busca vetorial, mas passar
-    # no limiar de similaridade não significa que sustentam a resposta — e exibir
+    # nenhuma. Os chunks foram os mais próximos na busca vetorial, mas ser o mais
+    # próximo não significa que sustentam a resposta — e exibir
     # cards de fonte embaixo de um "não encontrei" sugere um respaldo que não existe.
     if _sem_suporte_nas_fontes(resposta):
         fontes = []
 
-    return ChatResponse(resposta=resposta, fontes=fontes)
+    return resposta, fontes
 
 
 app.include_router(router)

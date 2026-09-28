@@ -9,11 +9,14 @@ from agent.utils.state import StateSchema
 from agent.utils.tools import TOOLS_CHAT
 
 
+LLM_MODEL = "gemini-3.7-flash"
+
+
 def create_agent_graph(checkpointer=None):
 
     llm = ChatGoogleGenerativeAI(
         api_key=os.getenv("GOOGLE_API_KEY"),
-        model="gemini-3.7-flash",
+        model=LLM_MODEL,
         temperature=0,
         max_tokens=20000,
         timeout=None,
