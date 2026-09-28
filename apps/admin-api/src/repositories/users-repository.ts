@@ -50,13 +50,17 @@ export const usersRepository = {
     hashedPassword: string;
     role?: UserRole;
     accountStatus: "pending" | "active";
+    evaluatedByUserId?: number;
+    evaluatedAt?: Date;
   }) =>
     prisma.$transaction(async (transaction) => {
       const user = await transaction.user.create({ data });
       await transaction.userAuthEvaluation.create({
         data: {
           userId: user.id,
-          status: data.accountStatus
+          status: data.accountStatus,
+          evaluatedByUserId: data.evaluatedByUserId,
+          evaluatedAt: data.evaluatedAt
         }
       });
       return user;

@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +10,17 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_admin
 from app.core.security import get_password_hash
-from app.models import AppSetting, AuditLog, CatalogColumn, CatalogTable, Dataset, TableRelationship, User, UserRole
+from app.models import (
+    AppSetting,
+    AuditLog,
+    CatalogColumn,
+    CatalogTable,
+    Dataset,
+    TableRelationship,
+    User,
+    UserAuthEvaluation,
+    UserRole,
+)
 from app.schemas import (
     AppSettingOut,
     AppSettingUpdate,
@@ -266,6 +278,14 @@ async def create_user(
     )
     db.add(user)
     await db.flush()
+    db.add(
+        UserAuthEvaluation(
+            user_id=user.id,
+            status=user.account_status,
+            evaluated_by_user_id=admin.id,
+            evaluated_at=datetime.now(timezone.utc),
+        )
+    )
     await log_audit(
         db,
         user_id=admin.id,

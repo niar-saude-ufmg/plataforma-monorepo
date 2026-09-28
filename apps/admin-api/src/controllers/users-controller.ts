@@ -30,8 +30,12 @@ export const usersController = {
 
   createByAdmin: async (request: Request, response: Response, next: NextFunction) => {
     try {
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+
       const data = createUserByAdminSchema.parse(request.body);
-      const user = await usersService.createUserByAdmin(data);
+      const user = await usersService.createUserByAdmin(data, request.user.id);
       response.status(201).json(user);
     } catch (error) {
       next(error);

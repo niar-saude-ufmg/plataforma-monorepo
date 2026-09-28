@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS admin.project_versions (
   version_number INTEGER NOT NULL,
   source_wizard_session_id INTEGER NOT NULL
     REFERENCES assistant.wizard_sessions(id) ON DELETE RESTRICT,
-  user_coep_data_id INTEGER NOT NULL,
+  user_coep_data_id INTEGER NULL,
   characterization_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
   status shared.project_status NOT NULL,
   submitted_at TIMESTAMPTZ NULL,
@@ -284,6 +284,9 @@ CREATE TABLE IF NOT EXISTS admin.project_versions (
 
 ALTER TABLE admin.project_versions
   ADD COLUMN IF NOT EXISTS user_coep_data_id INTEGER;
+
+ALTER TABLE admin.project_versions
+  ALTER COLUMN user_coep_data_id DROP NOT NULL;
 
 ALTER TABLE admin.project_versions
   DROP CONSTRAINT IF EXISTS uq_admin_project_versions_source_session;
@@ -529,9 +532,6 @@ BEGIN
       ON DELETE RESTRICT;
   END IF;
 END $$;
-
-ALTER TABLE admin.project_versions
-  ALTER COLUMN user_coep_data_id SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS admin.committee_evaluations (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

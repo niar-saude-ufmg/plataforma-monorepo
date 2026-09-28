@@ -1,9 +1,10 @@
 import enum
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     Enum,
     ForeignKey,
@@ -418,7 +419,7 @@ class UserCoepData(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     caae: Mapped[str] = mapped_column(String(50))
     opinion_number: Mapped[str] = mapped_column(String(50))
-    approval_date: Mapped[datetime] = mapped_column(DateTime)
+    approval_date: Mapped[date] = mapped_column(Date)
     document_filename: Mapped[str] = mapped_column(String(255))
     document_storage_path: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
