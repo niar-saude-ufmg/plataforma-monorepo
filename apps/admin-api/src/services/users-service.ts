@@ -34,7 +34,6 @@ const saveUser = async (
     email: user.email,
     full_name: user.fullName,
     role: user.role,
-    account_status: user.accountStatus,
     is_active: user.accountStatus === "active",
     created_at: user.createdAt.toISOString()
   };
@@ -61,14 +60,13 @@ export const usersService = {
       email: user.email,
       full_name: user.fullName,
       role: user.role,
-      account_status: user.accountStatus,
       is_active: user.accountStatus === "active",
       created_at: user.createdAt.toISOString()
     }));
   },
 
   // Cadastro público: role nunca vem do cliente, é sempre researcher.
-  createUser: (data: CreatePublicUserInput) => saveUser(data, "researcher", "pending"),
+  createUser: (data: CreatePublicUserInput) => saveUser(data, "researcher", "active"),
 
   // A rota já garantiu que quem chama é admin, então aceita a role enviada.
   createUserByAdmin: (data: CreateUserByAdminInput) => saveUser(data, data.role, "active")

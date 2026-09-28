@@ -78,7 +78,6 @@ describe("GET /api/admin/users", () => {
         email: "pesquisador1@niar.local",
         full_name: "Pesquisador Um",
         role: "researcher",
-        account_status: "active",
         is_active: true,
         created_at: "2026-08-25T15:00:00.000Z"
       }

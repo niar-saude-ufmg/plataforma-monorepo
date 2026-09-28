@@ -48,7 +48,7 @@ describe("POST /api/admin/users (público)", () => {
 
   it("cria um usuário com dados válidos e retorna 201", async () => {
     findByEmail.mockResolvedValueOnce(null);
-    create.mockResolvedValueOnce(buildStoredUser({ accountStatus: "pending" }));
+    create.mockResolvedValueOnce(buildStoredUser());
 
     const response = await request(app).post("/api/admin/users").send({
       full_name: "Teste",
@@ -61,8 +61,7 @@ describe("POST /api/admin/users (público)", () => {
       full_name: "Teste",
       email: "teste@niar.local.test",
       role: "researcher",
-      account_status: "pending",
-      is_active: false
+      is_active: true
     });
     expect(response.body).toHaveProperty("id");
     expect(response.body).toHaveProperty("created_at");

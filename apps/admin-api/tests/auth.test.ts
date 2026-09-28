@@ -120,7 +120,6 @@ describe("GET /api/admin/auth/me", () => {
       email: "pesquisador@niar.local",
       full_name: "Pesquisador Um",
       role: "researcher",
-      account_status: "active",
       is_active: true
     });
   });
