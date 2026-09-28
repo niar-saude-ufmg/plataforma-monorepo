@@ -17,6 +17,8 @@ __pycache__
 *.pyd
 *.log
 apps/**/dist
+apps/**/build
+apps/**/.svelte-kit
 apps/**/node_modules
 packages/**/node_modules
 packages/**/dist

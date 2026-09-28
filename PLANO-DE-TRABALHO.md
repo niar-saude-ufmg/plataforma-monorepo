@@ -61,6 +61,13 @@ Papel nesta fase:
 - ocupar a rota principal `/`;
 - funcionar como área pública/institucional do ecossistema.
 
+Situação atual (integração concluída):
+
+- o site foi importado com histórico (`git subtree`) para `apps/site-institucional/` e o placeholder React `apps/institucional/` foi removido;
+- não virou remote federado: é um SvelteKit estático com container próprio, e o Caddy o serve em `/` e em tudo que não é rota da shell nem de API;
+- a página `/sala-segura` do placeholder passou a ser uma página da própria shell;
+- a API do assistente LEME do site passou a ser `apps/rag-api/` (FastAPI + LangGraph + Qdrant), com prefixo `/api/rag`; o monorepo é a fonte oficial dela, e o repositório `niar-rag-prototype` guarda apenas o corpus.
+
 ### 2.3 Micro admin
 
 Contexto:
@@ -172,15 +179,13 @@ Sequência sugerida de implementação:
 
 Pontos ainda não fechados nesta etapa:
 
-- qual abordagem será adotada para integrar o `Svelte` do institucional na shell quando chegar a etapa final;
-- como será feita a aproximação entre o monorepo principal e o repositório externo do institucional;
 - como será o contrato de contexto entre `admin` e `assistente` quando o assistente entrar.
 
 Observação:
 
 - a direção já definida é centralizar o `login` na `shell`;
 - a direção técnica da composição dos micros agora também está definida como `Module Federation`;
-- o que permanece em aberto é a implementação detalhada da autenticação compartilhada, do repasse de contexto e da integração futura com o `institucional`.
+- o que permanece em aberto é a implementação detalhada da autenticação compartilhada e do repasse de contexto.
 
 ## 7. Próximos passos sugeridos
 
@@ -190,7 +195,7 @@ Próximos passos mais prováveis para continuidade:
 2. substituir a rota `/admin` da `shell` pelo microfrontend real do `admin`;
 3. repetir a integração federada para o `assistente-web`;
 4. consolidar autenticação e contexto compartilhado entre `shell` e micros;
-5. definir depois como o `institucional` em `Svelte` será incorporado na shell;
+5. ~~definir depois como o `institucional` em `Svelte` será incorporado na shell~~ (concluído: ver 2.2);
 6. evoluir este plano sempre que novas decisões forem tomadas.
 
 ## 8. Estrutura inicial recomendada do repositório

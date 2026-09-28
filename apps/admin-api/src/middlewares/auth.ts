@@ -76,7 +76,7 @@ export const authenticate = async (request: Request, _response: Response, next: 
 
   try {
     const user = await usersRepository.findById(userId);
-    if (!user || !user.isActive) {
+    if (!user || user.accountStatus !== "active") {
       throw new AppError("Usuário não encontrado", 401);
     }
 
@@ -85,7 +85,7 @@ export const authenticate = async (request: Request, _response: Response, next: 
       email: user.email,
       fullName: user.fullName,
       role: user.role,
-      isActive: user.isActive
+      isActive: user.accountStatus === "active"
     };
     next();
   } catch (error) {

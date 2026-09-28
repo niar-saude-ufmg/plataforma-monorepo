@@ -5,15 +5,15 @@ import { niar } from "../../tokens/index";
 export const switchTheme: Components<Theme>["MuiSwitch"] = {
   styleOverrides: {
     root: {
-      height: niar.component.switch.height,
+      height: niar.sizing.xl,
       margin: 0,
       padding: 0,
       position: "relative",
-      borderRadius: `calc(${niar.component.switch.height} / 2)`,
-      width: niar.component.switch.width,
+      borderRadius: `calc(${niar.sizing.xl} / 2)`,
+      width: `calc(${niar.sizing["2xl"]} + ${niar.sizing.xs} + ${niar.sizing["2xs"]})`,
       "&::before": {
         backgroundColor: alpha(niar.colors.action.primary, 0.12),
-        borderRadius: `calc(${niar.component.switch.height} / 2 + ${niar.spacing["2xs"]})`,
+        borderRadius: `calc(${niar.sizing.xl} / 2 + ${niar.spacing["2xs"]})`,
         content: '""',
         inset: `-${niar.spacing["2xs"]}`,
         opacity: 0,
@@ -29,12 +29,12 @@ export const switchTheme: Components<Theme>["MuiSwitch"] = {
       },
     },
     switchBase: {
-      padding: `calc((${niar.component.switch.height} - ${niar.component.switch.thumb}) / 2)`,
+      padding: `calc((${niar.sizing.xl} - ${niar.sizing.lg}) / 2)`,
       zIndex: 1,
       transition: "transform 180ms ease",
       "&.Mui-checked": {
         color: niar.colors.action.primary,
-        transform: `translateX(${niar.component.switch.offset})`,
+        transform: `translateX(${niar.sizing.lg})`,
         "+ .MuiSwitch-track": {
           backgroundColor: niar.colors.action.secondary,
           opacity: 1,
@@ -51,12 +51,12 @@ export const switchTheme: Components<Theme>["MuiSwitch"] = {
     thumb: {
       backgroundColor: niar.colors.neutral.white,
       boxShadow: "0 1px 3px rgba(15, 31, 91, 0.28)",
-      height: niar.component.switch.thumb,
-      width: niar.component.switch.thumb,
+      height: niar.sizing.lg,
+      width: niar.sizing.lg,
     },
     track: {
       backgroundColor: alpha(niar.colors.neutral.charcoal, 0.32),
-      borderRadius: `calc(${niar.component.switch.height} / 2)`,
+      borderRadius: `calc(${niar.sizing.xl} / 2)`,
       opacity: 1,
     },
   },

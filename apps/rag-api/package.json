@@ -1,0 +1,12 @@
+{
+  "name": "@niar/rag-api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../scripts/infra.mjs rag-api:dev",
+    "build": "node ../../scripts/infra.mjs rag-api:check",
+    "check": "node ../../scripts/infra.mjs rag-api:check",
+    "test": "node ../../scripts/infra.mjs rag-api:test"
+  }
+}
