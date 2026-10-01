@@ -45,7 +45,10 @@ usersRouter.get("/", authenticate, restrictTo("admin", "committee"), usersContro
  * /admin/users:
  *   post:
  *     summary: Cadastro público de pesquisador
- *     description: Sempre cria role "researcher", independente do que for enviado.
+ *     description: >
+ *       Sempre cria role "researcher", independente do que for enviado.
+ *       Grava usuário, perfil de contato, dados acadêmicos e parecer do COEP
+ *       na mesma transação: se qualquer etapa falhar, nada é persistido.
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -56,6 +59,10 @@ usersRouter.get("/", authenticate, restrictTo("admin", "committee"), usersContro
  *     responses:
  *       201:
  *         description: Usuário criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PublicUserCreatedResponse'
  *       400:
  *         description: Dados inválidos (validação do Zod)
  *       409:
