@@ -14,6 +14,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { afterNavigate } from '$app/navigation';
+	import Lock from 'lucide-svelte/icons/lock';
 	import Menu from 'lucide-svelte/icons/menu';
 	import X from 'lucide-svelte/icons/x';
 	import { Separator } from '$lib/components/ui/separator';
@@ -87,11 +88,17 @@
 		{ href: '/contact' as const, label: () => m.nav_contact() }
 	];
 
+	// A Sala Segura fica fora de navLinks de propósito: os itens do menu são páginas de
+	// conteúdo, e ela é a porta de entrada da plataforma — o pesquisador volta a ela para
+	// acompanhar o projeto. Por isso ganha um botão próprio no header e na gaveta, em vez
+	// de ser o oitavo link de texto.
+	const secureRoomLink = { href: '/sala-segura' as const, label: () => m.nav_secure_room() };
+
 	// O footer repete o menu menos a Home — quem quer voltar ao início clica na logo,
-	// que já está logo acima da lista. A ordem de navLinks já cai certa na grade de três
-	// colunas: Sobre/Notícias/Publicações na primeira linha, Equipe/LEME/Contato
-	// na segunda.
-	const footerLinks = navLinks.slice(1);
+	// que já está logo acima da lista — e soma a Sala Segura no fim. Na grade de duas
+	// colunas ela cai sozinha na última linha, o que também a separa das páginas de
+	// conteúdo.
+	const footerLinks = [...navLinks.slice(1), secureRoomLink];
 
 	const currentYear = new Date().getFullYear();
 
@@ -199,7 +206,24 @@
 						{link.label()}
 					</a>
 				{/each}
-				<div class="ml-8 flex items-center gap-2 text-sm font-semibold">
+				<!-- Botão em contorno, e não pílula cheia: os CTAs cheios do site (hero e LEME)
+				     são ações da página, e um terceiro no header competiria com eles. O contorno
+				     basta para separá-lo dos links de texto ao lado. Na própria página ele fica
+				     cheio em azul-profundo, no lugar do sublinhado dos outros itens. O hover só
+				     existe no estado em contorno: no cheio, clarear o fundo apagaria a marcação. -->
+				<a
+					href={localizeHref(resolve(secureRoomLink.href))}
+					aria-current={isActive(secureRoomLink) ? 'page' : undefined}
+					class="ml-2 inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors {isActive(
+						secureRoomLink
+					)
+						? 'border-primary bg-primary text-primary-foreground'
+						: 'border-primary/30 text-primary hover:border-primary hover:bg-primary/5'}"
+				>
+					<Lock class="h-3.5 w-3.5" aria-hidden="true" />
+					{secureRoomLink.label()}
+				</a>
+				<div class="ml-4 flex items-center gap-2 text-sm font-semibold">
 					{#each locales as locale, i (locale)}
 						{#if i > 0}<span class="text-primary/30">|</span>{/if}
 						<a
@@ -305,6 +329,24 @@
 					{/each}
 				</ul>
 			</nav>
+
+			<!-- Sala Segura fora da lista, pelo mesmo motivo do desktop: é a entrada da
+			     plataforma, não uma página de conteúdo. Largura total e 44px de altura, para
+			     ser o alvo mais fácil da gaveta. -->
+			<div class="border-t border-border px-6 py-4">
+				<a
+					href={localizeHref(resolve(secureRoomLink.href))}
+					aria-current={isActive(secureRoomLink) ? 'page' : undefined}
+					class="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border px-5 text-base font-semibold transition-colors {isActive(
+						secureRoomLink
+					)
+						? 'border-primary bg-primary text-primary-foreground'
+						: 'border-primary/30 text-primary hover:border-primary hover:bg-primary/5'}"
+				>
+					<Lock class="h-4 w-4" aria-hidden="true" />
+					{secureRoomLink.label()}
+				</a>
+			</div>
 
 			<!-- Idioma no pé da gaveta: é configuração, não destino, então fica separado da
 			     lista de páginas. -->
