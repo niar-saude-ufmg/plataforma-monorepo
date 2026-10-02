@@ -32,6 +32,11 @@ export default defineConfig(({ mode }) => {
           target: "http://localhost:4176",
           changeOrigin: true
         },
+        "/identidade-visual": {
+          target: "http://localhost:6006",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/identidade-visual/, "")
+        },
         "/api/admin": {
           target: env.VITE_ADMIN_API_PROXY_TARGET || `http://localhost:${env.ADMIN_API_PORT || 3333}`,
           changeOrigin: true

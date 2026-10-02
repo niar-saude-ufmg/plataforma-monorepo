@@ -73,19 +73,19 @@ describe("Shell App", () => {
     expect(await screen.findByRole("heading", { name: "Cadastro de pesquisador" })).toBeInTheDocument();
   });
 
-  it("disponibiliza a identidade visual sem exigir login", () => {
+  it("mostra 404 em rotas desconhecidas da shell", () => {
     render(
-      <MemoryRouter initialEntries={["/identidade-visual"]}>
+      <MemoryRouter initialEntries={["/rota-inexistente"]}>
         <App />
       </MemoryRouter>
     );
 
-    expect(screen.getByTitle("Design System NIAR")).toHaveAttribute("src", "http://localhost:6006");
+    expect(screen.getByRole("heading", { name: "Página não encontrada" })).toBeInTheDocument();
   });
 
-  it("mostra 404 em rotas desconhecidas da shell", () => {
+  it("não expõe o caminho interno legado do Storybook", () => {
     render(
-      <MemoryRouter initialEntries={["/rota-inexistente"]}>
+      <MemoryRouter initialEntries={["/storybook"]}>
         <App />
       </MemoryRouter>
     );

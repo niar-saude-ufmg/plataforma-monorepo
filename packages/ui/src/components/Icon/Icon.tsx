@@ -2,6 +2,7 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import { forwardRef } from "react";
 import * as MuiIcons from "@mui/icons-material";
 export type IconName =
+  | "arrowBack"
   | "menu"
   | "close"
   | "check"
@@ -24,6 +25,7 @@ export type IconName =
   | "visibilityOff";
 export type IconProps = Omit<SvgIconProps, "children"> & { name: IconName };
 const icons = {
+  arrowBack: MuiIcons.ArrowBack,
   menu: MuiIcons.Menu,
   close: MuiIcons.Close,
   check: MuiIcons.Check,

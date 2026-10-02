@@ -1,5 +1,6 @@
 export {
   Button,
+  Link,
   Input,
   Select,
   Card,
@@ -17,6 +18,7 @@ export {
 } from "./components/index";
 export type {
   ButtonProps,
+  LinkProps,
   InputProps,
   SelectProps,
   CardProps,

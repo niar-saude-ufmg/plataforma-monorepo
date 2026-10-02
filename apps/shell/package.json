@@ -12,9 +12,13 @@
     "@niar/auth": "workspace:*",
     "@niar/config": "workspace:*",
     "@niar/contracts": "workspace:*",
+    "@niar/ui": "workspace:*",
+    "@hookform/resolvers": "^3.9.1",
+    "react-hook-form": "^7.53.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@originjs/vite-plugin-federation": "^1.4.1",

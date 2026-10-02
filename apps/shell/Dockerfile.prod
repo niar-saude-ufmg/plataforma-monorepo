@@ -26,7 +26,7 @@ FROM docker.io/library/nginx:1.27-alpine
 
 COPY apps/shell/nginx.prod.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /workspace/apps/shell/dist /usr/share/nginx/html
-COPY --from=build /workspace/packages/ui/storybook-static /usr/share/nginx/html/storybook
+COPY --from=build /workspace/packages/ui/storybook-static /usr/share/nginx/html/identidade-visual
 
 EXPOSE 80
 

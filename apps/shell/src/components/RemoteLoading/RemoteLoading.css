@@ -1,0 +1,16 @@
+.remote-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--niar-spacing-3xl) var(--niar-spacing-md);
+}
+
+.remote-loading__card {
+  width: min(45rem, 100%);
+}
+
+.remote-loading__content {
+  display: flex;
+  align-items: center;
+  gap: var(--niar-spacing-md);
+}
