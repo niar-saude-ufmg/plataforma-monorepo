@@ -13,7 +13,6 @@ import { specialtiesRepository } from "../repositories/specialties-repository.js
 import { auditRepository } from "../repositories/audit-repository.js";
 import {
   CreateAdministratorInput,
-  CreateUserByAdminInput,
   CreateCommitteeMemberInput,
   CreatePublicUserInput,
   CreateResearcherInput,
@@ -179,9 +178,6 @@ export const usersService = {
       }
     };
   },
-
-  // A rota já garantiu que quem chama é admin, então aceita a role enviada.
-  createUserByAdmin: (data: CreateUserByAdminInput) => saveUser(data, data.role),
 
   createResearcher: async (
     data: CreateResearcherInput,

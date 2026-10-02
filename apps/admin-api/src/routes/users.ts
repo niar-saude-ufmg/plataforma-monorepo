@@ -75,30 +75,6 @@ usersRouter.post("/", uploadCoepDocument, usersController.create);
 
 /**
  * @swagger
- * /admin/users/internal:
- *   post:
- *     summary: Cadastro administrativo (protegido)
- *     deprecated: true
- *     description: Só admin autenticado. Aceita qualquer papel (researcher, admin, committee).
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       201:
- *         description: Usuário criado com sucesso
- *       400:
- *         description: Dados inválidos (validação do Zod)
- *       401:
- *         description: Não autenticado
- *       403:
- *         description: Autenticado, mas não é admin
- *       409:
- *         description: E-mail já cadastrado
- */
-usersRouter.post("/internal", authenticate, restrictTo("admin"), usersController.createByAdmin);
-
-/**
- * @swagger
  * /admin/users/researchers:
  *   post:
  *     summary: Cria um pesquisador

@@ -44,16 +44,6 @@ const options = {
             coep_document: { type: 'string', format: 'binary', description: 'Parecer do COEP em PDF, até 10 MB.' },
           },
         },
-        CreateUserByAdmin: {
-          type: 'object',
-          required: ['full_name', 'email', 'password', 'role'],
-          properties: {
-            full_name: { type: 'string', example: 'Usuário Teste' },
-            email: { type: 'string', format: 'email', example: 'usuario@niar.local' },
-            password: { type: 'string', format: 'password', minLength: 8, example: 'senha12345' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
-          },
-        },
         CreateResearcher: {
           type: 'object',
           required: ['full_name', 'email', 'password', 'coep'],

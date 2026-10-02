@@ -44,17 +44,6 @@ export const createPublicUserSchema = z.object({
 
 export type CreatePublicUserInput = z.infer<typeof createPublicUserSchema>;
 
-// Só é alcançado pela rota protegida (admin autenticado), por isso
-// aceita qualquer papel.
-export const createUserByAdminSchema = z.object({
-  full_name: z.string().min(1, { message: "Full name is required" }),
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters long" }),
-  role: z.enum(["researcher", "admin", "committee"])
-});
-
-export type CreateUserByAdminInput = z.infer<typeof createUserByAdminSchema>;
-
 export const createResearcherSchema = z.object({
   full_name: z.string().min(1),
   email: z.string().email(),
