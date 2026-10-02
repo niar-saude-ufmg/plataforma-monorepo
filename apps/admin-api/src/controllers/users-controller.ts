@@ -1,6 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors/app-error.js";
-import { createPublicUserSchema, createUserByAdminSchema, listUsersQuerySchema } from "../schemas/user-schema.js";
+import {
+  createPublicUserSchema,
+  listUsersQuerySchema,
+  createAdministratorSchema,
+  createCommitteeMemberSchema,
+  createResearcherSchema
+} from "../schemas/user-schema.js";
 import { usersService } from "../services/users-service.js";
 
 const parseMultipartJsonField = (value: unknown, fieldName: string) => {
@@ -65,10 +71,39 @@ export const usersController = {
     }
   },
 
-  createByAdmin: async (request: Request, response: Response, next: NextFunction) => {
+  createResearcher: async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const data = createUserByAdminSchema.parse(request.body);
-      const user = await usersService.createUserByAdmin(data);
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+      const data = createResearcherSchema.parse(request.body);
+      const user = await usersService.createResearcher(data, request.user!.id);
+      response.status(201).json(user);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  createCommitteeMember: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+      const data = createCommitteeMemberSchema.parse(request.body);
+      const user = await usersService.createCommitteeMember(data, request.user!.id);
+      response.status(201).json(user);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  createAdministrator: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+      const data = createAdministratorSchema.parse(request.body);
+      const user = await usersService.createAdministrator(data, request.user!.id);
       response.status(201).json(user);
     } catch (error) {
       next(error);

@@ -8,7 +8,18 @@ import {
   storeCoepDocument,
   type UploadedCoepDocument
 } from "./coep-document-storage.js";
-import { CreatePublicUserInput, CreateUserByAdminInput, ListUsersQuery, PublicUserCreatedResponse, UserResponse } from "../schemas/user-schema.js";
+
+import { specialtiesRepository } from "../repositories/specialties-repository.js";
+import { auditRepository } from "../repositories/audit-repository.js";
+import {
+  CreateAdministratorInput,
+  CreateCommitteeMemberInput,
+  CreatePublicUserInput,
+  CreateResearcherInput,
+  PublicUserCreatedResponse,
+  ListUsersQuery,
+  UserResponse,
+} from "../schemas/user-schema.js";
 
 // Usado pelo cadastro administrativo (rota protegida), que grava só o usuário.
 // O cadastro público tem caminho próprio, porque também grava perfil e COEP.
@@ -41,6 +52,32 @@ const saveUser = async (data: BasicUserInput, role: UserRole): Promise<UserRespo
     created_at: user.createdAt.toISOString()
   };
 };
+
+const prepareUserData = async (email: string, password: string) => {
+  const existing = await usersRepository.findByEmail(email);
+  if (existing) {
+    throw new AppError("User with this email already exists", 409);
+  }
+  // Hash em 10 rounds, padrão do bcrypt do Python, compatível com o assistente
+  const hashedPassword = await hash(password, 10);
+  return { hashedPassword };
+};
+
+const toUserResponse = (user: {
+  id: number;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  accountStatus: "pending" | "active" | "rejected" | "disabled";
+  createdAt: Date;
+}): UserResponse => ({
+  id: user.id,
+  email: user.email,
+  full_name: user.fullName,
+  role: user.role,
+  is_active: user.accountStatus === "active",
+  created_at: user.createdAt.toISOString(),
+});
 
 export const usersService = {
   listUsers: async (query: ListUsersQuery, currentUser: AuthenticatedUser): Promise<UserResponse[]> => {
@@ -142,6 +179,107 @@ export const usersService = {
     };
   },
 
-  // A rota já garantiu que quem chama é admin, então aceita a role enviada.
-  createUserByAdmin: (data: CreateUserByAdminInput) => saveUser(data, data.role)
+  createResearcher: async (
+    data: CreateResearcherInput,
+    adminId: number,
+  ): Promise<UserResponse> => {
+    const { hashedPassword } = await prepareUserData(data.email, data.password);
+
+    const user = await usersRepository.createResearcher({
+      user: {
+        fullName: data.full_name,
+        email: data.email,
+        hashedPassword,
+        role: "researcher",
+        accountStatus: "active",
+      },
+      profile: data.profile,
+      researcherProfile: data.researcher_profile,
+      coep: {
+        caae: data.coep.caae,
+        opinionNumber: data.coep.opinion_number,
+        approvalDate: data.coep.approval_date,
+        documentFilename: data.coep.document_filename,
+        documentStoragePath: data.coep.document_storage_path,
+      },
+      evaluation: {
+        status: "active",
+        evaluatedByUserId: adminId,
+        evaluatedAt: new Date(),
+      },
+    });
+
+    await auditRepository.create({
+      userId: adminId,
+      action: "create_researcher",
+      resourceType: "user",
+      resourceId: String(user.id),
+      details: `Created researcher user with email ${user.email}`,
+    });
+
+    return toUserResponse(user);
+  },
+
+  createCommitteeMember: async (
+    data: CreateCommitteeMemberInput,
+    adminId: number,
+  ): Promise<UserResponse> => {
+    const specialty = await specialtiesRepository.findById(data.specialty_id);
+    if (!specialty || !specialty.isActive) {
+      throw new AppError("Especialidade inválida ou inativa", 400);
+    }
+
+    const { hashedPassword } = await prepareUserData(data.email, data.password);
+
+    const user = await usersRepository.createCommitteeMember({
+      user: {
+        fullName: data.full_name,
+        email: data.email,
+        hashedPassword,
+        role: "committee",
+        accountStatus: "active",
+      },
+      committeeMemberProfile: { specialtyId: data.specialty_id },
+      evaluation: {
+        status: "active",
+        evaluatedByUserId: adminId,
+        evaluatedAt: new Date(),
+      },
+    });
+
+    await auditRepository.create({
+      userId: adminId,
+      action: "create_committee_member",
+      resourceType: "user",
+      resourceId: String(user.id),
+      details: `Created commitee member user with email ${user.email}`,
+    });
+
+    return toUserResponse(user);
+  },
+
+  createAdministrator: async (
+    data: CreateAdministratorInput,
+    adminId: number,
+  ): Promise<UserResponse> => {
+    const { hashedPassword } = await prepareUserData(data.email, data.password);
+
+    const user = await usersRepository.createAdministrator({
+      fullName: data.full_name,
+      email: data.email,
+      hashedPassword,
+      role: "admin",
+      accountStatus: "active",
+    });
+
+    await auditRepository.create({
+      userId: adminId,
+      action: "create_administrator",
+      resourceType: "user",
+      resourceId: String(user.id),
+      details: `Created administrator user with email ${user.email}`,
+    });
+
+    return toUserResponse(user);
+  },
 };
