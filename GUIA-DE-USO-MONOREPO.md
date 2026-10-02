@@ -76,7 +76,7 @@ pnpm dev
 
 Observacao:
 
-- o `pnpm dev` agora tambem tenta subir `assistente-web`, `assistente-api`, `site-institucional` (`http://localhost:5176`) e `rag-api` (`http://localhost:8001`);
+- o `pnpm dev` agora tambem tenta subir `assistente-web`, o remote `site-institucional` (`http://localhost:4176`) e `rag-api` (`http://localhost:8001`);
 - as `.venv` do `assistente-api` e do `rag-api` sao preparadas automaticamente pelo `pnpm setup` e tambem pelo proprio `pnpm dev`, se necessario;
 - o `rag-api` precisa de `GOOGLE_API_KEY`, `GOOGLE_GENAI_API_KEY`, `QDRANT_URL` e `QDRANT_API_KEY` no `.env` para o chat do site responder.
 
@@ -113,7 +113,7 @@ pnpm --filter @niar/shell dev
 Observacao:
 
 - a shell so consegue carregar os micros se `admin-web` e `assistente-web` tambem estiverem ativos como remotes
-- a rota `/` da shell redireciona para o site institucional (`VITE_SITE_URL`)
+- a rota pública da shell carrega o site institucional como microfrontend remoto; em desenvolvimento, o remote usa `VITE_INSTITUTIONAL_REMOTE_URL`
 
 ### 3.2. Só o admin-web
 
@@ -264,9 +264,10 @@ Pacote:
 
 - `apps/site-institucional/package.json`
 
-O site institucional é um app SvelteKit estático servido em `/`. Ele não é um
-remote da Module Federation. O assistente da rota `/leme` consome a API
-`@niar/rag-api` por `PUBLIC_RAG_API_URL`.
+O site institucional é um app SvelteKit estático compilado como remote da shell e
+servido em `/`. Ele inclui a rota `/sala-segura`; as rotas de login, cadastro e
+assistente continuam pertencendo à shell. O assistente da rota `/leme` consome a
+API `@niar/rag-api` por `PUBLIC_RAG_API_URL`.
 
 ### RAG API
 
@@ -362,7 +363,7 @@ Esta seção é o procedimento de referência para incorporar um novo frontend, 
 
 Use uma aplicação frontend quando o projeto for uma SPA, site estático ou microfrontend que possa ser composto pela shell. Crie uma API apenas quando houver regras de negócio, persistência, processamento ou integração HTTP que não pertençam ao frontend.
 
-Não crie uma API própria para um site institucional estático só porque ele é um projeto separado. O `apps/site-institucional/` é um exemplo de frontend que não é remote: um SvelteKit estático com container próprio, servido pelo Caddy em `/`, fora da Module Federation (que só compõe remotes React). A `rag-api` que ele consome existe por ter processamento próprio (busca vetorial e LLM), não por ser um projeto separado.
+Não crie uma API própria para um site institucional estático só porque ele é um projeto separado. O `apps/site-institucional/` é um frontend SvelteKit com build remoto próprio e container separado; a shell o compõe como microfrontend institucional. A `rag-api` que ele consome existe por ter processamento próprio (busca vetorial e LLM), não por ser um projeto separado.
 
 Mantenha estas fronteiras:
 
@@ -395,7 +396,7 @@ Reserve uma porta local exclusiva e defina uma variável de remote. As portas at
 | shell | 5173 | aplicação principal |
 | admin-web | 5174 | `VITE_ADMIN_REMOTE_URL` |
 | assistente-web | 5175 | `VITE_ASSISTENTE_REMOTE_URL` |
-| site-institucional | 5176 | app próprio, não é remote; a shell leva a ele por `VITE_SITE_URL` |
+| site-institucional | 5176 | remote institucional; `VITE_INSTITUTIONAL_REMOTE_URL` |
 
 Para o novo módulo, registre o remote em `apps/shell/vite.config.ts`:
 
@@ -427,6 +428,8 @@ handle_path /remotes/meu-modulo/* {
 ```
 
 O remote precisa responder a `remoteEntry.js`, carregar seus chunks e suportar a URL publicada com a base configurada. Teste também um refresh direto em uma rota interna do módulo.
+
+O `site-institucional` é carregado pela shell como remote. Ele mantém seu build SvelteKit separado, mas não é acessado por redirecionamento externo: a shell monta o módulo institucional dentro da própria aplicação. Em produção, os assets são publicados em `/remotes/institutional/` e os assets absolutos do SvelteKit em `/_app/` são servidos pelo mesmo serviço remoto.
 
 ### 9.3. Incorporar uma nova API
 
@@ -484,7 +487,7 @@ Faça a validação em camadas:
 Confira sempre os arquivos reais de referência antes de copiar uma configuração:
 
 - `apps/shell/vite.config.ts` e `apps/shell/src/types/federation.d.ts`;
-- `apps/site-institucional/` e `apps/site-institucional/Dockerfile.prod` para um frontend estático fora da Module Federation;
+- `apps/site-institucional/` e `apps/site-institucional/Dockerfile.prod` para o remote institucional SvelteKit;
 - `apps/admin-web/vite.config.ts` para um remote com formulário e API;
 - `apps/admin-api/src/app.ts` para rotas e documentação de uma API Express;
 - `apps/assistente-api/app/main.py` e `apps/rag-api/api/main.py` para prefixos e healthcheck em FastAPI;

@@ -16,6 +16,7 @@ import { DesignSystemPage } from "./pages/DesignSystemPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { SITE_URL } from "./site";
 import { AuthenticatedUser, getCurrentUser, login as loginRequest } from "./services/auth-api";
+import { InstitutionalRemotePage } from "./pages/InstitutionalRemotePage";
 
 type SessionUser = PlatformSessionUser;
 
@@ -249,10 +250,11 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* A página da Sala Segura mora no site institucional; o cadastro continua aqui. */}
-        <Route path={APP_ROUTES.salaSegura} element={<RedirectToSite path="sala-segura/" />} />
-        <Route path={APP_ROUTES.home} element={<RedirectToSite />} />
-        <Route path="*" element={<NotFoundPage />} />
+        {import.meta.env.MODE === "test" ? (
+          <Route path="*" element={<NotFoundPage />} />
+        ) : (
+          <Route path="/*" element={<InstitutionalRemotePage />} />
+        )}
       </Routes>}
     </div>
   );

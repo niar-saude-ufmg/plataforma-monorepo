@@ -17,16 +17,21 @@ export default defineConfig(({ mode }) => {
       federation({
         name: "shell",
         remotes: {
+          institutional: env.VITE_INSTITUTIONAL_REMOTE_URL || "http://localhost:4176/assets/remoteEntry.js",
           admin: env.VITE_ADMIN_REMOTE_URL || "http://localhost:4174/assets/remoteEntry.js",
           assistant: env.VITE_ASSISTENTE_REMOTE_URL || "http://localhost:4175/assets/remoteEntry.js"
         },
         shared: ["react", "react-dom", "react-router-dom"]
       })
     ],
-    server: {
+      server: {
       host: "0.0.0.0",
       port: 5173,
       proxy: {
+        "/_app": {
+          target: "http://localhost:4176",
+          changeOrigin: true
+        },
         "/api/admin": {
           target: env.VITE_ADMIN_API_PROXY_TARGET || `http://localhost:${env.ADMIN_API_PORT || 3333}`,
           changeOrigin: true

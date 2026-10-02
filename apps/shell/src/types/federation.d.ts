@@ -15,3 +15,7 @@ declare module "assistant/App" {
   const AssistantApp: ComponentType;
   export default AssistantApp;
 }
+
+declare module "institutional/mount" {
+  export function mountInstitutional(target: HTMLElement): unknown;
+}
