@@ -121,8 +121,7 @@ export const usersRepository = {
       const coep = await tx.userCoepData.create({
         data: {
           userId: user.id,
-          ...data.coep,
-          documentStoragePath: data.coep.documentStoragePath.replace("{user_id}", String(user.id))
+          ...data.coep
         }
       });
 

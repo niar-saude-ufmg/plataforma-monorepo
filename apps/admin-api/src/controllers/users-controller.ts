@@ -3,6 +3,43 @@ import { AppError } from "../errors/app-error.js";
 import { createPublicUserSchema, createUserByAdminSchema, listUsersQuerySchema } from "../schemas/user-schema.js";
 import { usersService } from "../services/users-service.js";
 
+const parseMultipartJsonField = (value: unknown, fieldName: string) => {
+  if (typeof value !== "string") {
+    throw new AppError(`O campo ${fieldName} deve conter um JSON válido`, 400);
+  }
+
+  try {
+    return JSON.parse(value) as Record<string, unknown>;
+  } catch {
+    throw new AppError(`O campo ${fieldName} deve conter um JSON válido`, 400);
+  }
+};
+
+const parsePublicUserRequest = (request: Request) => {
+  if (!request.file) {
+    throw new AppError("O documento do COEP é obrigatório", 400);
+  }
+
+  const profile = parseMultipartJsonField(request.body.profile, "profile");
+  const researcherProfile = parseMultipartJsonField(
+    request.body.researcher_profile,
+    "researcher_profile"
+  );
+  const coep = parseMultipartJsonField(request.body.coep, "coep");
+
+  return createPublicUserSchema.parse({
+    full_name: request.body.full_name,
+    email: request.body.email,
+    password: request.body.password,
+    profile,
+    researcher_profile: researcherProfile,
+    coep: {
+      ...coep,
+      document_filename: request.file.originalname
+    }
+  });
+};
+
 export const usersController = {
   list: async (request: Request, response: Response, next: NextFunction) => {
     try {
@@ -20,8 +57,8 @@ export const usersController = {
 
   create: async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const data = createPublicUserSchema.parse(request.body);
-      const user = await usersService.createUser(data);
+      const data = parsePublicUserRequest(request);
+      const user = await usersService.createUser(data, request.file!);
       response.status(201).json(user);
     } catch (error) {
       next(error);

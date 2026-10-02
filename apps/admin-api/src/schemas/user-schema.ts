@@ -29,8 +29,7 @@ const coepSchema = z.object({
       const date = new Date(`${value}T00:00:00.000Z`);
       return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
     }, { message: "Approval date is not a valid calendar date" }),
-  document_filename: z.string().min(1, { message: "Document filename is required" }),
-  document_storage_path: z.string().min(1, { message: "Document storage path is required" })
+  document_filename: z.string().min(1, { message: "Document filename is required" })
 });
 // "role" não existe aqui de propósito — quem decide que é sempre
 // "researcher" é o service, não o schema.

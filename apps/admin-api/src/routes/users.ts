@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { usersController } from "../controllers/users-controller.js";
+import { uploadCoepDocument } from "../middlewares/coep-upload.js";
 import { authenticate, restrictTo } from "../middlewares/auth.js";
 
 export const usersRouter = Router();
@@ -49,11 +50,13 @@ usersRouter.get("/", authenticate, restrictTo("admin", "committee"), usersContro
  *       Sempre cria role "researcher", independente do que for enviado.
  *       Grava usuário, perfil de contato, dados acadêmicos e parecer do COEP
  *       na mesma transação: se qualquer etapa falhar, nada é persistido.
+ *       Os blocos profile, researcher_profile e coep são JSON dentro do multipart/form-data,
+ *       e o arquivo deve ser enviado no campo coep_document.
  *     tags: [Users]
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             $ref: '#/components/schemas/CreateUser'
  *     responses:
@@ -68,7 +71,7 @@ usersRouter.get("/", authenticate, restrictTo("admin", "committee"), usersContro
  *       409:
  *         description: E-mail já cadastrado
  */
-usersRouter.post("/", usersController.create);
+usersRouter.post("/", uploadCoepDocument, usersController.create);
 
 /**
  * @swagger
