@@ -8,6 +8,7 @@ import { AppError } from "./errors/app-error.js";
 import { adminRouter } from "./routes/admin.js";
 import { authRouter } from "./routes/auth.js";
 import { healthRouter } from "./routes/health.js";
+import { projectsRouter } from "./routes/projects.js";
 import { specialtiesRouter } from "./routes/specialties.js";
 import { usersRouter } from "./routes/users.js";
 
@@ -26,16 +27,20 @@ app.use("/api/admin", adminRouter);
 app.use("/api/admin/users", usersRouter);
 app.use("/api/admin/auth", authRouter);
 app.use("/api/admin/specialties", specialtiesRouter);
+app.use("/api/admin/projects", projectsRouter);
 
 // Handler central de erro: decide o status HTTP a partir do tipo do erro,
 // nunca do texto da mensagem. Fica depois de todas as rotas de propósito
 // (é assim que o Express reconhece um error handler).
-app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
+app.use((error: unknown, _request: Request, response: Response, next: NextFunction) => {
+  if (response.headersSent) {
+    next(error);
+    return;
+  }
   if (error instanceof multer.MulterError) {
     response.status(400).json({ error: "Arquivo inválido ou maior que o limite permitido" });
     return;
   }
-
   if (error instanceof ZodError) {
     response.status(400).json({ errors: error.errors });
     return;

@@ -90,6 +90,49 @@ const options = {
             },
           ],
         },
+        ProjectStatusResponse: {
+          type: 'object',
+          required: ['code', 'label', 'version_number', 'created_at', 'notes'],
+          properties: {
+            code: {
+              type: 'string',
+              enum: ['submitted_to_committee', 'resubmitted_to_committee', 'under_review', 'needs_changes', 'approved', 'rejected'],
+            },
+            label: { type: 'string', example: 'Em avaliação' },
+            version_number: { type: 'integer', example: 1 },
+            created_at: { type: 'string', format: 'date-time' },
+            notes: { type: 'string', nullable: true },
+          },
+        },
+        ProjectDocumentResponse: {
+          type: 'object',
+          required: ['id', 'version_number', 'document_type', 'original_filename', 'created_at', 'download_url'],
+          properties: {
+            id: { type: 'integer', example: 101 },
+            version_number: { type: 'integer', example: 1 },
+            document_type: { type: 'string', example: 'project_docx' },
+            original_filename: { type: 'string', example: 'projeto-v1.docx' },
+            created_at: { type: 'string', format: 'date-time' },
+            download_url: { type: 'string', example: '/api/admin/projects/42/documents/101/download' },
+          },
+        },
+        ProjectResponse: {
+          type: 'object',
+          required: ['id', 'title', 'updated_at', 'status', 'documents'],
+          properties: {
+            id: { type: 'integer', example: 42 },
+            title: { type: 'string', example: 'Projeto de pesquisa' },
+            updated_at: { type: 'string', format: 'date-time' },
+            status: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ProjectStatusResponse' },
+            },
+            documents: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ProjectDocumentResponse' },
+            },
+          },
+        },
         ErrorResponse: {
           type: 'object',
           properties: {
