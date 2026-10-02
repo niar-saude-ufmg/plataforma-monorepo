@@ -55,6 +55,48 @@ export const createUserByAdminSchema = z.object({
 
 export type CreateUserByAdminInput = z.infer<typeof createUserByAdminSchema>;
 
+export const createResearcherSchema = z.object({
+  full_name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+  profile: z.object({
+    phone: z.string().optional(),
+    institution: z.string().optional(),
+    organizational_unit: z.string().optional(),
+    contact_address: z.string().optional(),
+  }),
+  researcher_profile: z.object({
+    research_area: z.string().optional(),
+    position: z.string().optional(),
+  }),
+  coep: z.object({
+    caae: z.string().min(1).max(50),
+    opinion_number: z.string().min(1).max(50),
+    approval_date: z.coerce.date(),
+    document_filename: z.string().min(1).max(255),
+    document_storage_path: z.string().min(1),
+  }),
+});
+
+export type CreateResearcherInput = z.infer<typeof createResearcherSchema>;
+
+export const createCommitteeMemberSchema = z.object({
+  full_name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+  specialty_id: z.number().int().positive(),
+});
+
+export type CreateCommitteeMemberInput = z.infer<typeof createCommitteeMemberSchema>;
+
+export const createAdministratorSchema = z.object({
+  full_name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+export type CreateAdministratorInput = z.infer<typeof createAdministratorSchema>;
+
 export const listUsersQuerySchema = z.object({
   role: z.enum(["researcher", "admin", "committee"]).optional(),
   page: z.coerce.number().int().positive().default(1),

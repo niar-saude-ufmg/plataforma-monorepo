@@ -16,6 +16,7 @@ const options = {
     ],
     components: {
       schemas: {
+        // Cadastro público (rota POST /admin/users)
         CreateUser: {
           type: 'object',
           description:
@@ -41,6 +42,71 @@ const options = {
               example: '{"caae":"12345678.9.0000.0000","opinion_number":"1234.567","approval_date":"2026-09-25"}',
             },
             coep_document: { type: 'string', format: 'binary', description: 'Parecer do COEP em PDF, até 10 MB.' },
+          },
+        },
+        CreateUserByAdmin: {
+          type: 'object',
+          required: ['full_name', 'email', 'password', 'role'],
+          properties: {
+            full_name: { type: 'string', example: 'Usuário Teste' },
+            email: { type: 'string', format: 'email', example: 'usuario@niar.local' },
+            password: { type: 'string', format: 'password', minLength: 8, example: 'senha12345' },
+            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
+          },
+        },
+        CreateResearcher: {
+          type: 'object',
+          required: ['full_name', 'email', 'password', 'coep'],
+          properties: {
+            full_name: { type: 'string', example: 'Pesquisador Um' },
+            email: { type: 'string', format: 'email', example: 'pesquisador@niar.local' },
+            password: { type: 'string', format: 'password', minLength: 8, example: 'senha12345' },
+            profile: {
+              type: 'object',
+              properties: {
+                phone: { type: 'string', example: '+55 31 99999-0000' },
+                institution: { type: 'string', example: 'UFMG' },
+                organizational_unit: { type: 'string', example: 'DCC' },
+                contact_address: { type: 'string', example: 'Av. Pres. Antônio Carlos, 6627' },
+              },
+            },
+            researcher_profile: {
+              type: 'object',
+              properties: {
+                research_area: { type: 'string', example: 'Oncologia computacional' },
+                position: { type: 'string', example: 'Professor adjunto' },
+              },
+            },
+            coep: {
+              type: 'object',
+              required: ['caae', 'opinion_number', 'approval_date', 'document_filename', 'document_storage_path'],
+              properties: {
+                caae: { type: 'string', example: '12345678.9.0000.0000' },
+                opinion_number: { type: 'string', example: '4.567.890' },
+                approval_date: { type: 'string', format: 'date', example: '2026-01-15' },
+                document_filename: { type: 'string', example: 'parecer.pdf' },
+                document_storage_path: { type: 'string', example: '/exports/coep/parecer.pdf' },
+              },
+            },
+          },
+        },
+        CreateCommitteeMember: {
+          type: 'object',
+          required: ['full_name', 'email', 'password', 'specialty_id'],
+          properties: {
+            full_name: { type: 'string', example: 'Membro do Comitê' },
+            email: { type: 'string', format: 'email', example: 'comite@niar.local' },
+            password: { type: 'string', format: 'password', minLength: 8, example: 'senha-segura' },
+            specialty_id: { type: 'integer', example: 2 },
+          },
+        },
+        CreateAdministrator: {
+          type: 'object',
+          required: ['full_name', 'email', 'password'],
+          properties: {
+            full_name: { type: 'string', example: 'Administrador' },
+            email: { type: 'string', format: 'email', example: 'admin@niar.local' },
+            password: { type: 'string', format: 'password', minLength: 8, example: 'senha-segura' },
           },
         },
         UserResponse: {
