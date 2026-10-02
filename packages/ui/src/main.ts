@@ -2,6 +2,7 @@ export {
   Button,
   Link,
   Input,
+  DatePicker,
   Select,
   Card,
   Alert,
@@ -20,6 +21,7 @@ export type {
   ButtonProps,
   LinkProps,
   InputProps,
+  DatePickerProps,
   SelectProps,
   CardProps,
   AlertProps,
@@ -48,6 +50,14 @@ export {
 export type { NiarProviderProps } from "./theme/index";
 export { niar } from "./tokens/index";
 export type { NiarTokens } from "./tokens/index";
+export {
+  typographyStyle,
+  typographyStyles,
+} from "./tokens/index";
+export type {
+  TypographyStyle,
+  TypographyVariant,
+} from "./tokens/index";
 export { Dialog, Stepper, Tabs } from "./components/index";
 export type {
   DialogProps,

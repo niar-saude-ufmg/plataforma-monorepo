@@ -4,7 +4,7 @@
 :root {
   color-scheme: light;
   font-family: var(--niar-font-family);
-  line-height: 1.5;
+  line-height: var(--niar-line-height-normal);
   font-weight: var(--niar-font-weight-regular);
   color: var(--niar-colors-text-body);
   background: var(--niar-colors-surface-page);

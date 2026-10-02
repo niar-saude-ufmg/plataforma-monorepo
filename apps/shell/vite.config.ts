@@ -21,7 +21,12 @@ export default defineConfig(({ mode }) => {
           admin: env.VITE_ADMIN_REMOTE_URL || "http://localhost:4174/assets/remoteEntry.js",
           assistant: env.VITE_ASSISTENTE_REMOTE_URL || "http://localhost:4175/assets/remoteEntry.js"
         },
-        shared: ["react", "react-dom", "react-router-dom"]
+        shared: {
+          react: { requiredVersion: "^18.3.1" },
+          "react-dom": { requiredVersion: "^18.3.1" },
+          "react-router-dom": { requiredVersion: "^6.28.0" },
+          "react-redux": { requiredVersion: "^9.3.0" }
+        }
       })
     ],
       server: {

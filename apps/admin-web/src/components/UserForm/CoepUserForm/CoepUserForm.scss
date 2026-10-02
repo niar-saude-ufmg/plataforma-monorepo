@@ -1,0 +1,38 @@
+@use '@niar/ui/typography.scss' as typography;
+
+.coep-user-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-md);
+}
+
+.coep-user-form h3 {
+  @include typography.typography-subtitle;
+  margin: 0;
+  color: var(--niar-colors-text-subtitle);
+  font-weight: var(--niar-font-weight-semibold);
+}
+
+.coep-user-form__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--niar-spacing-md);
+}
+
+.coep-user-form__file-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-2xs);
+}
+
+.coep-user-form__field-error {
+  @include typography.typography-caption;
+  color: var(--niar-colors-feedback-error);
+  font-weight: var(--niar-font-weight-semibold);
+}
+
+@media (max-width: 720px) {
+  .coep-user-form__grid {
+    grid-template-columns: 1fr;
+  }
+}

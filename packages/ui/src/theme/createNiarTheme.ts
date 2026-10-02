@@ -15,7 +15,7 @@ import { stepperTheme } from "../components/Stepper/Stepper.theme";
 import { tabsTheme } from "../components/Tabs/Tabs.theme";
 import { iconButtonTheme } from "../components/IconButton/IconButton.theme";
 import { tabTheme } from "../components/Tabs/Tab.theme";
-import { niar } from "../tokens/index";
+import { niar, typographyStyle } from "../tokens/index";
 import { headerTheme } from "../components/Header/Header.theme";
 import { sidebarTheme } from "../components/Sidebar/Sidebar.theme";
 import { breadcrumbsTheme } from "../components/Breadcrumbs/Breadcrumbs.theme";
@@ -50,14 +50,14 @@ const niarThemeOptions: ThemeOptions = {
     fontWeightRegular: niar.fontWeight.regular,
     fontWeightMedium: niar.fontWeight.medium,
     fontWeightBold: niar.fontWeight.bold,
-    body1: { color: niar.colors.text.body, fontSize: niar.fontSize.body },
-    body2: { color: niar.colors.text.body, fontSize: niar.fontSize.caption },
+    body1: { ...typographyStyle("body"), color: niar.colors.text.body },
+    body2: { ...typographyStyle("caption"), color: niar.colors.text.body },
     subtitle1: {
+      ...typographyStyle("subtitle"),
       color: niar.colors.text.subtitle,
-      fontSize: niar.fontSize.subtitle,
     },
-    h1: { color: niar.colors.text.heading, fontSize: niar.fontSize.heading },
-    h2: { color: niar.colors.text.heading, fontSize: niar.fontSize.title },
+    h1: { ...typographyStyle("heading"), color: niar.colors.text.heading },
+    h2: { ...typographyStyle("title"), color: niar.colors.text.heading },
   },
   spacing: Number.parseFloat(niar.spacing.xs),
   shape: { borderRadius: Number.parseFloat(niar.radius.small) },

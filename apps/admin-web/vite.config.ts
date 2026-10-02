@@ -21,7 +21,11 @@ export default defineConfig(({ mode }) => {
         exposes: {
           "./App": "./src/App.tsx"
         },
-        shared: ["react", "react-dom"]
+        shared: {
+          react: { requiredVersion: "^18.3.1" },
+          "react-dom": { requiredVersion: "^18.3.1" },
+          "react-redux": { requiredVersion: "^9.3.0" }
+        }
       })
     ],
     server: {

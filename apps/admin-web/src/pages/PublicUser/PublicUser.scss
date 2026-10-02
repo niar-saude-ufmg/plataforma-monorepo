@@ -1,0 +1,26 @@
+@use '@niar/ui/typography.scss' as typography;
+
+.public-user-back {
+  width: min(100%, 720px);
+  margin-bottom: var(--niar-spacing-3xl);
+}
+
+.public-user-back__link {
+  @include typography.typography-body;
+  font-weight: var(--niar-font-weight-bold);
+  padding: var(--niar-spacing-2xs) 0;
+}
+
+.public-user-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-xl);
+  width: 100%;
+}
+
+.public-user-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--niar-spacing-md);
+  justify-content: flex-end;
+}

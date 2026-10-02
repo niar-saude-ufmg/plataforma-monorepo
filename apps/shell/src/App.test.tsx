@@ -166,7 +166,7 @@ describe("Shell App", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Carregando sessão...")).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Carregando sessão" })).toBeInTheDocument();
 
     await waitFor(() => {
       expect(getCurrentUser).toHaveBeenCalledWith("token-de-teste");

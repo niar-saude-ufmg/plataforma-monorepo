@@ -21,6 +21,7 @@
       "import": "./dist/tokens/index.js"
     },
     "./tokens.css": "./dist/tokens/styles/tokens.css",
+    "./typography.scss": "./dist/tokens/styles/typography.scss",
     "./theme": {
       "types": "./dist/theme/index.d.ts",
       "import": "./dist/theme/index.js"
@@ -30,12 +31,12 @@
     "**/*.css"
   ],
   "scripts": {
-    "tokens:generate": "style-dictionary build --config style-dictionary.config.json && node scripts/copy-token-css.mjs",
+    "tokens:generate": "style-dictionary build --config style-dictionary.config.json && node scripts/generate-typography.mjs && node scripts/copy-token-css.mjs",
     "build": "pnpm clean && pnpm tokens:generate && tsc -p tsconfig.build.json",
     "check": "pnpm tokens:generate && node scripts/check-tokens.mjs && tsc --noEmit",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "dev": "pnpm tokens:generate && concurrently -k -n tokens,types \"pnpm tokens:watch\" \"tsc -p tsconfig.build.json --watch --preserveWatchOutput\"",
-    "tokens:watch": "chokidar \"src/tokens/*.json\" \"style-dictionary.config.json\" -c \"pnpm tokens:generate\"",
+    "tokens:watch": "chokidar \"src/tokens/*.json\" \"style-dictionary.config.json\" \"scripts/generate-typography.mjs\" -c \"pnpm tokens:generate\"",
     "storybook": "pnpm tokens:generate && concurrently -k -n tokens,storybook \"pnpm tokens:watch\" \"storybook dev -p 6006 --no-open\"",
     "storybook:dev": "storybook dev -p 6006 --no-open",
     "storybook:build": "pnpm tokens:generate && storybook build --disable-telemetry",

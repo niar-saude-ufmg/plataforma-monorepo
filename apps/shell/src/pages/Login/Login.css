@@ -65,7 +65,7 @@
 .brand-name {
   margin: 0;
   font-size: clamp(2.5rem, 5vw, 4.8rem);
-  line-height: 1;
+  line-height: var(--niar-line-height-tight);
   font-weight: var(--niar-font-weight-bold);
   letter-spacing: -0.06em;
 }
@@ -75,14 +75,14 @@
   margin: var(--niar-spacing-md) 0 0;
   font-size: var(--niar-font-size-caption);
   font-weight: var(--niar-font-weight-semibold);
-  line-height: 1.5;
+  line-height: var(--niar-line-height-normal);
 }
 
 .brand-message {
   max-width: 32rem;
   margin: var(--niar-spacing-4xl) 0 0;
   font-size: var(--niar-font-size-subtitle);
-  line-height: 1.75;
+  line-height: var(--niar-line-height-relaxed);
   color: color-mix(in srgb, var(--niar-colors-neutral-white) 82%, transparent);
 }
 

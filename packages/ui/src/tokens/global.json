@@ -58,6 +58,14 @@
     "title": { "value": "22px", "type": "dimension" },
     "heading": { "value": "30px", "type": "dimension" }
   },
+  "lineHeight": {
+    "tight": { "value": 1.2, "type": "number" },
+    "normal": { "value": 1.5, "type": "number" },
+    "relaxed": { "value": 1.6, "type": "number" }
+  },
+  "letterSpacing": {
+    "none": { "value": "0px", "type": "dimension" }
+  },
   "shadow": {
     "card": {
       "value": "0 1px 2px rgba(15, 31, 91, 0.06), 0 8px 24px rgba(15, 31, 91, 0.06)",

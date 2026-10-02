@@ -10,11 +10,16 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
     "@niar/config": "workspace:*",
     "@niar/contracts": "workspace:*",
-    "@tanstack/react-query": "^5.51.0",
+    "@niar/ui": "workspace:*",
+    "@reduxjs/toolkit": "^2.13.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.2",
+    "react-redux": "^9.3.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@originjs/vite-plugin-federation": "^1.4.1",
@@ -25,6 +30,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^25.0.1",
+    "sass": "^1.105.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
     "vitest": "^2.1.5"
