@@ -9,17 +9,26 @@ export const projectStatusSchema = z.enum([
   "rejected"
 ]);
 
-const optionalDate = z.coerce.date().optional();
+const optionalDate = (boundary: "from" | "to") =>
+  z.preprocess(
+    (value) => {
+      if (boundary === "to" && typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return `${value}T23:59:59.999Z`;
+      }
+      return value;
+    },
+    z.coerce.date().optional()
+  );
 
 export const listProjectsQuerySchema = z
   .object({
     page: z.coerce.number().int().positive().default(1),
     page_size: z.coerce.number().int().positive().max(100).default(20),
     status: projectStatusSchema.optional(),
-    submitted_from: optionalDate,
-    submitted_to: optionalDate,
-    updated_from: optionalDate,
-    updated_to: optionalDate,
+    submitted_from: optionalDate("from"),
+    submitted_to: optionalDate("to"),
+    updated_from: optionalDate("from"),
+    updated_to: optionalDate("to"),
     researcher_id: z.coerce.number().int().positive().optional(),
     version_number: z.coerce.number().int().positive().optional(),
     document_type: z.string().trim().min(1).max(100).optional(),

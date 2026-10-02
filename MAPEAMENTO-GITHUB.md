@@ -65,6 +65,15 @@ Cadastrar no repositório:
 - `DEPLOY_SSH_KEY`
 - `PRODUCTION_ENV_FILE`
 
+O `PRODUCTION_ENV_FILE` e o conteudo inteiro do `.env.production` (modelo em `.env.production.example`). Alem das variaveis de banco e das APIs, ele precisa das variaveis do `rag-api`, usado pelo assistente LEME do site institucional:
+
+- `RAG_CORS_ORIGINS`: dominio publico, por exemplo `https://niarplataforma.duckdns.org`
+- `GOOGLE_API_KEY`: chave do Gemini usada pelo LLM do agente
+- `GOOGLE_GENAI_API_KEY`: chave do Gemini usada nos embeddings
+- `QDRANT_URL` e `QDRANT_API_KEY`: banco vetorial com a colecao `niar_rag_documents` ja indexada
+
+Sem essas chaves o site sobe normalmente, mas o chat do `/assistant` falha ao responder.
+
 ### 3.2. Chave publica na VM
 
 A chave publica correspondente ao secret `DEPLOY_SSH_KEY` precisa estar em:

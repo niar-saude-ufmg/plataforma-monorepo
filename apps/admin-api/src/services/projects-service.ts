@@ -1,6 +1,6 @@
 import { constants } from "node:fs";
-import { access } from "node:fs/promises";
-import { basename, resolve } from "node:path";
+import { access, realpath } from "node:fs/promises";
+import { basename, isAbsolute, relative, resolve, sep } from "node:path";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
 import { projectsRepository, type ProjectListFilter, type ProjectRecord } from "../repositories/projects-repository.js";
@@ -13,6 +13,34 @@ const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
   needs_changes: "Precisa de alterações",
   approved: "Aprovado",
   rejected: "Rejeitado"
+};
+
+const DEFAULT_EXPORTS_DIR = resolve(process.cwd(), "apps/assistente-api/.local/exports");
+
+const exportsDirectory = () => resolve(process.env.EXPORTS_DIR ?? DEFAULT_EXPORTS_DIR);
+
+const isWithinDirectory = (directory: string, candidate: string) => {
+  const relativePath = relative(directory, candidate);
+  return relativePath !== "" && relativePath !== ".." && !relativePath.startsWith(`..${sep}`) && !isAbsolute(relativePath);
+};
+
+const safeDocumentPath = async (storagePath: string) => {
+  try {
+    const rootPath = await realpath(exportsDirectory());
+    const requestedPath = isAbsolute(storagePath)
+      ? resolve(storagePath)
+      : resolve(rootPath, storagePath);
+    const filePath = await realpath(requestedPath);
+
+    if (!isWithinDirectory(rootPath, filePath)) {
+      throw new Error("Documento fora do diretório de exports");
+    }
+
+    await access(filePath, constants.R_OK);
+    return filePath;
+  } catch {
+    throw new AppError("Arquivo do documento não encontrado", 404);
+  }
 };
 
 const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUser): ProjectResponse => ({
@@ -101,12 +129,7 @@ export const projectsService = {
       throw new AppError("Este tipo de documento não está disponível para o perfil autenticado", 403);
     }
 
-    const filePath = resolve(document.storagePath);
-    try {
-      await access(filePath, constants.R_OK);
-    } catch {
-      throw new AppError("Arquivo do documento não encontrado", 404);
-    }
+    const filePath = await safeDocumentPath(document.storagePath);
 
     return {
       filePath,

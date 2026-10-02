@@ -43,10 +43,70 @@ const meta = {
         "Função que retorna o conteúdo exibido ao expandir uma linha, inclusive uma segunda Table para detalhes relacionados.",
       table: { category: "PROPS", type: { summary: "(row: T) => ReactNode" } },
     },
+    expandedRows: {
+      description:
+        "Linhas atualmente expandidas quando a tabela usa o recurso collapsible.",
+      table: {
+        category: "PROPS",
+        type: { summary: "readonly T[]" },
+        defaultValue: { summary: "[]" },
+      },
+    },
+    onExpandChange: {
+      description:
+        "Callback chamado quando o usuário solicita a expansão ou o recolhimento de uma linha.",
+      table: {
+        category: "EVENTS",
+        type: { summary: "(row: T) => void" },
+      },
+    },
     selectable: {
       control: "boolean",
       description: "Exibe checkboxes para selecionar linhas.",
       table: { category: "PROPS", defaultValue: { summary: "false" } },
+    },
+    selectedRows: {
+      description:
+        "Linhas atualmente selecionadas quando a tabela usa seleção controlada.",
+      table: {
+        category: "PROPS",
+        type: { summary: "readonly T[]" },
+        defaultValue: { summary: "[]" },
+      },
+    },
+    selectAllChecked: {
+      description:
+        "Controla se o checkbox de seleção de todas as linhas aparece marcado.",
+      table: {
+        category: "PROPS",
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
+      },
+    },
+    selectAllIndeterminate: {
+      description:
+        "Exibe o checkbox de seleção de todas as linhas no estado indeterminado.",
+      table: {
+        category: "PROPS",
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
+      },
+    },
+    onSelectionChange: {
+      description:
+        "Callback chamado quando a seleção de uma linha é alterada.",
+      table: {
+        category: "EVENTS",
+        type: { summary: "(row: T, selected: boolean) => void" },
+      },
+    },
+    onSelectAllChange: {
+      description:
+        "Callback chamado quando o checkbox de seleção de todas as linhas é alterado.",
+      table: {
+        category: "EVENTS",
+        type: { summary: "(selected: boolean) => void" },
+      },
     },
     border: {
       control: "boolean",
@@ -329,7 +389,7 @@ export const Selecting: Story = {
           "A propriedade selectable adiciona seleção individual e seleção de todas as linhas com Checkbox do MUI.",
       },
       source: {
-        code: 'const [selectedRows, setSelectedRows] = useState([]);\n\n<Table\n  columns={columns}\n  rows={rows}\n  selectable\n  selectedRows={selectedRows}\n  onSelectionChange={(row, checked) => setSelectedRows(checked ? [...selectedRows, row] : selectedRows.filter((item) => item.name !== row.name))}\n/>',
+        code: 'const [selectedRows, setSelectedRows] = useState([]);\n\n<Table\n  columns={columns}\n  rows={rows}\n  selectable\n  selectedRows={selectedRows}\n  selectAllChecked={selectedRows.length === rows.length}\n  selectAllIndeterminate={selectedRows.length > 0 && selectedRows.length < rows.length}\n  onSelectionChange={(row, checked) => setSelectedRows(checked ? [...selectedRows, row] : selectedRows.filter((item) => item.name !== row.name))}\n  onSelectAllChange={(checked) => setSelectedRows(checked ? rows : [])}\n/>',
       },
     },
   },
@@ -380,26 +440,45 @@ export const Pagination: Story = {
   },
 };
 
+function CollapsibleExample() {
+  const [expandedRows, setExpandedRows] = useState<typeof rows[number][]>([]);
+
+  const toggleExpanded = (row: typeof rows[number]) => {
+    setExpandedRows((current) =>
+      current.some((expandedRow) => expandedRow.name === row.name)
+        ? current.filter((expandedRow) => expandedRow.name !== row.name)
+        : [...current, row],
+    );
+  };
+
+  return (
+    <Table
+      columns={plainColumns}
+      rows={rows}
+      collapsible={(row) => (
+        <Table
+          size="small"
+          columns={[
+            { key: "field", label: "Campo" },
+            { key: "value", label: "Valor" },
+          ]}
+          rows={[
+            { field: "Projeto", value: row.name },
+            { field: "Responsável", value: "Usuário NIAR" },
+            { field: "Última atualização", value: row.updated },
+          ]}
+          aria-label={`Detalhes de ${row.name}`}
+        />
+      )}
+      expandedRows={expandedRows}
+      onExpandChange={toggleExpanded}
+    />
+  );
+}
+
 export const Collapsible: Story = {
-  args: {
-    columns: plainColumns,
-    rows,
-    collapsible: (row) => (
-      <Table
-        size="small"
-        columns={[
-          { key: "field", label: "Campo" },
-          { key: "value", label: "Valor" },
-        ]}
-        rows={[
-          { field: "Projeto", value: row.name },
-          { field: "Responsável", value: "Usuário NIAR" },
-          { field: "Última atualização", value: row.updated },
-        ]}
-        aria-label={`Detalhes de ${row.name}`}
-      />
-    ),
-  },
+  args: { columns: plainColumns, rows },
+  render: () => <CollapsibleExample />,
   parameters: {
     controls: { disable: true },
     docs: {
@@ -408,7 +487,7 @@ export const Collapsible: Story = {
           "A propriedade collapsible usa Collapse do MUI e pode renderizar uma segunda Table com os detalhes relacionados.",
       },
       source: {
-        code: "<Table columns={columns} rows={rows} collapsible={(row) => <Table columns={detailColumns} rows={getDetails(row)} />} />",
+        code: 'const [expandedRows, setExpandedRows] = useState([]);\n\n<Table\n  columns={columns}\n  rows={rows}\n  collapsible={(row) => <Table columns={detailColumns} rows={getDetails(row)} />}\n  expandedRows={expandedRows}\n  onExpandChange={(row) => setExpandedRows((current) => current.includes(row) ? current.filter((item) => item !== row) : [...current, row])}\n/>',
       },
     },
   },

@@ -6,6 +6,7 @@ import type { UserRole } from "@niar/contracts";
 import type { ProjectListFilter, ProjectRecord } from "../src/repositories/projects-repository.js";
 
 process.env.SECRET_KEY = "test-secret";
+process.env.EXPORTS_DIR = "/tmp";
 
 type StoredUser = {
   id: number;
@@ -177,6 +178,23 @@ describe("GET /api/admin/projects", () => {
     );
   });
 
+  it("considera o dia inteiro quando o limite superior é uma data sem horário", async () => {
+    findUserById.mockResolvedValueOnce(authUser(20, "admin"));
+    findAll.mockResolvedValueOnce([]);
+
+    const response = await request(app)
+      .get("/api/admin/projects?submitted_to=2026-09-30&updated_to=2026-09-30")
+      .set("Authorization", `Bearer ${tokenFor(20)}`);
+
+    expect(response.status).toBe(200);
+    expect(findAll).toHaveBeenCalledWith(
+      expect.objectContaining({
+        submittedTo: new Date("2026-09-30T23:59:59.999Z"),
+        updatedTo: new Date("2026-09-30T23:59:59.999Z")
+      })
+    );
+  });
+
   it("retorna histórico único e documentos por versão sem expor caminho interno", async () => {
     findUserById.mockResolvedValueOnce(authUser(30, "committee"));
     findAll.mockResolvedValueOnce([projectRecord()]);
@@ -344,5 +362,16 @@ describe("GET /api/admin/projects/:projectId/documents/:documentId/download", ()
 
     expect(response.status).toBe(404);
     expect(findDocument).toHaveBeenCalledWith(99, 101, 10);
+  });
+
+  it("não baixa arquivos fora do diretório de exports", async () => {
+    findUserById.mockResolvedValueOnce(authUser(20, "admin"));
+    findDocument.mockResolvedValueOnce({ ...record("data_card"), storagePath: "/etc/passwd" });
+
+    const response = await request(app)
+      .get("/api/admin/projects/42/documents/101/download")
+      .set("Authorization", `Bearer ${tokenFor(20)}`);
+
+    expect(response.status).toBe(404);
   });
 });

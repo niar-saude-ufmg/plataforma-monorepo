@@ -27,9 +27,59 @@ export type UserListFilter = {
   pageSize: number;
 };
 
+// Formato de entrada do cadastro público. Nomes em camelCase pq é assim que as colunas aparecem no Prisma; a tradução do snake_case que chega na requisição acontece no service.
+export type CreateResearcherData = {
+  fullName: string;
+  email: string;
+  hashedPassword: string;
+  profile: {
+    phone: string;
+    institution: string;
+    organizationalUnit: string;
+    contactAddress: string;
+  };
+  researcherProfile: {
+    researchArea: string;
+    position: string;
+  };
+  coep: {
+    caae: string;
+    opinionNumber: string;
+    approvalDate: Date;
+    documentFilename: string;
+    documentStoragePath: string;
+  };
+};
+
+export type CreatedResearcherRecord = {
+  user: {
+    id: number;
+    email: string;
+    fullName: string;
+    role: UserRole;
+    accountStatus: "pending" | "active" | "rejected" | "disabled";
+    createdAt: Date;
+  };
+  profile: {
+    phone: string | null;
+    institution: string | null;
+    organizationalUnit: string | null;
+    contactAddress: string | null;
+  };
+  researcherProfile: {
+    researchArea: string | null;
+    position: string | null;
+  };
+  coep: {
+    caae: string;
+    opinionNumber: string;
+    approvalDate: Date;
+    documentFilename: string;
+  };
+};
+
 export const usersRepository = {
-  // Única camada que acessa o Prisma/banco. Service e controller não sabem
-  // que existe um Postgres por trás disso.
+  // Única camada que acessa o Prisma/banco. Service e controller não sabem que existe um Postgres por trás disso.
   findAll: (filter: UserListFilter): Promise<UserListRecord[]> =>
     prisma.user.findMany({
       select: userListSelect,
@@ -45,5 +95,36 @@ export const usersRepository = {
   findById: (id: number) => prisma.user.findUnique({ where: { id } }),
 
   create: (data: { fullName: string; email: string; hashedPassword: string; role?: UserRole }) =>
-    prisma.user.create({ data })
+    prisma.user.create({ data }),
+
+// Cadastro público: o pesquisador só existe junto com perfil, dados acadêmicos e parecer do COEP. prisma.$transaction executa os quatro INSERTs como uma operação só — se qualquer um falhar, o banco desfaz todos e nenhum registro pela metade fica para trás.
+  createResearcherWithProfile: (data: CreateResearcherData): Promise<CreatedResearcherRecord> =>
+    prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          fullName: data.fullName,
+          email: data.email,
+          hashedPassword: data.hashedPassword,
+          role: "researcher",
+          accountStatus: "active"
+        }
+      });
+
+      const profile = await tx.userProfile.create({
+        data: { userId: user.id, ...data.profile }
+      });
+
+      const researcherProfile = await tx.researcherProfile.create({
+        data: { userId: user.id, ...data.researcherProfile }
+      });
+
+      const coep = await tx.userCoepData.create({
+        data: {
+          userId: user.id,
+          ...data.coep
+        }
+      });
+
+      return { user, profile, researcherProfile, coep };
+    })
 };

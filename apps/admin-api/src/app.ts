@@ -1,5 +1,6 @@
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
+import multer from "multer";
 import { ZodError } from "zod";
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './swagger.js';
@@ -34,6 +35,10 @@ app.use("/api/admin/projects", projectsRouter);
 app.use((error: unknown, _request: Request, response: Response, next: NextFunction) => {
   if (response.headersSent) {
     next(error);
+    return;
+  }
+  if (error instanceof multer.MulterError) {
+    response.status(400).json({ error: "Arquivo inválido ou maior que o limite permitido" });
     return;
   }
   if (error instanceof ZodError) {
