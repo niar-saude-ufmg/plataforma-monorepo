@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors/app-error.js";
 import {
   createPublicUserSchema,
-  createUserByAdminSchema,
   listUsersQuerySchema,
   createAdministratorSchema,
   createCommitteeMemberSchema,
@@ -29,16 +28,6 @@ export const usersController = {
     try {
       const data = createPublicUserSchema.parse(request.body);
       const user = await usersService.createUser(data);
-      response.status(201).json(user);
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  createByAdmin: async (request: Request, response: Response, next: NextFunction) => {
-    try {
-      const data = createUserByAdminSchema.parse(request.body);
-      const user = await usersService.createUserByAdmin(data);
       response.status(201).json(user);
     } catch (error) {
       next(error);

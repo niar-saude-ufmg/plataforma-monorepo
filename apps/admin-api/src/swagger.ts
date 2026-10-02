@@ -26,16 +26,6 @@ const options = {
             password: { type: 'string', format: 'password', minLength: 8, example: 'senha12345' },
           },
         },
-        CreateUserByAdmin: {
-          type: 'object',
-          required: ['full_name', 'email', 'password', 'role'],
-          properties: {
-            full_name: { type: 'string', example: 'Usuário Teste' },
-            email: { type: 'string', format: 'email', example: 'usuario@niar.local' },
-            password: { type: 'string', format: 'password', minLength: 8, example: 'senha12345' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
-          },
-        },
         CreateResearcher: {
           type: 'object',
           required: ['full_name', 'email', 'password', 'coep'],
