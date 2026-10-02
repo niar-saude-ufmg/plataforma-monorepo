@@ -21,7 +21,7 @@ niarplataforma.duckdns.org {
 
 	# Rotas e assets da shell (APP_ROUTES em packages/config + build do Vite).
 	# Ao criar uma rota nova na shell, inclua-a aqui.
-	@shell path /login /login/* /cadastro/*/admin /admin/* /assistente /assistente/* /identidade-visual /identidade-visual/* /design-system /design-system/* /storybook /storybook/* /assets/*
+	@shell path /login /login/* /cadastro/* /admin /admin/* /assistente /assistente/* /identidade-visual /identidade-visual/* /design-system /design-system/* /storybook /storybook/* /assets/*
 	handle @shell {
 		reverse_proxy shell:80
 	}
