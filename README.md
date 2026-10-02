@@ -370,7 +370,7 @@ Os fluxos reais ficam acessíveis por:
 | Aplicação | Endereço local | Observação |
 | --- | --- | --- |
 | site institucional | `http://localhost:5176` | SvelteKit estático; em produção responde em `/` |
-| shell | `http://localhost:5173` | `/login`, `/sala-segura`, `/admin`, `/assistente`, `/identidade-visual` |
+| shell | `http://localhost:5173` | `/login`, `/cadastro/pesquisador`, `/admin`, `/assistente`, `/identidade-visual` (`/sala-segura` redireciona para a página do site) |
 | `admin-api` | `http://localhost:3333` | prefixo `/api/admin` |
 | `assistente-api` | `http://localhost:8000` | prefixo `/api/assistente` |
 | `rag-api` | `http://localhost:8001` | prefixo `/api/rag`, usado pelo assistente LEME do site (`/leme`) |

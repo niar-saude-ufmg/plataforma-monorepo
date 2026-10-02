@@ -14,7 +14,6 @@ import { APP_ROUTES, APP_TITLES } from "@niar/config";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DesignSystemPage } from "./pages/DesignSystemPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
-import { SalaSeguraPage } from "./pages/SalaSeguraPage";
 import { SITE_URL } from "./site";
 import { AuthenticatedUser, getCurrentUser, login as loginRequest } from "./services/auth-api";
 
@@ -144,12 +143,12 @@ function LoginPage({
   );
 }
 
-// Em produção o Caddy serve o site em "/" e esta rota nunca chega à shell;
-// em dev (shell em :5173) ela leva ao site, que roda em outra porta.
-function RedirectToSite() {
+// Em produção o Caddy serve o site em "/" (e em "/sala-segura") e estas rotas nunca
+// chegam à shell; em dev (shell em :5173) elas levam ao site, que roda em outra porta.
+function RedirectToSite({ path = "" }: { path?: string }) {
   useEffect(() => {
-    window.location.replace(SITE_URL);
-  }, []);
+    window.location.replace(`${SITE_URL.replace(/\/$/, "")}/${path}`);
+  }, [path]);
 
   return <RemoteLoading label="site institucional" />;
 }
@@ -250,7 +249,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path={APP_ROUTES.salaSegura} element={<SalaSeguraPage />} />
+        {/* A página da Sala Segura mora no site institucional; o cadastro continua aqui. */}
+        <Route path={APP_ROUTES.salaSegura} element={<RedirectToSite path="sala-segura/" />} />
         <Route path={APP_ROUTES.home} element={<RedirectToSite />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>}

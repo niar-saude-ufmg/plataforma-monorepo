@@ -83,16 +83,27 @@ describe("Shell App", () => {
     expect(screen.getByTitle("Design System NIAR")).toHaveAttribute("src", "http://localhost:6006");
   });
 
-  it("renderiza a Sala Segura sem exigir login", () => {
-    render(
-      <MemoryRouter initialEntries={["/sala-segura"]}>
-        <App />
-      </MemoryRouter>
-    );
+  it("leva a Sala Segura para a página do site institucional sem exigir login", async () => {
+    const originalLocation = window.location;
+    const locationReplaceMock = vi.fn();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...originalLocation, replace: locationReplaceMock }
+    });
 
-    expect(screen.getByRole("heading", { name: /pesquisas que exigem governança/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Cadastrar-se como pesquisador" })).toHaveAttribute("href", "/cadastro/pesquisador");
-    expect(screen.getByRole("link", { name: "Usar o assistente" })).toHaveAttribute("href", "/assistente");
+    try {
+      render(
+        <MemoryRouter initialEntries={["/sala-segura"]}>
+          <App />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(locationReplaceMock).toHaveBeenCalledWith(expect.stringMatching(/\/sala-segura\/$/));
+      });
+    } finally {
+      Object.defineProperty(window, "location", { configurable: true, value: originalLocation });
+    }
   });
 
   it("mostra 404 em rotas desconhecidas da shell", () => {
