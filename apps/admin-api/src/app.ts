@@ -1,5 +1,6 @@
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
+import multer from "multer";
 import { ZodError } from "zod";
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './swagger.js';
@@ -30,6 +31,11 @@ app.use("/api/admin/specialties", specialtiesRouter);
 // nunca do texto da mensagem. Fica depois de todas as rotas de propósito
 // (é assim que o Express reconhece um error handler).
 app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
+  if (error instanceof multer.MulterError) {
+    response.status(400).json({ error: "Arquivo inválido ou maior que o limite permitido" });
+    return;
+  }
+
   if (error instanceof ZodError) {
     response.status(400).json({ errors: error.errors });
     return;
