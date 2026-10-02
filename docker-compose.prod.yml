@@ -30,7 +30,7 @@ services:
       PORT: 3333
       EXPORTS_DIR: /data/exports
     volumes:
-      - assistente-exports:/data/exports:ro
+      - assistente-exports:/data/exports
     depends_on:
       postgres:
         condition: service_healthy
