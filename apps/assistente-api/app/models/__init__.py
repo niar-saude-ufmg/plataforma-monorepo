@@ -565,6 +565,7 @@ class ProjectStatusHistory(Base):
 
 
 class CommitteeEvaluationResult(str, enum.Enum):
+    to_review = "to_review"
     approved = "approved"
     needs_changes = "needs_changes"
     rejected = "rejected"
@@ -588,10 +589,10 @@ class CommitteeEvaluation(Base):
     responsible_member_user_id: Mapped[int] = mapped_column(
         ForeignKey("committee_member_profiles.user_id", ondelete="RESTRICT")
     )
-    result: Mapped[CommitteeEvaluationResult] = mapped_column(
-        COMMITTEE_EVALUATION_RESULT_ENUM
+    result: Mapped[Optional[CommitteeEvaluationResult]] = mapped_column(
+        COMMITTEE_EVALUATION_RESULT_ENUM, nullable=True
     )
-    justification: Mapped[str] = mapped_column(Text)
+    justification: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     evaluated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

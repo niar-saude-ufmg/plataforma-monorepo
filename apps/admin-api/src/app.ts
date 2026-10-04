@@ -6,6 +6,7 @@ import { swaggerSpec } from './swagger.js';
 import { AppError } from "./errors/app-error.js";
 import { adminRouter } from "./routes/admin.js";
 import { authRouter } from "./routes/auth.js";
+import { committeeEvaluationsRouter } from "./routes/committee-evaluations.js";
 import { healthRouter } from "./routes/health.js";
 import { specialtiesRouter } from "./routes/specialties.js";
 import { usersRouter } from "./routes/users.js";
@@ -25,6 +26,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/admin/users", usersRouter);
 app.use("/api/admin/auth", authRouter);
 app.use("/api/admin/specialties", specialtiesRouter);
+app.use("/api/admin/project-versions", committeeEvaluationsRouter);
 
 // Handler central de erro: decide o status HTTP a partir do tipo do erro,
 // nunca do texto da mensagem. Fica depois de todas as rotas de propósito
