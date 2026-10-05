@@ -1,6 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors/app-error.js";
-import { createPublicUserSchema, createUserByAdminSchema, listUsersQuerySchema } from "../schemas/user-schema.js";
+import {
+  listUsersQuerySchema,
+  createAdministratorSchema,
+  createCommitteeMemberSchema,
+  createResearcherSchema
+} from "../schemas/user-schema.js";
 import { usersService } from "../services/users-service.js";
 
 const parseMultipartJsonField = (value: unknown, fieldName: string) => {
@@ -15,7 +20,7 @@ const parseMultipartJsonField = (value: unknown, fieldName: string) => {
   }
 };
 
-const parsePublicUserRequest = (request: Request) => {
+const parseResearcherMultipartRequest = (request: Request) => {
   if (!request.file) {
     throw new AppError("O documento do COEP é obrigatório", 400);
   }
@@ -27,7 +32,7 @@ const parsePublicUserRequest = (request: Request) => {
   );
   const coep = parseMultipartJsonField(request.body.coep, "coep");
 
-  return createPublicUserSchema.parse({
+  return createResearcherSchema.parse({
     full_name: request.body.full_name,
     email: request.body.email,
     password: request.body.password,
@@ -57,7 +62,7 @@ export const usersController = {
 
   create: async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const data = parsePublicUserRequest(request);
+      const data = parseResearcherMultipartRequest(request);
       const user = await usersService.createUser(data, request.file!);
       response.status(201).json(user);
     } catch (error) {
@@ -65,10 +70,39 @@ export const usersController = {
     }
   },
 
-  createByAdmin: async (request: Request, response: Response, next: NextFunction) => {
+  createResearcher: async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const data = createUserByAdminSchema.parse(request.body);
-      const user = await usersService.createUserByAdmin(data);
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+      const data = parseResearcherMultipartRequest(request);
+      const user = await usersService.createResearcher(data, request.file!, request.user.id);
+      response.status(201).json(user);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  createCommitteeMember: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+      const data = createCommitteeMemberSchema.parse(request.body);
+      const user = await usersService.createCommitteeMember(data, request.user!.id);
+      response.status(201).json(user);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  createAdministrator: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+      const data = createAdministratorSchema.parse(request.body);
+      const user = await usersService.createAdministrator(data, request.user!.id);
       response.status(201).json(user);
     } catch (error) {
       next(error);

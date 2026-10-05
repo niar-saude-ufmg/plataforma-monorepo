@@ -26,10 +26,35 @@ const findById = jest.fn<(id: number) => Promise<StoredUser | null>>();
 const createResearcherWithProfile = jest.fn<
   (data: { coep: { documentStoragePath: string } }) => Promise<CreatedResearcher>
 >();
+const createResearcher = jest.fn<(
+  data: { coep: { documentStoragePath: string } },
+  audit: { actorUserId: number; role: UserRole; email: string },
+) => Promise<StoredUser>>();
+const createCommitteeMember = jest.fn<(
+  data: unknown,
+  audit: { actorUserId: number; role: UserRole; email: string },
+) => Promise<StoredUser>>();
+const createAdministrator = jest.fn<(
+  data: unknown,
+  audit: { actorUserId: number; role: UserRole; email: string },
+) => Promise<StoredUser>>();
+const findSpecialtyById = jest.fn<(id: number) => Promise<{ id: number; isActive: boolean } | null>>();
 
 // Mesma técnica usada em users.list.test.ts: mocka o repository antes de qualquer coisa importar o app, pra n depender de um Postgres real.
 jest.unstable_mockModule("../src/repositories/users-repository.js", () => ({
-  usersRepository: { findByEmail, create, findById, createResearcherWithProfile }
+  usersRepository: {
+    findByEmail,
+    create,
+    findById,
+    createResearcher,
+    createCommitteeMember,
+    createAdministrator,
+    createResearcherWithProfile
+  }
+}));
+
+jest.unstable_mockModule("../src/repositories/specialties-repository.js", () => ({
+  specialtiesRepository: { findById: findSpecialtyById }
 }));
 
 const { app } = await import("../src/app.js");
@@ -124,11 +149,43 @@ const publicRequest = (payload: PublicPayload = validPayload(), attachDocument =
   return requestBuilder.attach("coep_document", Buffer.from("%PDF-1.7\nfixture pdf"), filename);
 };
 
+const researcherRequest = (
+  payload: PublicPayload = validPayload(),
+  userId = 10,
+  attachDocument = true,
+  filename = "parecer-coep.pdf",
+) => {
+  const requestBuilder = request(app)
+    .post("/api/admin/users/researchers")
+    .set("Authorization", `Bearer ${tokenFor(userId)}`)
+    .field("full_name", payload.full_name)
+    .field("email", payload.email)
+    .field("password", payload.password);
+
+  if (payload.profile) {
+    requestBuilder.field("profile", JSON.stringify(payload.profile));
+  }
+  if (payload.researcher_profile) {
+    requestBuilder.field("researcher_profile", JSON.stringify(payload.researcher_profile));
+  }
+  if (payload.coep) {
+    requestBuilder.field("coep", JSON.stringify(payload.coep));
+  }
+
+  if (!attachDocument) {
+    return requestBuilder;
+  }
+
+  return requestBuilder.attach("coep_document", Buffer.from("%PDF-1.7\nfixture pdf"), filename);
+};
+
 const tokenFor = (userId: number) => jwt.sign({ sub: String(userId) }, process.env.SECRET_KEY!, { algorithm: "HS256" });
 
 afterAll(() => {
   rmSync(exportsDirectory, { recursive: true, force: true });
 });
+
+const buildAdmin = (id = 10) => buildStoredUser({ id, role: "admin" });
 
 describe("POST /api/admin/users (público)", () => {
   beforeEach(() => {
@@ -352,75 +409,307 @@ describe("POST /api/admin/users (público)", () => {
   });
 });
 
-describe("POST /api/admin/users/internal (protegido)", () => {
+describe("POST /api/admin/users/researchers", () => {
   beforeEach(() => {
     findByEmail.mockReset();
-    create.mockReset();
     findById.mockReset();
+    createResearcher.mockReset();
+  });
+
+  it("admin autenticado cria pesquisador aprovado e armazena o COEP", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+    findByEmail.mockResolvedValueOnce(null);
+    createResearcher.mockResolvedValueOnce(
+      buildStoredUser({
+        id: 30,
+        role: "researcher",
+        email: validPayload().email,
+        fullName: validPayload().full_name,
+      })
+    );
+
+    const response = await researcherRequest();
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      full_name: validPayload().full_name,
+      email: validPayload().email,
+      role: "researcher",
+      is_active: true,
+    });
+    expect(response.body).not.toHaveProperty("password");
+    expect(response.body).not.toHaveProperty("hashed_password");
+
+    expect(createResearcher).toHaveBeenCalledWith(
+      expect.objectContaining({
+        coep: expect.objectContaining({
+          documentFilename: "parecer-coep.pdf",
+          documentStoragePath: expect.stringMatching(
+            new RegExp(`${exportsDirectory}/coep/usuarios/[a-f0-9-]+\\.pdf`),
+          ),
+        }),
+        evaluation: expect.objectContaining({
+          status: "active",
+          evaluatedByUserId: 10,
+        }),
+      }),
+      { actorUserId: 10, role: "researcher", email: validPayload().email },
+    );
+
+    const storedPath = createResearcher.mock.calls[0]![0].coep.documentStoragePath;
+    expect(existsSync(storedPath)).toBe(true);
+    expect(readFileSync(storedPath, "ascii")).toContain("%PDF-");
   });
 
   it("retorna 401 sem autenticação", async () => {
-    const response = await request(app).post("/api/admin/users/internal").send({
-      full_name: "Novo Admin",
-      email: "novo-admin@niar.local",
-      password: "senha12345",
-      role: "admin"
-    });
+    const response = await request(app).post("/api/admin/users/researchers");
 
     expect(response.status).toBe(401);
-    expect(create).not.toHaveBeenCalled();
+    expect(createResearcher).not.toHaveBeenCalled();
   });
 
-  it("researcher autenticado não consegue usar o cadastro protegido", async () => {
+  it("researcher autenticado não pode criar pesquisador", async () => {
     findById.mockResolvedValueOnce(buildStoredUser({ id: 20, role: "researcher" }));
 
-    const response = await request(app)
-      .post("/api/admin/users/internal")
-      .set("Authorization", `Bearer ${tokenFor(20)}`)
-      .send({ full_name: "X", email: "x@niar.local", password: "senha12345", role: "committee" });
+    const response = await researcherRequest(validPayload(), 20);
 
     expect(response.status).toBe(403);
-    expect(create).not.toHaveBeenCalled();
+    expect(createResearcher).not.toHaveBeenCalled();
   });
 
-  it("committee autenticado não consegue usar o cadastro protegido", async () => {
+  it("committee autenticado não pode criar pesquisador", async () => {
     findById.mockResolvedValueOnce(buildStoredUser({ id: 21, role: "committee" }));
 
-    const response = await request(app)
-      .post("/api/admin/users/internal")
-      .set("Authorization", `Bearer ${tokenFor(21)}`)
-      .send({ full_name: "X", email: "x@niar.local", password: "senha12345", role: "researcher" });
+    const response = await researcherRequest(validPayload(), 21);
 
     expect(response.status).toBe(403);
-    expect(create).not.toHaveBeenCalled();
+    expect(createResearcher).not.toHaveBeenCalled();
   });
 
-  it("admin autenticado consegue criar um committee", async () => {
-    findById.mockResolvedValueOnce(buildStoredUser({ id: 10, role: "admin" }));
+  it("retorna 400 para payload incompleto", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+
+    const response = await researcherRequest({ full_name: "X", email: "x@niar.local", password: "" });
+
+    expect(response.status).toBe(400);
+    expect(createResearcher).not.toHaveBeenCalled();
+  });
+
+  it("retorna 409 para e-mail duplicado", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+    findByEmail.mockResolvedValueOnce(buildStoredUser({ email: validPayload().email }));
+
+    const response = await researcherRequest();
+
+    expect(response.status).toBe(409);
+    expect(createResearcher).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/admin/users/committee-members", () => {
+  const validPayload = {
+    full_name: "Membro do Comitê",
+    email: "comite@niar.local",
+    password: "senha12345",
+    specialty_id: 2,
+  };
+
+  beforeEach(() => {
+    findByEmail.mockReset();
+    findById.mockReset();
+    createCommitteeMember.mockReset();
+    findSpecialtyById.mockReset();
+  });
+
+  it("admin autenticado cria membro do comitê e gera audit log", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
     findByEmail.mockResolvedValueOnce(null);
-    create.mockResolvedValueOnce(buildStoredUser({ id: 30, role: "committee", email: "comite@niar.local" }));
+    findSpecialtyById.mockResolvedValueOnce({ id: 2, isActive: true });
+    createCommitteeMember.mockResolvedValueOnce(
+      buildStoredUser({
+        id: 31,
+        role: "committee",
+        email: validPayload.email,
+        fullName: validPayload.full_name,
+      })
+    );
 
     const response = await request(app)
-      .post("/api/admin/users/internal")
+      .post("/api/admin/users/committee-members")
       .set("Authorization", `Bearer ${tokenFor(10)}`)
-      .send({ full_name: "Membro do Comitê", email: "comite@niar.local", password: "senha12345", role: "committee" });
+      .send(validPayload);
 
     expect(response.status).toBe(201);
     expect(response.body.role).toBe("committee");
-    expect(create).toHaveBeenCalledWith(expect.objectContaining({ role: "committee" }));
+    expect(response.body).not.toHaveProperty("password");
+    expect(response.body).not.toHaveProperty("hashed_password");
+
+    expect(createCommitteeMember).toHaveBeenCalledWith(
+      expect.objectContaining({
+        committeeMemberProfile: { specialtyId: validPayload.specialty_id },
+      }),
+      { actorUserId: 10, role: "committee", email: validPayload.email },
+    );
   });
 
-  it("admin autenticado consegue criar outro admin", async () => {
-    findById.mockResolvedValueOnce(buildStoredUser({ id: 10, role: "admin" }));
-    findByEmail.mockResolvedValueOnce(null);
-    create.mockResolvedValueOnce(buildStoredUser({ id: 31, role: "admin", email: "outro-admin@niar.local" }));
+  it("retorna 401 sem autenticação", async () => {
+    const response = await request(app)
+      .post("/api/admin/users/committee-members")
+      .send(validPayload);
+
+    expect(response.status).toBe(401);
+    expect(createCommitteeMember).not.toHaveBeenCalled();
+  });
+
+  it("researcher autenticado não pode criar membro do comitê", async () => {
+    findById.mockResolvedValueOnce(buildStoredUser({ id: 20, role: "researcher" }));
+    findSpecialtyById.mockResolvedValueOnce({ id: 2, isActive: true });
 
     const response = await request(app)
-      .post("/api/admin/users/internal")
+      .post("/api/admin/users/committee-members")
+      .set("Authorization", `Bearer ${tokenFor(20)}`)
+      .send(validPayload);
+
+    expect(response.status).toBe(403);
+    expect(createCommitteeMember).not.toHaveBeenCalled();
+  });
+
+  it("retorna 400 quando specialty_id não existe", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+    findSpecialtyById.mockResolvedValueOnce(null);
+
+    const response = await request(app)
+      .post("/api/admin/users/committee-members")
       .set("Authorization", `Bearer ${tokenFor(10)}`)
-      .send({ full_name: "Outro Gestor", email: "outro-admin@niar.local", password: "senha12345", role: "admin" });
+      .send(validPayload);
+
+    expect(response.status).toBe(400);
+    expect(createCommitteeMember).not.toHaveBeenCalled();
+  });
+
+  it("retorna 400 quando especialidade está inativa", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+    findSpecialtyById.mockResolvedValueOnce({ id: 2, isActive: false });
+
+    const response = await request(app)
+      .post("/api/admin/users/committee-members")
+      .set("Authorization", `Bearer ${tokenFor(10)}`)
+      .send(validPayload);
+
+    expect(response.status).toBe(400);
+    expect(createCommitteeMember).not.toHaveBeenCalled();
+  });
+
+  it("retorna 400 para payload incompleto (sem specialty_id)", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+
+    const { specialty_id, ...incomplete } = validPayload;
+    const response = await request(app)
+      .post("/api/admin/users/committee-members")
+      .set("Authorization", `Bearer ${tokenFor(10)}`)
+      .send(incomplete);
+
+    expect(response.status).toBe(400);
+    expect(createCommitteeMember).not.toHaveBeenCalled();
+  });
+
+  it("retorna 409 para e-mail duplicado", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+    findSpecialtyById.mockResolvedValueOnce({ id: 2, isActive: true });
+    findByEmail.mockResolvedValueOnce(buildStoredUser({ email: validPayload.email }));
+
+    const response = await request(app)
+      .post("/api/admin/users/committee-members")
+      .set("Authorization", `Bearer ${tokenFor(10)}`)
+      .send(validPayload);
+
+    expect(response.status).toBe(409);
+    expect(createCommitteeMember).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/admin/users/administrators", () => {
+  const validPayload = {
+    full_name: "Administrador",
+    email: "admin2@niar.local",
+    password: "senha12345",
+  };
+
+  beforeEach(() => {
+    findByEmail.mockReset();
+    findById.mockReset();
+    createAdministrator.mockReset();
+  });
+
+  it("admin autenticado cria administrador e gera audit log", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+    findByEmail.mockResolvedValueOnce(null);
+    createAdministrator.mockResolvedValueOnce(
+      buildStoredUser({ id: 32, role: "admin", email: validPayload.email, fullName: validPayload.full_name })
+    );
+
+    const response = await request(app)
+      .post("/api/admin/users/administrators")
+      .set("Authorization", `Bearer ${tokenFor(10)}`)
+      .send(validPayload);
 
     expect(response.status).toBe(201);
     expect(response.body.role).toBe("admin");
+    expect(response.body).not.toHaveProperty("password");
+    expect(response.body).not.toHaveProperty("hashed_password");
+
+    expect(createAdministrator).toHaveBeenCalledWith(
+      expect.objectContaining({
+        role: "admin",
+        accountStatus: "active",
+      }),
+      { actorUserId: 10, role: "admin", email: validPayload.email },
+    );
+  });
+
+  it("retorna 401 sem autenticação", async () => {
+    const response = await request(app)
+      .post("/api/admin/users/administrators")
+      .send(validPayload);
+
+    expect(response.status).toBe(401);
+    expect(createAdministrator).not.toHaveBeenCalled();
+  });
+
+  it("committee autenticado não pode criar administrador", async () => {
+    findById.mockResolvedValueOnce(buildStoredUser({ id: 21, role: "committee" }));
+
+    const response = await request(app)
+      .post("/api/admin/users/administrators")
+      .set("Authorization", `Bearer ${tokenFor(21)}`)
+      .send(validPayload);
+
+    expect(response.status).toBe(403);
+    expect(createAdministrator).not.toHaveBeenCalled();
+  });
+
+  it("retorna 400 para payload incompleto", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+
+    const response = await request(app)
+      .post("/api/admin/users/administrators")
+      .set("Authorization", `Bearer ${tokenFor(10)}`)
+      .send({ email: "x@niar.local" }); // sem full_name e password
+
+    expect(response.status).toBe(400);
+    expect(createAdministrator).not.toHaveBeenCalled();
+  });
+
+  it("retorna 409 para e-mail duplicado", async () => {
+    findById.mockResolvedValueOnce(buildAdmin(10));
+    findByEmail.mockResolvedValueOnce(buildStoredUser({ email: validPayload.email }));
+
+    const response = await request(app)
+      .post("/api/admin/users/administrators")
+      .set("Authorization", `Bearer ${tokenFor(10)}`)
+      .send(validPayload);
+
+    expect(response.status).toBe(409);
+    expect(createAdministrator).not.toHaveBeenCalled();
   });
 });
