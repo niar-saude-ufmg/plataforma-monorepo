@@ -26,11 +26,19 @@ const findById = jest.fn<(id: number) => Promise<StoredUser | null>>();
 const createResearcherWithProfile = jest.fn<
   (data: { coep: { documentStoragePath: string } }) => Promise<CreatedResearcher>
 >();
-const createResearcher = jest.fn<() => Promise<StoredUser>>();
-const createCommitteeMember = jest.fn<() => Promise<StoredUser>>();
-const createAdministrator = jest.fn<() => Promise<StoredUser>>();
+const createResearcher = jest.fn<(
+  data: { coep: { documentStoragePath: string } },
+  audit: { actorUserId: number; role: UserRole; email: string },
+) => Promise<StoredUser>>();
+const createCommitteeMember = jest.fn<(
+  data: unknown,
+  audit: { actorUserId: number; role: UserRole; email: string },
+) => Promise<StoredUser>>();
+const createAdministrator = jest.fn<(
+  data: unknown,
+  audit: { actorUserId: number; role: UserRole; email: string },
+) => Promise<StoredUser>>();
 const findSpecialtyById = jest.fn<(id: number) => Promise<{ id: number; isActive: boolean } | null>>();
-const auditCreate = jest.fn<() => Promise<unknown>>();
 
 // Mesma técnica usada em users.list.test.ts: mocka o repository antes de qualquer coisa importar o app, pra n depender de um Postgres real.
 jest.unstable_mockModule("../src/repositories/users-repository.js", () => ({
@@ -43,10 +51,6 @@ jest.unstable_mockModule("../src/repositories/users-repository.js", () => ({
     createAdministrator,
     createResearcherWithProfile
   }
-}));
-
-jest.unstable_mockModule("../src/repositories/audit-repository.js", () => ({
-  auditRepository: { create: auditCreate }
 }));
 
 jest.unstable_mockModule("../src/repositories/specialties-repository.js", () => ({
@@ -124,6 +128,36 @@ type PublicPayload = {
 const publicRequest = (payload: PublicPayload = validPayload(), attachDocument = true, filename = "parecer-coep.pdf") => {
   const requestBuilder = request(app)
     .post("/api/admin/users")
+    .field("full_name", payload.full_name)
+    .field("email", payload.email)
+    .field("password", payload.password);
+
+  if (payload.profile) {
+    requestBuilder.field("profile", JSON.stringify(payload.profile));
+  }
+  if (payload.researcher_profile) {
+    requestBuilder.field("researcher_profile", JSON.stringify(payload.researcher_profile));
+  }
+  if (payload.coep) {
+    requestBuilder.field("coep", JSON.stringify(payload.coep));
+  }
+
+  if (!attachDocument) {
+    return requestBuilder;
+  }
+
+  return requestBuilder.attach("coep_document", Buffer.from("%PDF-1.7\nfixture pdf"), filename);
+};
+
+const researcherRequest = (
+  payload: PublicPayload = validPayload(),
+  userId = 10,
+  attachDocument = true,
+  filename = "parecer-coep.pdf",
+) => {
+  const requestBuilder = request(app)
+    .post("/api/admin/users/researchers")
+    .set("Authorization", `Bearer ${tokenFor(userId)}`)
     .field("full_name", payload.full_name)
     .field("email", payload.email)
     .field("password", payload.password);
@@ -376,84 +410,68 @@ describe("POST /api/admin/users (público)", () => {
 });
 
 describe("POST /api/admin/users/researchers", () => {
-  const validPayload = {
-    full_name: "Pesquisador Teste",
-    email: "pesquisador@niar.local",
-    password: "senha12345",
-    profile: {},
-    researcher_profile: {},
-    coep: {
-      caae: "12345678.9.0000.0000",
-      opinion_number: "4.567.890",
-      approval_date: "2026-01-15",
-      document_filename: "parecer.pdf",
-      document_storage_path: "/exports/coep/parecer.pdf",
-    },
-  };
-
   beforeEach(() => {
     findByEmail.mockReset();
     findById.mockReset();
     createResearcher.mockReset();
-    auditCreate.mockReset();
   });
 
-  it("admin autenticado cria pesquisador e gera audit log associado ao admin", async () => {
+  it("admin autenticado cria pesquisador aprovado e armazena o COEP", async () => {
     findById.mockResolvedValueOnce(buildAdmin(10));
     findByEmail.mockResolvedValueOnce(null);
     createResearcher.mockResolvedValueOnce(
       buildStoredUser({
         id: 30,
         role: "researcher",
-        email: validPayload.email,
-        fullName: validPayload.full_name,
+        email: validPayload().email,
+        fullName: validPayload().full_name,
       })
     );
 
-    const response = await request(app)
-      .post("/api/admin/users/researchers")
-      .set("Authorization", `Bearer ${tokenFor(10)}`)
-      .send(validPayload);
+    const response = await researcherRequest();
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
-      full_name: validPayload.full_name,
-      email: validPayload.email,
+      full_name: validPayload().full_name,
+      email: validPayload().email,
       role: "researcher",
       is_active: true,
     });
     expect(response.body).not.toHaveProperty("password");
     expect(response.body).not.toHaveProperty("hashed_password");
 
-    // audit log
-    expect(auditCreate).toHaveBeenCalledTimes(1);
-    expect(auditCreate).toHaveBeenCalledWith(
+    expect(createResearcher).toHaveBeenCalledWith(
       expect.objectContaining({
-        userId: 10,
-        action: "create_researcher",
-        resourceType: "user",
-        resourceId: "30",
-      })
+        coep: expect.objectContaining({
+          documentFilename: "parecer-coep.pdf",
+          documentStoragePath: expect.stringMatching(
+            new RegExp(`${exportsDirectory}/coep/usuarios/[a-f0-9-]+\\.pdf`),
+          ),
+        }),
+        evaluation: expect.objectContaining({
+          status: "active",
+          evaluatedByUserId: 10,
+        }),
+      }),
+      { actorUserId: 10, role: "researcher", email: validPayload().email },
     );
+
+    const storedPath = createResearcher.mock.calls[0]![0].coep.documentStoragePath;
+    expect(existsSync(storedPath)).toBe(true);
+    expect(readFileSync(storedPath, "ascii")).toContain("%PDF-");
   });
 
   it("retorna 401 sem autenticação", async () => {
-    const response = await request(app)
-      .post("/api/admin/users/researchers")
-      .send(validPayload);
+    const response = await request(app).post("/api/admin/users/researchers");
 
     expect(response.status).toBe(401);
     expect(createResearcher).not.toHaveBeenCalled();
-    expect(auditCreate).not.toHaveBeenCalled();
   });
 
   it("researcher autenticado não pode criar pesquisador", async () => {
     findById.mockResolvedValueOnce(buildStoredUser({ id: 20, role: "researcher" }));
 
-    const response = await request(app)
-      .post("/api/admin/users/researchers")
-      .set("Authorization", `Bearer ${tokenFor(20)}`)
-      .send(validPayload);
+    const response = await researcherRequest(validPayload(), 20);
 
     expect(response.status).toBe(403);
     expect(createResearcher).not.toHaveBeenCalled();
@@ -462,10 +480,7 @@ describe("POST /api/admin/users/researchers", () => {
   it("committee autenticado não pode criar pesquisador", async () => {
     findById.mockResolvedValueOnce(buildStoredUser({ id: 21, role: "committee" }));
 
-    const response = await request(app)
-      .post("/api/admin/users/researchers")
-      .set("Authorization", `Bearer ${tokenFor(21)}`)
-      .send(validPayload);
+    const response = await researcherRequest(validPayload(), 21);
 
     expect(response.status).toBe(403);
     expect(createResearcher).not.toHaveBeenCalled();
@@ -474,10 +489,7 @@ describe("POST /api/admin/users/researchers", () => {
   it("retorna 400 para payload incompleto", async () => {
     findById.mockResolvedValueOnce(buildAdmin(10));
 
-    const response = await request(app)
-      .post("/api/admin/users/researchers")
-      .set("Authorization", `Bearer ${tokenFor(10)}`)
-      .send({ full_name: "X", email: "x@niar.local" }); // sem password nem coep
+    const response = await researcherRequest({ full_name: "X", email: "x@niar.local", password: "" });
 
     expect(response.status).toBe(400);
     expect(createResearcher).not.toHaveBeenCalled();
@@ -485,12 +497,9 @@ describe("POST /api/admin/users/researchers", () => {
 
   it("retorna 409 para e-mail duplicado", async () => {
     findById.mockResolvedValueOnce(buildAdmin(10));
-    findByEmail.mockResolvedValueOnce(buildStoredUser({ email: validPayload.email }));
+    findByEmail.mockResolvedValueOnce(buildStoredUser({ email: validPayload().email }));
 
-    const response = await request(app)
-      .post("/api/admin/users/researchers")
-      .set("Authorization", `Bearer ${tokenFor(10)}`)
-      .send(validPayload);
+    const response = await researcherRequest();
 
     expect(response.status).toBe(409);
     expect(createResearcher).not.toHaveBeenCalled();
@@ -510,7 +519,6 @@ describe("POST /api/admin/users/committee-members", () => {
     findById.mockReset();
     createCommitteeMember.mockReset();
     findSpecialtyById.mockReset();
-    auditCreate.mockReset();
   });
 
   it("admin autenticado cria membro do comitê e gera audit log", async () => {
@@ -536,13 +544,11 @@ describe("POST /api/admin/users/committee-members", () => {
     expect(response.body).not.toHaveProperty("password");
     expect(response.body).not.toHaveProperty("hashed_password");
 
-    expect(auditCreate).toHaveBeenCalledTimes(1);
-    expect(auditCreate).toHaveBeenCalledWith(
+    expect(createCommitteeMember).toHaveBeenCalledWith(
       expect.objectContaining({
-        userId: 10,
-        action: "create_committee_member",
-        resourceId: "31",
-      })
+        committeeMemberProfile: { specialtyId: validPayload.specialty_id },
+      }),
+      { actorUserId: 10, role: "committee", email: validPayload.email },
     );
   });
 
@@ -632,8 +638,7 @@ describe("POST /api/admin/users/administrators", () => {
   beforeEach(() => {
     findByEmail.mockReset();
     findById.mockReset();
-    create.mockReset();
-    auditCreate.mockReset();
+    createAdministrator.mockReset();
   });
 
   it("admin autenticado cria administrador e gera audit log", async () => {
@@ -653,13 +658,12 @@ describe("POST /api/admin/users/administrators", () => {
     expect(response.body).not.toHaveProperty("password");
     expect(response.body).not.toHaveProperty("hashed_password");
 
-    expect(auditCreate).toHaveBeenCalledTimes(1);
-    expect(auditCreate).toHaveBeenCalledWith(
+    expect(createAdministrator).toHaveBeenCalledWith(
       expect.objectContaining({
-        userId: 10,
-        action: "create_administrator",
-        resourceId: "32",
-      })
+        role: "admin",
+        accountStatus: "active",
+      }),
+      { actorUserId: 10, role: "admin", email: validPayload.email },
     );
   });
 
@@ -669,7 +673,7 @@ describe("POST /api/admin/users/administrators", () => {
       .send(validPayload);
 
     expect(response.status).toBe(401);
-    expect(create).not.toHaveBeenCalled();
+    expect(createAdministrator).not.toHaveBeenCalled();
   });
 
   it("committee autenticado não pode criar administrador", async () => {
@@ -681,7 +685,7 @@ describe("POST /api/admin/users/administrators", () => {
       .send(validPayload);
 
     expect(response.status).toBe(403);
-    expect(create).not.toHaveBeenCalled();
+    expect(createAdministrator).not.toHaveBeenCalled();
   });
 
   it("retorna 400 para payload incompleto", async () => {
@@ -693,7 +697,7 @@ describe("POST /api/admin/users/administrators", () => {
       .send({ email: "x@niar.local" }); // sem full_name e password
 
     expect(response.status).toBe(400);
-    expect(create).not.toHaveBeenCalled();
+    expect(createAdministrator).not.toHaveBeenCalled();
   });
 
   it("retorna 409 para e-mail duplicado", async () => {
@@ -706,6 +710,6 @@ describe("POST /api/admin/users/administrators", () => {
       .send(validPayload);
 
     expect(response.status).toBe(409);
-    expect(create).not.toHaveBeenCalled();
+    expect(createAdministrator).not.toHaveBeenCalled();
   });
 });

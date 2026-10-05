@@ -1,4 +1,6 @@
-import { prisma } from '@niar/database';
+import { Prisma, prisma } from '@niar/database';
+
+type AuditDatabaseClient = Prisma.TransactionClient | typeof prisma;
 
 export const auditRepository = {
   create: (data: {
@@ -8,5 +10,5 @@ export const auditRepository = {
     resourceId: string;
     details?: string;
     ipAddress?: string;
-  }) => prisma.auditLog.create({ data }),
+  }, client: AuditDatabaseClient = prisma) => client.auditLog.create({ data }),
 };

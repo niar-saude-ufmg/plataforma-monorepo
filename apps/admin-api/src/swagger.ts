@@ -46,38 +46,29 @@ const options = {
         },
         CreateResearcher: {
           type: 'object',
-          required: ['full_name', 'email', 'password', 'coep'],
+          description:
+            'Cadastro administrativo de pesquisador. Usa o mesmo contrato multipart do cadastro público, mas cria a conta ativa e registra a aprovação inicial pelo admin autenticado.',
+          required: ['full_name', 'email', 'password', 'profile', 'researcher_profile', 'coep', 'coep_document'],
           properties: {
             full_name: { type: 'string', example: 'Pesquisador Um' },
             email: { type: 'string', format: 'email', example: 'pesquisador@niar.local' },
             password: { type: 'string', format: 'password', minLength: 8, example: 'senha12345' },
             profile: {
-              type: 'object',
-              properties: {
-                phone: { type: 'string', example: '+55 31 99999-0000' },
-                institution: { type: 'string', example: 'UFMG' },
-                organizational_unit: { type: 'string', example: 'DCC' },
-                contact_address: { type: 'string', example: 'Av. Pres. Antônio Carlos, 6627' },
-              },
+              type: 'string',
+              description: 'JSON com phone, institution, organizational_unit e contact_address.',
+              example: '{"phone":"+55 31 99999-0000","institution":"UFMG","organizational_unit":"DCC","contact_address":"Av. Pres. Antônio Carlos, 6627"}',
             },
             researcher_profile: {
-              type: 'object',
-              properties: {
-                research_area: { type: 'string', example: 'Oncologia computacional' },
-                position: { type: 'string', example: 'Professor adjunto' },
-              },
+              type: 'string',
+              description: 'JSON com research_area e position.',
+              example: '{"research_area":"Oncologia computacional","position":"Professor adjunto"}',
             },
             coep: {
-              type: 'object',
-              required: ['caae', 'opinion_number', 'approval_date', 'document_filename', 'document_storage_path'],
-              properties: {
-                caae: { type: 'string', example: '12345678.9.0000.0000' },
-                opinion_number: { type: 'string', example: '4.567.890' },
-                approval_date: { type: 'string', format: 'date', example: '2026-01-15' },
-                document_filename: { type: 'string', example: 'parecer.pdf' },
-                document_storage_path: { type: 'string', example: '/exports/coep/parecer.pdf' },
-              },
+              type: 'string',
+              description: 'JSON com caae, opinion_number e approval_date no formato YYYY-MM-DD. O nome do arquivo vem de coep_document.',
+              example: '{"caae":"12345678.9.0000.0000","opinion_number":"4.567.890","approval_date":"2026-01-15"}',
             },
+            coep_document: { type: 'string', format: 'binary', description: 'Parecer do COEP em PDF, até 10 MB.' },
           },
         },
         CreateCommitteeMember: {

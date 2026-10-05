@@ -1,5 +1,6 @@
-import { prisma, user_account_status } from "@niar/database";
+import { Prisma, prisma, user_account_status } from "@niar/database";
 import type { UserRole } from "@niar/contracts";
+import { auditRepository } from "./audit-repository.js";
 
 // hashedPassword fica de fora de propósito: como o select já não busca o
 // campo, ele nunca existe em memória nas camadas acima (service/controller),
@@ -27,6 +28,24 @@ export type UserListFilter = {
   page: number;
   pageSize: number;
 };
+
+type RegistrationAudit = {
+  actorUserId: number;
+  role: UserRole;
+  email: string;
+};
+
+const createRegistrationAudit = (
+  tx: Prisma.TransactionClient,
+  user: { id: number },
+  audit: RegistrationAudit,
+) => auditRepository.create({
+  userId: audit.actorUserId,
+  action: "create_user",
+  resourceType: "user",
+  resourceId: String(user.id),
+  details: `Created ${audit.role} user with email ${audit.email}`,
+}, tx);
 
 // Formato de entrada do cadastro público. Nomes em camelCase pq é assim que as colunas aparecem no Prisma; a tradução do snake_case que chega na requisição acontece no service.
 export type CreateResearcherData = {
@@ -130,14 +149,20 @@ export const usersRepository = {
     prisma.user.create({ data }),
 
   // * mantive uma separação de create por garantia
-  createAdministrator: (data: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status }) =>
-    prisma.user.create({ data }),
+  createAdministrator: (
+    data: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status },
+    audit: RegistrationAudit,
+  ) => prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({ data });
+    await createRegistrationAudit(tx, user, audit);
+    return user;
+  }),
 
   createCommitteeMember: (data: {
     user: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status };
     committeeMemberProfile: { specialtyId: number };
     evaluation?: { evaluatedByUserId: number, status: user_account_status; evaluatedAt?: Date };
-  }) =>
+  }, audit: RegistrationAudit) =>
     prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: data.user
@@ -158,6 +183,7 @@ export const usersRepository = {
           specialtyId: data.committeeMemberProfile.specialtyId,
         },
       });
+      await createRegistrationAudit(tx, user, audit);
       return user;
     }),
 
@@ -167,7 +193,7 @@ export const usersRepository = {
       researcherProfile?: { researchArea?: string; position?: string };
       coep: { caae: string; opinionNumber: string; approvalDate: Date; documentFilename: string; documentStoragePath: string };
       evaluation?: { evaluatedByUserId: number, status: user_account_status; evaluatedAt?: Date };
-    }) =>
+    }, audit: RegistrationAudit) =>
       prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
           data: data.user
@@ -196,6 +222,7 @@ export const usersRepository = {
             },
           });
         }
+        await createRegistrationAudit(tx, user, audit);
         return user;
       }),
 };

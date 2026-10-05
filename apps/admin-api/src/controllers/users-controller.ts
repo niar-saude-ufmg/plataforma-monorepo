@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors/app-error.js";
 import {
-  createPublicUserSchema,
   listUsersQuerySchema,
   createAdministratorSchema,
   createCommitteeMemberSchema,
@@ -21,7 +20,7 @@ const parseMultipartJsonField = (value: unknown, fieldName: string) => {
   }
 };
 
-const parsePublicUserRequest = (request: Request) => {
+const parseResearcherMultipartRequest = (request: Request) => {
   if (!request.file) {
     throw new AppError("O documento do COEP é obrigatório", 400);
   }
@@ -33,7 +32,7 @@ const parsePublicUserRequest = (request: Request) => {
   );
   const coep = parseMultipartJsonField(request.body.coep, "coep");
 
-  return createPublicUserSchema.parse({
+  return createResearcherSchema.parse({
     full_name: request.body.full_name,
     email: request.body.email,
     password: request.body.password,
@@ -63,7 +62,7 @@ export const usersController = {
 
   create: async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const data = parsePublicUserRequest(request);
+      const data = parseResearcherMultipartRequest(request);
       const user = await usersService.createUser(data, request.file!);
       response.status(201).json(user);
     } catch (error) {
@@ -76,8 +75,8 @@ export const usersController = {
       if (!request.user) {
         throw new AppError("Não autenticado", 401);
       }
-      const data = createResearcherSchema.parse(request.body);
-      const user = await usersService.createResearcher(data, request.user!.id);
+      const data = parseResearcherMultipartRequest(request);
+      const user = await usersService.createResearcher(data, request.file!, request.user.id);
       response.status(201).json(user);
     } catch (error) {
       next(error);

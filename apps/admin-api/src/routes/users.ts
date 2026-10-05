@@ -6,7 +6,7 @@ import { authenticate, restrictTo } from "../middlewares/auth.js";
 export const usersRouter = Router();
 
 // Montado em "/api/admin/users" no app.ts, então isso vira
-// GET/POST /api/admin/users e POST /api/admin/users/internal.
+// GET/POST /api/admin/users e as rotas administrativas específicas abaixo.
 
 /**
  * @swagger
@@ -85,7 +85,7 @@ usersRouter.post("/", uploadCoepDocument, usersController.create);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             $ref: '#/components/schemas/CreateResearcher'
  *     responses:
@@ -104,7 +104,13 @@ usersRouter.post("/", uploadCoepDocument, usersController.create);
  *       409:
  *         description: E-mail já cadastrado
  */
-usersRouter.post("/researchers", authenticate, restrictTo("admin"), usersController.createResearcher);
+usersRouter.post(
+  "/researchers",
+  authenticate,
+  restrictTo("admin"),
+  uploadCoepDocument,
+  usersController.createResearcher
+);
 
 /**
  * @swagger

@@ -10,7 +10,6 @@ import {
 } from "./coep-document-storage.js";
 
 import { specialtiesRepository } from "../repositories/specialties-repository.js";
-import { auditRepository } from "../repositories/audit-repository.js";
 import {
   CreateAdministratorInput,
   CreateCommitteeMemberInput,
@@ -181,41 +180,53 @@ export const usersService = {
 
   createResearcher: async (
     data: CreateResearcherInput,
+    document: UploadedCoepDocument,
     adminId: number,
   ): Promise<UserResponse> => {
     const { hashedPassword } = await prepareUserData(data.email, data.password);
 
-    const user = await usersRepository.createResearcher({
-      user: {
-        fullName: data.full_name,
-        email: data.email,
-        hashedPassword,
-        role: "researcher",
-        accountStatus: "active",
-      },
-      profile: data.profile,
-      researcherProfile: data.researcher_profile,
-      coep: {
-        caae: data.coep.caae,
-        opinionNumber: data.coep.opinion_number,
-        approvalDate: data.coep.approval_date,
-        documentFilename: data.coep.document_filename,
-        documentStoragePath: data.coep.document_storage_path,
-      },
-      evaluation: {
-        status: "active",
-        evaluatedByUserId: adminId,
-        evaluatedAt: new Date(),
-      },
-    });
+    const storedDocument = await storeCoepDocument(document);
+    let user;
 
-    await auditRepository.create({
-      userId: adminId,
-      action: "create_researcher",
-      resourceType: "user",
-      resourceId: String(user.id),
-      details: `Created researcher user with email ${user.email}`,
-    });
+    try {
+      user = await usersRepository.createResearcher(
+        {
+          user: {
+            fullName: data.full_name,
+            email: data.email,
+            hashedPassword,
+            role: "researcher",
+            accountStatus: "active",
+          },
+          profile: {
+            phone: data.profile.phone,
+            institution: data.profile.institution,
+            organizationalUnit: data.profile.organizational_unit,
+            contactAddress: data.profile.contact_address,
+          },
+          researcherProfile: {
+            researchArea: data.researcher_profile.research_area,
+            position: data.researcher_profile.position,
+          },
+          coep: {
+            caae: data.coep.caae,
+            opinionNumber: data.coep.opinion_number,
+            approvalDate: new Date(`${data.coep.approval_date}T00:00:00.000Z`),
+            documentFilename: storedDocument.filename,
+            documentStoragePath: storedDocument.storagePath,
+          },
+          evaluation: {
+            status: "active",
+            evaluatedByUserId: adminId,
+            evaluatedAt: new Date(),
+          },
+        },
+        { actorUserId: adminId, role: "researcher", email: data.email },
+      );
+    } catch (error) {
+      await removeStoredCoepDocument(storedDocument.storagePath);
+      throw error;
+    }
 
     return toUserResponse(user);
   },
@@ -231,29 +242,24 @@ export const usersService = {
 
     const { hashedPassword } = await prepareUserData(data.email, data.password);
 
-    const user = await usersRepository.createCommitteeMember({
-      user: {
-        fullName: data.full_name,
-        email: data.email,
-        hashedPassword,
-        role: "committee",
-        accountStatus: "active",
+    const user = await usersRepository.createCommitteeMember(
+      {
+        user: {
+          fullName: data.full_name,
+          email: data.email,
+          hashedPassword,
+          role: "committee",
+          accountStatus: "active",
+        },
+        committeeMemberProfile: { specialtyId: data.specialty_id },
+        evaluation: {
+          status: "active",
+          evaluatedByUserId: adminId,
+          evaluatedAt: new Date(),
+        },
       },
-      committeeMemberProfile: { specialtyId: data.specialty_id },
-      evaluation: {
-        status: "active",
-        evaluatedByUserId: adminId,
-        evaluatedAt: new Date(),
-      },
-    });
-
-    await auditRepository.create({
-      userId: adminId,
-      action: "create_committee_member",
-      resourceType: "user",
-      resourceId: String(user.id),
-      details: `Created commitee member user with email ${user.email}`,
-    });
+      { actorUserId: adminId, role: "committee", email: data.email },
+    );
 
     return toUserResponse(user);
   },
@@ -264,21 +270,16 @@ export const usersService = {
   ): Promise<UserResponse> => {
     const { hashedPassword } = await prepareUserData(data.email, data.password);
 
-    const user = await usersRepository.createAdministrator({
-      fullName: data.full_name,
-      email: data.email,
-      hashedPassword,
-      role: "admin",
-      accountStatus: "active",
-    });
-
-    await auditRepository.create({
-      userId: adminId,
-      action: "create_administrator",
-      resourceType: "user",
-      resourceId: String(user.id),
-      details: `Created administrator user with email ${user.email}`,
-    });
+    const user = await usersRepository.createAdministrator(
+      {
+        fullName: data.full_name,
+        email: data.email,
+        hashedPassword,
+        role: "admin",
+        accountStatus: "active",
+      },
+      { actorUserId: adminId, role: "admin", email: data.email },
+    );
 
     return toUserResponse(user);
   },

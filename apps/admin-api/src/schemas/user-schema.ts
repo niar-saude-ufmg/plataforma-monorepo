@@ -44,30 +44,12 @@ export const createPublicUserSchema = z.object({
 
 export type CreatePublicUserInput = z.infer<typeof createPublicUserSchema>;
 
-export const createResearcherSchema = z.object({
-  full_name: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(8),
-  profile: z.object({
-    phone: z.string().optional(),
-    institution: z.string().optional(),
-    organizational_unit: z.string().optional(),
-    contact_address: z.string().optional(),
-  }),
-  researcher_profile: z.object({
-    research_area: z.string().optional(),
-    position: z.string().optional(),
-  }),
-  coep: z.object({
-    caae: z.string().min(1).max(50),
-    opinion_number: z.string().min(1).max(50),
-    approval_date: z.coerce.date(),
-    document_filename: z.string().min(1).max(255),
-    document_storage_path: z.string().min(1),
-  }),
-});
+// O cadastro administrativo do pesquisador usa exatamente o mesmo contrato
+// de dados do cadastro público. A diferença de fluxo (conta ativa e avaliação
+// inicial aprovada pelo admin) fica no service, nunca no payload do cliente.
+export const createResearcherSchema = createPublicUserSchema;
 
-export type CreateResearcherInput = z.infer<typeof createResearcherSchema>;
+export type CreateResearcherInput = CreatePublicUserInput;
 
 export const createCommitteeMemberSchema = z.object({
   full_name: z.string().min(1),
