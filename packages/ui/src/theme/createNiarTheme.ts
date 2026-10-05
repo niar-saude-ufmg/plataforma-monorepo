@@ -35,6 +35,26 @@ const niarThemeOptions: ThemeOptions = {
       main: niar.colors.action.secondary,
       contrastText: niar.colors.action.onSecondary,
     },
+    success: {
+      main: niar.colors.feedback.success,
+      light: niar.colors.feedback.successSurface,
+      contrastText: niar.colors.base.white,
+    },
+    warning: {
+      main: niar.colors.feedback.warning,
+      light: niar.colors.feedback.warningSurface,
+      contrastText: niar.colors.base.white,
+    },
+    error: {
+      main: niar.colors.feedback.error,
+      light: niar.colors.feedback.errorSurface,
+      contrastText: niar.colors.base.white,
+    },
+    info: {
+      main: niar.colors.feedback.info,
+      light: niar.colors.feedback.infoSurface,
+      contrastText: niar.colors.base.white,
+    },
     background: {
       default: niar.colors.surface.page,
       paper: niar.colors.surface.card,

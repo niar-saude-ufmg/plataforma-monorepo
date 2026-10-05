@@ -2,14 +2,14 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { z } from 'zod';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useNiarForm } from './use-niar-form';
+import { useForm } from './use-form';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Informe o nome.'),
 });
 
 function FormHarness({ onSubmit }: { onSubmit: (values: { name: string }) => void }) {
-  const form = useNiarForm({
+  const form = useForm({
     schema,
     defaultValues: { name: 'Nome inicial' },
   });
@@ -25,7 +25,30 @@ function FormHarness({ onSubmit }: { onSubmit: (values: { name: string }) => voi
   );
 }
 
-describe('useNiarForm', () => {
+function ApiErrorHarness() {
+  const form = useForm({
+    schema,
+    defaultValues: { name: '' },
+  });
+
+  return (
+    <>
+      <input aria-label="Nome" {...form.register('name')} />
+      {form.fieldError('name') ? <span role="alert">{form.fieldError('name')}</span> : null}
+      {form.formState.errors.root?.message ? <span>{form.formState.errors.root.message}</span> : null}
+      <button
+        onClick={() => form.applyApiFieldErrors({
+          message: 'Revise os dados.',
+          fieldErrors: { name: 'Nome já utilizado.' },
+        })}
+      >
+        Aplicar erro
+      </button>
+    </>
+  );
+}
+
+describe('useForm', () => {
   afterEach(cleanup);
 
   it('aplica os valores padrão e encaminha os valores validados', async () => {
@@ -48,5 +71,15 @@ describe('useNiarForm', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('Informe o nome.');
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('distribui erros de validação da API para o campo', async () => {
+    render(<ApiErrorHarness />);
+
+    // A mensagem geral da API pertence ao estado da requisição no Redux.
+    // O formulário só recebe os erros específicos dos campos.
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Aplicar erro' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Nome já utilizado.');
   });
 });

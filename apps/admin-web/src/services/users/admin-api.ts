@@ -144,6 +144,27 @@ export function toCreateUserFormData(input: CreateUserInput) {
   return formData;
 }
 
+export async function createUserRequest(input: CreateUserInput): Promise<User> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${getAdminApiBaseUrl()}/users`, {
+      method: 'POST',
+      body: toCreateUserFormData(input),
+    });
+  } catch {
+    throw normalizeUserApiError('FETCH_ERROR', undefined);
+  }
+
+  const body = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    throw normalizeUserApiError(response.status, body);
+  }
+
+  return toUser(body as CreateUserApiResponse);
+}
+
 export function normalizeUserApiError(
   status: number | string,
   body: unknown,

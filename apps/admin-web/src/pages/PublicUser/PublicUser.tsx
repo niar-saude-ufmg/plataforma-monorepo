@@ -1,10 +1,16 @@
 import { APP_ROUTES } from '@niar/config';
-import { USER_ROLE_LABELS, type UserRole } from '@niar/contracts';
-import { Alert, Button, Card, Form, Icon, Link, PageIntro, StatusChip } from '@niar/ui';
-import { useState } from 'react';
-import { useController, type ControllerRenderProps } from 'react-hook-form';
-import { useNiarForm } from '../../hooks/forms/use-niar-form';
-import { useCreateUserMutation } from '../../store/users/users.api';
+import { Button, Form, Icon, Link, Snackbar } from '@niar/ui';
+import { useEffect, useState } from 'react';
+import { getApiErrorMessage } from '../../hooks/forms/use-form/use-form';
+import { usePublicUserForm, DEFAULT_PUBLIC_USER_VALUES } from '../../hooks/forms/use-public-user-form/use-public-user-form';
+import { textFieldProps } from '../../hooks/forms/utils/props';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { createUser } from '../../store/users/users.api';
+import {
+  clearUsersError,
+  selectError,
+  selectIsLoading,
+} from '../../store/users/users.slice';
 import type {
   ApiError,
   CoepUserFormFields,
@@ -12,7 +18,6 @@ import type {
   ResearcherProfileFormFields,
   SharedUserFormFields,
   User,
-  UserTextField,
 } from '../../types/user.types';
 import { CoepUserForm } from '../../components/UserForm/CoepUserForm/CoepUserForm';
 import { ResearcherProfileForm } from '../../components/UserForm/ResearcherProfileForm/ResearcherProfileForm';
@@ -20,90 +25,34 @@ import { SharedUserForm } from '../../components/UserForm/SharedUserForm/SharedU
 import { RegistrationApprovalDialog } from '../../components/RegistrationApprovalDialog/RegistrationApprovalDialog';
 import './PublicUser.scss';
 import {
-  researcherRegistrationSchema,
   type ResearcherRegistrationValues,
 } from './PublicUser.validators';
 import { formatBrazilianPhone } from './PublicUser.formatters';
 
-type UsersPageProps = {
-  mode?: 'admin' | 'public';
-  currentUser?: {
-    name: string;
-    email: string;
-    role: UserRole;
-  };
-};
-
-const DEFAULT_VALUES: ResearcherRegistrationValues = {
-  fullName: '',
-  email: '',
-  password: '',
-  passwordConfirmation: '',
-  phone: '',
-  institution: '',
-  organizationalUnit: '',
-  contactAddress: '',
-  researchArea: '',
-  position: '',
-  caae: '',
-  opinionNumber: '',
-  approvalDate: '',
-  coepDocument: undefined as unknown as File,
-};
-
-function isApiError(value: unknown): value is ApiError {
-  return typeof value === 'object' && value !== null && 'message' in value;
-}
-
-function textFieldProps<TName extends keyof ResearcherRegistrationValues>(
-  field: ControllerRenderProps<ResearcherRegistrationValues, TName>,
-  error?: string,
-  formatValue?: (value: string) => string,
-): UserTextField {
-  return {
-    name: field.name,
-    value: String(field.value ?? ''),
-    onChange: formatValue
-      ? (event) => field.onChange(formatValue(event.target.value))
-      : field.onChange,
-    onBlur: field.onBlur,
-    error: Boolean(error),
-    helperText: error,
-  };
-}
-
-function RegistrationForm({ onCreated }: { onCreated?: (user: User) => void }) {
-  const [createUser, { isLoading }] = useCreateUserMutation();
+function RegistrationForm({
+  apiError,
+  onCreated,
+}: {
+  apiError: ApiError | null;
+  onCreated?: (user: User) => void;
+}) {
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(selectIsLoading);
   const {
-    control,
     handleSubmit,
     reset,
-    setError,
+    clearErrors,
+    applyApiFieldErrors,
+    fieldError,
     formState: { errors },
-  } = useNiarForm({
-    schema: researcherRegistrationSchema,
-    defaultValues: DEFAULT_VALUES,
-  });
+    fields,
+  } = usePublicUserForm();
 
-  const fullName = useController({ control, name: 'fullName' });
-  const email = useController({ control, name: 'email' });
-  const password = useController({ control, name: 'password' });
-  const passwordConfirmation = useController({ control, name: 'passwordConfirmation' });
-  const phone = useController({ control, name: 'phone' });
-  const institution = useController({ control, name: 'institution' });
-  const organizationalUnit = useController({ control, name: 'organizationalUnit' });
-  const contactAddress = useController({ control, name: 'contactAddress' });
-  const researchArea = useController({ control, name: 'researchArea' });
-  const position = useController({ control, name: 'position' });
-  const caae = useController({ control, name: 'caae' });
-  const opinionNumber = useController({ control, name: 'opinionNumber' });
-  const approvalDate = useController({ control, name: 'approvalDate' });
-  const coepDocument = useController({ control, name: 'coepDocument' });
-
-  const fieldMessage = (field: keyof ResearcherRegistrationValues) => {
-    const message = errors[field]?.message;
-    return typeof message === 'string' ? message : undefined;
-  };
+  useEffect(() => {
+    if (apiError) {
+      applyApiFieldErrors(apiError);
+    }
+  }, [apiError, applyApiFieldErrors]);
 
   async function submit(values: ResearcherRegistrationValues) {
     const input: CreateUserInput = {
@@ -128,56 +77,51 @@ function RegistrationForm({ onCreated }: { onCreated?: (user: User) => void }) {
       },
     };
 
-    try {
-      const created = await createUser(input).unwrap();
-      reset(DEFAULT_VALUES);
-      onCreated?.(created);
-    } catch (error) {
-      if (isApiError(error)) {
-        Object.entries(error.fieldErrors ?? {}).forEach(([field, message]) => {
-          if (message && field in DEFAULT_VALUES) {
-            setError(field as keyof ResearcherRegistrationValues, { message });
-          }
-        });
-        setError('root', { message: error.message });
-        return;
-      }
+    const result = await dispatch(createUser(input));
 
-      setError('root', { message: 'Não foi possível cadastrar o pesquisador. Tente novamente.' });
+    if (createUser.fulfilled.match(result)) {
+      reset(DEFAULT_PUBLIC_USER_VALUES);
+      onCreated?.(result.payload);
     }
   }
 
   const sharedFields: SharedUserFormFields = {
-    fullName: textFieldProps(fullName.field, fieldMessage('fullName')),
-    email: textFieldProps(email.field, fieldMessage('email')),
-    password: textFieldProps(password.field, fieldMessage('password')),
-    passwordConfirmation: textFieldProps(passwordConfirmation.field, fieldMessage('passwordConfirmation')),
+    fullName: textFieldProps(fields.fullName.field, fieldError('fullName')),
+    email: textFieldProps(fields.email.field, fieldError('email')),
+    password: textFieldProps(fields.password.field, fieldError('password')),
+    passwordConfirmation: textFieldProps(fields.passwordConfirmation.field, fieldError('passwordConfirmation')),
   };
 
   const researcherFields: ResearcherProfileFormFields = {
-    phone: textFieldProps(phone.field, fieldMessage('phone'), formatBrazilianPhone),
-    institution: textFieldProps(institution.field, fieldMessage('institution')),
-    organizationalUnit: textFieldProps(organizationalUnit.field, fieldMessage('organizationalUnit')),
-    contactAddress: textFieldProps(contactAddress.field, fieldMessage('contactAddress')),
-    researchArea: textFieldProps(researchArea.field, fieldMessage('researchArea')),
-    position: textFieldProps(position.field, fieldMessage('position')),
+    phone: textFieldProps(fields.phone.field, fieldError('phone'), formatBrazilianPhone),
+    institution: textFieldProps(fields.institution.field, fieldError('institution')),
+    organizationalUnit: textFieldProps(fields.organizationalUnit.field, fieldError('organizationalUnit')),
+    contactAddress: textFieldProps(fields.contactAddress.field, fieldError('contactAddress')),
+    researchArea: textFieldProps(fields.researchArea.field, fieldError('researchArea')),
+    position: textFieldProps(fields.position.field, fieldError('position')),
   };
 
   const coepFields: CoepUserFormFields = {
-    caae: textFieldProps(caae.field, fieldMessage('caae')),
-    opinionNumber: textFieldProps(opinionNumber.field, fieldMessage('opinionNumber')),
-    approvalDate: textFieldProps(approvalDate.field, fieldMessage('approvalDate')),
+    caae: textFieldProps(fields.caae.field, fieldError('caae')),
+    opinionNumber: textFieldProps(fields.opinionNumber.field, fieldError('opinionNumber')),
+    approvalDate: textFieldProps(fields.approvalDate.field, fieldError('approvalDate')),
     coepDocument: {
-      onChange: (file) => coepDocument.field.onChange(file),
-      error: fieldMessage('coepDocument'),
+      onChange: (file) => fields.coepDocument.field.onChange(file),
+      error: fieldError('coepDocument'),
     },
   };
 
-  const rootError = typeof errors.root?.message === 'string' ? errors.root.message : undefined;
+  const formError = typeof errors.root?.message === 'string' ? errors.root.message : undefined;
 
   return (
     <div className="public-user-form">
-      {rootError ? <Alert severity="error">{rootError}</Alert> : null}
+      <Snackbar
+        open={Boolean(formError)}
+        message={formError ?? ''}
+        severity="error"
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        onClose={() => clearErrors('root')}
+      />
       <SharedUserForm fields={sharedFields} />
       <ResearcherProfileForm fields={researcherFields} />
       <CoepUserForm fields={coepFields} />
@@ -203,18 +147,18 @@ function RegistrationForm({ onCreated }: { onCreated?: (user: User) => void }) {
 }
 
 /*
- * Página pública de cadastro e resumo da sessão do usuário.
+ * Página pública de cadastro de pesquisador.
  * A página compõe os formulários dumb e concentra estado, validação e API.
  */
-export function PublicUser({ mode = 'admin', currentUser }: UsersPageProps) {
-  const isPublicMode = mode === 'public';
+export function PublicUser() {
   const [isApprovalDialogOpen, setApprovalDialogOpen] = useState(false);
+  const dispatch = useAppDispatch();
+  const apiError = useAppSelector(selectError);
+  const apiErrorMessage = apiError
+    ? getApiErrorMessage(apiError, 'Não foi possível cadastrar o pesquisador. Tente novamente.')
+    : '';
 
   function handleCreated() {
-    if (!isPublicMode) {
-      return;
-    }
-
     setApprovalDialogOpen(true);
   }
 
@@ -223,55 +167,19 @@ export function PublicUser({ mode = 'admin', currentUser }: UsersPageProps) {
     window.location.assign(APP_ROUTES.salaSegura);
   }
 
-  if (!isPublicMode && currentUser) {
-    return (
-      <div className="users-page">
-        <header className="page-head">
-          <PageIntro
-            title="Gerenciamento do usuário"
-            description="Consulte os dados da sua conta e acesse, nas próximas etapas, as funções disponíveis para o seu perfil."
-          />
-        </header>
-
-        <Card variant="outlined">
-          <div className="card-section-heading">
-            <h2 id="current-user-title">Usuário autenticado</h2>
-            <p>Estas são as informações da sessão atual.</p>
-          </div>
-          <dl className="user-summary">
-            <div className="user-summary__item">
-              <dt>Nome</dt>
-              <dd>{currentUser.name}</dd>
-            </div>
-            <div className="user-summary__item">
-              <dt>E-mail</dt>
-              <dd>{currentUser.email}</dd>
-            </div>
-            <div className="user-summary__item">
-              <dt>Tipo de usuário</dt>
-              <dd><StatusChip status="info" label={USER_ROLE_LABELS[currentUser.role]} /></dd>
-            </div>
-          </dl>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className={isPublicMode ? 'users-page users-page--public' : 'users-page'}>
-        {isPublicMode ? (
-          <div className="public-user-back">
-            <Link
-              className="public-user-back__link"
-              href={APP_ROUTES.salaSegura}
-              startIcon={<Icon name="arrowBack" fontSize="small" aria-hidden="true" />}
-              underline="none"
-            >
-              Voltar para a Sala Segura
-            </Link>
-          </div>
-        ) : null}
+      <div className="users-page users-page--public">
+        <div className="public-user-back">
+          <Link
+            className="public-user-back__link"
+            href={APP_ROUTES.salaSegura}
+            startIcon={<Icon name="arrowBack" fontSize="small" aria-hidden="true" />}
+            underline="none"
+          >
+            Voltar para a Sala Segura
+          </Link>
+        </div>
 
         <Form
           title="Cadastro de pesquisador"
@@ -279,10 +187,17 @@ export function PublicUser({ mode = 'admin', currentUser }: UsersPageProps) {
           aria-level={1}
         >
           <div className="form-card-body">
-            <RegistrationForm onCreated={handleCreated} />
+            <RegistrationForm apiError={apiError} onCreated={handleCreated} />
           </div>
         </Form>
       </div>
+      <Snackbar
+        open={Boolean(apiErrorMessage)}
+        message={apiErrorMessage}
+        severity="error"
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        onClose={() => dispatch(clearUsersError())}
+      />
       <RegistrationApprovalDialog
         open={isApprovalDialogOpen}
         onClose={handleApprovalDialogClose}

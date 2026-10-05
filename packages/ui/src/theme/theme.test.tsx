@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { createNiarTheme } from "./createNiarTheme";
 import { NiarProvider } from "./NiarProvider";
 import { useNiarTheme } from "./useNiarTheme";
+import { niar } from "../tokens/index";
 
 function ThemeProbe() {
   const theme = useNiarTheme();
@@ -17,6 +18,8 @@ describe("tema NIAR", () => {
     });
 
     expect(theme.components?.MuiButton).toBeDefined();
+    expect(theme.palette.error.main).toBe(niar.colors.feedback.error);
+    expect(theme.palette.error.light).toBe(niar.colors.feedback.errorSurface);
 
     render(
       <NiarProvider theme={theme}>

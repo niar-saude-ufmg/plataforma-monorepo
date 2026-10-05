@@ -1,24 +1,22 @@
-import { adminApi } from '../api/admin.api';
+import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
+  createUserRequest,
   normalizeUserApiError,
-  toCreateUserFormData,
-  toUser,
 } from '../../services/users/admin-api';
-import type { CreateUserInput, User } from '../../types/user.types';
+import type { ApiError, CreateUserInput, User } from '../../types/user.types';
 
-export const usersApi = adminApi.injectEndpoints({
-  endpoints: (builder) => ({
-    createUser: builder.mutation<User, CreateUserInput>({
-      query: (input) => ({
-        url: '/users',
-        method: 'POST',
-        body: toCreateUserFormData(input),
-      }),
-      transformResponse: (response: Parameters<typeof toUser>[0]) => toUser(response),
-      transformErrorResponse: (response) =>
-        normalizeUserApiError(response.status, response.data),
-    }),
-  }),
+export const createUser = createAsyncThunk<
+  User,
+  CreateUserInput,
+  { rejectValue: ApiError }
+>('users/createUser', async (input, { rejectWithValue }) => {
+  try {
+    return await createUserRequest(input);
+  } catch (error) {
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+      return rejectWithValue(error as ApiError);
+    }
+
+    return rejectWithValue(normalizeUserApiError('UNKNOWN_ERROR', undefined));
+  }
 });
-
-export const { useCreateUserMutation } = usersApi;

@@ -1,8 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CreateUserInput } from '../../types/user.types';
-import { adminApi } from '../api/admin.api';
-import { usersApi } from './users.api';
+import { createUser } from './users.api';
+import usersReducer from './users.slice';
 
 const fetchMock = vi.hoisted(() => {
   const mock = vi.fn();
@@ -35,13 +35,12 @@ const input: CreateUserInput = {
 function createTestStore() {
   return configureStore({
     reducer: {
-      [adminApi.reducerPath]: adminApi.reducer,
+      users: usersReducer,
     },
-    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
   });
 }
 
-describe('usersApi', () => {
+describe('users api', () => {
   afterEach(() => {
     fetchMock.mockReset();
   });
@@ -60,21 +59,45 @@ describe('usersApi', () => {
         headers: { 'Content-Type': 'application/json' },
       }),
     );
-    const result = await createTestStore().dispatch(
-      usersApi.endpoints.createUser.initiate(input),
-    );
-    const request = fetchMock.mock.calls[0]?.[0] as Request;
+    const store = createTestStore();
+    const result = await store.dispatch(createUser(input));
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
 
     expect(result).toMatchObject({
-      data: {
+      type: 'users/createUser/fulfilled',
+      payload: {
         id: 7,
         fullName: 'Ana Beatriz Souza',
         email: 'ana.souza@niar-saude.org',
         role: 'researcher',
       },
     });
+    expect(store.getState().users).toMatchObject({
+      status: 'succeeded',
+      error: null,
+    });
     expect(request.method).toBe('POST');
-    expect(request.url).toContain('/api/admin/users');
+    expect(url).toContain('/api/admin/users');
     expect(request.body).toBeTruthy();
+  });
+
+  it('normaliza o erro no estado do domínio', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({
+        error: 'User with this email already exists',
+      }), { status: 409 }),
+    );
+    const store = createTestStore();
+
+    await store.dispatch(createUser(input));
+
+    expect(store.getState().users).toEqual(expect.objectContaining({
+      status: 'failed',
+      error: {
+        status: 409,
+        message: 'Este e-mail já está cadastrado.',
+        fieldErrors: { email: 'Este e-mail já está cadastrado.' },
+      },
+    }));
   });
 });

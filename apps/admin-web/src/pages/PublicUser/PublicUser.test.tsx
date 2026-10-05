@@ -2,11 +2,16 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { APP_ROUTES } from '@niar/config';
+import { Provider } from 'react-redux';
 import { PublicUser } from './PublicUser';
 import type { ApiError } from '../../types/user.types';
+import { store } from '../../store';
+import { clearUsersState } from '../../store/users/users.slice';
+import { createUser } from '../../store/users/users.api';
 
 vi.mock('@niar/ui', () => ({
   Alert: ({ children }: any) => <div role="alert">{children}</div>,
+  Snackbar: ({ message, open }: any) => open ? <div role="alert" data-testid="global-snackbar">{message}</div> : null,
   Button: ({ children, className, component, disabled, href, onClick }: any) => {
     const Element = href || component === 'a' ? 'a' : 'button';
     return <Element className={className} disabled={disabled} href={href} onClick={onClick}>{children}</Element>;
@@ -35,17 +40,17 @@ vi.mock('@niar/ui', () => ({
   ),
   Icon: () => null,
   Link: ({ children, startIcon, endIcon, ...props }: any) => <a {...props}>{startIcon}{children}{endIcon}</a>,
-  Input: ({ label, type = 'text', value, name, onChange, onBlur, helperText }: any) => (
+  Input: ({ label, type = 'text', value, name, onChange, onBlur, inputRef, helperText }: any) => (
     <label>
       {label}
-      <input aria-label={label} type={type} value={value} name={name} onChange={onChange} onBlur={onBlur} />
+      <input aria-label={label} ref={inputRef} type={type} value={value} name={name} onChange={onChange} onBlur={onBlur} />
       {helperText ? <span>{helperText}</span> : null}
     </label>
   ),
-  DatePicker: ({ label, value, name, onChange, onBlur, helperText }: any) => (
+  DatePicker: ({ label, value, name, onChange, onBlur, inputRef, helperText }: any) => (
     <label>
       {label}
-      <input aria-label={label} type="date" value={value} name={name} onChange={onChange} onBlur={onBlur} />
+      <input aria-label={label} ref={inputRef} type="date" value={value} name={name} onChange={onChange} onBlur={onBlur} />
       {helperText ? <span>{helperText}</span> : null}
     </label>
   ),
@@ -53,25 +58,19 @@ vi.mock('@niar/ui', () => ({
   StatusChip: ({ label }: any) => <span>{label}</span>,
 }));
 
-const useCreateUserMutationMock = vi.fn();
-const createUserTrigger = vi.fn();
 const locationAssignMock = vi.fn();
+const fetchMock = vi.hoisted(() => {
+  const mock = vi.fn();
+  globalThis.fetch = mock as typeof fetch;
+  return mock;
+});
 
-vi.mock('../../store/users/users.api', () => ({
-  useCreateUserMutation: () => useCreateUserMutationMock(),
-}));
-
-function setCreateState(overrides: Record<string, unknown> = {}) {
-  useCreateUserMutationMock.mockReturnValue([
-    createUserTrigger,
-    {
-      isLoading: false,
-      isError: false,
-      error: null,
-      reset: vi.fn(),
-      ...overrides,
-    },
-  ]);
+function renderPublicUser() {
+  return render(
+    <Provider store={store}>
+      <PublicUser />
+    </Provider>,
+  );
 }
 
 async function fillForm() {
@@ -98,16 +97,19 @@ async function fillForm() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  setCreateState();
-  createUserTrigger.mockReturnValue({
-    unwrap: vi.fn().mockResolvedValue({
+  store.dispatch(clearUsersState());
+  fetchMock.mockReset();
+  fetchMock.mockResolvedValue(new Response(JSON.stringify({
       id: 3,
-      fullName: 'Ana Beatriz Souza',
+      full_name: 'Ana Beatriz Souza',
       email: 'ana.souza@niar-saude.org',
       role: 'researcher',
-      createdAt: '2026-08-31T12:00:00.000Z',
-    }),
-  });
+      is_active: true,
+      created_at: '2026-08-31T12:00:00.000Z',
+    }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' },
+    }));
 
   Object.defineProperty(window, 'location', {
     configurable: true,
@@ -124,25 +126,8 @@ afterEach(() => {
 });
 
 describe('PublicUser', () => {
-  it('exibe o gerenciamento do usuário autenticado', () => {
-    render(
-      <PublicUser
-        currentUser={{
-          name: 'Pesquisador NIAR',
-          email: 'pesquisador@niar.local',
-          role: 'researcher',
-        }}
-      />,
-    );
-
-    expect(screen.getByRole('heading', { name: 'Gerenciamento do usuário' })).toBeInTheDocument();
-    expect(screen.getByText('Pesquisador NIAR')).toBeInTheDocument();
-    expect(screen.getByText('pesquisador@niar.local')).toBeInTheDocument();
-    expect(screen.getByText('Pesquisador')).toBeInTheDocument();
-  });
-
   it('renderiza os dados do cadastro e do COEP', () => {
-    render(<PublicUser />);
+    renderPublicUser();
 
     expect(screen.getByRole('heading', { name: 'Cadastro de pesquisador' })).toBeInTheDocument();
     expect(screen.getByLabelText('Nome completo')).toBeInTheDocument();
@@ -153,18 +138,18 @@ describe('PublicUser', () => {
   });
 
   it('valida os campos obrigatórios antes de chamar a API', async () => {
-    render(<PublicUser />);
+    renderPublicUser();
 
     await userEvent.setup().click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     expect(screen.getByText('Informe o nome completo do pesquisador.')).toBeInTheDocument();
     expect(screen.getByText('Informe um e-mail válido, como nome@instituicao.org.')).toBeInTheDocument();
     expect(screen.getByText('Anexe o parecer do COEP.')).toBeInTheDocument();
-    expect(createUserTrigger).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('envia os dados completos e redireciona no modo público', async () => {
-    render(<PublicUser mode="public" />);
+  it('envia os dados completos e exibe a confirmação do cadastro', async () => {
+    renderPublicUser();
 
     expect(screen.getByRole('link', { name: 'Voltar para a Sala Segura' })).toHaveAttribute(
       'href',
@@ -177,20 +162,13 @@ describe('PublicUser', () => {
 
     await fillForm();
 
-    await waitFor(() => expect(createUserTrigger).toHaveBeenCalledWith(expect.objectContaining({
-      fullName: 'Ana Beatriz Souza',
-      profile: expect.objectContaining({
-        institution: 'UFMG',
-        phone: '(31) 99999-9999',
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/admin/users'),
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.any(FormData),
       }),
-      researcherProfile: expect.objectContaining({ researchArea: 'Saúde pública' }),
-      coep: expect.objectContaining({
-        caae: '12345678.9.0000.0000',
-        opinionNumber: '1234.567',
-        approvalDate: '2026-09-25',
-        document: expect.any(File),
-      }),
-    })));
+    ));
     expect(locationAssignMock).not.toHaveBeenCalled();
     expect(screen.getByRole('dialog', { name: 'Cadastro enviado' })).toHaveTextContent(
       'As informações serão verificadas pela equipe responsável e o acesso à plataforma depende da aprovação do cadastro.',
@@ -208,19 +186,20 @@ describe('PublicUser', () => {
       status: 409,
       fieldErrors: { email: 'Este e-mail já está cadastrado.' },
     };
-    createUserTrigger.mockReturnValueOnce({
-      unwrap: vi.fn().mockRejectedValueOnce(apiError),
-    });
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      error: 'User with this email already exists',
+    }), { status: apiError.status }));
 
-    render(<PublicUser />);
+    renderPublicUser();
     await fillForm();
 
     expect(await screen.findAllByText('Este e-mail já está cadastrado.')).toHaveLength(2);
+    expect(screen.getByTestId('global-snackbar').closest('.form-card-body')).toBeNull();
   });
 
   it('desabilita o envio enquanto a mutação está pendente', () => {
-    setCreateState({ isLoading: true });
-    render(<PublicUser />);
+    store.dispatch({ type: createUser.pending.type });
+    renderPublicUser();
 
     expect(screen.getByRole('button', { name: 'Cadastrando…' })).toBeDisabled();
   });

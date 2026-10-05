@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { hasAccessToRoute } from '@niar/auth';
 import { APP_ROUTES, APP_TITLES } from '@niar/config';
-import { Alert, Button, Icon, Input, Link as NiarLink, PageIntro } from '@niar/ui';
+import { Button, Icon, Input, Link as NiarLink, PageIntro, Snackbar } from '@niar/ui';
 import { Controller, useForm } from 'react-hook-form';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './Login.css';
@@ -22,6 +22,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     control,
     handleSubmit,
     setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -74,13 +75,19 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <Controller name="password" control={control} render={({ field }) => (
               <Input {...field} label="Senha" type="password" autoComplete="current-password" error={Boolean(errors.password)} helperText={errors.password?.message} fullWidth />
             )} />
-            {errors.root?.message ? <Alert severity="error">{errors.root.message}</Alert> : null}
             <Button disabled={isSubmitting} type="submit" variant="contained" color="primary" size="large">
               {isSubmitting ? 'Entrando...' : 'Entrar na plataforma'}
             </Button>
           </form>
         </div>
       </section>
+      <Snackbar
+        open={Boolean(errors.root?.message)}
+        message={errors.root?.message ?? ''}
+        severity="error"
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        onClose={() => clearErrors('root')}
+      />
     </main>
   );
 }
