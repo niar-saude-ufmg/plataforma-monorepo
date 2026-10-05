@@ -148,9 +148,9 @@ export default function App() {
         <Route
           path={`${APP_ROUTES.admin}/*`}
           element={
-            <ProtectedRoute userRole={user?.role}>
+              <ProtectedRoute userRole={user?.role}>
               <Suspense fallback={<RemoteLoading label="área administrativa" />}>
-                <AdminRemote currentUser={user ?? undefined} />
+                <AdminRemote mode="admin" currentUser={user ?? undefined} />
               </Suspense>
             </ProtectedRoute>
           }

@@ -4,7 +4,7 @@ declare module "admin/App" {
 
   const AdminApp: ComponentType<{
     mode?: "admin" | "public";
-    currentUser?: { name: string; email: string; role: UserRole };
+    currentUser?: { id: number; name: string; email: string; role: UserRole };
   }>;
   export default AdminApp;
 }
