@@ -23,6 +23,18 @@ const meta = {
         "Escolhe entre navegação lateral, MenuBar horizontal e abas no cabeçalho.",
       table: { category: "PROPS", defaultValue: { summary: "sidebar" } },
     },
+    activeItem: {
+      control: "text",
+      description:
+        "Item ativo para qualquer modo de navegação, normalmente derivado da rota atual.",
+      table: { category: "NAVIGATION" },
+    },
+    onItemChange: {
+      action: "item changed",
+      description:
+        "Chamado quando o usuário seleciona uma tab, item de menu ou item de sidebar.",
+      table: { category: "EVENTS" },
+    },
     logo: {
       control: "boolean",
       description: "Exibe o logo padrão do NIAR.",
@@ -59,7 +71,18 @@ const meta = {
       control: false,
       description:
         "Elemento React exibido no lado direito do cabeçalho para identificar a pessoa usuária. Use o componente Avatar para manter o padrão visual do NIAR.",
-      table: { category: "PROPS" },
+      table: { category: "HEADER" },
+    },
+    actions: {
+      control: false,
+      description:
+        "Conteúdo adicional exibido no final da navegação, como ações da página.",
+      table: { category: "HEADER" },
+    },
+    showAvatar: {
+      control: "boolean",
+      description: "Controla a exibição do avatar quando não há uma imagem personalizada.",
+      table: { category: "HEADER", defaultValue: { summary: "true" } },
     },
     openNavigationLabel: { control: "text", description: "Label acessível para abrir a navegação lateral.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Abrir navegação" } } },
     closeNavigationLabel: { control: "text", description: "Label acessível para fechar a navegação lateral.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Fechar navegação" } } },
@@ -71,9 +94,9 @@ const meta = {
       table: { category: "PROPS" },
     },
     tabsValue: {
-      control: "text",
-      description: "Valor controlado da aba selecionada.",
-      table: { category: "PROPS" },
+      control: false,
+      description: "Legado: use activeItem para controlar a navegação selecionada.",
+      table: { category: "DEPRECATED" },
     },
     defaultTabsValue: {
       control: "text",
@@ -81,9 +104,9 @@ const meta = {
       table: { category: "PROPS" },
     },
     onChange: {
-      action: "navigation changed",
-      description: "Evento disparado ao trocar a navegação ativa.",
-      table: { category: "EVENTS" },
+      control: false,
+      description: "Legado: use onItemChange para tratar qualquer modo de navegação.",
+      table: { category: "DEPRECATED" },
     },
   },
 } satisfies Meta<typeof PageHeader>;
@@ -96,6 +119,7 @@ export const Playground: Story = {
     navigation: "sidebar",
     avatar: <Avatar alt="Usuário NIAR">UN</Avatar>,
     tabs: navigationOptions.map(({ value, label }) => ({ value, label })),
+    activeItem: "overview",
   },
   render: (args) => (
     <InteractivePage {...args} navigation={args.navigation ?? "sidebar"} />
@@ -176,8 +200,11 @@ function InteractivePage({
   logoHref,
   onLogoClick,
   avatar,
+  actions,
+  showAvatar,
+  activeItem,
   tabs,
-  onChange,
+  onItemChange,
 }: Pick<
   PageHeaderProps,
   | "navigation"
@@ -186,13 +213,16 @@ function InteractivePage({
   | "logoHref"
   | "onLogoClick"
   | "avatar"
+  | "actions"
+  | "showAvatar"
   | "tabs"
-  | "onChange"
+  | "activeItem"
+  | "onItemChange"
 >) {
-  const [selected, setSelected] = useState("overview");
+  const [selected, setSelected] = useState(activeItem ?? "overview");
   const handleNavigationChange = (value: string) => {
     setSelected(value);
-    onChange?.(value);
+    onItemChange?.(value);
   };
   const sidebarItems = navigationOptions.map((option) => ({
     label: option.label,
@@ -231,9 +261,11 @@ function InteractivePage({
         sidebarItems={sidebarItems}
         menuGroups={menuGroups}
         avatar={avatar}
+        actions={actions}
+        showAvatar={showAvatar}
         tabs={navigation === "tabs" ? tabs : undefined}
-        tabsValue={navigation === "tabs" ? selected : undefined}
-        onChange={handleNavigationChange}
+        activeItem={navigation === "tabs" ? selected : undefined}
+        onItemChange={handleNavigationChange}
       />
       <Content selected={selected} />
     </>
