@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { usersController } from "../controllers/users-controller.js";
+import { uploadCoepDocument } from "../middlewares/coep-upload.js";
 import { authenticate, restrictTo } from "../middlewares/auth.js";
 
 export const usersRouter = Router();
 
 // Montado em "/api/admin/users" no app.ts, então isso vira
-// GET/POST /api/admin/users e POST /api/admin/users/internal.
+// GET/POST /api/admin/users e as rotas administrativas específicas abaixo.
 
 /**
  * @swagger
@@ -45,36 +46,55 @@ usersRouter.get("/", authenticate, restrictTo("admin", "committee"), usersContro
  * /admin/users:
  *   post:
  *     summary: Cadastro público de pesquisador
- *     description: Sempre cria role "researcher", independente do que for enviado.
+ *     description: >
+ *       Sempre cria role "researcher", independente do que for enviado.
+ *       Grava usuário, perfil de contato, dados acadêmicos e parecer do COEP
+ *       na mesma transação: se qualquer etapa falhar, nada é persistido.
+ *       Os blocos profile, researcher_profile e coep são JSON dentro do multipart/form-data,
+ *       e o arquivo deve ser enviado no campo coep_document.
  *     tags: [Users]
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             $ref: '#/components/schemas/CreateUser'
  *     responses:
  *       201:
  *         description: Usuário criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PublicUserCreatedResponse'
  *       400:
  *         description: Dados inválidos (validação do Zod)
  *       409:
  *         description: E-mail já cadastrado
  */
-usersRouter.post("/", usersController.create);
+usersRouter.post("/", uploadCoepDocument, usersController.create);
 
 /**
  * @swagger
- * /admin/users/internal:
+ * /admin/users/researchers:
  *   post:
- *     summary: Cadastro administrativo (protegido)
- *     description: Só admin autenticado. Aceita qualquer papel (researcher, admin, committee).
+ *     summary: Cria um pesquisador
+ *     description: Só admin autenticado pode criar pesquisadores.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateResearcher'
  *     responses:
  *       201:
- *         description: Usuário criado com sucesso
+ *         description: Pesquisador criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  *       400:
  *         description: Dados inválidos (validação do Zod)
  *       401:
@@ -84,4 +104,74 @@ usersRouter.post("/", usersController.create);
  *       409:
  *         description: E-mail já cadastrado
  */
-usersRouter.post("/internal", authenticate, restrictTo("admin"), usersController.createByAdmin);
+usersRouter.post(
+  "/researchers",
+  authenticate,
+  restrictTo("admin"),
+  uploadCoepDocument,
+  usersController.createResearcher
+);
+
+/**
+ * @swagger
+ * /admin/users/committee-members:
+ *   post:
+ *     summary: Cria um membro do comitê
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateCommitteeMember'
+ *     responses:
+ *       201:
+ *         description: Membro do comitê criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       400:
+ *         description: Dados inválidos ou especialidade inválida
+ *       401:
+ *         description: Não autenticado
+ *       403:
+ *         description: Não é admin
+ *       409:
+ *         description: E-mail já cadastrado
+ */
+usersRouter.post("/committee-members", authenticate, restrictTo("admin"), usersController.createCommitteeMember);
+
+/**
+ * @swagger
+ * /admin/users/administrators:
+ *   post:
+ *     summary: Cria um administrador
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateAdministrator'
+ *     responses:
+ *       201:
+ *         description: Administrador criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       400:
+ *         description: Dados inválidos
+ *       401:
+ *         description: Não autenticado
+ *       403:
+ *         description: Não é admin
+ *       409:
+ *         description: E-mail já cadastrado
+ */
+usersRouter.post("/administrators", authenticate, restrictTo("admin"), usersController.createAdministrator);

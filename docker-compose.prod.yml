@@ -28,6 +28,9 @@ services:
     environment:
       DATABASE_URL: ${CONTAINER_DATABASE_URL:-postgresql://niar:niar@postgres:5432/niar_plataforma}
       PORT: 3333
+      EXPORTS_DIR: /data/exports
+    volumes:
+      - files-exports:/data/exports
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,7 +48,7 @@ services:
       DATABASE_URL: ${CONTAINER_DATABASE_URL:-postgresql://niar:niar@postgres:5432/niar_plataforma}
       EXPORTS_DIR: /data/exports
     volumes:
-      - assistente-exports:/data/exports
+      - files-exports:/data/exports
     depends_on:
       postgres:
         condition: service_healthy
@@ -121,6 +124,6 @@ services:
 
 volumes:
   postgres-data:
-  assistente-exports:
+  files-exports:
   caddy-data:
   caddy-config:

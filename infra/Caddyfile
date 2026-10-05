@@ -21,12 +21,14 @@ niarplataforma.duckdns.org {
 
 	# Rotas e assets da shell (APP_ROUTES em packages/config + build do Vite).
 	# Ao criar uma rota nova na shell, inclua-a aqui.
-	@shell path /login /login/* /sala-segura /sala-segura/* /cadastro/* /admin /admin/* /assistente /assistente/* /identidade-visual /identidade-visual/* /design-system /design-system/* /storybook /storybook/* /assets/*
+	@shell path /login /login/* /cadastro/* /admin /admin/* /assistente /assistente/* /identidade-visual /identidade-visual/* /design-system /design-system/* /storybook /storybook/* /assets/*
 	handle @shell {
 		reverse_proxy shell:80
 	}
 
-	# Todo o resto é o site institucional (/, /en/, /about/, /news/..., /_app/, /sitemap.xml).
+	# Todo o resto é o site institucional (/, /en/, /about/, /news/..., /sala-segura/,
+	# /_app/, /sitemap.xml). A página da Sala Segura é do site; o cadastro que ela chama
+	# (/cadastro/pesquisador) continua na shell, pelo remote do admin-web.
 	handle {
 		reverse_proxy site-institucional-web:80
 	}
