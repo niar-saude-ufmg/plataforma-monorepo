@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import reducer, { clearAuthUser, setAuthUser } from './auth.slice';
 
 const user = {
+  id: 4,
   name: 'Pesquisador NIAR',
   email: 'pesquisador@niar.local',
   role: 'researcher' as const,

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@niar/auth": "workspace:*",
     "@niar/config": "workspace:*",
     "@niar/contracts": "workspace:*",
     "@niar/ui": "workspace:*",
@@ -19,6 +20,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.53.2",
     "react-redux": "^9.3.0",
+    "react-router-dom": "^6.28.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

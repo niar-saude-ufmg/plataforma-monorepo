@@ -12,6 +12,7 @@ export type UserRole = 'researcher' | 'admin' | 'committee';
 
 /** Usuário autenticado disponível para as telas da plataforma. */
 export interface AuthUser {
+  id: number;
   name: string;
   email: string;
   role: UserRole;
