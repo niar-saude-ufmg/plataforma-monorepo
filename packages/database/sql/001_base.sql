@@ -44,12 +44,15 @@ BEGIN
     WHERE t.typname = 'committee_evaluation_result' AND n.nspname = 'admin'
   ) THEN
     CREATE TYPE admin.committee_evaluation_result AS ENUM (
+      'to_review',
       'approved',
       'needs_changes',
       'rejected'
     );
   END IF;
 END $$;
+
+ALTER TYPE admin.committee_evaluation_result ADD VALUE IF NOT EXISTS 'to_review';
 
 DO $$
 BEGIN
@@ -540,11 +543,17 @@ CREATE TABLE IF NOT EXISTS admin.committee_evaluations (
   responsible_member_user_id INTEGER NOT NULL
     REFERENCES admin.committee_member_profiles(user_id) ON DELETE RESTRICT,
   result admin.committee_evaluation_result NOT NULL,
-  justification TEXT NOT NULL,
+  justification TEXT,
   evaluated_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE admin.committee_evaluations
+  ALTER COLUMN result SET NOT NULL;
+
+ALTER TABLE admin.committee_evaluations
+  ALTER COLUMN justification DROP NOT NULL;
 
 ALTER TABLE shared.project_status_history
   ADD COLUMN IF NOT EXISTS committee_evaluation_id INTEGER;

@@ -565,6 +565,7 @@ class ProjectStatusHistory(Base):
 
 
 class CommitteeEvaluationResult(str, enum.Enum):
+    to_review = "to_review"
     approved = "approved"
     needs_changes = "needs_changes"
     rejected = "rejected"
@@ -591,7 +592,7 @@ class CommitteeEvaluation(Base):
     result: Mapped[CommitteeEvaluationResult] = mapped_column(
         COMMITTEE_EVALUATION_RESULT_ENUM
     )
-    justification: Mapped[str] = mapped_column(Text)
+    justification: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     evaluated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
