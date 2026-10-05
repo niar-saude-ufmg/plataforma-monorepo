@@ -47,7 +47,7 @@ export type CommitteeEvaluationResponse = {
       name: string;
     };
   };
-  result: "to_review" | "approved" | "needs_changes" | "rejected" | null;
+  result: "to_review" | "approved" | "needs_changes" | "rejected";
   justification: string | null;
   evaluated_at: string | null;
   created_at: string;

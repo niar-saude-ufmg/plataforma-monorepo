@@ -367,7 +367,7 @@ model CommitteeEvaluation {
   id                      Int                         @id @default(autoincrement())
   projectVersionId        Int                         @unique @map("project_version_id")
   responsibleMemberUserId Int                         @map("responsible_member_user_id")
-  result                  committee_evaluation_result?
+  result                  committee_evaluation_result
   justification           String?
   evaluatedAt             DateTime?                   @map("evaluated_at") @db.Timestamptz(6)
   createdAt               DateTime                    @default(now()) @map("created_at") @db.Timestamptz(6)

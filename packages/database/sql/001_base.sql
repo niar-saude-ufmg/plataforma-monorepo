@@ -542,7 +542,7 @@ CREATE TABLE IF NOT EXISTS admin.committee_evaluations (
     REFERENCES admin.project_versions(id) ON DELETE CASCADE,
   responsible_member_user_id INTEGER NOT NULL
     REFERENCES admin.committee_member_profiles(user_id) ON DELETE RESTRICT,
-  result admin.committee_evaluation_result,
+  result admin.committee_evaluation_result NOT NULL,
   justification TEXT,
   evaluated_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -550,7 +550,7 @@ CREATE TABLE IF NOT EXISTS admin.committee_evaluations (
 );
 
 ALTER TABLE admin.committee_evaluations
-  ALTER COLUMN result DROP NOT NULL;
+  ALTER COLUMN result SET NOT NULL;
 
 ALTER TABLE admin.committee_evaluations
   ALTER COLUMN justification DROP NOT NULL;
