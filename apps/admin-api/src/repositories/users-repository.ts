@@ -80,6 +80,7 @@ export type CreateResearcherData = {
   fullName: string;
   email: string;
   hashedPassword: string;
+  accountStatus: "pending";
   profile: {
     phone: string;
     institution: string;
@@ -224,7 +225,7 @@ export const usersRepository = {
           email: data.email,
           hashedPassword: data.hashedPassword,
           role: "researcher",
-          accountStatus: "pending"
+          accountStatus: data.accountStatus
         }
       });
 

@@ -95,6 +95,14 @@ export default {
     title: "22px",
     heading: "30px",
   },
+  lineHeight: {
+    tight: 1.2,
+    normal: 1.5,
+    relaxed: 1.6,
+  },
+  letterSpacing: {
+    none: "0px",
+  },
   shadow: {
     card: "0 1px 2px rgba(15, 31, 91, 0.06), 0 8px 24px rgba(15, 31, 91, 0.06)",
   },

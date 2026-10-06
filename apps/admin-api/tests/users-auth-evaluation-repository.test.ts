@@ -50,6 +50,7 @@ describe("usersRepository.createResearcherWithProfile", () => {
       fullName: "Pesquisador",
       email: "pesquisador@niar.local",
       hashedPassword: "hash",
+      accountStatus: "pending",
       profile: {
         phone: "31999999999",
         institution: "UFMG",

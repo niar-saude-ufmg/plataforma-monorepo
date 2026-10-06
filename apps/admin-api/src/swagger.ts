@@ -97,7 +97,6 @@ const options = {
             full_name: { type: 'string', example: 'Pesquisador Teste' },
             email: { type: 'string', example: 'teste@niar.local' },
             role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
-            is_active: { type: 'boolean', example: true },
             created_at: { type: 'string', format: 'date-time' },
           },
         },
@@ -126,6 +125,17 @@ const options = {
             evaluated_at: { type: 'string', format: 'date-time' },
             created_at: { type: 'string', format: 'date-time' },
             user_coep_data_id: { type: 'integer', nullable: true, example: 4 },
+          },
+        },
+        AuthenticatedUserResponse: {
+          type: 'object',
+          required: ['id', 'full_name', 'email', 'role', 'account_status'],
+          properties: {
+            id: { type: 'integer', example: 1 },
+            full_name: { type: 'string', example: 'Pesquisador Teste' },
+            email: { type: 'string', format: 'email', example: 'teste@niar.local' },
+            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
+            account_status: { type: 'string', enum: ['pending', 'active', 'rejected', 'disabled'], example: 'active' },
           },
         },
         PublicUserCreatedResponse: {
@@ -192,11 +202,21 @@ const options = {
         },
         ProjectResponse: {
           type: 'object',
-          required: ['id', 'title', 'updated_at', 'status', 'documents'],
+          required: ['id', 'title', 'updated_at', 'researcher', 'status', 'documents'],
           properties: {
             id: { type: 'integer', example: 42 },
             title: { type: 'string', example: 'Projeto de pesquisa' },
             updated_at: { type: 'string', format: 'date-time' },
+            evaluation_status: { type: 'string', enum: ['waiting', 'to_review', 'approved', 'needs_changes', 'rejected'], example: 'waiting' },
+            researcher: {
+              type: 'object',
+              required: ['id', 'full_name', 'email'],
+              properties: {
+                id: { type: 'integer', example: 10 },
+                full_name: { type: 'string', example: 'Pesquisador 10' },
+                email: { type: 'string', format: 'email', example: 'researcher@niar.local' },
+              },
+            },
             status: {
               type: 'array',
               items: { $ref: '#/components/schemas/ProjectStatusResponse' },
@@ -205,6 +225,38 @@ const options = {
               type: 'array',
               items: { $ref: '#/components/schemas/ProjectDocumentResponse' },
             },
+            evaluations: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ProjectEvaluationResponse' },
+            },
+          },
+        },
+        ProjectEvaluationResponse: {
+          type: 'object',
+          required: ['id', 'version_number', 'result', 'responsible_member', 'evaluated_at', 'updated_at'],
+          properties: {
+            id: { type: 'integer', example: 8 },
+            version_number: { type: 'integer', example: 2 },
+            result: { type: 'string', enum: ['to_review', 'approved', 'needs_changes', 'rejected'] },
+            responsible_member: {
+              type: 'object',
+              required: ['user_id', 'full_name', 'email', 'specialty'],
+              properties: {
+                user_id: { type: 'integer', example: 4 },
+                full_name: { type: 'string', example: 'Membro do comitê' },
+                email: { type: 'string', format: 'email' },
+                specialty: {
+                  type: 'object',
+                  required: ['id', 'name'],
+                  properties: {
+                    id: { type: 'integer', example: 2 },
+                    name: { type: 'string', example: 'Epidemiologia' },
+                  },
+                },
+              },
+            },
+            evaluated_at: { type: 'string', format: 'date-time', nullable: true },
+            updated_at: { type: 'string', format: 'date-time' },
           },
         },
         ErrorResponse: {

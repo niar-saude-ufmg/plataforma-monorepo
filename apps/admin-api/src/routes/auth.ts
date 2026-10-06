@@ -44,6 +44,10 @@ authRouter.post("/login", authController.login);
  *     responses:
  *       200:
  *         description: Dados do usuário autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthenticatedUserResponse'
  *       401:
  *         description: Não autenticado
  */

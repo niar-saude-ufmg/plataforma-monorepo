@@ -17,16 +17,31 @@ export default defineConfig(({ mode }) => {
       federation({
         name: "shell",
         remotes: {
+          institutional: env.VITE_INSTITUTIONAL_REMOTE_URL || "http://localhost:4176/assets/remoteEntry.js",
           admin: env.VITE_ADMIN_REMOTE_URL || "http://localhost:4174/assets/remoteEntry.js",
           assistant: env.VITE_ASSISTENTE_REMOTE_URL || "http://localhost:4175/assets/remoteEntry.js"
         },
-        shared: ["react", "react-dom", "react-router-dom"]
+        shared: {
+          react: { requiredVersion: "^18.3.1" },
+          "react-dom": { requiredVersion: "^18.3.1" },
+          "react-router-dom": { requiredVersion: "^6.28.0" },
+          "react-redux": { requiredVersion: "^9.3.0" }
+        }
       })
     ],
-    server: {
+      server: {
       host: "0.0.0.0",
       port: 5173,
       proxy: {
+        "/_app": {
+          target: "http://localhost:4176",
+          changeOrigin: true
+        },
+        "/identidade-visual": {
+          target: "http://localhost:6006",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/identidade-visual/, "")
+        },
         "/api/admin": {
           target: env.VITE_ADMIN_API_PROXY_TARGET || `http://localhost:${env.ADMIN_API_PORT || 3333}`,
           changeOrigin: true

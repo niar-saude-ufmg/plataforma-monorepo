@@ -94,6 +94,17 @@ describe("POST /api/admin/auth/login", () => {
     expect(response.body.error).toBe("Conta desativada");
   });
 
+  it("retorna 403 quando o cadastro ainda está pendente", async () => {
+    findByEmail.mockResolvedValueOnce(await buildStoredUser({ accountStatus: "pending" }));
+
+    const response = await request(app)
+      .post("/api/admin/auth/login")
+      .send({ email: "pesquisador@niar.local", password: PASSWORD });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe("Conta desativada");
+  });
+
   it("retorna 400 para email em formato inválido", async () => {
     const response = await request(app)
       .post("/api/admin/auth/login")
@@ -120,7 +131,7 @@ describe("GET /api/admin/auth/me", () => {
       email: "pesquisador@niar.local",
       full_name: "Pesquisador Um",
       role: "researcher",
-      is_active: true
+      account_status: "active"
     });
   });
 

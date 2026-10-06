@@ -13,6 +13,13 @@ import * as Stories from "./Snackbar.stories";
 
 Mensagem temporária para comunicar o resultado de uma ação.
 
+O `Snackbar` usa o `Alert` internamente. Além de `severity`, ele aceita as
+variações visuais `standard`, `filled` e `outlined` por meio da prop `variant`.
+Por padrão, a mensagem desaparece após 6 segundos; use `autoHideDuration` para
+alterar esse tempo.
+Quando `onClose` é informado, o `Alert` também exibe o botão para fechar a
+mensagem manualmente.
+
 <Description of={Stories.Playground} />
 <Canvas of={Stories.Playground} />
 ### Props
@@ -32,6 +39,7 @@ export function Saved() {
         open
         message="Projeto salvo."
         severity="success"
+        variant="standard"
       />
     );
 }`}

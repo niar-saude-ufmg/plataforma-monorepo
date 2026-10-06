@@ -1,0 +1,17 @@
+.not-found-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--niar-spacing-3xl) var(--niar-spacing-md);
+  background: var(--niar-colors-surface-page);
+}
+
+.not-found-card {
+  width: min(45rem, 100%);
+}
+
+.not-found-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: var(--niar-spacing-xl);
+}

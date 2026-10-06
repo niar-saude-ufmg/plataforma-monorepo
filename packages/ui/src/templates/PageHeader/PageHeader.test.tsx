@@ -6,7 +6,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { NiarProvider } from "../../theme/NiarProvider";
 import { PageHeader } from "./PageHeader";
 
@@ -51,5 +51,23 @@ describe("PageHeader", () => {
 
     expect(screen.getByRole("img", { name: "NIAR" })).toBeVisible();
     expect(screen.getByRole("menuitem", { name: "Arquivo" })).toBeVisible();
+  });
+
+  it("usa o callback genérico de navegação nas tabs", () => {
+    const onItemChange = vi.fn();
+
+    render(
+      <NiarProvider>
+        <PageHeader
+          navigation="tabs"
+          tabs={[{ label: "Início", value: "home" }, { label: "Projetos", value: "projects" }]}
+          activeItem="home"
+          onItemChange={onItemChange}
+        />
+      </NiarProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Projetos" }));
+    expect(onItemChange).toHaveBeenCalledWith("projects");
   });
 });

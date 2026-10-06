@@ -1,0 +1,137 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(280px, 1.15fr) minmax(360px, 0.85fr);
+  font-family: var(--niar-font-family);
+  background: var(--niar-colors-surface-page);
+}
+
+.login-brand-panel {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(var(--niar-spacing-3xl), 8vw, var(--niar-spacing-4xl));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: var(--niar-colors-neutral-white);
+  background: linear-gradient(
+    135deg,
+    var(--niar-colors-brand-deep) 0%,
+    var(--niar-colors-brand-descriptive) 52%,
+    var(--niar-colors-brand-cyan) 130%
+  );
+}
+
+.login-brand-panel::before,
+.login-brand-panel::after {
+  content: "";
+  position: absolute;
+  border: var(--niar-border-width-default) solid color-mix(
+    in srgb,
+    var(--niar-colors-neutral-white) 24%,
+    transparent
+  );
+  border-radius: 50%;
+}
+
+.login-brand-panel::before {
+  width: 32rem;
+  height: 32rem;
+  right: -15rem;
+  top: -13rem;
+}
+
+.login-brand-panel::after {
+  width: 20rem;
+  height: 20rem;
+  left: -10rem;
+  bottom: -12rem;
+}
+
+.brand-mark {
+  width: 4.5rem;
+  height: 0.45rem;
+  margin-bottom: var(--niar-spacing-2xl);
+  background: var(--niar-colors-brand-cyan);
+}
+
+.brand-name,
+.brand-description,
+.brand-message {
+  position: relative;
+  z-index: 1;
+}
+
+.brand-name {
+  margin: 0;
+  font-size: clamp(2.5rem, 5vw, 4.8rem);
+  line-height: var(--niar-line-height-tight);
+  font-weight: var(--niar-font-weight-bold);
+  letter-spacing: -0.06em;
+}
+
+.brand-description {
+  max-width: 34rem;
+  margin: var(--niar-spacing-md) 0 0;
+  font-size: var(--niar-font-size-caption);
+  font-weight: var(--niar-font-weight-semibold);
+  line-height: var(--niar-line-height-normal);
+}
+
+.brand-message {
+  max-width: 32rem;
+  margin: var(--niar-spacing-4xl) 0 0;
+  font-size: var(--niar-font-size-subtitle);
+  line-height: var(--niar-line-height-relaxed);
+  color: color-mix(in srgb, var(--niar-colors-neutral-white) 82%, transparent);
+}
+
+.login-form-panel {
+  display: grid;
+  place-items: center;
+  padding: var(--niar-spacing-xl);
+  background: var(--niar-colors-surface-card);
+}
+
+.login-form-content {
+  width: min(21rem, 100%);
+}
+
+.back-to-site {
+  display: inline-flex;
+  font-size: var(--niar-font-size-body);
+  font-weight: var(--niar-font-weight-bold);
+  margin-bottom: var(--niar-spacing-3xl);
+  padding: var(--niar-spacing-2xs) 0;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-lg);
+  margin-top: var(--niar-spacing-xl);
+}
+
+.login-form-content .auth-form .MuiButton-root {
+  width: 100%;
+  margin-top: var(--niar-spacing-2xs);
+}
+
+@media (max-width: 720px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-brand-panel {
+    min-height: 18rem;
+    padding: var(--niar-spacing-3xl) var(--niar-spacing-2xl);
+  }
+
+  .brand-message {
+    margin-top: var(--niar-spacing-sm);
+  }
+
+  .login-form-panel {
+    min-height: calc(100vh - 18rem);
+  }
+}

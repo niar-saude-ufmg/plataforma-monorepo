@@ -16,4 +16,5 @@ describe("Tabs", () => {
     expect(screen.getByRole("tab", { name: "Uma" })).toBeVisible();
     expect(screen.getByRole("tab", { name: "Duas" })).toBeVisible();
   });
+
 });

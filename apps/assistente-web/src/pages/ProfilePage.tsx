@@ -1,10 +1,21 @@
 import { Link } from 'react-router-dom';
 import { APP_ROUTES } from '@niar/config';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, type User } from '../context/AuthContext';
 
 function roleLabel(role: string) {
   if (role === 'admin') return 'Administrador';
   return 'Pesquisador';
+}
+
+function accountStatusLabel(status: User['account_status']) {
+  const labels: Record<User['account_status'], string> = {
+    pending: 'Pendente',
+    active: 'Ativo',
+    rejected: 'Rejeitado',
+    disabled: 'Desativado',
+  };
+
+  return labels[status];
 }
 
 export default function ProfilePage() {
@@ -35,7 +46,7 @@ export default function ProfilePage() {
           </div>
           <div>
             <dt>Status</dt>
-            <dd>{user.is_active ? 'Ativo' : 'Inativo'}</dd>
+            <dd>{accountStatusLabel(user.account_status)}</dd>
           </div>
         </dl>
 

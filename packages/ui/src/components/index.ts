@@ -4,6 +4,8 @@ export { Link } from "./Link/Link";
 export type { LinkProps } from "./Link/Link";
 export { Input } from "./Input/Input";
 export type { InputProps } from "./Input/Input";
+export { DatePicker } from "./DatePicker/DatePicker";
+export type { DatePickerProps } from "./DatePicker/DatePicker";
 export { Select } from "./Select/Select";
 export type { SelectProps } from "./Select/Select";
 export { Card } from "./Card/Card";

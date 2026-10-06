@@ -6,13 +6,23 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.security import get_password_hash
-from app.models import User, UserRole
+from app.models import User, UserAccountStatus, UserRole
 from app.schemas import UserCreate, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserOut,
+    status_code=status.HTTP_201_CREATED,
+    deprecated=True,
+    summary="Cadastro legado",
+    description=(
+        "Deprecated: use POST /api/admin/users para o cadastro de pesquisador "
+        "com perfil, dados do COEP e revisão administrativa."
+    ),
+)
 async def register(body: UserCreate, db: AsyncSession = Depends(get_db)):
     settings = get_settings()
     if not settings.allow_registration:
@@ -26,6 +36,11 @@ async def register(body: UserCreate, db: AsyncSession = Depends(get_db)):
         full_name=body.full_name,
         hashed_password=get_password_hash(body.password),
         role=role,
+        account_status=(
+            UserAccountStatus.pending
+            if role == UserRole.researcher
+            else UserAccountStatus.active
+        ),
     )
     db.add(user)
     await db.commit()

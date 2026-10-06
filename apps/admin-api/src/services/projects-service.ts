@@ -4,7 +4,13 @@ import { basename, isAbsolute, relative, resolve, sep } from "node:path";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
 import { projectsRepository, type ProjectListFilter, type ProjectRecord } from "../repositories/projects-repository.js";
-import type { ListProjectsQuery, ProjectResponse, ProjectStatusCode } from "../schemas/project-schema.js";
+import type {
+  ListProjectsQuery,
+  ProjectEvaluationStatusCode,
+  ProjectListResponse,
+  ProjectResponse,
+  ProjectStatusCode
+} from "../schemas/project-schema.js";
 
 const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
   submitted_to_committee: "Enviado à comissão",
@@ -13,6 +19,11 @@ const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
   needs_changes: "Precisa de alterações",
   approved: "Aprovado",
   rejected: "Rejeitado"
+};
+
+const evaluationStatusFor = (project: ProjectRecord): ProjectEvaluationStatusCode => {
+  const latestVersion = project.versions.at(-1);
+  return latestVersion?.committeeEvaluation?.result ?? "waiting";
 };
 
 const DEFAULT_EXPORTS_DIR = resolve(process.cwd(), "apps/assistente-api/.local/exports");
@@ -43,32 +54,66 @@ const safeDocumentPath = async (storagePath: string) => {
   }
 };
 
-const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUser): ProjectResponse => ({
-  id: project.id,
-  title: project.title,
-  updated_at: project.updatedAt.toISOString(),
-  status: project.versions.flatMap((version) =>
-    version.statusHistory.map((history) => ({
-      code: history.status,
-      label: PROJECT_STATUS_LABELS[history.status],
-      version_number: version.versionNumber,
-      created_at: history.createdAt.toISOString(),
-      notes: history.notes
-    }))
-  ),
-  documents: project.versions.flatMap((version) =>
-    version.documents
-      .filter((document) => currentUser.role === "admin" || document.documentType === "project_docx")
-      .map((document) => ({
-      id: document.id,
-      version_number: version.versionNumber,
-      document_type: document.documentType,
-      original_filename: basename(document.originalFilename),
-      created_at: document.createdAt.toISOString(),
-      download_url: `/api/admin/projects/${project.id}/documents/${document.id}/download`
-    }))
-  )
-});
+const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUser): ProjectResponse => {
+  const response: ProjectResponse = {
+    id: project.id,
+    title: project.title,
+    updated_at: project.updatedAt.toISOString(),
+    researcher: {
+      id: project.owner.id,
+      full_name: project.owner.fullName,
+      email: project.owner.email
+    },
+    status: project.versions.flatMap((version) =>
+      version.statusHistory.map((history) => ({
+        code: history.status,
+        label: PROJECT_STATUS_LABELS[history.status],
+        version_number: version.versionNumber,
+        created_at: history.createdAt.toISOString(),
+        notes: history.notes
+      }))
+    ),
+    documents: project.versions.flatMap((version) =>
+      version.documents
+        .filter((document) => currentUser.role === "admin" || document.documentType === "project_docx")
+        .map((document) => ({
+          id: document.id,
+          version_number: version.versionNumber,
+          document_type: document.documentType,
+          original_filename: basename(document.originalFilename),
+          created_at: document.createdAt.toISOString(),
+          download_url: `/api/admin/projects/${project.id}/documents/${document.id}/download`
+        }))
+    )
+  };
+
+  if (currentUser.role !== "researcher") {
+    response.evaluation_status = evaluationStatusFor(project);
+    response.evaluations = project.versions.flatMap((version) => {
+      const evaluation = version.committeeEvaluation;
+      if (!evaluation) return [];
+
+      return [{
+        id: evaluation.id,
+        version_number: version.versionNumber,
+        result: evaluation.result,
+        responsible_member: {
+          user_id: evaluation.responsibleMember.userId,
+          full_name: evaluation.responsibleMember.user.fullName,
+          email: evaluation.responsibleMember.user.email,
+          specialty: {
+            id: evaluation.responsibleMember.specialty.id,
+            name: evaluation.responsibleMember.specialty.name
+          }
+        },
+        evaluated_at: evaluation.evaluatedAt?.toISOString() ?? null,
+        updated_at: evaluation.updatedAt.toISOString()
+      }];
+    });
+  }
+
+  return response;
+};
 
 const ownerScopeFor = (currentUser: AuthenticatedUser): number | undefined =>
   currentUser.role === "researcher" ? currentUser.id : undefined;
@@ -96,6 +141,7 @@ const toRepositoryFilter = (query: ListProjectsQuery, currentUser: Authenticated
     pageSize: query.page_size,
     ownerUserId: currentUser.role === "researcher" ? currentUser.id : query.researcher_id,
     status: query.status,
+    evaluationStatus: query.evaluation_status,
     submittedFrom: query.submitted_from,
     submittedTo: query.submitted_to,
     updatedFrom: query.updated_from,
@@ -110,9 +156,17 @@ const toRepositoryFilter = (query: ListProjectsQuery, currentUser: Authenticated
 };
 
 export const projectsService = {
-  listProjects: async (query: ListProjectsQuery, currentUser: AuthenticatedUser): Promise<ProjectResponse[]> => {
-    const projects = await projectsRepository.findAll(toRepositoryFilter(query, currentUser));
-    return projects.map((project) => toProjectResponse(project, currentUser));
+  listProjects: async (query: ListProjectsQuery, currentUser: AuthenticatedUser): Promise<ProjectListResponse> => {
+    const result = await projectsRepository.findAll(toRepositoryFilter(query, currentUser));
+    return {
+      items: result.items.map((project) => toProjectResponse(project, currentUser)),
+      pagination: {
+        page: query.page,
+        page_size: query.page_size,
+        total_items: result.total,
+        total_pages: Math.ceil(result.total / query.page_size)
+      }
+    };
   },
 
   getProject: async (projectId: number, currentUser: AuthenticatedUser): Promise<ProjectResponse> => {

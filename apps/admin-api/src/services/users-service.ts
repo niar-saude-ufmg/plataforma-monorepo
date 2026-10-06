@@ -59,7 +59,6 @@ const saveUser = async (data: BasicUserInput, role: UserRole): Promise<UserRespo
     email: user.email,
     full_name: user.fullName,
     role: user.role,
-    is_active: user.accountStatus === "active",
     created_at: user.createdAt.toISOString()
   };
 };
@@ -86,7 +85,6 @@ const toUserResponse = (user: {
   email: user.email,
   full_name: user.fullName,
   role: user.role,
-  is_active: user.accountStatus === "active",
   created_at: user.createdAt.toISOString(),
 });
 
@@ -111,7 +109,6 @@ export const usersService = {
       email: user.email,
       full_name: user.fullName,
       role: user.role,
-      is_active: user.accountStatus === "active",
       created_at: user.createdAt.toISOString()
     }));
   },
@@ -138,6 +135,7 @@ export const usersService = {
         fullName: data.full_name,
         email: data.email,
         hashedPassword,
+        accountStatus: "pending",
         profile: {
           phone: data.profile.phone,
           institution: data.profile.institution,
@@ -168,7 +166,6 @@ export const usersService = {
       email: created.user.email,
       full_name: created.user.fullName,
       role: created.user.role,
-      is_active: created.user.accountStatus === "active",
       created_at: created.user.createdAt.toISOString(),
       profile: {
         phone: created.profile.phone ?? "",

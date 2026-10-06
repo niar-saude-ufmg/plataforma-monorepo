@@ -1,5 +1,3 @@
-import { FormEvent, lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
   ACCESS_TOKEN_STORAGE_KEY,
   clearPlatformSession,
@@ -10,11 +8,15 @@ import {
   SESSION_CHANGED_EVENT,
   writePlatformSession
 } from "@niar/auth";
-import { APP_ROUTES, APP_TITLES } from "@niar/config";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { DesignSystemPage } from "./pages/DesignSystemPage";
-import { NotFoundPage } from "./pages/NotFoundPage";
-import { SITE_URL } from "./site";
+import { APP_ROUTES } from "@niar/config";
+import { NiarProvider } from "@niar/ui";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { ProtectedRoute } from "./components/ProtectedRoute/ProtectedRoute";
+import { RemoteLoading } from "./components/RemoteLoading/RemoteLoading";
+import { LoginPage } from "./pages/Login/Login";
+import { NotFoundPage } from "./pages/NotFound/NotFound";
+import { InstitutionalRemotePage } from "./remotes/InstitutionalRemotePage";
 import { AuthenticatedUser, getCurrentUser, login as loginRequest } from "./services/auth-api";
 
 type SessionUser = PlatformSessionUser;
@@ -42,6 +44,25 @@ const AssistantRemote = import.meta.env.MODE === "test"
     }))
   : lazy(() => import("assistant/App"));
 
+const INSTITUTIONAL_ROUTES = [
+  "/",
+  "/about/*",
+  "/contact/*",
+  "/leme/*",
+  "/news/*",
+  "/publications/*",
+  "/sala-segura/*",
+  "/team/*",
+  "/en",
+  "/en/about/*",
+  "/en/contact/*",
+  "/en/leme/*",
+  "/en/news/*",
+  "/en/publications/*",
+  "/en/sala-segura/*",
+  "/en/team/*"
+] as const;
+
 const writeSession = (user: SessionUser | null) => {
   if (!user) {
     clearPlatformSession();
@@ -55,113 +76,9 @@ const toSessionUser = (user: AuthenticatedUser): SessionUser => ({
   id: user.id,
   email: user.email,
   name: user.full_name,
-  role: user.role
+  role: user.role,
+  accountStatus: user.account_status
 });
-
-const defaultRouteForRole = () => {
-  return APP_ROUTES.admin;
-};
-
-function LoginPage({
-  onLogin
-}: {
-  onLogin: (email: string, password: string) => Promise<SessionUser>;
-}) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
-
-    try {
-      const user = await onLogin(email, password);
-      const requestedRoute = (location.state as { from?: string } | null)?.from;
-      const redirectTo = requestedRoute && hasAccessToRoute(user.role, requestedRoute)
-        ? requestedRoute
-        : defaultRouteForRole();
-      navigate(redirectTo, { replace: true });
-    } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : "Não foi possível entrar.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <main className="login-page">
-      <section className="login-brand-panel">
-        <div className="brand-mark" aria-hidden="true" />
-        <p className="brand-name">NIAR-Saúde</p>
-        <p className="brand-description">Núcleo de Inteligência Artificial Responsável para a Saúde</p>
-        <p className="brand-message">
-          Pesquisa, inovação e responsabilidade para transformar a saúde com inteligência artificial.
-        </p>
-      </section>
-      <section className="login-form-panel" aria-labelledby="login-title">
-        <div className="login-form-content">
-          <a className="back-to-site" href={SITE_URL}>
-            {"< Voltar ao site institucional"}
-          </a>
-          <p className="eyebrow">Acesso à plataforma</p>
-          <h1 id="login-title">{APP_TITLES.login}</h1>
-          <p className="muted">Use suas credenciais para continuar.</p>
-          <form className="auth-form" onSubmit={handleSubmit}>
-            <label>
-              E-mail
-              <input
-                autoComplete="email"
-                onChange={(event) => setEmail(event.target.value)}
-                required
-                type="email"
-                value={email}
-              />
-            </label>
-            <label>
-              Senha
-              <input
-                autoComplete="current-password"
-                onChange={(event) => setPassword(event.target.value)}
-                required
-                type="password"
-                value={password}
-              />
-            </label>
-            {error && <p className="form-error" role="alert">{error}</p>}
-            <button disabled={isSubmitting} type="submit">
-              {isSubmitting ? "Entrando..." : "Entrar na plataforma"}
-            </button>
-          </form>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-// Em produção o Caddy serve o site em "/" (e em "/sala-segura") e estas rotas nunca
-// chegam à shell; em dev (shell em :5173) elas levam ao site, que roda em outra porta.
-function RedirectToSite({ path = "" }: { path?: string }) {
-  useEffect(() => {
-    window.location.replace(`${SITE_URL.replace(/\/$/, "")}/${path}`);
-  }, [path]);
-
-  return <RemoteLoading label="site institucional" />;
-}
-
-function RemoteLoading({ label }: { label: string }) {
-  return (
-    <main className="page">
-      <section className="card">
-        <p className="muted">Carregando {label}...</p>
-      </section>
-    </main>
-  );
-}
 
 export default function App() {
   const location = useLocation();
@@ -210,7 +127,8 @@ export default function App() {
   };
 
   return (
-    <div className="layout">
+    <NiarProvider>
+      <div className="layout">
       {isRestoringSession && <RemoteLoading label="sessão" />}
 
       {!isRestoringSession && !canAccessCurrentRoute && (
@@ -219,8 +137,7 @@ export default function App() {
 
       {!isRestoringSession && <Routes>
         <Route path={APP_ROUTES.login} element={<LoginPage onLogin={login} />} />
-        <Route path={`${APP_ROUTES.visualIdentity}/*`} element={<DesignSystemPage />} />
-        <Route path="/design-system/*" element={<Navigate replace to={APP_ROUTES.visualIdentity} />} />
+        <Route path="/storybook/*" element={<NotFoundPage />} />
         <Route
           path={APP_ROUTES.researcherSignup}
           element={
@@ -232,9 +149,9 @@ export default function App() {
         <Route
           path={`${APP_ROUTES.admin}/*`}
           element={
-            <ProtectedRoute userRole={user?.role}>
+              <ProtectedRoute userRole={user?.role}>
               <Suspense fallback={<RemoteLoading label="área administrativa" />}>
-                <AdminRemote currentUser={user ?? undefined} />
+                <AdminRemote mode="admin" currentUser={user ?? undefined} />
               </Suspense>
             </ProtectedRoute>
           }
@@ -249,11 +166,12 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        {/* A página da Sala Segura mora no site institucional; o cadastro continua aqui. */}
-        <Route path={APP_ROUTES.salaSegura} element={<RedirectToSite path="sala-segura/" />} />
-        <Route path={APP_ROUTES.home} element={<RedirectToSite />} />
+        {INSTITUTIONAL_ROUTES.map((path) => (
+          <Route key={path} path={path} element={<InstitutionalRemotePage />} />
+        ))}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>}
-    </div>
+      </div>
+    </NiarProvider>
   );
 }
