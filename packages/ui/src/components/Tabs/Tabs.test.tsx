@@ -16,4 +16,23 @@ describe("Tabs", () => {
     expect(screen.getByRole("tab", { name: "Uma" })).toBeVisible();
     expect(screen.getByRole("tab", { name: "Duas" })).toBeVisible();
   });
+
+  it("renderiza qualquer quantidade de opções", () => {
+    render(
+      <Tabs
+        value="home"
+        options={[
+          { value: "home", label: "Início" },
+          { value: "projects", label: "Projetos" },
+          { value: "users", label: "Usuários" },
+          { value: "specialties", label: "Especialidades" },
+          { value: "profile", label: "Perfil" },
+        ]}
+      />,
+    );
+
+    const tablist = screen.getAllByRole("tablist")[1];
+    expect(tablist.querySelectorAll('[role="tab"]')).toHaveLength(5);
+    expect(screen.getByRole("tab", { name: "Perfil" })).toBeVisible();
+  });
 });
