@@ -170,6 +170,7 @@ const options = {
             id: { type: 'integer', example: 42 },
             title: { type: 'string', example: 'Projeto de pesquisa' },
             updated_at: { type: 'string', format: 'date-time' },
+            evaluation_status: { type: 'string', enum: ['waiting', 'to_review', 'approved', 'needs_changes', 'rejected'], example: 'waiting' },
             researcher: {
               type: 'object',
               required: ['id', 'full_name', 'email'],

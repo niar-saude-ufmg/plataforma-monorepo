@@ -217,6 +217,7 @@ describe("GET /api/admin/projects", () => {
         id: 42,
         title: "Projeto de pesquisa",
         updated_at: "2026-09-25T12:00:00.000Z",
+        evaluation_status: "waiting",
         researcher: {
           id: 10,
           full_name: "Pesquisador 10",
@@ -300,6 +301,7 @@ describe("GET /api/admin/projects", () => {
       evaluated_at: null,
       updated_at: "2026-09-22T10:00:00.000Z"
     }]);
+    expect(adminResponse.body.items[0].evaluation_status).toBe("to_review");
 
     findUserById.mockResolvedValueOnce(authUser(10, "researcher"));
     findAll.mockResolvedValueOnce({ items: [record], total: 1 });
@@ -309,6 +311,19 @@ describe("GET /api/admin/projects", () => {
       .set("Authorization", `Bearer ${tokenFor(10)}`);
 
     expect(researcherResponse.body.items[0]).not.toHaveProperty("evaluations");
+    expect(researcherResponse.body.items[0]).not.toHaveProperty("evaluation_status");
+  });
+
+  it("repassa o filtro derivado de avaliação", async () => {
+    findUserById.mockResolvedValueOnce(authUser(30, "committee"));
+    findAll.mockResolvedValueOnce({ items: [], total: 0 });
+
+    const response = await request(app)
+      .get("/api/admin/projects?evaluation_status=waiting")
+      .set("Authorization", `Bearer ${tokenFor(30)}`);
+
+    expect(response.status).toBe(200);
+    expect(findAll).toHaveBeenCalledWith(expect.objectContaining({ evaluationStatus: "waiting" }));
   });
 
   it("limita filtros de documento da comissão aos tipos autorizados", async () => {

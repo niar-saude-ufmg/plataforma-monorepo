@@ -9,6 +9,14 @@ export const projectStatusSchema = z.enum([
   "rejected"
 ]);
 
+export const projectEvaluationStatusSchema = z.enum([
+  "waiting",
+  "to_review",
+  "approved",
+  "needs_changes",
+  "rejected"
+]);
+
 const optionalDate = (boundary: "from" | "to") =>
   z.preprocess(
     (value) => {
@@ -25,6 +33,7 @@ export const listProjectsQuerySchema = z
     page: z.coerce.number().int().positive().default(1),
     page_size: z.coerce.number().int().positive().max(100).default(20),
     status: projectStatusSchema.optional(),
+    evaluation_status: projectEvaluationStatusSchema.optional(),
     submitted_from: optionalDate("from"),
     submitted_to: optionalDate("to"),
     updated_from: optionalDate("from"),
@@ -55,6 +64,7 @@ export const projectDocumentParamsSchema = projectParamsSchema.extend({
 });
 
 export type ProjectStatusCode = z.infer<typeof projectStatusSchema>;
+export type ProjectEvaluationStatusCode = z.infer<typeof projectEvaluationStatusSchema>;
 export type ListProjectsQuery = z.infer<typeof listProjectsQuerySchema>;
 
 export type ProjectStatusResponse = {
@@ -102,6 +112,7 @@ export type ProjectResponse = {
   title: string;
   updated_at: string;
   researcher: ProjectResearcherResponse;
+  evaluation_status?: ProjectEvaluationStatusCode;
   status: ProjectStatusResponse[];
   documents: ProjectDocumentResponse[];
   evaluations?: ProjectEvaluationResponse[];

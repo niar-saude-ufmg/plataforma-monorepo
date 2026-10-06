@@ -1,4 +1,9 @@
-import { Prisma, type project_status as ProjectStatus, prisma } from "@niar/database";
+import {
+  Prisma,
+  type committee_evaluation_result as CommitteeEvaluationResult,
+  type project_status as ProjectStatus,
+  prisma
+} from "@niar/database";
 
 const projectInclude = {
   owner: {
@@ -50,6 +55,7 @@ export type ProjectListFilter = {
   pageSize: number;
   ownerUserId?: number;
   status?: ProjectStatus;
+  evaluationStatus?: "waiting" | CommitteeEvaluationResult;
   submittedFrom?: Date;
   submittedTo?: Date;
   updatedFrom?: Date;
@@ -66,6 +72,11 @@ const buildWhere = (filter: Omit<ProjectListFilter, "page" | "pageSize" | "order
   const versionWhere: Prisma.ProjectVersionWhereInput = {};
 
   if (filter.status) versionWhere.status = filter.status;
+  if (filter.evaluationStatus === "waiting") {
+    versionWhere.committeeEvaluation = { is: null };
+  } else if (filter.evaluationStatus) {
+    versionWhere.committeeEvaluation = { is: { result: filter.evaluationStatus } };
+  }
   if (filter.versionNumber) versionWhere.versionNumber = filter.versionNumber;
   if (filter.submittedFrom || filter.submittedTo) {
     versionWhere.submittedAt = {

@@ -4,7 +4,13 @@ import { basename, isAbsolute, relative, resolve, sep } from "node:path";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
 import { projectsRepository, type ProjectListFilter, type ProjectRecord } from "../repositories/projects-repository.js";
-import type { ListProjectsQuery, ProjectListResponse, ProjectResponse, ProjectStatusCode } from "../schemas/project-schema.js";
+import type {
+  ListProjectsQuery,
+  ProjectEvaluationStatusCode,
+  ProjectListResponse,
+  ProjectResponse,
+  ProjectStatusCode
+} from "../schemas/project-schema.js";
 
 const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
   submitted_to_committee: "Enviado à comissão",
@@ -13,6 +19,11 @@ const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
   needs_changes: "Precisa de alterações",
   approved: "Aprovado",
   rejected: "Rejeitado"
+};
+
+const evaluationStatusFor = (project: ProjectRecord): ProjectEvaluationStatusCode => {
+  const latestVersion = project.versions.at(-1);
+  return latestVersion?.committeeEvaluation?.result ?? "waiting";
 };
 
 const DEFAULT_EXPORTS_DIR = resolve(process.cwd(), "apps/assistente-api/.local/exports");
@@ -77,6 +88,7 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
   };
 
   if (currentUser.role !== "researcher") {
+    response.evaluation_status = evaluationStatusFor(project);
     response.evaluations = project.versions.flatMap((version) => {
       const evaluation = version.committeeEvaluation;
       if (!evaluation) return [];
@@ -129,6 +141,7 @@ const toRepositoryFilter = (query: ListProjectsQuery, currentUser: Authenticated
     pageSize: query.page_size,
     ownerUserId: currentUser.role === "researcher" ? currentUser.id : query.researcher_id,
     status: query.status,
+    evaluationStatus: query.evaluation_status,
     submittedFrom: query.submitted_from,
     submittedTo: query.submitted_to,
     updatedFrom: query.updated_from,

@@ -24,6 +24,12 @@ export const projectsRouter = Router();
  *           type: string
  *           enum: [submitted_to_committee, resubmitted_to_committee, under_review, needs_changes, approved, rejected]
  *       - in: query
+ *         name: evaluation_status
+ *         description: Estado derivado da avaliação da versão mais recente. waiting significa que ainda não existe avaliação atribuída.
+ *         schema:
+ *           type: string
+ *           enum: [waiting, to_review, approved, needs_changes, rejected]
+ *       - in: query
  *         name: submitted_from
  *         schema: { type: string, format: date-time }
  *       - in: query
