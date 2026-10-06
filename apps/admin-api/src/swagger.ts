@@ -165,11 +165,20 @@ const options = {
         },
         ProjectResponse: {
           type: 'object',
-          required: ['id', 'title', 'updated_at', 'status', 'documents'],
+          required: ['id', 'title', 'updated_at', 'researcher', 'status', 'documents'],
           properties: {
             id: { type: 'integer', example: 42 },
             title: { type: 'string', example: 'Projeto de pesquisa' },
             updated_at: { type: 'string', format: 'date-time' },
+            researcher: {
+              type: 'object',
+              required: ['id', 'full_name', 'email'],
+              properties: {
+                id: { type: 'integer', example: 10 },
+                full_name: { type: 'string', example: 'Pesquisador 10' },
+                email: { type: 'string', format: 'email', example: 'researcher@niar.local' },
+              },
+            },
             status: {
               type: 'array',
               items: { $ref: '#/components/schemas/ProjectStatusResponse' },
@@ -178,6 +187,38 @@ const options = {
               type: 'array',
               items: { $ref: '#/components/schemas/ProjectDocumentResponse' },
             },
+            evaluations: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ProjectEvaluationResponse' },
+            },
+          },
+        },
+        ProjectEvaluationResponse: {
+          type: 'object',
+          required: ['id', 'version_number', 'result', 'responsible_member', 'evaluated_at', 'updated_at'],
+          properties: {
+            id: { type: 'integer', example: 8 },
+            version_number: { type: 'integer', example: 2 },
+            result: { type: 'string', enum: ['to_review', 'approved', 'needs_changes', 'rejected'] },
+            responsible_member: {
+              type: 'object',
+              required: ['user_id', 'full_name', 'email', 'specialty'],
+              properties: {
+                user_id: { type: 'integer', example: 4 },
+                full_name: { type: 'string', example: 'Membro do comitê' },
+                email: { type: 'string', format: 'email' },
+                specialty: {
+                  type: 'object',
+                  required: ['id', 'name'],
+                  properties: {
+                    id: { type: 'integer', example: 2 },
+                    name: { type: 'string', example: 'Epidemiologia' },
+                  },
+                },
+              },
+            },
+            evaluated_at: { type: 'string', format: 'date-time', nullable: true },
+            updated_at: { type: 'string', format: 'date-time' },
           },
         },
         ErrorResponse: {

@@ -62,6 +62,11 @@ const projectRecord = (): ProjectRecord =>
     submittedAt: new Date("2026-09-20T10:00:00.000Z"),
     createdAt: new Date("2026-09-20T10:00:00.000Z"),
     updatedAt: new Date("2026-09-25T12:00:00.000Z"),
+    owner: {
+      id: 10,
+      fullName: "Pesquisador 10",
+      email: "researcher10@niar.local"
+    },
     versions: [
       {
         id: 51,
@@ -73,6 +78,7 @@ const projectRecord = (): ProjectRecord =>
         status: "needs_changes",
         submittedAt: new Date("2026-09-20T10:00:00.000Z"),
         createdAt: new Date("2026-09-20T10:00:00.000Z"),
+        committeeEvaluation: null,
         statusHistory: [
           {
             id: 70,
@@ -211,6 +217,11 @@ describe("GET /api/admin/projects", () => {
         id: 42,
         title: "Projeto de pesquisa",
         updated_at: "2026-09-25T12:00:00.000Z",
+        researcher: {
+          id: 10,
+          full_name: "Pesquisador 10",
+          email: "researcher10@niar.local"
+        },
         status: [
           {
             code: "submitted_to_committee",
@@ -236,7 +247,8 @@ describe("GET /api/admin/projects", () => {
             created_at: "2026-09-20T10:00:00.000Z",
             download_url: "/api/admin/projects/42/documents/101/download"
           }
-        ]
+        ],
+        evaluations: []
         }
       ],
       pagination: {
@@ -248,6 +260,55 @@ describe("GET /api/admin/projects", () => {
     });
     expect(JSON.stringify(response.body)).not.toContain("storage_path");
     expect(JSON.stringify(response.body)).not.toContain("/segredo/interno");
+  });
+
+  it("retorna a avaliação para todos os perfis dentro do próprio escopo", async () => {
+    const record = projectRecord();
+    record.versions[0].committeeEvaluation = {
+      id: 88,
+      projectVersionId: 51,
+      responsibleMemberUserId: 31,
+      result: "to_review",
+      justification: null,
+      evaluatedAt: null,
+      createdAt: new Date("2026-09-22T10:00:00.000Z"),
+      updatedAt: new Date("2026-09-22T10:00:00.000Z"),
+      responsibleMember: {
+        userId: 31,
+        user: { fullName: "Avaliador 31", email: "committee31@niar.local" },
+        specialty: { id: 4, name: "Epidemiologia" }
+      }
+    };
+
+    findUserById.mockResolvedValueOnce(authUser(20, "admin"));
+    findAll.mockResolvedValueOnce({ items: [record], total: 1 });
+
+    const adminResponse = await request(app)
+      .get("/api/admin/projects")
+      .set("Authorization", `Bearer ${tokenFor(20)}`);
+
+    expect(adminResponse.body.items[0].evaluations).toEqual([{
+      id: 88,
+      version_number: 1,
+      result: "to_review",
+      responsible_member: {
+        user_id: 31,
+        full_name: "Avaliador 31",
+        email: "committee31@niar.local",
+        specialty: { id: 4, name: "Epidemiologia" }
+      },
+      evaluated_at: null,
+      updated_at: "2026-09-22T10:00:00.000Z"
+    }]);
+
+    findUserById.mockResolvedValueOnce(authUser(10, "researcher"));
+    findAll.mockResolvedValueOnce({ items: [record], total: 1 });
+
+    const researcherResponse = await request(app)
+      .get("/api/admin/projects")
+      .set("Authorization", `Bearer ${tokenFor(10)}`);
+
+    expect(researcherResponse.body.items[0]).not.toHaveProperty("evaluations");
   });
 
   it("limita filtros de documento da comissão aos tipos autorizados", async () => {

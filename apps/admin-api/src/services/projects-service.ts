@@ -43,32 +43,65 @@ const safeDocumentPath = async (storagePath: string) => {
   }
 };
 
-const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUser): ProjectResponse => ({
-  id: project.id,
-  title: project.title,
-  updated_at: project.updatedAt.toISOString(),
-  status: project.versions.flatMap((version) =>
-    version.statusHistory.map((history) => ({
-      code: history.status,
-      label: PROJECT_STATUS_LABELS[history.status],
-      version_number: version.versionNumber,
-      created_at: history.createdAt.toISOString(),
-      notes: history.notes
-    }))
-  ),
-  documents: project.versions.flatMap((version) =>
-    version.documents
-      .filter((document) => currentUser.role === "admin" || document.documentType === "project_docx")
-      .map((document) => ({
-      id: document.id,
-      version_number: version.versionNumber,
-      document_type: document.documentType,
-      original_filename: basename(document.originalFilename),
-      created_at: document.createdAt.toISOString(),
-      download_url: `/api/admin/projects/${project.id}/documents/${document.id}/download`
-    }))
-  )
-});
+const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUser): ProjectResponse => {
+  const response: ProjectResponse = {
+    id: project.id,
+    title: project.title,
+    updated_at: project.updatedAt.toISOString(),
+    researcher: {
+      id: project.owner.id,
+      full_name: project.owner.fullName,
+      email: project.owner.email
+    },
+    status: project.versions.flatMap((version) =>
+      version.statusHistory.map((history) => ({
+        code: history.status,
+        label: PROJECT_STATUS_LABELS[history.status],
+        version_number: version.versionNumber,
+        created_at: history.createdAt.toISOString(),
+        notes: history.notes
+      }))
+    ),
+    documents: project.versions.flatMap((version) =>
+      version.documents
+        .filter((document) => currentUser.role === "admin" || document.documentType === "project_docx")
+        .map((document) => ({
+          id: document.id,
+          version_number: version.versionNumber,
+          document_type: document.documentType,
+          original_filename: basename(document.originalFilename),
+          created_at: document.createdAt.toISOString(),
+          download_url: `/api/admin/projects/${project.id}/documents/${document.id}/download`
+        }))
+    )
+  };
+
+  if (currentUser.role !== "researcher") {
+    response.evaluations = project.versions.flatMap((version) => {
+      const evaluation = version.committeeEvaluation;
+      if (!evaluation) return [];
+
+      return [{
+        id: evaluation.id,
+        version_number: version.versionNumber,
+        result: evaluation.result,
+        responsible_member: {
+          user_id: evaluation.responsibleMember.userId,
+          full_name: evaluation.responsibleMember.user.fullName,
+          email: evaluation.responsibleMember.user.email,
+          specialty: {
+            id: evaluation.responsibleMember.specialty.id,
+            name: evaluation.responsibleMember.specialty.name
+          }
+        },
+        evaluated_at: evaluation.evaluatedAt?.toISOString() ?? null,
+        updated_at: evaluation.updatedAt.toISOString()
+      }];
+    });
+  }
+
+  return response;
+};
 
 const ownerScopeFor = (currentUser: AuthenticatedUser): number | undefined =>
   currentUser.role === "researcher" ? currentUser.id : undefined;

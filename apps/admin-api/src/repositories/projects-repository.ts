@@ -1,11 +1,39 @@
 import { Prisma, type project_status as ProjectStatus, prisma } from "@niar/database";
 
 const projectInclude = {
+  owner: {
+    select: {
+      id: true,
+      fullName: true,
+      email: true
+    }
+  },
   versions: {
     orderBy: { versionNumber: "asc" as const },
     include: {
       statusHistory: { orderBy: { createdAt: "asc" as const } },
-      documents: { orderBy: { createdAt: "asc" as const } }
+      documents: { orderBy: { createdAt: "asc" as const } },
+      committeeEvaluation: {
+        include: {
+          responsibleMember: {
+            select: {
+              userId: true,
+              user: {
+                select: {
+                  fullName: true,
+                  email: true
+                }
+              },
+              specialty: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 } satisfies Prisma.ProjectInclude;

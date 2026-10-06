@@ -74,12 +74,37 @@ export type ProjectDocumentResponse = {
   download_url: string;
 };
 
+export type ProjectResearcherResponse = {
+  id: number;
+  full_name: string;
+  email: string;
+};
+
+export type ProjectEvaluationResponse = {
+  id: number;
+  version_number: number;
+  result: "to_review" | "approved" | "needs_changes" | "rejected";
+  responsible_member: {
+    user_id: number;
+    full_name: string;
+    email: string;
+    specialty: {
+      id: number;
+      name: string;
+    };
+  };
+  evaluated_at: string | null;
+  updated_at: string;
+};
+
 export type ProjectResponse = {
   id: number;
   title: string;
   updated_at: string;
+  researcher: ProjectResearcherResponse;
   status: ProjectStatusResponse[];
   documents: ProjectDocumentResponse[];
+  evaluations?: ProjectEvaluationResponse[];
 };
 
 export type ProjectListResponse = {
