@@ -40,7 +40,7 @@ function AppContent({ mode, currentUser }: AppProps) {
  * Casca do admin. Substitui o placeholder anterior.
  * Quando entrar roteamento (react-router), o <main> vira o outlet das rotas.
  */
-export default function App({ mode = 'public', currentUser }: AppProps) {
+export default function App({ mode = 'admin', currentUser }: AppProps) {
   return (
     <NiarProvider>
       <Provider store={store}>
