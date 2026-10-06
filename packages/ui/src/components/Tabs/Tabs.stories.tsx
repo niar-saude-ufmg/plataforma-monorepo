@@ -1,14 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Tabs } from "./Tabs";
 
-const roleNavigationOptions = [
-  { value: "home", label: "Início" },
-  { value: "projects", label: "Projetos" },
-  { value: "users", label: "Usuários" },
-  { value: "specialties", label: "Especialidades" },
-  { value: "profile", label: "Perfil" },
-] as const;
-
 const meta = {
   title: "Componentes/Tabs",
   component: Tabs,
@@ -70,33 +62,6 @@ export const Playground: Story = {
       canvas: { sourceState: "shown" },
       description: {
         story: "Clique nas abas para alternar o valor selecionado.",
-      },
-    },
-  },
-};
-
-export const RoleNavigation: Story = {
-  args: {
-    defaultValue: "home",
-    options: roleNavigationOptions,
-    "aria-label": "Navegação principal",
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: "Exemplo com cinco abas. A lista pode ter qualquer quantidade de opções.",
-      },
-      source: {
-        code: `<Tabs
-  defaultValue="home"
-  options={[
-    { value: "home", label: "Início" },
-    { value: "projects", label: "Projetos" },
-    { value: "users", label: "Usuários" },
-    { value: "specialties", label: "Especialidades" },
-    { value: "profile", label: "Perfil" },
-  ]}
-/>`,
       },
     },
   },
