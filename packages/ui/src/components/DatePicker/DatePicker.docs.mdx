@@ -1,0 +1,53 @@
+import {
+  Canvas,
+  Controls,
+  Description,
+  Meta,
+  Source,
+} from "@storybook/addon-docs/blocks";
+import * as Stories from "./DatePicker.stories";
+
+<Meta of={Stories} />
+
+# DatePicker
+
+Campo de data baseado no input nativo do navegador, com o label retraído e a identidade visual do Design System. A pessoa usuária pode clicar em qualquer área do campo para abrir o seletor de data.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+### Preenchido
+
+<Description of={Stories.Filled} />
+<Canvas of={Stories.Filled} />
+
+### Exemplo de aplicação
+
+<Source
+  dark
+  language="tsx"
+  code={`import { DatePicker } from "@niar/ui";
+
+export function CoepOpinion() {
+  return (
+    <DatePicker
+      label="Data de aprovação"
+      value={approvalDate}
+      onChange={(event) => setApprovalDate(event.target.value)}
+      required
+      fullWidth
+    />
+  );
+}`}
+/> 
+
+### Acessibilidade e interação
+
+- Mantenha um `label` visível e associado ao campo.
+- Use valores no formato `YYYY-MM-DD`, conforme o input nativo de data.
+- O campo recebe `cursor: pointer` e abre o seletor ao clicar na área do campo.
+- Use `required`, `error` e `helperText` para comunicar as regras de validação.

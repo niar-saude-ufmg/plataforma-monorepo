@@ -1,57 +1,51 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { UserRole } from '@niar/contracts';
-import { UsersPage } from './pages/users-page';
+import { NiarProvider } from '@niar/ui';
+import { useEffect, useState } from 'react';
+import { Provider, useDispatch } from 'react-redux';
+import { PublicUser } from './pages/PublicUser/PublicUser';
+import { AdminRoutes } from './routes/AdminRoutes';
+import { store } from './store';
+import { setAuthUser } from './store/auth/auth.slice';
+import type { AuthUser } from './types/user.types';
 import './styles/niar.css';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 type AppProps = {
   mode?: 'admin' | 'public';
-  currentUser?: {
-    name: string;
-    email: string;
-    role: UserRole;
-  };
+  currentUser?: AuthUser;
 };
+
+function AppContent({ mode, currentUser }: AppProps) {
+  const dispatch = useDispatch();
+  const isPublicMode = mode === 'public';
+  const [isAuthReady, setIsAuthReady] = useState(isPublicMode);
+
+  useEffect(() => {
+    dispatch(setAuthUser(currentUser ?? null));
+    setIsAuthReady(true);
+  }, [currentUser, dispatch]);
+
+  if (!isPublicMode && !isAuthReady) return null;
+
+  return (
+    <div className="app-shell">
+      {isPublicMode ? (
+        <main className="app-main app-main--public">
+          <PublicUser />
+        </main>
+      ) : <AdminRoutes />}
+    </div>
+  );
+}
 
 /**
  * Casca do admin. Substitui o placeholder anterior.
  * Quando entrar roteamento (react-router), o <main> vira o outlet das rotas.
  */
 export default function App({ mode = 'admin', currentUser }: AppProps) {
-  const isPublicMode = mode === 'public';
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="app-shell">
-        {!isPublicMode ? (
-          <header className="app-header">
-            <div className="app-header__inner">
-              {/* TODO: trocar por <img src="/logo-niar-saude.svg" alt="NIAR-Saúde" />.
-                  O manual não permite recriar a marca com outra tipografia em produção. */}
-              <div className="brand">
-                <span className="brand__mark">NIAR-Saúde</span>
-                <span className="brand__descriptor">
-                  Núcleo de Inteligência Artificial Responsável para a Saúde
-                </span>
-              </div>
-              <span className="app-header__meta">Painel administrativo</span>
-            </div>
-          </header>
-        ) : null}
-
-        <main className={isPublicMode ? 'app-main app-main--public' : 'app-main'}>
-          <UsersPage mode={mode} currentUser={currentUser} />
-        </main>
-      </div>
-    </QueryClientProvider>
+    <NiarProvider>
+      <Provider store={store}>
+        <AppContent mode={mode} currentUser={currentUser} />
+      </Provider>
+    </NiarProvider>
   );
 }

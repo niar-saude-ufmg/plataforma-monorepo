@@ -15,7 +15,7 @@ import { stepperTheme } from "../components/Stepper/Stepper.theme";
 import { tabsTheme } from "../components/Tabs/Tabs.theme";
 import { iconButtonTheme } from "../components/IconButton/IconButton.theme";
 import { tabTheme } from "../components/Tabs/Tab.theme";
-import { niar } from "../tokens/index";
+import { niar, typographyStyle } from "../tokens/index";
 import { headerTheme } from "../components/Header/Header.theme";
 import { sidebarTheme } from "../components/Sidebar/Sidebar.theme";
 import { breadcrumbsTheme } from "../components/Breadcrumbs/Breadcrumbs.theme";
@@ -35,6 +35,26 @@ const niarThemeOptions: ThemeOptions = {
       main: niar.colors.action.secondary,
       contrastText: niar.colors.action.onSecondary,
     },
+    success: {
+      main: niar.colors.feedback.success,
+      light: niar.colors.feedback.successSurface,
+      contrastText: niar.colors.base.white,
+    },
+    warning: {
+      main: niar.colors.feedback.warning,
+      light: niar.colors.feedback.warningSurface,
+      contrastText: niar.colors.base.white,
+    },
+    error: {
+      main: niar.colors.feedback.error,
+      light: niar.colors.feedback.errorSurface,
+      contrastText: niar.colors.base.white,
+    },
+    info: {
+      main: niar.colors.feedback.info,
+      light: niar.colors.feedback.infoSurface,
+      contrastText: niar.colors.base.white,
+    },
     background: {
       default: niar.colors.surface.page,
       paper: niar.colors.surface.card,
@@ -50,14 +70,14 @@ const niarThemeOptions: ThemeOptions = {
     fontWeightRegular: niar.fontWeight.regular,
     fontWeightMedium: niar.fontWeight.medium,
     fontWeightBold: niar.fontWeight.bold,
-    body1: { color: niar.colors.text.body, fontSize: niar.fontSize.body },
-    body2: { color: niar.colors.text.body, fontSize: niar.fontSize.caption },
+    body1: { ...typographyStyle("body"), color: niar.colors.text.body },
+    body2: { ...typographyStyle("caption"), color: niar.colors.text.body },
     subtitle1: {
+      ...typographyStyle("subtitle"),
       color: niar.colors.text.subtitle,
-      fontSize: niar.fontSize.subtitle,
     },
-    h1: { color: niar.colors.text.heading, fontSize: niar.fontSize.heading },
-    h2: { color: niar.colors.text.heading, fontSize: niar.fontSize.title },
+    h1: { ...typographyStyle("heading"), color: niar.colors.text.heading },
+    h2: { ...typographyStyle("title"), color: niar.colors.text.heading },
   },
   spacing: Number.parseFloat(niar.spacing.xs),
   shape: { borderRadius: Number.parseFloat(niar.radius.small) },

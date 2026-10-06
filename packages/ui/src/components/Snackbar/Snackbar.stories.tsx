@@ -8,6 +8,7 @@ const meta = {
     open: true,
     message: "Projeto salvo com sucesso.",
     severity: "success",
+    variant: "standard",
     anchorOrigin: { vertical: "top", horizontal: "center" },
   },
   argTypes: {
@@ -26,6 +27,25 @@ const meta = {
       options: ["success", "info", "warning", "error"],
       description: "Define o significado semântico e a cor.",
       table: { category: "PROPS", defaultValue: { summary: "info" } },
+    },
+    variant: {
+      control: "select",
+      options: ["standard", "filled", "outlined"],
+      description: "Define a aparência visual da mensagem, como no Alert.",
+      table: { category: "PROPS", defaultValue: { summary: "standard" } },
+    },
+    anchorOrigin: {
+      control: "object",
+      description: "Define a posição do Snackbar na janela.",
+      table: {
+        category: "PROPS",
+        defaultValue: { summary: "{ vertical: 'bottom', horizontal: 'left' }" },
+      },
+    },
+    autoHideDuration: {
+      control: "number",
+      description: "Tempo, em milissegundos, até a mensagem desaparecer.",
+      table: { category: "PROPS", defaultValue: { summary: "6000" } },
     },
     onClose: {
       action: "closed",

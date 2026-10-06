@@ -19,10 +19,19 @@ export type PageHeaderNavigation = "sidebar" | "menu" | "tabs";
 
 export type PageHeaderProps = {
   tabs?: readonly TabOption[];
+  /** Item ativo para qualquer modo de navegação: tabs, menu ou sidebar. */
+  activeItem?: string;
+  /** Chamado quando um item de qualquer modo de navegação é selecionado. */
+  onItemChange?: (value: string) => void;
+  /** @deprecated Use activeItem. Mantido para compatibilidade com consumidores existentes. */
   tabsValue?: string;
   defaultTabsValue?: string;
   onChange?: (value: string) => void;
   avatar?: ReactNode;
+  /** Conteúdo adicional exibido no final da navegação, como ações da página. */
+  actions?: ReactNode;
+  /** Controla a exibição do avatar quando ainda não há imagem disponível. */
+  showAvatar?: boolean;
   logo?: boolean;
   logoAlt?: string;
   logoHref?: string;
@@ -38,6 +47,8 @@ export type PageHeaderProps = {
 
 export function PageHeader({
   avatar,
+  actions,
+  showAvatar = true,
   logo = true,
   logoAlt = "NIAR",
   logoHref = "/",
@@ -47,20 +58,26 @@ export function PageHeader({
   menuGroups = [],
   tabs,
   tabsValue,
+  activeItem,
   defaultTabsValue,
   onChange,
+  onItemChange,
   openNavigationLabel = "Abrir navegação",
   closeNavigationLabel = "Fechar navegação",
   defaultAvatarAlt = "Usuário NIAR",
   defaultAvatarContent = "UN",
 }: PageHeaderProps) {
+  const handleItemChange = (value: string) => {
+    onItemChange?.(value);
+    if (!onItemChange) onChange?.(value);
+  };
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const withSidebarClose = (items: readonly SidebarItem[]): SidebarItem[] =>
     items.map((item) => ({
       ...item,
       onClick: () => {
         item.onClick?.();
-        onChange?.(item.value ?? item.label);
+        handleItemChange(item.value ?? item.label);
         if (!item.children?.length) setSidebarOpen(false);
       },
       children: item.children ? withSidebarClose(item.children) : undefined,
@@ -72,7 +89,7 @@ export function PageHeader({
       ...item,
       onClick: (event: Parameters<MouseEventHandler<HTMLElement>>[0]) => {
         item.onClick?.(event);
-        onChange?.(item.value ?? String(item.label));
+        handleItemChange(item.value ?? String(item.label));
       },
     })),
   }));
@@ -97,12 +114,13 @@ export function PageHeader({
           {navigation === "tabs" && tabs && (
             <Tabs
               options={tabs}
-              value={tabsValue}
+              value={activeItem ?? tabsValue}
               defaultValue={defaultTabsValue}
-              onChange={(_, value) => onChange?.(value)}
+              onChange={(_, value) => handleItemChange(value)}
             />
           )}
-          {avatar ?? <Avatar alt={defaultAvatarAlt}>{defaultAvatarContent}</Avatar>}
+          {actions}
+          {showAvatar && (avatar ?? <Avatar alt={defaultAvatarAlt}>{defaultAvatarContent}</Avatar>)}
         </Box>
       </Header>
 

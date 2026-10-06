@@ -1,0 +1,15 @@
+.institutional-remote-error {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: var(--niar-spacing-xl);
+  background: var(--niar-colors-surface-page);
+}
+
+.institutional-remote-error__content {
+  display: flex;
+  width: min(36rem, 100%);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--niar-spacing-lg);
+}

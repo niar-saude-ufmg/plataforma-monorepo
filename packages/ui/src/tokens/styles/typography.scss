@@ -1,0 +1,47 @@
+@mixin typography-heading {
+	font-family: var(--niar-font-family);
+	font-size: var(--niar-font-size-heading);
+	font-weight: var(--niar-font-weight-bold);
+	line-height: var(--niar-line-height-tight);
+	letter-spacing: var(--niar-letter-spacing-none);
+}
+
+@mixin typography-title {
+	font-family: var(--niar-font-family);
+	font-size: var(--niar-font-size-title);
+	font-weight: var(--niar-font-weight-semibold);
+	line-height: var(--niar-line-height-tight);
+	letter-spacing: var(--niar-letter-spacing-none);
+}
+
+@mixin typography-subtitle {
+	font-family: var(--niar-font-family);
+	font-size: var(--niar-font-size-subtitle);
+	font-weight: var(--niar-font-weight-medium);
+	line-height: var(--niar-line-height-normal);
+	letter-spacing: var(--niar-letter-spacing-none);
+}
+
+@mixin typography-body {
+	font-family: var(--niar-font-family);
+	font-size: var(--niar-font-size-body);
+	font-weight: var(--niar-font-weight-regular);
+	line-height: var(--niar-line-height-normal);
+	letter-spacing: var(--niar-letter-spacing-none);
+}
+
+@mixin typography-caption {
+	font-family: var(--niar-font-family);
+	font-size: var(--niar-font-size-caption);
+	font-weight: var(--niar-font-weight-regular);
+	line-height: var(--niar-line-height-relaxed);
+	letter-spacing: var(--niar-letter-spacing-none);
+}
+
+@mixin typography-label {
+	font-family: var(--niar-font-family);
+	font-size: var(--niar-font-size-body);
+	font-weight: var(--niar-font-weight-medium);
+	line-height: var(--niar-line-height-normal);
+	letter-spacing: var(--niar-letter-spacing-none);
+}

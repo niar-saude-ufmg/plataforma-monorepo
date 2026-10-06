@@ -95,4 +95,4 @@ const headingColor = niar.colors.text.heading;
 - `pnpm storybook:build`: gera o catálogo estático.
 - `pnpm dev`: inicia o pacote, Storybook, shell, aplicações e APIs. O catálogo fica disponível pela shell em `/identidade-visual`.
 
-O build de produção da shell incorpora o Storybook em `/storybook/` e apresenta o catálogo na rota pública `/identidade-visual`.
+O build de produção da shell incorpora o Storybook diretamente em `/identidade-visual/`, que é a rota pública e canônica do catálogo. Links de stories e docs podem ser compartilhados mantendo o parâmetro `path` nessa mesma rota.

@@ -42,6 +42,29 @@ it("associa a mensagem de erro ao email", () => {
   expect(screen.getByLabelText("E-mail")).toBeInvalid();
 });
 
+it("exibe o placeholder somente enquanto o campo está focado", () => {
+  render(<Input label="Nome" placeholder="Digite seu nome" />);
+
+  const input = screen.getByLabelText("Nome");
+  expect(input).not.toHaveAttribute("placeholder");
+
+  fireEvent.focus(input);
+  expect(input).toHaveAttribute("placeholder", "Digite seu nome");
+
+  fireEvent.blur(input);
+  expect(input).not.toHaveAttribute("placeholder");
+});
+
+it("mantém o label recolhido em campos de data", () => {
+  render(<Input label="Data de aprovação" type="date" />);
+
+  const input = screen.getByLabelText("Data de aprovação");
+  expect(document.querySelector(`label[for="${input.id}"]`)).toHaveAttribute(
+    "data-shrink",
+    "true",
+  );
+});
+
 it("seleciona uma opção e informa a alteração", () => {
   const change = vi.fn();
   render(

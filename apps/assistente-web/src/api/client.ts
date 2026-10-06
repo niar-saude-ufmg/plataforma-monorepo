@@ -283,11 +283,11 @@ export const api = {
     request(`/admin/settings/${key}`, { method: 'PUT', body: JSON.stringify({ value }) }),
   listAudit: () => request<Array<Record<string, unknown>>>('/admin/audit'),
   listUsers: () =>
-    request<Array<{ id: number; email: string; full_name: string; role: string; is_active: boolean }>>(
+    request<Array<{ id: number; email: string; full_name: string; role: string; account_status: string }>>(
       '/admin/users',
     ),
   createUser: (data: { email: string; full_name: string; password: string; role: string }) =>
-    request<{ id: number; email: string; full_name: string; role: string; is_active: boolean }>(
+    request<{ id: number; email: string; full_name: string; role: string; account_status: string }>(
       '/admin/users',
       { method: 'POST', body: JSON.stringify(data) },
     ),

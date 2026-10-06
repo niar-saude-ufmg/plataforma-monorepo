@@ -205,7 +205,6 @@ describe("POST /api/admin/users (público)", () => {
       full_name: "Teste",
       email: "teste@niar.local.test",
       role: "researcher",
-      is_active: false,
       profile: { institution: "UFMG", organizational_unit: "Faculdade de Medicina" },
       researcher_profile: { research_area: "Saude publica", position: "Professor" },
       coep: { caae: "12345678.9.0000.0000", approval_date: "2026-09-25" }
@@ -438,7 +437,6 @@ describe("POST /api/admin/users/researchers", () => {
       full_name: validPayload().full_name,
       email: validPayload().email,
       role: "researcher",
-      is_active: true,
     });
     expect(response.body).not.toHaveProperty("password");
     expect(response.body).not.toHaveProperty("hashed_password");

@@ -362,20 +362,20 @@ pnpm dev
 
 Esse é o comando padrão para trabalhar na plataforma. Ele usa `turbo` para orquestrar o monorepo e sobe o ambiente em duas frentes:
 
-- remotos federados de `admin-web` e `assistente-web`;
-- shell, `admin-api`, `assistente-api`, `site-institucional` e `rag-api` depois que os remotos ficam disponíveis.
+- remotos federados de `admin-web`, `assistente-web` e `site-institucional`;
+- shell, `admin-api`, `assistente-api` e `rag-api` depois que os remotos ficam disponíveis.
 
 Os fluxos reais ficam acessíveis por:
 
 | Aplicação | Endereço local | Observação |
 | --- | --- | --- |
-| site institucional | `http://localhost:5176` | SvelteKit estático; em produção responde em `/` |
-| shell | `http://localhost:5173` | `/login`, `/cadastro/pesquisador`, `/admin`, `/assistente`, `/identidade-visual` (`/sala-segura` redireciona para a página do site) |
+| site institucional | `http://localhost:5176` | remote SvelteKit; carregado pela shell em `/`, incluindo `/sala-segura` |
+| shell | `http://localhost:5173` | `/login`, `/cadastro/pesquisador`, `/admin`, `/assistente`, `/identidade-visual` |
 | `admin-api` | `http://localhost:3333` | prefixo `/api/admin` |
 | `assistente-api` | `http://localhost:8000` | prefixo `/api/assistente` |
 | `rag-api` | `http://localhost:8001` | prefixo `/api/rag`, usado pelo assistente LEME do site (`/leme`) |
 
-As portas próprias dos remotos (`4174` e `4175`) são internas ao desenvolvimento. O acesso funcional à plataforma deve ser feito pela shell, e não abrindo cada microfrontend separadamente. O site institucional não é um remote: é um app próprio, e a shell leva a ele pelo `VITE_SITE_URL`.
+As portas próprias dos remotos (`4174`, `4175` e `4176`) são internas ao desenvolvimento. O acesso funcional à plataforma deve ser feito pela shell, e não abrindo cada microfrontend separadamente. O site institucional também é um remote: a shell o monta na rota pública, usando `VITE_INSTITUTIONAL_REMOTE_URL`.
 
 O `rag-api` precisa das chaves `GOOGLE_API_KEY`, `GOOGLE_GENAI_API_KEY`, `QDRANT_URL` e `QDRANT_API_KEY` no `.env` da raiz. Sem elas o site sobe normalmente, mas o chat do `/leme` falha ao responder.
 

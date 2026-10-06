@@ -1,0 +1,22 @@
+.remote-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: var(--niar-spacing-xl);
+  color: var(--niar-colors-text-body);
+  background: var(--niar-colors-surface-page);
+}
+
+.remote-loading__content {
+  display: grid;
+  justify-items: center;
+  gap: var(--niar-spacing-md);
+  color: var(--niar-colors-text-subtitle);
+  font-family: var(--niar-font-family);
+  font-size: var(--niar-font-size-body);
+  font-weight: var(--niar-font-weight-medium);
+}
+
+.remote-loading__content p {
+  margin: 0;
+}

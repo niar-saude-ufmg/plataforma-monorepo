@@ -4,6 +4,7 @@
    Nenhuma cor fora da paleta institucional é usada.
    ============================================================ */
 
+@import '@niar/ui/tokens.css';
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 
 :root {
@@ -166,8 +167,7 @@ body {
   justify-content: center;
 }
 
-.users-page--public .card__head > div,
-.users-page--public .form {
+.users-page--public .card__head > div {
   width: 100%;
 }
 
@@ -175,19 +175,6 @@ body {
 
 .page-head {
   margin-bottom: 28px;
-}
-
-.page-head__back-link {
-  display: inline-block;
-  margin-bottom: 16px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--azul-descritivo);
-  text-decoration: none;
-}
-
-.page-head__back-link:hover {
-  color: var(--azul-profundo);
 }
 
 .page-head__eyebrow {
@@ -393,148 +380,6 @@ body {
   background: var(--cinza-claro);
   color: var(--cinza-chumbo);
   box-shadow: inset 0 0 0 1px var(--linha);
-}
-
-/* ---------- Formulário ---------- */
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--azul-descritivo);
-}
-
-.field__control,
-.field select {
-  width: 100%;
-  font-family: var(--fonte);
-  font-size: 14px;
-  color: var(--azul-profundo);
-  background: var(--branco);
-  border: 1px solid var(--linha-forte);
-  border-radius: var(--raio-sm);
-  padding: 11px 12px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.field__control::placeholder {
-  color: rgba(74, 74, 74, 0.55);
-}
-
-.field__control:focus {
-  border-color: var(--azul-ciano);
-  box-shadow: 0 0 0 3px var(--ciano-suave);
-  outline: none;
-}
-
-.field__control[aria-invalid='true'] {
-  border-color: var(--azul-profundo);
-  box-shadow: 0 0 0 3px var(--profundo-suave);
-}
-
-.field__hint {
-  font-size: 12px;
-  color: var(--cinza-chumbo);
-}
-
-.field__error {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--azul-profundo);
-}
-
-.field--password {
-  position: relative;
-}
-
-.field__toggle {
-  position: absolute;
-  right: 8px;
-  top: 27px;
-  background: none;
-  border: 0;
-  font-family: var(--fonte);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--azul-ciano);
-  cursor: pointer;
-  padding: 6px 8px;
-  border-radius: var(--raio-sm);
-}
-
-.field__toggle:hover {
-  background: var(--ciano-suave);
-}
-
-/* ---------- Botões ---------- */
-
-.btn {
-  font-family: var(--fonte);
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: var(--raio-sm);
-  padding: 12px 18px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: filter 0.15s ease, background 0.15s ease;
-}
-
-.btn--primary {
-  background: var(--gradiente-institucional);
-  color: var(--branco);
-}
-
-.btn--primary:hover:not(:disabled) {
-  filter: brightness(1.08);
-}
-
-.btn--ghost {
-  background: var(--branco);
-  border-color: var(--linha-forte);
-  color: var(--azul-descritivo);
-}
-
-.btn--ghost:hover:not(:disabled) {
-  background: var(--cinza-claro);
-}
-
-.btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-/* ---------- Avisos ---------- */
-
-.alert {
-  border-radius: var(--raio-sm);
-  padding: 12px 14px;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.alert--error {
-  background: var(--profundo-suave);
-  color: var(--azul-profundo);
-  border: 1px solid var(--linha-forte);
-  font-weight: 500;
-}
-
-.alert--success {
-  background: var(--ciano-suave);
-  color: var(--azul-descritivo);
-  border: 1px solid rgba(63, 169, 217, 0.4);
-  font-weight: 500;
 }
 
 /* ---------- Estados vazio / erro ---------- */
