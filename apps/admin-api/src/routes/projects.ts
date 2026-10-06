@@ -24,6 +24,12 @@ export const projectsRouter = Router();
  *           type: string
  *           enum: [submitted_to_committee, resubmitted_to_committee, under_review, needs_changes, approved, rejected]
  *       - in: query
+ *         name: evaluation_status
+ *         description: Estado derivado da avaliação da versão mais recente. waiting significa que ainda não existe avaliação atribuída.
+ *         schema:
+ *           type: string
+ *           enum: [waiting, to_review, approved, needs_changes, rejected]
+ *       - in: query
  *         name: submitted_from
  *         schema: { type: string, format: date-time }
  *       - in: query
@@ -62,8 +68,20 @@ export const projectsRouter = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items: { $ref: '#/components/schemas/ProjectResponse' }
+ *               type: object
+ *               required: [items, pagination]
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/ProjectResponse' }
+ *                 pagination:
+ *                   type: object
+ *                   required: [page, page_size, total_items, total_pages]
+ *                   properties:
+ *                     page: { type: integer, example: 1 }
+ *                     page_size: { type: integer, example: 20 }
+ *                     total_items: { type: integer, example: 24 }
+ *                     total_pages: { type: integer, example: 2 }
  *       401: { description: Não autenticado }
  *       403: { description: Filtro fora do escopo do pesquisador }
  *       422: { description: Filtros inválidos }

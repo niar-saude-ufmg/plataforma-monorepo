@@ -16,6 +16,7 @@ const options = {
     ],
     components: {
       schemas: {
+        // Cadastro público (rota POST /admin/users)
         CreateUser: {
           type: 'object',
           description:
@@ -41,6 +42,52 @@ const options = {
               example: '{"caae":"12345678.9.0000.0000","opinion_number":"1234.567","approval_date":"2026-09-25"}',
             },
             coep_document: { type: 'string', format: 'binary', description: 'Parecer do COEP em PDF, até 10 MB.' },
+          },
+        },
+        CreateResearcher: {
+          type: 'object',
+          description:
+            'Cadastro administrativo de pesquisador. Usa o mesmo contrato multipart do cadastro público, mas cria a conta ativa e registra a aprovação inicial pelo admin autenticado.',
+          required: ['full_name', 'email', 'password', 'profile', 'researcher_profile', 'coep', 'coep_document'],
+          properties: {
+            full_name: { type: 'string', example: 'Pesquisador Um' },
+            email: { type: 'string', format: 'email', example: 'pesquisador@niar.local' },
+            password: { type: 'string', format: 'password', minLength: 8, example: 'senha12345' },
+            profile: {
+              type: 'string',
+              description: 'JSON com phone, institution, organizational_unit e contact_address.',
+              example: '{"phone":"+55 31 99999-0000","institution":"UFMG","organizational_unit":"DCC","contact_address":"Av. Pres. Antônio Carlos, 6627"}',
+            },
+            researcher_profile: {
+              type: 'string',
+              description: 'JSON com research_area e position.',
+              example: '{"research_area":"Oncologia computacional","position":"Professor adjunto"}',
+            },
+            coep: {
+              type: 'string',
+              description: 'JSON com caae, opinion_number e approval_date no formato YYYY-MM-DD. O nome do arquivo vem de coep_document.',
+              example: '{"caae":"12345678.9.0000.0000","opinion_number":"4.567.890","approval_date":"2026-01-15"}',
+            },
+            coep_document: { type: 'string', format: 'binary', description: 'Parecer do COEP em PDF, até 10 MB.' },
+          },
+        },
+        CreateCommitteeMember: {
+          type: 'object',
+          required: ['full_name', 'email', 'password', 'specialty_id'],
+          properties: {
+            full_name: { type: 'string', example: 'Membro do Comitê' },
+            email: { type: 'string', format: 'email', example: 'comite@niar.local' },
+            password: { type: 'string', format: 'password', minLength: 8, example: 'senha-segura' },
+            specialty_id: { type: 'integer', example: 2 },
+          },
+        },
+        CreateAdministrator: {
+          type: 'object',
+          required: ['full_name', 'email', 'password'],
+          properties: {
+            full_name: { type: 'string', example: 'Administrador' },
+            email: { type: 'string', format: 'email', example: 'admin@niar.local' },
+            password: { type: 'string', format: 'password', minLength: 8, example: 'senha-segura' },
           },
         },
         UserResponse: {
@@ -128,11 +175,21 @@ const options = {
         },
         ProjectResponse: {
           type: 'object',
-          required: ['id', 'title', 'updated_at', 'status', 'documents'],
+          required: ['id', 'title', 'updated_at', 'researcher', 'status', 'documents'],
           properties: {
             id: { type: 'integer', example: 42 },
             title: { type: 'string', example: 'Projeto de pesquisa' },
             updated_at: { type: 'string', format: 'date-time' },
+            evaluation_status: { type: 'string', enum: ['waiting', 'to_review', 'approved', 'needs_changes', 'rejected'], example: 'waiting' },
+            researcher: {
+              type: 'object',
+              required: ['id', 'full_name', 'email'],
+              properties: {
+                id: { type: 'integer', example: 10 },
+                full_name: { type: 'string', example: 'Pesquisador 10' },
+                email: { type: 'string', format: 'email', example: 'researcher@niar.local' },
+              },
+            },
             status: {
               type: 'array',
               items: { $ref: '#/components/schemas/ProjectStatusResponse' },
@@ -141,6 +198,38 @@ const options = {
               type: 'array',
               items: { $ref: '#/components/schemas/ProjectDocumentResponse' },
             },
+            evaluations: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ProjectEvaluationResponse' },
+            },
+          },
+        },
+        ProjectEvaluationResponse: {
+          type: 'object',
+          required: ['id', 'version_number', 'result', 'responsible_member', 'evaluated_at', 'updated_at'],
+          properties: {
+            id: { type: 'integer', example: 8 },
+            version_number: { type: 'integer', example: 2 },
+            result: { type: 'string', enum: ['to_review', 'approved', 'needs_changes', 'rejected'] },
+            responsible_member: {
+              type: 'object',
+              required: ['user_id', 'full_name', 'email', 'specialty'],
+              properties: {
+                user_id: { type: 'integer', example: 4 },
+                full_name: { type: 'string', example: 'Membro do comitê' },
+                email: { type: 'string', format: 'email' },
+                specialty: {
+                  type: 'object',
+                  required: ['id', 'name'],
+                  properties: {
+                    id: { type: 'integer', example: 2 },
+                    name: { type: 'string', example: 'Epidemiologia' },
+                  },
+                },
+              },
+            },
+            evaluated_at: { type: 'string', format: 'date-time', nullable: true },
+            updated_at: { type: 'string', format: 'date-time' },
           },
         },
         ErrorResponse: {

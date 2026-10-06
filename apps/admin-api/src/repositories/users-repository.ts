@@ -1,5 +1,7 @@
-import { prisma } from "@niar/database";
+import { Prisma, prisma, user_account_status } from "@niar/database";
 import type { UserRole } from "@niar/contracts";
+import { auditRepository } from "./audit-repository.js";
+
 // hashedPassword fica de fora de propósito: como o select já não busca o
 // campo, ele nunca existe em memória nas camadas acima (service/controller),
 // então não tem como vazar por esquecimento na resposta da API.
@@ -17,7 +19,7 @@ export type UserListRecord = {
   email: string;
   fullName: string;
   role: UserRole; // O papel vem do UserRole de @niar/contracts, nao de uma lista escrita a mao acho que fica mais fácil
-  accountStatus: "pending" | "active" | "rejected" | "disabled";
+  accountStatus: user_account_status;
   createdAt: Date;
 };
 
@@ -27,11 +29,30 @@ export type UserListFilter = {
   pageSize: number;
 };
 
+type RegistrationAudit = {
+  actorUserId: number;
+  role: UserRole;
+  email: string;
+};
+
+const createRegistrationAudit = (
+  tx: Prisma.TransactionClient,
+  user: { id: number },
+  audit: RegistrationAudit,
+) => auditRepository.create({
+  userId: audit.actorUserId,
+  action: "create_user",
+  resourceType: "user",
+  resourceId: String(user.id),
+  details: `Created ${audit.role} user with email ${audit.email}`,
+}, tx);
+
 // Formato de entrada do cadastro público. Nomes em camelCase pq é assim que as colunas aparecem no Prisma; a tradução do snake_case que chega na requisição acontece no service.
 export type CreateResearcherData = {
   fullName: string;
   email: string;
   hashedPassword: string;
+  accountStatus: "pending";
   profile: {
     phone: string;
     institution: string;
@@ -94,9 +115,6 @@ export const usersRepository = {
   // O middleware de auth usa isso: token só tem o id, precisa buscar a role.
   findById: (id: number) => prisma.user.findUnique({ where: { id } }),
 
-  create: (data: { fullName: string; email: string; hashedPassword: string; role?: UserRole }) =>
-    prisma.user.create({ data }),
-
 // Cadastro público: o pesquisador só existe junto com perfil, dados acadêmicos e parecer do COEP. prisma.$transaction executa os quatro INSERTs como uma operação só — se qualquer um falhar, o banco desfaz todos e nenhum registro pela metade fica para trás.
   createResearcherWithProfile: (data: CreateResearcherData): Promise<CreatedResearcherRecord> =>
     prisma.$transaction(async (tx) => {
@@ -106,7 +124,7 @@ export const usersRepository = {
           email: data.email,
           hashedPassword: data.hashedPassword,
           role: "researcher",
-          accountStatus: "active"
+          accountStatus: data.accountStatus
         }
       });
 
@@ -126,5 +144,86 @@ export const usersRepository = {
       });
 
       return { user, profile, researcherProfile, coep };
-    })
+    }),
+
+  create: (data: { fullName: string; email: string; hashedPassword: string; role?: UserRole, accountStatus?: user_account_status }) =>
+    prisma.user.create({ data }),
+
+  // * mantive uma separação de create por garantia
+  createAdministrator: (
+    data: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status },
+    audit: RegistrationAudit,
+  ) => prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({ data });
+    await createRegistrationAudit(tx, user, audit);
+    return user;
+  }),
+
+  createCommitteeMember: (data: {
+    user: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status };
+    committeeMemberProfile: { specialtyId: number };
+    evaluation?: { evaluatedByUserId: number, status: user_account_status; evaluatedAt?: Date };
+  }, audit: RegistrationAudit) =>
+    prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: data.user
+      });
+      if (data.evaluation) {
+        await tx.userAuthEvaluation.create({
+          data: {
+            userId: user.id,
+            status: data.evaluation.status,
+            evaluatedByUserId: data.evaluation.evaluatedByUserId,
+            evaluatedAt: data.evaluation.evaluatedAt || new Date(),
+          },
+        });
+      }
+      await tx.committeeMemberProfile.create({
+        data: {
+          userId: user.id,
+          specialtyId: data.committeeMemberProfile.specialtyId,
+        },
+      });
+      await createRegistrationAudit(tx, user, audit);
+      return user;
+    }),
+
+    createResearcher: (data: {
+      user: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status };
+      profile?: { phone?: string; institution?: string; organizationalUnit?: string; contactAddress?: string };
+      researcherProfile?: { researchArea?: string; position?: string };
+      coep: { caae: string; opinionNumber: string; approvalDate: Date; documentFilename: string; documentStoragePath: string };
+      evaluation?: { evaluatedByUserId: number, status: user_account_status; evaluatedAt?: Date };
+    }, audit: RegistrationAudit) =>
+      prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: data.user
+        });
+        if (data.profile) {
+          await tx.userProfile.create({
+            data: { userId: user.id, ...data.profile },
+          });
+        }
+        if (data.researcherProfile) {
+          await tx.researcherProfile.create({
+            data: { userId: user.id, ...data.researcherProfile },
+          });
+        }
+        const coep = await tx.userCoepData.create({
+          data: { userId: user.id, ...data.coep },
+        });
+        if (data.evaluation) {
+          await tx.userAuthEvaluation.create({
+            data: {
+              userId: user.id,
+              status: data.evaluation.status,
+              evaluatedByUserId: data.evaluation.evaluatedByUserId,
+              evaluatedAt: data.evaluation.evaluatedAt || new Date(),
+              userCoepDataId: coep.id,
+            },
+          });
+        }
+        await createRegistrationAudit(tx, user, audit);
+        return user;
+      }),
 };

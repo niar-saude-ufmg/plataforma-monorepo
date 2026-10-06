@@ -6,7 +6,7 @@ import { authenticate, restrictTo } from "../middlewares/auth.js";
 export const usersRouter = Router();
 
 // Montado em "/api/admin/users" no app.ts, então isso vira
-// GET/POST /api/admin/users e POST /api/admin/users/internal.
+// GET/POST /api/admin/users e as rotas administrativas específicas abaixo.
 
 /**
  * @swagger
@@ -75,16 +75,26 @@ usersRouter.post("/", uploadCoepDocument, usersController.create);
 
 /**
  * @swagger
- * /admin/users/internal:
+ * /admin/users/researchers:
  *   post:
- *     summary: Cadastro administrativo (protegido)
- *     description: Só admin autenticado. Aceita qualquer papel (researcher, admin, committee).
+ *     summary: Cria um pesquisador
+ *     description: Só admin autenticado pode criar pesquisadores.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateResearcher'
  *     responses:
  *       201:
- *         description: Usuário criado com sucesso
+ *         description: Pesquisador criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  *       400:
  *         description: Dados inválidos (validação do Zod)
  *       401:
@@ -94,4 +104,74 @@ usersRouter.post("/", uploadCoepDocument, usersController.create);
  *       409:
  *         description: E-mail já cadastrado
  */
-usersRouter.post("/internal", authenticate, restrictTo("admin"), usersController.createByAdmin);
+usersRouter.post(
+  "/researchers",
+  authenticate,
+  restrictTo("admin"),
+  uploadCoepDocument,
+  usersController.createResearcher
+);
+
+/**
+ * @swagger
+ * /admin/users/committee-members:
+ *   post:
+ *     summary: Cria um membro do comitê
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateCommitteeMember'
+ *     responses:
+ *       201:
+ *         description: Membro do comitê criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       400:
+ *         description: Dados inválidos ou especialidade inválida
+ *       401:
+ *         description: Não autenticado
+ *       403:
+ *         description: Não é admin
+ *       409:
+ *         description: E-mail já cadastrado
+ */
+usersRouter.post("/committee-members", authenticate, restrictTo("admin"), usersController.createCommitteeMember);
+
+/**
+ * @swagger
+ * /admin/users/administrators:
+ *   post:
+ *     summary: Cria um administrador
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateAdministrator'
+ *     responses:
+ *       201:
+ *         description: Administrador criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       400:
+ *         description: Dados inválidos
+ *       401:
+ *         description: Não autenticado
+ *       403:
+ *         description: Não é admin
+ *       409:
+ *         description: E-mail já cadastrado
+ */
+usersRouter.post("/administrators", authenticate, restrictTo("admin"), usersController.createAdministrator);

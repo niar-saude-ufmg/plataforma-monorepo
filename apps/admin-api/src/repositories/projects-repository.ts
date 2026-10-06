@@ -1,22 +1,61 @@
-import { Prisma, type project_status as ProjectStatus, prisma } from "@niar/database";
+import {
+  Prisma,
+  type committee_evaluation_result as CommitteeEvaluationResult,
+  type project_status as ProjectStatus,
+  prisma
+} from "@niar/database";
 
 const projectInclude = {
+  owner: {
+    select: {
+      id: true,
+      fullName: true,
+      email: true
+    }
+  },
   versions: {
     orderBy: { versionNumber: "asc" as const },
     include: {
       statusHistory: { orderBy: { createdAt: "asc" as const } },
-      documents: { orderBy: { createdAt: "asc" as const } }
+      documents: { orderBy: { createdAt: "asc" as const } },
+      committeeEvaluation: {
+        include: {
+          responsibleMember: {
+            select: {
+              userId: true,
+              user: {
+                select: {
+                  fullName: true,
+                  email: true
+                }
+              },
+              specialty: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 } satisfies Prisma.ProjectInclude;
 
 export type ProjectRecord = Prisma.ProjectGetPayload<{ include: typeof projectInclude }>;
 
+export type ProjectListResult = {
+  items: ProjectRecord[];
+  total: number;
+};
+
 export type ProjectListFilter = {
   page: number;
   pageSize: number;
   ownerUserId?: number;
   status?: ProjectStatus;
+  evaluationStatus?: "waiting" | CommitteeEvaluationResult;
   submittedFrom?: Date;
   submittedTo?: Date;
   updatedFrom?: Date;
@@ -33,6 +72,11 @@ const buildWhere = (filter: Omit<ProjectListFilter, "page" | "pageSize" | "order
   const versionWhere: Prisma.ProjectVersionWhereInput = {};
 
   if (filter.status) versionWhere.status = filter.status;
+  if (filter.evaluationStatus === "waiting") {
+    versionWhere.committeeEvaluation = { is: null };
+  } else if (filter.evaluationStatus) {
+    versionWhere.committeeEvaluation = { is: { result: filter.evaluationStatus } };
+  }
   if (filter.versionNumber) versionWhere.versionNumber = filter.versionNumber;
   if (filter.submittedFrom || filter.submittedTo) {
     versionWhere.submittedAt = {
@@ -95,14 +139,21 @@ const buildOrderBy = (
 };
 
 export const projectsRepository = {
-  findAll: (filter: ProjectListFilter): Promise<ProjectRecord[]> =>
-    prisma.project.findMany({
-      where: buildWhere(filter),
-      include: projectInclude,
-      orderBy: [buildOrderBy(filter.orderBy, filter.orderDirection), { id: "asc" }],
-      skip: (filter.page - 1) * filter.pageSize,
-      take: filter.pageSize
-    }),
+  findAll: async (filter: ProjectListFilter): Promise<ProjectListResult> => {
+    const where = buildWhere(filter);
+    const [items, total] = await prisma.$transaction([
+      prisma.project.findMany({
+        where,
+        include: projectInclude,
+        orderBy: [buildOrderBy(filter.orderBy, filter.orderDirection), { id: "asc" }],
+        skip: (filter.page - 1) * filter.pageSize,
+        take: filter.pageSize
+      }),
+      prisma.project.count({ where })
+    ]);
+
+    return { items, total };
+  },
 
   findById: (projectId: number, ownerUserId?: number): Promise<ProjectRecord | null> =>
     prisma.project.findFirst({
