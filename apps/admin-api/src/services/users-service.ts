@@ -73,7 +73,6 @@ const toUserResponse = (user: {
   email: user.email,
   full_name: user.fullName,
   role: user.role,
-  is_active: user.accountStatus === "active",
   created_at: user.createdAt.toISOString(),
 });
 

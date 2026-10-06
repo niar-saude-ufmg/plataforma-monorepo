@@ -437,7 +437,6 @@ describe("POST /api/admin/users/researchers", () => {
       full_name: validPayload().full_name,
       email: validPayload().email,
       role: "researcher",
-      is_active: true,
     });
     expect(response.body).not.toHaveProperty("password");
     expect(response.body).not.toHaveProperty("hashed_password");
