@@ -1,4 +1,5 @@
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { access, mkdir, realpath, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { AppError } from "../errors/app-error.js";
@@ -19,6 +20,12 @@ export type StoredCoepDocument = {
 
 const getExportsDirectory = () =>
   path.resolve(process.env.EXPORTS_DIR ?? DEFAULT_EXPORTS_DIR);
+
+const isWithinDirectory = (directory: string, candidate: string) => {
+  const relativePath = path.relative(directory, candidate);
+  return relativePath !== "" && relativePath !== ".." &&
+    !relativePath.startsWith(`..${path.sep}`) && !path.isAbsolute(relativePath);
+};
 
 const sanitizeFilename = (filename: string) => {
   const basename = path.basename(filename).trim();
@@ -67,4 +74,23 @@ export const removeStoredCoepDocument = async (storagePath: string) => {
       throw error;
     }
   });
+};
+
+export const resolveStoredCoepDocument = async (storagePath: string) => {
+  try {
+    const exportsDirectory = await realpath(getExportsDirectory());
+    const requestedPath = path.isAbsolute(storagePath)
+      ? path.resolve(storagePath)
+      : path.resolve(exportsDirectory, storagePath);
+    const filePath = await realpath(requestedPath);
+
+    if (!isWithinDirectory(exportsDirectory, filePath)) {
+      throw new Error("Documento fora do diretório de exports");
+    }
+
+    await access(filePath, constants.R_OK);
+    return filePath;
+  } catch {
+    throw new AppError("Documento do COEP não encontrado", 404);
+  }
 };

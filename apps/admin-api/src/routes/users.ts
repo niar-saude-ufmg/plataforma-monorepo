@@ -43,6 +43,106 @@ usersRouter.get("/", authenticate, restrictTo("admin", "committee"), usersContro
 
 /**
  * @swagger
+ * /admin/users/{user_id}/auth-evaluation:
+ *   post:
+ *     summary: Registra a revisão do cadastro de um pesquisador
+ *     description: >
+ *       Usa o status compartilhado pending, active, rejected ou disabled.
+ *       Este fluxo permite somente pending -> active e pending -> rejected.
+ *       Contas active, rejected ou disabled não podem ser alteradas por este endpoint.
+ *       A justificativa é obrigatória para rejected. Cada decisão cria uma nova
+ *       avaliação e atualiza a conta na mesma transação.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, active, rejected, disabled]
+ *               justification:
+ *                 type: string
+ *           examples:
+ *             approval:
+ *               value: { status: active, justification: "Cadastro aprovado." }
+ *             rejection:
+ *               value: { status: rejected, justification: "O parecer do COEP precisa ser corrigido." }
+ *     responses:
+ *       201:
+ *         description: Revisão registrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserAuthEvaluationResponse'
+ *       400:
+ *         description: Payload inválido, justificativa ausente ou usuário sem perfil de pesquisador
+ *       401:
+ *         description: Não autenticado
+ *       403:
+ *         description: Pesquisador não pode registrar revisões
+ *       404:
+ *         description: Usuário não encontrado
+ *       409:
+ *         description: Transição de status não permitida ou revisão concorrente
+ */
+usersRouter.post(
+  "/:user_id/auth-evaluation",
+  authenticate,
+  restrictTo("admin", "committee"),
+  usersController.createAuthEvaluation
+);
+
+/**
+ * @swagger
+ * /admin/users/{user_id}/coep-document:
+ *   get:
+ *     summary: Baixa o parecer do COEP de um pesquisador
+ *     description: Retorna o PDF com o nome original sem expor o caminho interno de armazenamento.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Parecer do COEP
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: Não autenticado
+ *       403:
+ *         description: Pesquisador não pode baixar o documento por este endpoint
+ *       404:
+ *         description: Usuário, parecer ou arquivo não encontrado
+ */
+usersRouter.get(
+  "/:user_id/coep-document",
+  authenticate,
+  restrictTo("admin", "committee"),
+  usersController.downloadCoepDocument
+);
+
+/**
+ * @swagger
  * /admin/users:
  *   post:
  *     summary: Cadastro público de pesquisador

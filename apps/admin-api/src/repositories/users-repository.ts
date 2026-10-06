@@ -1,5 +1,6 @@
 import { Prisma, prisma, user_account_status } from "@niar/database";
 import type { UserRole } from "@niar/contracts";
+import { AppError } from "../errors/app-error.js";
 import { auditRepository } from "./audit-repository.js";
 
 // hashedPassword fica de fora de propósito: como o select já não busca o
@@ -27,6 +28,33 @@ export type UserListFilter = {
   role?: UserRole;
   page: number;
   pageSize: number;
+};
+
+export type UserAuthEvaluationTarget = {
+  id: number;
+  role: UserRole;
+  accountStatus: user_account_status;
+  researcherProfile: { userId: number } | null;
+};
+
+export type UserAuthEvaluationRecord = {
+  id: number;
+  userId: number;
+  status: user_account_status;
+  justification: string | null;
+  evaluatedByUserId: number;
+  evaluatedAt: Date;
+  createdAt: Date;
+  userCoepDataId: number | null;
+};
+
+export type CoepDocumentRecord = {
+  role: UserRole;
+  researcherProfile: { userId: number } | null;
+  coepData: Array<{
+    documentFilename: string;
+    documentStoragePath: string;
+  }>;
 };
 
 type RegistrationAudit = {
@@ -114,6 +142,79 @@ export const usersRepository = {
   // O middleware de auth usa isso: token só tem o id, precisa buscar a role.
   findById: (id: number) => prisma.user.findUnique({ where: { id } }),
 
+  findAuthEvaluationTarget: (id: number): Promise<UserAuthEvaluationTarget | null> =>
+    prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        role: true,
+        accountStatus: true,
+        researcherProfile: { select: { userId: true } }
+      }
+    }),
+
+  findCoepDocument: (id: number): Promise<CoepDocumentRecord | null> =>
+    prisma.user.findUnique({
+      where: { id },
+      select: {
+        role: true,
+        researcherProfile: { select: { userId: true } },
+        coepData: {
+          select: {
+            documentFilename: true,
+            documentStoragePath: true
+          },
+          orderBy: { createdAt: "desc" },
+          take: 1
+        }
+      }
+    }),
+
+  createAuthEvaluation: (data: {
+    userId: number;
+    expectedStatus: user_account_status;
+    status: user_account_status;
+    justification: string | null;
+    evaluatedByUserId: number;
+  }): Promise<UserAuthEvaluationRecord> =>
+    prisma.$transaction(async (transaction) => {
+      const updated = await transaction.user.updateMany({
+        where: {
+          id: data.userId,
+          role: "researcher",
+          accountStatus: data.expectedStatus
+        },
+        data: { accountStatus: data.status }
+      });
+
+      if (updated.count !== 1) {
+        throw new AppError("O status do cadastro foi alterado por outra revisão", 409);
+      }
+
+      const coep = await transaction.userCoepData.findFirst({
+        where: { userId: data.userId },
+        select: { id: true },
+        orderBy: { createdAt: "desc" }
+      });
+      const evaluatedAt = new Date();
+      const evaluation = await transaction.userAuthEvaluation.create({
+        data: {
+          userId: data.userId,
+          status: data.status,
+          justification: data.justification,
+          evaluatedByUserId: data.evaluatedByUserId,
+          evaluatedAt,
+          userCoepDataId: coep?.id
+        }
+      });
+
+      return {
+        ...evaluation,
+        evaluatedByUserId: data.evaluatedByUserId,
+        evaluatedAt
+      };
+    }),
+
 // Cadastro público: o pesquisador só existe junto com perfil, dados acadêmicos e parecer do COEP. prisma.$transaction executa os quatro INSERTs como uma operação só — se qualquer um falhar, o banco desfaz todos e nenhum registro pela metade fica para trás.
   createResearcherWithProfile: (data: CreateResearcherData): Promise<CreatedResearcherRecord> =>
     prisma.$transaction(async (tx) => {
@@ -123,7 +224,7 @@ export const usersRepository = {
           email: data.email,
           hashedPassword: data.hashedPassword,
           role: "researcher",
-          accountStatus: "active"
+          accountStatus: "pending"
         }
       });
 

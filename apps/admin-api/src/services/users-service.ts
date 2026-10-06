@@ -1,10 +1,13 @@
 import { hash } from "bcryptjs";
+import { basename } from "node:path";
 import type { UserRole } from "@niar/contracts";
+import type { user_account_status } from "@niar/database";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
 import { usersRepository } from "../repositories/users-repository.js";
 import {
   removeStoredCoepDocument,
+  resolveStoredCoepDocument,
   storeCoepDocument,
   type UploadedCoepDocument
 } from "./coep-document-storage.js";
@@ -17,8 +20,17 @@ import {
   CreateResearcherInput,
   PublicUserCreatedResponse,
   ListUsersQuery,
+  CreateUserAuthEvaluationInput,
+  UserAuthEvaluationResponse,
   UserResponse,
 } from "../schemas/user-schema.js";
+
+const AUTH_REVIEW_TRANSITIONS: Record<user_account_status, readonly user_account_status[]> = {
+  pending: ["active", "rejected"],
+  active: [],
+  rejected: [],
+  disabled: []
+};
 
 // Usado pelo cadastro administrativo (rota protegida), que grava só o usuário.
 // O cadastro público tem caminho próprio, porque também grava perfil e COEP.
@@ -282,5 +294,66 @@ export const usersService = {
     );
 
     return toUserResponse(user);
+  },
+
+  createAuthEvaluation: async (
+    userId: number,
+    data: CreateUserAuthEvaluationInput,
+    currentUser: AuthenticatedUser
+  ): Promise<UserAuthEvaluationResponse> => {
+    const target = await usersRepository.findAuthEvaluationTarget(userId);
+
+    if (!target) {
+      throw new AppError("Usuário não encontrado", 404);
+    }
+
+    if (target.role !== "researcher" || !target.researcherProfile) {
+      throw new AppError("O usuário não possui perfil de pesquisador", 400);
+    }
+
+    if (!AUTH_REVIEW_TRANSITIONS[target.accountStatus].includes(data.status)) {
+      throw new AppError(
+        `Transição de ${target.accountStatus} para ${data.status} não permitida`,
+        409
+      );
+    }
+
+    const justification = data.justification?.trim() || null;
+    if (data.status === "rejected" && !justification) {
+      throw new AppError("Justificativa é obrigatória para rejeição", 400);
+    }
+
+    const evaluation = await usersRepository.createAuthEvaluation({
+      userId,
+      expectedStatus: target.accountStatus,
+      status: data.status,
+      justification,
+      evaluatedByUserId: currentUser.id
+    });
+
+    return {
+      id: evaluation.id,
+      user_id: evaluation.userId,
+      status: evaluation.status,
+      justification: evaluation.justification,
+      evaluated_by_user_id: evaluation.evaluatedByUserId,
+      evaluated_at: evaluation.evaluatedAt.toISOString(),
+      created_at: evaluation.createdAt.toISOString(),
+      user_coep_data_id: evaluation.userCoepDataId
+    };
+  },
+
+  getCoepDocument: async (userId: number) => {
+    const user = await usersRepository.findCoepDocument(userId);
+    const document = user?.coepData[0];
+
+    if (!user || user.role !== "researcher" || !user.researcherProfile || !document) {
+      throw new AppError("Documento do COEP não encontrado", 404);
+    }
+
+    return {
+      filePath: await resolveStoredCoepDocument(document.documentStoragePath),
+      filename: basename(document.documentFilename) || `parecer-coep-${userId}.pdf`
+    };
   },
 };

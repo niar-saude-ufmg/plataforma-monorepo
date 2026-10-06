@@ -3,8 +3,10 @@ import { AppError } from "../errors/app-error.js";
 import {
   listUsersQuerySchema,
   createAdministratorSchema,
+  createUserAuthEvaluationSchema,
   createCommitteeMemberSchema,
-  createResearcherSchema
+  createResearcherSchema,
+  userAuthEvaluationParamsSchema
 } from "../schemas/user-schema.js";
 import { usersService } from "../services/users-service.js";
 
@@ -104,6 +106,33 @@ export const usersController = {
       const data = createAdministratorSchema.parse(request.body);
       const user = await usersService.createAdministrator(data, request.user!.id);
       response.status(201).json(user);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  createAuthEvaluation: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+
+      const { user_id } = userAuthEvaluationParamsSchema.parse(request.params);
+      const data = createUserAuthEvaluationSchema.parse(request.body);
+      const evaluation = await usersService.createAuthEvaluation(user_id, data, request.user);
+      response.status(201).json(evaluation);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  downloadCoepDocument: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      const { user_id } = userAuthEvaluationParamsSchema.parse(request.params);
+      const document = await usersService.getCoepDocument(user_id);
+      response.download(document.filePath, document.filename, (error) => {
+        if (error) next(error);
+      });
     } catch (error) {
       next(error);
     }

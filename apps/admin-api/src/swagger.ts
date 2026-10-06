@@ -20,7 +20,7 @@ const options = {
         CreateUser: {
           type: 'object',
           description:
-            'Cadastro público de pesquisador. A role enviada pelo cliente é ignorada: sempre cria "researcher".',
+            'Cadastro público de pesquisador. A role enviada pelo cliente é ignorada: sempre cria "researcher" com status "pending".',
           required: ['full_name', 'email', 'password', 'profile', 'researcher_profile', 'coep', 'coep_document'],
           properties: {
             full_name: { type: 'string', example: 'Pesquisador Teste' },
@@ -99,6 +99,33 @@ const options = {
             role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
             is_active: { type: 'boolean', example: true },
             created_at: { type: 'string', format: 'date-time' },
+          },
+        },
+        UserAuthEvaluationResponse: {
+          type: 'object',
+          required: [
+            'id',
+            'user_id',
+            'status',
+            'justification',
+            'evaluated_by_user_id',
+            'evaluated_at',
+            'created_at',
+            'user_coep_data_id',
+          ],
+          properties: {
+            id: { type: 'integer', example: 12 },
+            user_id: { type: 'integer', example: 42 },
+            status: {
+              type: 'string',
+              enum: ['pending', 'active', 'rejected', 'disabled'],
+              example: 'active',
+            },
+            justification: { type: 'string', nullable: true, example: 'Cadastro aprovado.' },
+            evaluated_by_user_id: { type: 'integer', example: 7 },
+            evaluated_at: { type: 'string', format: 'date-time' },
+            created_at: { type: 'string', format: 'date-time' },
+            user_coep_data_id: { type: 'integer', nullable: true, example: 4 },
           },
         },
         PublicUserCreatedResponse: {

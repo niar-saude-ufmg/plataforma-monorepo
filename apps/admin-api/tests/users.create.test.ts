@@ -80,7 +80,7 @@ type CreatedResearcher = {
 // O que o repository devolve depois da transacao. O teste nao toca no banco:
 // interessa o comportamento da rota, nao o INSERT em si.
 const buildCreatedResearcher = (overrides: Partial<CreatedResearcher> = {}): CreatedResearcher => ({
-  user: buildStoredUser(),
+  user: buildStoredUser({ accountStatus: "pending" }),
   profile: {
     phone: "(31) 99999-9999",
     institution: "UFMG",
@@ -205,7 +205,7 @@ describe("POST /api/admin/users (público)", () => {
       full_name: "Teste",
       email: "teste@niar.local.test",
       role: "researcher",
-      is_active: true,
+      is_active: false,
       profile: { institution: "UFMG", organizational_unit: "Faculdade de Medicina" },
       researcher_profile: { research_area: "Saude publica", position: "Professor" },
       coep: { caae: "12345678.9.0000.0000", approval_date: "2026-09-25" }
