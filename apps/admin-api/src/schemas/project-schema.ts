@@ -81,3 +81,13 @@ export type ProjectResponse = {
   status: ProjectStatusResponse[];
   documents: ProjectDocumentResponse[];
 };
+
+export type ProjectListResponse = {
+  items: ProjectResponse[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_items: number;
+    total_pages: number;
+  };
+};

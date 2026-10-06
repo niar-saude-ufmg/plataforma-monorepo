@@ -4,7 +4,7 @@ import { basename, isAbsolute, relative, resolve, sep } from "node:path";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
 import { projectsRepository, type ProjectListFilter, type ProjectRecord } from "../repositories/projects-repository.js";
-import type { ListProjectsQuery, ProjectResponse, ProjectStatusCode } from "../schemas/project-schema.js";
+import type { ListProjectsQuery, ProjectListResponse, ProjectResponse, ProjectStatusCode } from "../schemas/project-schema.js";
 
 const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
   submitted_to_committee: "Enviado à comissão",
@@ -110,9 +110,17 @@ const toRepositoryFilter = (query: ListProjectsQuery, currentUser: Authenticated
 };
 
 export const projectsService = {
-  listProjects: async (query: ListProjectsQuery, currentUser: AuthenticatedUser): Promise<ProjectResponse[]> => {
-    const projects = await projectsRepository.findAll(toRepositoryFilter(query, currentUser));
-    return projects.map((project) => toProjectResponse(project, currentUser));
+  listProjects: async (query: ListProjectsQuery, currentUser: AuthenticatedUser): Promise<ProjectListResponse> => {
+    const result = await projectsRepository.findAll(toRepositoryFilter(query, currentUser));
+    return {
+      items: result.items.map((project) => toProjectResponse(project, currentUser)),
+      pagination: {
+        page: query.page,
+        page_size: query.page_size,
+        total_items: result.total,
+        total_pages: Math.ceil(result.total / query.page_size)
+      }
+    };
   },
 
   getProject: async (projectId: number, currentUser: AuthenticatedUser): Promise<ProjectResponse> => {

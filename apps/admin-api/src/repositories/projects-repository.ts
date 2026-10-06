@@ -12,6 +12,11 @@ const projectInclude = {
 
 export type ProjectRecord = Prisma.ProjectGetPayload<{ include: typeof projectInclude }>;
 
+export type ProjectListResult = {
+  items: ProjectRecord[];
+  total: number;
+};
+
 export type ProjectListFilter = {
   page: number;
   pageSize: number;
@@ -95,14 +100,21 @@ const buildOrderBy = (
 };
 
 export const projectsRepository = {
-  findAll: (filter: ProjectListFilter): Promise<ProjectRecord[]> =>
-    prisma.project.findMany({
-      where: buildWhere(filter),
-      include: projectInclude,
-      orderBy: [buildOrderBy(filter.orderBy, filter.orderDirection), { id: "asc" }],
-      skip: (filter.page - 1) * filter.pageSize,
-      take: filter.pageSize
-    }),
+  findAll: async (filter: ProjectListFilter): Promise<ProjectListResult> => {
+    const where = buildWhere(filter);
+    const [items, total] = await prisma.$transaction([
+      prisma.project.findMany({
+        where,
+        include: projectInclude,
+        orderBy: [buildOrderBy(filter.orderBy, filter.orderDirection), { id: "asc" }],
+        skip: (filter.page - 1) * filter.pageSize,
+        take: filter.pageSize
+      }),
+      prisma.project.count({ where })
+    ]);
+
+    return { items, total };
+  },
 
   findById: (projectId: number, ownerUserId?: number): Promise<ProjectRecord | null> =>
     prisma.project.findFirst({

@@ -62,8 +62,20 @@ export const projectsRouter = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items: { $ref: '#/components/schemas/ProjectResponse' }
+ *               type: object
+ *               required: [items, pagination]
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items: { $ref: '#/components/schemas/ProjectResponse' }
+ *                 pagination:
+ *                   type: object
+ *                   required: [page, page_size, total_items, total_pages]
+ *                   properties:
+ *                     page: { type: integer, example: 1 }
+ *                     page_size: { type: integer, example: 20 }
+ *                     total_items: { type: integer, example: 24 }
+ *                     total_pages: { type: integer, example: 2 }
  *       401: { description: Não autenticado }
  *       403: { description: Filtro fora do escopo do pesquisador }
  *       422: { description: Filtros inválidos }

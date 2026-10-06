@@ -3,7 +3,7 @@ import { writeFile, unlink } from "node:fs/promises";
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import type { UserRole } from "@niar/contracts";
-import type { ProjectListFilter, ProjectRecord } from "../src/repositories/projects-repository.js";
+import type { ProjectListFilter, ProjectListResult, ProjectRecord } from "../src/repositories/projects-repository.js";
 
 process.env.SECRET_KEY = "test-secret";
 process.env.EXPORTS_DIR = "/tmp";
@@ -24,7 +24,7 @@ type DownloadRecord = {
   projectVersion: { versionNumber: number };
 };
 
-const findAll = jest.fn<(filter: ProjectListFilter) => Promise<ProjectRecord[]>>();
+const findAll = jest.fn<(filter: ProjectListFilter) => Promise<ProjectListResult>>();
 const findByProjectId = jest.fn<(projectId: number, ownerUserId?: number) => Promise<ProjectRecord | null>>();
 const findDocument = jest.fn<
   (projectId: number, documentId: number, ownerUserId?: number) => Promise<DownloadRecord | null>
@@ -128,7 +128,7 @@ describe("GET /api/admin/projects", () => {
 
   it("limita pesquisador aos próprios projetos", async () => {
     findUserById.mockResolvedValueOnce(authUser(10, "researcher"));
-    findAll.mockResolvedValueOnce([]);
+    findAll.mockResolvedValueOnce({ items: [], total: 0 });
 
     const response = await request(app)
       .get("/api/admin/projects?page=2&page_size=5")
@@ -153,7 +153,7 @@ describe("GET /api/admin/projects", () => {
 
   it("repassa paginação e filtros seguros para administrador", async () => {
     findUserById.mockResolvedValueOnce(authUser(20, "admin"));
-    findAll.mockResolvedValueOnce([]);
+    findAll.mockResolvedValueOnce({ items: [], total: 0 });
 
     const response = await request(app)
       .get(
@@ -180,7 +180,7 @@ describe("GET /api/admin/projects", () => {
 
   it("considera o dia inteiro quando o limite superior é uma data sem horário", async () => {
     findUserById.mockResolvedValueOnce(authUser(20, "admin"));
-    findAll.mockResolvedValueOnce([]);
+    findAll.mockResolvedValueOnce({ items: [], total: 0 });
 
     const response = await request(app)
       .get("/api/admin/projects?submitted_to=2026-09-30&updated_to=2026-09-30")
@@ -197,7 +197,7 @@ describe("GET /api/admin/projects", () => {
 
   it("retorna histórico único e documentos por versão sem expor caminho interno", async () => {
     findUserById.mockResolvedValueOnce(authUser(30, "committee"));
-    findAll.mockResolvedValueOnce([projectRecord()]);
+    findAll.mockResolvedValueOnce({ items: [projectRecord()], total: 1 });
 
     const response = await request(app)
       .get("/api/admin/projects")
@@ -205,8 +205,9 @@ describe("GET /api/admin/projects", () => {
 
     expect(response.status).toBe(200);
     expect(findAll).toHaveBeenCalledWith(expect.objectContaining({ ownerUserId: undefined }));
-    expect(response.body).toEqual([
-      {
+    expect(response.body).toEqual({
+      items: [
+        {
         id: 42,
         title: "Projeto de pesquisa",
         updated_at: "2026-09-25T12:00:00.000Z",
@@ -236,8 +237,15 @@ describe("GET /api/admin/projects", () => {
             download_url: "/api/admin/projects/42/documents/101/download"
           }
         ]
+        }
+      ],
+      pagination: {
+        page: 1,
+        page_size: 20,
+        total_items: 1,
+        total_pages: 1
       }
-    ]);
+    });
     expect(JSON.stringify(response.body)).not.toContain("storage_path");
     expect(JSON.stringify(response.body)).not.toContain("/segredo/interno");
   });
@@ -253,7 +261,7 @@ describe("GET /api/admin/projects", () => {
     expect(findAll).not.toHaveBeenCalled();
 
     findUserById.mockResolvedValueOnce(authUser(30, "committee"));
-    findAll.mockResolvedValueOnce([]);
+    findAll.mockResolvedValueOnce({ items: [], total: 0 });
 
     const allowed = await request(app)
       .get("/api/admin/projects?has_document=true")
