@@ -6,24 +6,26 @@ import {
   SESSION_CHANGED_EVENT,
 } from '@niar/auth';
 
-type User = {
+export type User = {
   id: number;
   email: string;
   full_name: string;
   role: string;
-  is_active: boolean;
+  account_status: 'pending' | 'active' | 'rejected' | 'disabled';
 };
 
 const readUserFromShellSession = (): User | null => {
   const session = readPlatformSession();
   if (!session) return null;
 
+  const accountStatus = session.accountStatus ?? 'active';
+
   return {
     id: session.id,
     email: session.email,
     full_name: session.name,
     role: session.role,
-    is_active: true,
+    account_status: accountStatus,
   };
 };
 

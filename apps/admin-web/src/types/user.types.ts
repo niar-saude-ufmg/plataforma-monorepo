@@ -1,4 +1,5 @@
 import type { ChangeEvent, ReactNode } from 'react';
+import type { UserAccountStatus } from '@niar/contracts';
 
 /**
  * Contratos de dados usados pela interface do admin.
@@ -16,6 +17,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: UserRole;
+  accountStatus: UserAccountStatus;
 }
 
 /** Entrada do cadastro como a UI produz (camelCase). */

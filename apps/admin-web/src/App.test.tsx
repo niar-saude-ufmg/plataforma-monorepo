@@ -8,7 +8,7 @@ describe("Admin App", () => {
   it("redireciona a área administrativa para a home do papel autenticado", async () => {
     render(
       <MemoryRouter initialEntries={["/admin"]}>
-        <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin" }} />
+        <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
       </MemoryRouter>,
     );
 
@@ -18,7 +18,7 @@ describe("Admin App", () => {
   it("redireciona uma rota de outro papel para a home do usuário autenticado", async () => {
     render(
       <MemoryRouter initialEntries={["/admin/administrador/home"]}>
-        <App mode="admin" currentUser={{ id: 2, name: "Pesquisador", email: "pesquisador@niar.local", role: "researcher" }} />
+        <App mode="admin" currentUser={{ id: 2, name: "Pesquisador", email: "pesquisador@niar.local", role: "researcher", accountStatus: "active" }} />
       </MemoryRouter>,
     );
 
@@ -31,7 +31,7 @@ describe("Admin App", () => {
 
     render(
       <MemoryRouter initialEntries={["/admin"]}>
-        <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin" }} />
+        <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
       </MemoryRouter>,
     );
 

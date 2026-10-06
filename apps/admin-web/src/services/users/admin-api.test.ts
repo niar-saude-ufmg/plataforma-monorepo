@@ -79,7 +79,6 @@ describe("admin-api service", () => {
         full_name: "Ana Beatriz Souza",
         email: "ana.souza@niar-saude.org",
         role: "researcher",
-        is_active: true,
         created_at: "2026-09-04T10:00:00.000Z",
       }),
     ).toEqual({

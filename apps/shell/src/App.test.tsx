@@ -44,7 +44,7 @@ describe("Shell App", () => {
         email: "pesquisador@niar.local",
         full_name: "Pesquisador NIAR",
         role: "researcher",
-        is_active: true
+        account_status: "active"
       }
     });
 
@@ -101,7 +101,7 @@ describe("Shell App", () => {
         email: "pesquisador@niar.local",
         full_name: "Pesquisador NIAR",
         role: "researcher",
-        is_active: true
+        account_status: "active"
       }
     });
 
@@ -131,7 +131,7 @@ describe("Shell App", () => {
         email: "admin@niar.local",
         full_name: "Administrador NIAR",
         role: "admin",
-        is_active: true
+        account_status: "active"
       }
     });
 
@@ -157,7 +157,7 @@ describe("Shell App", () => {
       email: "pesquisador@niar.local",
       full_name: "Pesquisador NIAR",
       role: "researcher",
-      is_active: true
+      account_status: "active"
     });
 
     render(
@@ -177,7 +177,8 @@ describe("Shell App", () => {
       id: 4,
       email: "pesquisador@niar.local",
       name: "Pesquisador NIAR",
-      role: "researcher"
+      role: "researcher",
+      accountStatus: "active"
     });
   });
 });

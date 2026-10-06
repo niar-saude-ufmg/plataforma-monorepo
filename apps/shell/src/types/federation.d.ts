@@ -1,10 +1,10 @@
 declare module "admin/App" {
   import { ComponentType } from "react";
-  import type { UserRole } from "@niar/contracts";
+  import type { UserAccountStatus, UserRole } from "@niar/contracts";
 
   const AdminApp: ComponentType<{
     mode?: "admin" | "public";
-    currentUser?: { id: number; name: string; email: string; role: UserRole };
+    currentUser?: { id: number; name: string; email: string; role: UserRole; accountStatus: UserAccountStatus };
   }>;
   export default AdminApp;
 }

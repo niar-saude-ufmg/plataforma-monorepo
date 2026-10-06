@@ -1,4 +1,4 @@
-import { UserRole } from "@niar/contracts";
+import { UserAccountStatus, UserRole } from "@niar/contracts";
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 
@@ -25,7 +25,7 @@ export type AuthenticatedUser = {
   email: string;
   full_name: string;
   role: UserRole;
-  is_active: boolean;
+  account_status: UserAccountStatus;
 };
 
 async function request<T>(path: string, options: RequestInit = {}) {

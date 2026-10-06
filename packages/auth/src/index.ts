@@ -1,5 +1,5 @@
 import { APP_ROUTES } from "@niar/config";
-import { UserRole } from "@niar/contracts";
+import { UserAccountStatus, UserRole } from "@niar/contracts";
 
 export const SESSION_STORAGE_KEY = "niar.platform.session";
 export const ACCESS_TOKEN_STORAGE_KEY = "token";
@@ -11,6 +11,7 @@ export type PlatformSessionUser = {
   email: string;
   name: string;
   role: UserRole;
+  accountStatus: UserAccountStatus;
 };
 
 export const isProtectedRoute = (pathname: string) =>

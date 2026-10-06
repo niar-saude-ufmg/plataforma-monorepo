@@ -106,19 +106,6 @@ class User(Base):
     committee_profile: Mapped[Optional["CommitteeMemberProfile"]] = relationship(back_populates="user")
     coep_data: Mapped[list["UserCoepData"]] = relationship(back_populates="user")
 
-    @property
-    def is_active(self) -> bool:
-        """Compatibilidade temporária com consumidores antigos da API."""
-        return self.account_status == UserAccountStatus.active
-
-    @is_active.setter
-    def is_active(self, value: bool) -> None:
-        """Traduz o campo legado para o status persistido atual."""
-        self.account_status = (
-            UserAccountStatus.active if value else UserAccountStatus.disabled
-        )
-
-
 class UserProfile(Base):
     __tablename__ = "user_profiles"
 

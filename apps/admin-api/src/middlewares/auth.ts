@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import type { UserRole } from "@niar/contracts";
+import type { UserAccountStatus, UserRole } from "@niar/contracts";
 import { AppError } from "../errors/app-error.js";
 import { usersRepository } from "../repositories/users-repository.js";
 
-// email/fullName/isActive entraram aqui (além de id/role) para o GET /me não
+// email/fullName/accountStatus entraram aqui (além de id/role) para o GET /me não
 // precisar buscar o usuário de novo no banco — authenticate já fez essa
 // consulta, então só reaproveitamos os campos.
 export type AuthenticatedUser = {
@@ -12,7 +12,7 @@ export type AuthenticatedUser = {
   email: string;
   fullName: string;
   role: UserRole;
-  isActive: boolean;
+  accountStatus: UserAccountStatus;
 };
 
 declare global 
@@ -85,7 +85,7 @@ export const authenticate = async (request: Request, _response: Response, next: 
       email: user.email,
       fullName: user.fullName,
       role: user.role,
-      isActive: user.accountStatus === "active"
+      accountStatus: user.accountStatus
     };
     next();
   } catch (error) {

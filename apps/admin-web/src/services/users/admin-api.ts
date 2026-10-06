@@ -10,7 +10,6 @@ type CreateUserApiResponse = {
   full_name: string;
   email: string;
   role: 'researcher' | 'admin' | 'committee';
-  is_active: boolean;
   created_at: string;
 };
 

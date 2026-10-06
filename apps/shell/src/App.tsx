@@ -76,7 +76,8 @@ const toSessionUser = (user: AuthenticatedUser): SessionUser => ({
   id: user.id,
   email: user.email,
   name: user.full_name,
-  role: user.role
+  role: user.role,
+  accountStatus: user.account_status
 });
 
 export default function App() {

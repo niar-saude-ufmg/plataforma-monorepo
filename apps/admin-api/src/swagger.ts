@@ -50,8 +50,18 @@ const options = {
             full_name: { type: 'string', example: 'Pesquisador Teste' },
             email: { type: 'string', example: 'teste@niar.local' },
             role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
-            is_active: { type: 'boolean', example: true },
             created_at: { type: 'string', format: 'date-time' },
+          },
+        },
+        AuthenticatedUserResponse: {
+          type: 'object',
+          required: ['id', 'full_name', 'email', 'role', 'account_status'],
+          properties: {
+            id: { type: 'integer', example: 1 },
+            full_name: { type: 'string', example: 'Pesquisador Teste' },
+            email: { type: 'string', format: 'email', example: 'teste@niar.local' },
+            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
+            account_status: { type: 'string', enum: ['pending', 'active', 'rejected', 'disabled'], example: 'active' },
           },
         },
         PublicUserCreatedResponse: {

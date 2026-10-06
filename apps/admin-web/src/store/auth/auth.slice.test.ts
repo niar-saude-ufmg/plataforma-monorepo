@@ -6,6 +6,7 @@ const user = {
   name: 'Pesquisador NIAR',
   email: 'pesquisador@niar.local',
   role: 'researcher' as const,
+  accountStatus: 'active' as const,
 };
 
 describe('authSlice', () => {

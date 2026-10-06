@@ -148,7 +148,6 @@ describe("POST /api/admin/users (público)", () => {
       full_name: "Teste",
       email: "teste@niar.local.test",
       role: "researcher",
-      is_active: true,
       profile: { institution: "UFMG", organizational_unit: "Faculdade de Medicina" },
       researcher_profile: { research_area: "Saude publica", position: "Professor" },
       coep: { caae: "12345678.9.0000.0000", approval_date: "2026-09-25" }
