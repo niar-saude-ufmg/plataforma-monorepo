@@ -126,6 +126,7 @@ export const usersService = {
         fullName: data.full_name,
         email: data.email,
         hashedPassword,
+        accountStatus: "pending",
         profile: {
           phone: data.profile.phone,
           institution: data.profile.institution,
