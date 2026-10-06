@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS shared.users (
   full_name VARCHAR(255) NOT NULL,
   hashed_password VARCHAR(255) NOT NULL,
   role shared.user_role NOT NULL DEFAULT 'researcher',
-  account_status shared.user_account_status NOT NULL DEFAULT 'active',
+  account_status shared.user_account_status NOT NULL DEFAULT 'pending',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -102,7 +102,7 @@ SET account_status = 'active'::shared.user_account_status
 WHERE account_status IS NULL;
 
 ALTER TABLE shared.users
-  ALTER COLUMN account_status SET DEFAULT 'active',
+  ALTER COLUMN account_status SET DEFAULT 'pending',
   ALTER COLUMN account_status SET NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_shared_users_email ON shared.users (email);

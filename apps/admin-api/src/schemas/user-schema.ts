@@ -1,4 +1,5 @@
 import type { UserRole } from "@niar/contracts";
+import { user_account_status } from "@niar/database";
 import { z } from "zod";
 
 // Dados de contato. Vira uma linha em shared.user_profiles.
@@ -75,6 +76,28 @@ export const listUsersQuerySchema = z.object({
 });
 
 export type ListUsersQuery = z.infer<typeof listUsersQuerySchema>;
+
+export const userAuthEvaluationParamsSchema = z.object({
+  user_id: z.coerce.number().int().positive()
+});
+
+export const createUserAuthEvaluationSchema = z.object({
+  status: z.nativeEnum(user_account_status),
+  justification: z.string().trim().min(1).optional()
+});
+
+export type CreateUserAuthEvaluationInput = z.infer<typeof createUserAuthEvaluationSchema>;
+
+export type UserAuthEvaluationResponse = {
+  id: number;
+  user_id: number;
+  status: user_account_status;
+  justification: string | null;
+  evaluated_by_user_id: number;
+  evaluated_at: string;
+  created_at: string;
+  user_coep_data_id: number | null;
+};
 
 // Contrato de saída da API: de propósito não tem "password" nem
 // "hashed_password" aqui. Isso é o que garante, em nível de tipo, que
