@@ -14,13 +14,13 @@ export const authController = {
     }
   },
 
-  me: (request: Request, response: Response, next: NextFunction) => {
+  me: async (request: Request, response: Response, next: NextFunction) => {
     try {
       if (!request.user) {
         throw new AppError("Não autenticado", 401);
       }
 
-      response.status(200).json(authService.getSession(request.user));
+      response.status(200).json(await authService.getSession(request.user.id));
     } catch (error) {
       next(error);
     }

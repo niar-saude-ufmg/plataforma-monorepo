@@ -136,15 +136,66 @@ const options = {
             email: { type: 'string', format: 'email', example: 'teste@niar.local' },
             role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
             account_status: { type: 'string', enum: ['pending', 'active', 'rejected', 'disabled'], example: 'active' },
+            profile: {
+              type: 'object',
+              description: 'Presente para pesquisadores quando houver perfil cadastrado.',
+              properties: {
+                phone: { type: 'string', nullable: true, example: '(31) 99999-9999' },
+                institution: { type: 'string', nullable: true, example: 'UFMG' },
+                organizational_unit: { type: 'string', nullable: true, example: 'DCC' },
+                contact_address: { type: 'string', nullable: true, example: 'Belo Horizonte - MG' },
+              },
+            },
+            researcher_profile: {
+              type: 'object',
+              description: 'Presente para pesquisadores quando houver perfil cadastrado.',
+              properties: {
+                research_area: { type: 'string', nullable: true, example: 'Saúde pública' },
+                position: { type: 'string', nullable: true, example: 'Professor' },
+              },
+            },
+            coep: {
+              type: 'object',
+              description: 'Metadados do parecer mais recente. O arquivo é obtido pelo endpoint de download.',
+              properties: {
+                caae: { type: 'string', example: '12345678.9.0000.0000' },
+                opinion_number: { type: 'string', example: '1234.567' },
+                approval_date: { type: 'string', format: 'date', example: '2026-09-25' },
+                document_filename: { type: 'string', example: 'parecer-coep.pdf' },
+              },
+            },
+            committee_profile: {
+              type: 'object',
+              description: 'Presente para membros do comitê.',
+              properties: {
+                specialty: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'integer', example: 1 },
+                    code: { type: 'string', example: 'CC' },
+                    name: { type: 'string', example: 'Ciência da Computação' },
+                    description: { type: 'string', example: '...' },
+                    guidance_context: { type: 'string', example: 'Responsável por...' },
+                    is_active: { type: 'boolean', example: true },
+                  },
+                },
+              },
+            },
           },
         },
         UpdateMe: {
           type: 'object',
           description:
-            'Edição do próprio perfil. Todos os campos são opcionais, mas ao menos um entre full_name, email e password deve ser enviado. Campos fora desta lista são recusados com 400.',
+            'Edição do próprio perfil. Todos os campos são opcionais, mas ao menos um entre full_name, email, phone e password deve ser enviado. O telefone só pode ser alterado por pesquisadores. Campos fora desta lista são recusados com 400.',
           properties: {
             full_name: { type: 'string', example: 'Novo Nome Completo' },
             email: { type: 'string', format: 'email', example: 'novo.email@niar.local' },
+            phone: {
+              type: 'string',
+              maxLength: 50,
+              description: 'Pode ser alterado por pesquisadores.',
+              example: '(31) 99999-9999',
+            },
             current_password: {
               type: 'string',
               format: 'password',

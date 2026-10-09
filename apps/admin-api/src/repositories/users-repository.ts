@@ -15,6 +15,51 @@ const userListSelect = {
   createdAt: true
 };
 
+export const sessionUserInclude = {
+  profile: {
+    select: {
+      phone: true,
+      institution: true,
+      organizationalUnit: true,
+      contactAddress: true
+    }
+  },
+  researcherProfile: {
+    select: {
+      researchArea: true,
+      position: true
+    }
+  },
+  committeeProfile: {
+    select: {
+      specialty: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          description: true,
+          guidanceContext: true,
+          isActive: true
+        }
+      }
+    }
+  },
+  coepData: {
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    select: {
+      caae: true,
+      opinionNumber: true,
+      approvalDate: true,
+      documentFilename: true
+    }
+  }
+} satisfies Prisma.UserInclude;
+
+export type SessionUserRecord = Prisma.UserGetPayload<{
+  include: typeof sessionUserInclude;
+}>;
+
 export type UserListRecord = {
   id: number;
   email: string;
@@ -143,13 +188,46 @@ export const usersRepository = {
   // O middleware de auth usa isso: token só tem o id, precisa buscar a role.
   findById: (id: number) => prisma.user.findUnique({ where: { id } }),
 
-  // PATCH /auth/me: só os três campos que o próprio usuário pode editar.
+  findSessionById: (id: number): Promise<SessionUserRecord | null> =>
+    prisma.user.findUnique({ where: { id }, include: sessionUserInclude }),
+
+  // PATCH /auth/me: dados básicos da conta e telefone do perfil do pesquisador.
   // role e accountStatus ficam de fora de propósito — não existe caminho
   // por aqui para alguém mudar o próprio papel ou reativar a conta.
   updateBasicData: (
     id: number,
-    data: { fullName?: string; email?: string; hashedPassword?: string }
-  ) => prisma.user.update({ where: { id }, data }),
+    data: { fullName?: string; email?: string; hashedPassword?: string; phone?: string }
+  ): Promise<SessionUserRecord> =>
+    prisma.$transaction(async (transaction) => {
+      const userData = {
+        ...(data.fullName !== undefined ? { fullName: data.fullName } : {}),
+        ...(data.email !== undefined ? { email: data.email } : {}),
+        ...(data.hashedPassword !== undefined ? { hashedPassword: data.hashedPassword } : {})
+      };
+
+      if (Object.keys(userData).length > 0) {
+        await transaction.user.update({ where: { id }, data: userData });
+      }
+
+      if (data.phone !== undefined) {
+        await transaction.userProfile.upsert({
+          where: { userId: id },
+          update: { phone: data.phone },
+          create: { userId: id, phone: data.phone }
+        });
+      }
+
+      const updated = await transaction.user.findUnique({
+        where: { id },
+        include: sessionUserInclude
+      });
+
+      if (!updated) {
+        throw new AppError("Usuário não encontrado", 404);
+      }
+
+      return updated;
+    }),
 
   findAuthEvaluationTarget: (id: number): Promise<UserAuthEvaluationTarget | null> =>
     prisma.user.findUnique({

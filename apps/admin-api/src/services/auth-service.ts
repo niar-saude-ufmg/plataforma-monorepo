@@ -1,28 +1,66 @@
 import { compare, hash } from "bcryptjs";
-import type { UserAccountStatus, UserRole } from "@niar/contracts";
 import { AppError } from "../errors/app-error.js";
 import { signAccessToken } from "../middlewares/auth.js";
-import type { AuthenticatedUser } from "../middlewares/auth.js";
 import { usersRepository } from "../repositories/users-repository.js";
+import type { SessionUserRecord } from "../repositories/users-repository.js";
 import { LoginInput, SessionUserResponse, UpdateMeInput } from "../schemas/auth-schema.js";
 
 // Mesmo custo do cadastro e do bcrypt do assistente.
 const PASSWORD_HASH_ROUNDS = 10;
 
 // Único lugar que monta a resposta da sessão: GET e PATCH /auth/me usam este formato.
-const toSessionUser = (user: {
-  id: number;
-  email: string;
-  fullName: string;
-  role: UserRole;
-  accountStatus: UserAccountStatus;
-}): SessionUserResponse => ({
-  id: user.id,
-  email: user.email,
-  full_name: user.fullName,
-  role: user.role,
-  account_status: user.accountStatus
-});
+const toSessionUser = (user: SessionUserRecord): SessionUserResponse => {
+  const response: SessionUserResponse = {
+    id: user.id,
+    email: user.email,
+    full_name: user.fullName,
+    role: user.role,
+    account_status: user.accountStatus
+  };
+
+  if (user.role === "researcher") {
+    if (user.profile) {
+      response.profile = {
+        phone: user.profile.phone,
+        institution: user.profile.institution,
+        organizational_unit: user.profile.organizationalUnit,
+        contact_address: user.profile.contactAddress
+      };
+    }
+
+    if (user.researcherProfile) {
+      response.researcher_profile = {
+        research_area: user.researcherProfile.researchArea,
+        position: user.researcherProfile.position
+      };
+    }
+
+    const coep = user.coepData[0];
+    if (coep) {
+      response.coep = {
+        caae: coep.caae,
+        opinion_number: coep.opinionNumber,
+        approval_date: coep.approvalDate.toISOString().slice(0, 10),
+        document_filename: coep.documentFilename
+      };
+    }
+  }
+
+  if (user.role === "committee" && user.committeeProfile) {
+    response.committee_profile = {
+      specialty: {
+        id: user.committeeProfile.specialty.id,
+        code: user.committeeProfile.specialty.code,
+        name: user.committeeProfile.specialty.name,
+        description: user.committeeProfile.specialty.description,
+        guidance_context: user.committeeProfile.specialty.guidanceContext,
+        is_active: user.committeeProfile.specialty.isActive
+      }
+    };
+  }
+
+  return response;
+};
 
 export const authService = {
   login: async (data: LoginInput): Promise<{ access_token: string; token_type: string }> => {
@@ -50,14 +88,19 @@ export const authService = {
     };
   },
 
-  // O authenticate já buscou o usuário; aqui só reformata request.user.
-  getSession: (user: AuthenticatedUser): SessionUserResponse => toSessionUser(user),
+  getSession: async (userId: number): Promise<SessionUserResponse> => {
+    const user = await usersRepository.findSessionById(userId);
+    if (!user) {
+      throw new AppError("Usuário não encontrado", 401);
+    }
+    return toSessionUser(user);
+  },
 
   // userId vem sempre do token, nunca do corpo.
   updateMe: async (userId: number, data: UpdateMeInput): Promise<SessionUserResponse> => {
     const current = await usersRepository.findById(userId);
 
-  // Usuário sumiu do banco entre o authenticate e aqui.
+    // Usuário sumiu do banco entre o authenticate e aqui.
     if (!current) {
       throw new AppError("Usuário não encontrado", 401);
     }
@@ -84,11 +127,15 @@ export const authService = {
       hashedPassword = await hash(data.password, PASSWORD_HASH_ROUNDS);
     }
 
-    // Campos undefined o Prisma não inclui no UPDATE.
+    if (data.phone !== undefined && current.role !== "researcher") {
+      throw new AppError("Apenas pesquisadores podem alterar telefone", 400);
+    }
+
     const updated = await usersRepository.updateBasicData(userId, {
       fullName: data.full_name,
       email: data.email,
-      hashedPassword
+      hashedPassword,
+      phone: data.phone
     });
 
     return toSessionUser(updated);

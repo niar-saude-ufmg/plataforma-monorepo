@@ -8,11 +8,13 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
-// PATCH /auth/me: só nome, e-mail e senha. ".strict()" recusa qualquer outra chave com 400.
+// PATCH /auth/me: nome, e-mail, telefone do pesquisador e senha. ".strict()"
+// recusa qualquer outra chave com 400.
 export const updateMeSchema = z
   .object({
     full_name: z.string().min(1, { message: "Full name is required" }).optional(),
     email: z.string().email({ message: "Invalid email address" }).optional(),
+    phone: z.string().min(1, { message: "Phone is required" }).max(50).optional(),
     current_password: z.string().min(1, { message: "Current password is required" }).optional(),
     password: z.string().min(8, { message: "Password must be at least 8 characters long" }).optional()
   })
@@ -25,7 +27,10 @@ export const updateMeSchema = z
   // Corpo sem nenhum campo editável não tem o que atualizar.
   .refine(
     (data) =>
-      data.full_name !== undefined || data.email !== undefined || data.password !== undefined,
+      data.full_name !== undefined ||
+      data.email !== undefined ||
+      data.phone !== undefined ||
+      data.password !== undefined,
     { message: "Informe ao menos um campo para atualizar" }
   );
 
@@ -38,4 +43,30 @@ export type SessionUserResponse = {
   full_name: string;
   role: UserRole;
   account_status: UserAccountStatus;
+  profile?: {
+    phone: string | null;
+    institution: string | null;
+    organizational_unit: string | null;
+    contact_address: string | null;
+  };
+  researcher_profile?: {
+    research_area: string | null;
+    position: string | null;
+  };
+  coep?: {
+    caae: string;
+    opinion_number: string;
+    approval_date: string;
+    document_filename: string;
+  };
+  committee_profile?: {
+    specialty: {
+      id: number;
+      code: string;
+      name: string;
+      description: string;
+      guidance_context: string;
+      is_active: boolean;
+    };
+  };
 };
