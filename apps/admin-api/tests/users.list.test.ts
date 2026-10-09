@@ -71,7 +71,7 @@ describe("GET /api/admin/users", () => {
     const response = await request(app).get("/api/admin/users").set("Authorization", `Bearer ${tokenFor(10)}`);
 
     expect(response.status).toBe(200);
-    expect(findAll).toHaveBeenCalledWith({ role: undefined, page: 1, pageSize: 20 });
+    expect(findAll).toHaveBeenCalledWith({ role: undefined, accountStatus: undefined, page: 1, pageSize: 20 });
     expect(response.body).toEqual([
       {
         id: 1,
@@ -90,7 +90,12 @@ describe("GET /api/admin/users", () => {
     const response = await request(app).get("/api/admin/users").set("Authorization", `Bearer ${tokenFor(11)}`);
 
     expect(response.status).toBe(200);
-    expect(findAll).toHaveBeenCalledWith({ role: "researcher", page: 1, pageSize: 20 });
+    expect(findAll).toHaveBeenCalledWith({
+      role: "researcher",
+      accountStatus: undefined,
+      page: 1,
+      pageSize: 20
+    });
   });
 
   it("committee pedindo outro papel explicitamente recebe 403", async () => {
@@ -113,6 +118,51 @@ describe("GET /api/admin/users", () => {
     expect(findAll).not.toHaveBeenCalled();
   });
 
+  it("admin filtra usuários por status da conta", async () => {
+    findById.mockResolvedValueOnce(buildAuthUser({ id: 10, role: "admin" }));
+    findAll.mockResolvedValueOnce([buildUserRecord({ accountStatus: "pending" })]);
+
+    const response = await request(app)
+      .get("/api/admin/users?account_status=pending")
+      .set("Authorization", `Bearer ${tokenFor(10)}`);
+
+    expect(response.status).toBe(200);
+    expect(findAll).toHaveBeenCalledWith({
+      role: undefined,
+      accountStatus: "pending",
+      page: 1,
+      pageSize: 20
+    });
+  });
+
+  it("committee filtra status somente dentro do escopo de pesquisadores", async () => {
+    findById.mockResolvedValueOnce(buildAuthUser({ id: 11, role: "committee" }));
+    findAll.mockResolvedValueOnce([]);
+
+    const response = await request(app)
+      .get("/api/admin/users?account_status=disabled")
+      .set("Authorization", `Bearer ${tokenFor(11)}`);
+
+    expect(response.status).toBe(200);
+    expect(findAll).toHaveBeenCalledWith({
+      role: "researcher",
+      accountStatus: "disabled",
+      page: 1,
+      pageSize: 20
+    });
+  });
+
+  it("rejeita status de conta inválido", async () => {
+    findById.mockResolvedValueOnce(buildAuthUser({ id: 10, role: "admin" }));
+
+    const response = await request(app)
+      .get("/api/admin/users?account_status=unknown")
+      .set("Authorization", `Bearer ${tokenFor(10)}`);
+
+    expect(response.status).toBe(400);
+    expect(findAll).not.toHaveBeenCalled();
+  });
+
   it("aplica página e tamanho de página informados", async () => {
     findById.mockResolvedValueOnce(buildAuthUser({ id: 10, role: "admin" }));
     findAll.mockResolvedValueOnce([]);
@@ -122,7 +172,7 @@ describe("GET /api/admin/users", () => {
       .set("Authorization", `Bearer ${tokenFor(10)}`);
 
     expect(response.status).toBe(200);
-    expect(findAll).toHaveBeenCalledWith({ role: undefined, page: 2, pageSize: 5 });
+    expect(findAll).toHaveBeenCalledWith({ role: undefined, accountStatus: undefined, page: 2, pageSize: 5 });
   });
 
   it("não expõe hashed_password nem password na resposta", async () => {

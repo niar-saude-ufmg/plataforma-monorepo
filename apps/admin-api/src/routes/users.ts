@@ -24,6 +24,12 @@ export const usersRouter = Router();
  *           type: string
  *           enum: [researcher, admin, committee]
  *       - in: query
+ *         name: account_status
+ *         description: Filtra usuários pelo status atual da conta.
+ *         schema:
+ *           type: string
+ *           enum: [pending, active, rejected, disabled]
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer

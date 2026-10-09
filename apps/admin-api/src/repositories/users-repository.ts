@@ -26,6 +26,7 @@ export type UserListRecord = {
 
 export type UserListFilter = {
   role?: UserRole;
+  accountStatus?: user_account_status;
   page: number;
   pageSize: number;
 };
@@ -132,7 +133,13 @@ export const usersRepository = {
   findAll: (filter: UserListFilter): Promise<UserListRecord[]> =>
     prisma.user.findMany({
       select: userListSelect,
-      where: filter.role ? { role: filter.role } : undefined,
+      where:
+        filter.role || filter.accountStatus
+          ? {
+              ...(filter.role ? { role: filter.role } : {}),
+              ...(filter.accountStatus ? { accountStatus: filter.accountStatus } : {})
+            }
+          : undefined,
       orderBy: { id: "asc" },
       skip: (filter.page - 1) * filter.pageSize,
       take: filter.pageSize

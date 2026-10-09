@@ -102,7 +102,12 @@ export const usersService = {
       role = "researcher";
     }
 
-    const users = await usersRepository.findAll({ role, page: query.page, pageSize: query.page_size });
+    const users = await usersRepository.findAll({
+      role,
+      accountStatus: query.account_status,
+      page: query.page,
+      pageSize: query.page_size
+    });
 
     return users.map((user) => ({
       id: user.id,
