@@ -3,15 +3,19 @@ import type { UserRole } from "@niar/contracts";
 import { AppError } from "../errors/app-error.js";
 import { auditRepository } from "./audit-repository.js";
 
-// A consulta administrativa seleciona explicitamente só os campos públicos.
-// Senha, caminho interno do COEP e demais dados sensíveis nunca chegam ao service.
-const consolidatedUserSelect = {
+const userIdentitySelect = {
   id: true,
   email: true,
   fullName: true,
   role: true,
   accountStatus: true,
   createdAt: true,
+} as const;
+
+// As consultas de leitura selecionam explicitamente só os campos públicos.
+// Senha, caminho interno do COEP e demais dados sensíveis nunca chegam ao service.
+const consolidatedUserSelect = {
+  ...userIdentitySelect,
   profile: {
     select: {
       phone: true,
@@ -65,7 +69,8 @@ const consolidatedUserSelect = {
 
 export type ConsolidatedUserRecord = Prisma.UserGetPayload<{ select: typeof consolidatedUserSelect }>;
 
-export const sessionUserInclude = {
+export const sessionUserSelect = {
+  ...userIdentitySelect,
   profile: {
     select: {
       phone: true,
@@ -101,20 +106,11 @@ export const sessionUserInclude = {
       documentFilename: true
     }
   }
-} satisfies Prisma.UserInclude;
+} satisfies Prisma.UserSelect;
 
 export type SessionUserRecord = Prisma.UserGetPayload<{
-  include: typeof sessionUserInclude;
+  select: typeof sessionUserSelect;
 }>;
-
-export type UserListRecord = {
-  id: number;
-  email: string;
-  fullName: string;
-  role: UserRole; // O papel vem do UserRole de @niar/contracts, nao de uma lista escrita a mao acho que fica mais fácil
-  accountStatus: user_account_status;
-  createdAt: Date;
-};
 
 export type UserListFilter = {
   role?: UserRole;
@@ -261,7 +257,7 @@ export const usersRepository = {
   findById: (id: number) => prisma.user.findUnique({ where: { id } }),
 
   findSessionById: (id: number): Promise<SessionUserRecord | null> =>
-    prisma.user.findUnique({ where: { id }, include: sessionUserInclude }),
+    prisma.user.findUnique({ where: { id }, select: sessionUserSelect }),
 
   // PATCH /auth/me: dados básicos da conta e telefone do perfil do pesquisador.
   // role e accountStatus ficam de fora de propósito — não existe caminho
@@ -291,7 +287,7 @@ export const usersRepository = {
 
       const updated = await transaction.user.findUnique({
         where: { id },
-        include: sessionUserInclude
+        select: sessionUserSelect
       });
 
       if (!updated) {
