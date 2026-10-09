@@ -3,7 +3,7 @@ import { niar } from "../../tokens/index";
 const headerHeight = `calc(${niar.spacing["4xl"]} + ${niar.spacing.xs})`;
 
 export const pageContainerRootStyles = {
-  backgroundColor: niar.colors.surface.page,
+  backgroundColor: niar.colors.surface.light,
   boxSizing: "border-box",
   display: "flex",
   flexDirection: "column",

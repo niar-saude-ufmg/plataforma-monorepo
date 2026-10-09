@@ -1,7 +1,7 @@
 import { niar } from "../../tokens/index";
 
 export const pageHeaderRootStyles = {
-  backgroundColor: niar.colors.surface.page,
+  backgroundColor: niar.colors.surface.light,
 };
 
 export const pageHeaderHeaderContentStyles = {

@@ -419,7 +419,14 @@ export const usersService = {
     };
   },
 
-  getCoepDocument: async (userId: number) => {
+  getCoepDocument: async (userId: number, currentUser: AuthenticatedUser) => {
+    const canDownloadAnyResearcherDocument = currentUser.role === "admin" || currentUser.role === "committee";
+    const isOwnDocument = currentUser.role === "researcher" && currentUser.id === userId;
+
+    if (!canDownloadAnyResearcherDocument && !isOwnDocument) {
+      throw new AppError("Você não pode baixar este documento", 403);
+    }
+
     const user = await usersRepository.findCoepDocument(userId);
     const document = user?.coepData[0];
 

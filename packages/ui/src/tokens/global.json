@@ -7,6 +7,27 @@
       "white": { "value": "#ffffff", "type": "color" },
       "charcoal": { "value": "#4a4a4a", "type": "color" },
       "light": { "value": "#f5f5f5", "type": "color" }
+    },
+    "global": {
+      "black": { "value": "#000000", "type": "color" },
+      "gray": { "value": "#e4e7ec", "type": "color" },
+      "overlay": { "value": "rgba(0, 0, 0, 0.5)", "type": "color" },
+      "red": {
+        "light": { "value": "#fde2e2", "type": "color" },
+        "dark": { "value": "#9b2c2c", "type": "color" }
+      },
+      "green": {
+        "light": { "value": "#d9f2e6", "type": "color" },
+        "dark": { "value": "#176b4d", "type": "color" }
+      },
+      "yellow": {
+        "light": { "value": "#fff1c2", "type": "color" },
+        "dark": { "value": "#765400", "type": "color" }
+      },
+      "blue": {
+        "light": { "value": "#dcecf7", "type": "color" },
+        "dark": { "value": "#1c355e", "type": "color" }
+      }
     }
   },
   "spacing": {
@@ -67,7 +88,7 @@
     "none": { "value": "0px", "type": "dimension" }
   },
   "shadow": {
-    "card": {
+    "md": {
       "value": "0 1px 2px rgba(15, 31, 91, 0.06), 0 8px 24px rgba(15, 31, 91, 0.06)",
       "type": "shadow"
     }

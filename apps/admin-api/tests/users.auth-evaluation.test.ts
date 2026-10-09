@@ -237,6 +237,27 @@ describe("GET /api/admin/users/:user_id/coep-document", () => {
     expect(findCoepDocument).not.toHaveBeenCalled();
   });
 
+  it("permite ao pesquisador baixar o próprio documento", async () => {
+    mkdirSync(documentDirectory, { recursive: true });
+    writeFileSync(documentPath, "%PDF-1.7\nfixture");
+    findById.mockResolvedValueOnce(authUser(20, "researcher"));
+    findCoepDocument.mockResolvedValueOnce({
+      role: "researcher",
+      researcherProfile: { userId: 20 },
+      coepData: [{
+        documentFilename: "meu-parecer.pdf",
+        documentStoragePath: documentPath
+      }]
+    });
+
+    const response = await request(app)
+      .get("/api/admin/users/20/coep-document")
+      .set("Authorization", `Bearer ${tokenFor(20)}`);
+
+    expect(response.status).toBe(200);
+    expect(response.headers["content-disposition"]).toContain("meu-parecer.pdf");
+  });
+
   it("retorna 404 quando o usuário não possui parecer", async () => {
     findById.mockResolvedValueOnce(authUser(10, "admin"));
     findCoepDocument.mockResolvedValueOnce(null);

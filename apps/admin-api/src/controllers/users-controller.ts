@@ -143,7 +143,11 @@ export const usersController = {
   downloadCoepDocument: async (request: Request, response: Response, next: NextFunction) => {
     try {
       const { user_id } = userAuthEvaluationParamsSchema.parse(request.params);
-      const document = await usersService.getCoepDocument(user_id);
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+
+      const document = await usersService.getCoepDocument(user_id, request.user);
       response.download(document.filePath, document.filename, (error) => {
         if (error) next(error);
       });

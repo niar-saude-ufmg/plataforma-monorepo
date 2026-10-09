@@ -49,7 +49,7 @@ export function Autocomplete({
           label={label}
           sx={{
             "& .MuiOutlinedInput-root": {
-              backgroundColor: niar.colors.surface.card,
+              backgroundColor: niar.colors.surface.white,
             },
           }}
         />

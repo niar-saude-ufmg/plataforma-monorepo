@@ -13,7 +13,7 @@ export const menuTriggerStyles = {
   fontSize: niar.fontSize.body,
   fontWeight: niar.fontWeight.medium,
   padding: `${niar.spacing.xs} ${niar.spacing.sm}`,
-  "&:hover": { backgroundColor: niar.colors.surface.page },
+  "&:hover": { backgroundColor: niar.colors.surface.light },
   '&[aria-expanded="true"]': { backgroundColor: niar.colors.border },
   "&:focus-visible": {
     outline: `${niar.borderWidth.focus} solid ${niar.colors.focus}`,
@@ -22,10 +22,10 @@ export const menuTriggerStyles = {
 };
 
 export const menuPopupStyles = {
-  background: niar.colors.surface.card,
+  background: niar.colors.surface.white,
   border: `${niar.borderWidth.default} solid ${niar.colors.border}`,
   borderRadius: niar.radius.small,
-  boxShadow: niar.shadow.card,
+  boxShadow: niar.shadow.md,
   minWidth: 180,
   padding: niar.spacing["2xs"],
 };

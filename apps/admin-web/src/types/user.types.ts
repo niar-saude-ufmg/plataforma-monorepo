@@ -1,5 +1,6 @@
 import type { ChangeEvent, ReactNode } from 'react';
 import type { UserAccountStatus } from '@niar/contracts';
+import type { ApiError } from "./api.types";
 
 /**
  * Contratos de dados usados pela interface do admin.
@@ -11,6 +12,36 @@ import type { UserAccountStatus } from '@niar/contracts';
 /** Único perfil criado nesta entrega. Outros perfis voltam na tarefa da gestão de usuários. */
 export type UserRole = 'researcher' | 'admin' | 'committee';
 
+export interface AuthProfile {
+  phone: string | null;
+  institution: string | null;
+  organizationalUnit: string | null;
+  contactAddress: string | null;
+}
+
+export interface AuthResearcherProfile {
+  researchArea: string | null;
+  position: string | null;
+}
+
+export interface AuthCoepData {
+  caae: string;
+  opinionNumber: string;
+  approvalDate: string;
+  documentFilename: string;
+}
+
+export interface AuthCommitteeProfile {
+  specialty: {
+    id: number;
+    code: string;
+    name: string;
+    description: string;
+    guidanceContext: string;
+    isActive: boolean;
+  };
+}
+
 /** Usuário autenticado disponível para as telas da plataforma. */
 export interface AuthUser {
   id: number;
@@ -18,6 +49,10 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   accountStatus: UserAccountStatus;
+  profile?: AuthProfile;
+  researcherProfile?: AuthResearcherProfile;
+  coep?: AuthCoepData;
+  committeeProfile?: AuthCommitteeProfile;
 }
 
 /** Entrada do cadastro como a UI produz (camelCase). */
@@ -53,27 +88,26 @@ export interface User {
   createdAt: string;
 }
 
-/** Erro normalizado da API. */
-export interface ApiError {
-  message: string;
-  status?: number;
-  fieldErrors?: Partial<Record<
-    | 'fullName'
-    | 'email'
-    | 'password'
-    | 'passwordConfirmation'
-    | 'phone'
-    | 'institution'
-    | 'organizationalUnit'
-    | 'contactAddress'
-    | 'researchArea'
-    | 'position'
-    | 'caae'
-    | 'opinionNumber'
-    | 'approvalDate'
-    | 'coepDocument',
-    string
-  >>;
+export interface UserFormFieldErrors {
+  fullName?: string;
+  email?: string;
+  password?: string;
+  passwordConfirmation?: string;
+  phone?: string;
+  institution?: string;
+  organizationalUnit?: string;
+  contactAddress?: string;
+  researchArea?: string;
+  position?: string;
+  caae?: string;
+  opinionNumber?: string;
+  approvalDate?: string;
+  coepDocument?: string;
+}
+
+/* Erro de API específico do cadastro de usuário, com detalhes de validação por campo. */
+export interface UserApiError extends ApiError {
+  fieldErrors?: UserFormFieldErrors;
 }
 
 export type UserTextField = {

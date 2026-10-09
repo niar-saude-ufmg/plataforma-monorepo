@@ -77,7 +77,41 @@ const toSessionUser = (user: AuthenticatedUser): SessionUser => ({
   email: user.email,
   name: user.full_name,
   role: user.role,
-  accountStatus: user.account_status
+  accountStatus: user.account_status,
+  ...(user.profile ? {
+    profile: {
+      phone: user.profile.phone,
+      institution: user.profile.institution,
+      organizationalUnit: user.profile.organizational_unit,
+      contactAddress: user.profile.contact_address
+    }
+  } : {}),
+  ...(user.researcher_profile ? {
+    researcherProfile: {
+      researchArea: user.researcher_profile.research_area,
+      position: user.researcher_profile.position
+    }
+  } : {}),
+  ...(user.coep ? {
+    coep: {
+      caae: user.coep.caae,
+      opinionNumber: user.coep.opinion_number,
+      approvalDate: user.coep.approval_date,
+      documentFilename: user.coep.document_filename
+    }
+  } : {}),
+  ...(user.committee_profile ? {
+    committeeProfile: {
+      specialty: {
+        id: user.committee_profile.specialty.id,
+        code: user.committee_profile.specialty.code,
+        name: user.committee_profile.specialty.name,
+        description: user.committee_profile.specialty.description,
+        guidanceContext: user.committee_profile.specialty.guidance_context,
+        isActive: user.committee_profile.specialty.is_active
+      }
+    }
+  } : {})
 });
 
 export default function App() {

@@ -6,10 +6,10 @@ export const inputTheme: Components<Theme>["MuiOutlinedInput"] = {
     root: {
       borderRadius: niar.radius.small,
       fontFamily: niar.fontFamily,
-      backgroundColor: niar.colors.surface.card,
+      backgroundColor: niar.colors.surface.white,
     },
     notchedOutline: {
-      borderColor: "rgba(28, 53, 94, 0.24)",
+      borderColor: niar.colors.border,
       borderWidth: niar.borderWidth.default,
     },
   },
