@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { APP_ROUTES } from '@niar/config';
 import { Provider } from 'react-redux';
 import { PublicUser } from './PublicUser';
-import type { ApiError } from '../../types/user.types';
+import type { UserApiError } from '../../types/user.types';
 import { store } from '../../store';
 import { clearUsersState } from '../../store/users/users.slice';
 import { createUser } from '../../store/users/users.api';
@@ -180,7 +180,7 @@ describe('PublicUser', () => {
   });
 
   it('exibe erro de campo devolvido pelo backend', async () => {
-    const apiError: ApiError = {
+    const apiError: UserApiError = {
       message: 'Este e-mail já está cadastrado.',
       status: 409,
       fieldErrors: { email: 'Este e-mail já está cadastrado.' },
