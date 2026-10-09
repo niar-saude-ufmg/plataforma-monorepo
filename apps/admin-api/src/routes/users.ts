@@ -12,7 +12,7 @@ export const usersRouter = Router();
  * @swagger
  * /admin/users:
  *   get:
- *     summary: Lista usuários (protegido)
+ *     summary: Lista dados consolidados dos usuários
  *     description: Admin vê qualquer papel. Committee só vê researcher, mesmo sem filtro.
  *     tags: [Users]
  *     security:
@@ -33,19 +33,62 @@ export const usersRouter = Router();
  *         name: page
  *         schema:
  *           type: integer
+ *           minimum: 1
+ *           default: 1
  *       - in: query
  *         name: page_size
  *         schema:
  *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
  *     responses:
  *       200:
- *         description: Lista de usuários
+ *         description: Página de usuários com perfil, COEP e última avaliação
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaginatedUsersResponse'
  *       401:
  *         description: Não autenticado
  *       403:
  *         description: Papel sem acesso à listagem, ou fora do escopo permitido
  */
 usersRouter.get("/", authenticate, restrictTo("admin", "committee"), usersController.list);
+
+/**
+ * @swagger
+ * /admin/users/{user_id}:
+ *   get:
+ *     summary: Consulta os dados consolidados de um usuário
+ *     description: Admin consulta qualquer papel. Committee consulta somente pesquisadores.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       200:
+ *         description: Usuário com perfil, COEP e última avaliação
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ConsolidatedUserResponse'
+ *       400:
+ *         description: Identificador inválido
+ *       401:
+ *         description: Não autenticado
+ *       403:
+ *         description: Pesquisador não pode consultar usuários
+ *       404:
+ *         description: Usuário inexistente ou fora do escopo do comitê
+ */
+usersRouter.get("/:user_id", authenticate, restrictTo("admin", "committee"), usersController.detail);
 
 /**
  * @swagger

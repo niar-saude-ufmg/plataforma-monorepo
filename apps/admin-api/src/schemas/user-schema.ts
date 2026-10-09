@@ -113,6 +113,55 @@ export type UserResponse = {
   created_at: string;
 };
 
+export type ConsolidatedUserResponse = UserResponse & {
+  account_status: user_account_status;
+  profile: {
+    phone: string | null;
+    institution: string | null;
+    organizational_unit: string | null;
+    contact_address: string | null;
+  } | null;
+  researcher_profile: {
+    research_area: string | null;
+    position: string | null;
+  } | null;
+  committee_profile: {
+    specialty: {
+      id: number;
+      code: string;
+      name: string;
+    };
+  } | null;
+  coep: {
+    id: number;
+    caae: string;
+    opinion_number: string;
+    approval_date: string;
+    document_filename: string;
+    download_url: string;
+  } | null;
+  latest_auth_evaluation: {
+    id: number;
+    user_id: number;
+    status: user_account_status;
+    justification: string | null;
+    evaluated_by_user_id: number | null;
+    evaluated_at: string | null;
+    created_at: string;
+    user_coep_data_id: number | null;
+  } | null;
+};
+
+export type PaginatedUsersResponse = {
+  items: ConsolidatedUserResponse[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_items: number;
+    total_pages: number;
+  };
+};
+
 // Retorno da API: dados do cadastro público e blocos vinculados. O caminho interno do documento ("document_storage_path") é omitido por segurança e restringido via TypeScript.
 export type PublicUserCreatedResponse = UserResponse & {
   profile: {
