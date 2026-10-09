@@ -130,14 +130,13 @@ usersRouter.post(
  *       401:
  *         description: Não autenticado
  *       403:
- *         description: Pesquisador não pode baixar o documento por este endpoint
+ *         description: Pesquisador só pode baixar o próprio documento; admin e comitê podem baixar documentos de pesquisadores
  *       404:
  *         description: Usuário, parecer ou arquivo não encontrado
  */
 usersRouter.get(
   "/:user_id/coep-document",
   authenticate,
-  restrictTo("admin", "committee"),
   usersController.downloadCoepDocument
 );
 
