@@ -254,10 +254,7 @@ describe("GET /api/admin/auth/me", () => {
       specialty: {
         id: 1,
         code: "CC",
-        name: "Ciência da Computação",
-        description: "Descrição",
-        guidance_context: "Responsabilidade da especialidade",
-        is_active: true
+        name: "Ciência da Computação"
       }
     });
     expect(response.body).not.toHaveProperty("profile");

@@ -126,12 +126,10 @@ const toConsolidatedUserResponse = (user: ConsolidatedUserRecord): ConsolidatedU
       : null,
     coep: coep
       ? {
-          id: coep.id,
           caae: coep.caae,
           opinion_number: coep.opinionNumber,
           approval_date: coep.approvalDate.toISOString().slice(0, 10),
-          document_filename: basename(coep.documentFilename),
-          download_url: `/api/admin/users/${user.id}/coep-document`
+          document_filename: basename(coep.documentFilename)
         }
       : null,
     latest_auth_evaluation: latestAuthEvaluation

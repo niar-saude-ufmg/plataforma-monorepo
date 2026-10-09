@@ -113,33 +113,39 @@ export type UserResponse = {
   created_at: string;
 };
 
+export type UserProfileResponse = {
+  phone: string | null;
+  institution: string | null;
+  organizational_unit: string | null;
+  contact_address: string | null;
+};
+
+export type ResearcherProfileResponse = {
+  research_area: string | null;
+  position: string | null;
+};
+
+export type CoepResponse = {
+  caae: string;
+  opinion_number: string;
+  approval_date: string;
+  document_filename: string;
+};
+
+export type CommitteeProfileResponse = {
+  specialty: {
+    id: number;
+    code: string;
+    name: string;
+  };
+};
+
 export type ConsolidatedUserResponse = UserResponse & {
   account_status: user_account_status;
-  profile: {
-    phone: string | null;
-    institution: string | null;
-    organizational_unit: string | null;
-    contact_address: string | null;
-  } | null;
-  researcher_profile: {
-    research_area: string | null;
-    position: string | null;
-  } | null;
-  committee_profile: {
-    specialty: {
-      id: number;
-      code: string;
-      name: string;
-    };
-  } | null;
-  coep: {
-    id: number;
-    caae: string;
-    opinion_number: string;
-    approval_date: string;
-    document_filename: string;
-    download_url: string;
-  } | null;
+  profile: UserProfileResponse | null;
+  researcher_profile: ResearcherProfileResponse | null;
+  committee_profile: CommitteeProfileResponse | null;
+  coep: CoepResponse | null;
   latest_auth_evaluation: {
     id: number;
     user_id: number;
@@ -164,20 +170,7 @@ export type PaginatedUsersResponse = {
 
 // Retorno da API: dados do cadastro público e blocos vinculados. O caminho interno do documento ("document_storage_path") é omitido por segurança e restringido via TypeScript.
 export type PublicUserCreatedResponse = UserResponse & {
-  profile: {
-    phone: string;
-    institution: string;
-    organizational_unit: string;
-    contact_address: string;
-  };
-  researcher_profile: {
-    research_area: string;
-    position: string;
-  };
-  coep: {
-    caae: string;
-    opinion_number: string;
-    approval_date: string;
-    document_filename: string;
-  };
+  profile: UserProfileResponse;
+  researcher_profile: ResearcherProfileResponse;
+  coep: CoepResponse;
 };

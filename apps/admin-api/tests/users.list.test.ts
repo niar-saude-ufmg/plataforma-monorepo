@@ -50,7 +50,6 @@ const buildUserRecord = (overrides: Partial<ConsolidatedUserRecord> = {}): Conso
   committeeProfile: null,
   coepData: [
     {
-      id: 4,
       caae: "12345678.9.0000.0000",
       opinionNumber: "1234.567",
       approvalDate: new Date("2026-09-25T00:00:00.000Z"),
@@ -103,12 +102,10 @@ const expectedConsolidatedUser = {
   },
   committee_profile: null,
   coep: {
-    id: 4,
     caae: "12345678.9.0000.0000",
     opinion_number: "1234.567",
     approval_date: "2026-09-25",
-    document_filename: "parecer-coep.pdf",
-    download_url: "/api/admin/users/10/coep-document"
+    document_filename: "parecer-coep.pdf"
   },
   latest_auth_evaluation: {
     id: 12,

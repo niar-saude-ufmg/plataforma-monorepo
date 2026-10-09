@@ -39,7 +39,6 @@ const consolidatedUserSelect = {
   },
   coepData: {
     select: {
-      id: true,
       caae: true,
       opinionNumber: true,
       approvalDate: true,
@@ -87,10 +86,7 @@ export const sessionUserInclude = {
         select: {
           id: true,
           code: true,
-          name: true,
-          description: true,
-          guidanceContext: true,
-          isActive: true
+          name: true
         }
       }
     }
