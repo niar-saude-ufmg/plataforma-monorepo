@@ -11,6 +11,36 @@ import type { UserAccountStatus } from '@niar/contracts';
 /** Único perfil criado nesta entrega. Outros perfis voltam na tarefa da gestão de usuários. */
 export type UserRole = 'researcher' | 'admin' | 'committee';
 
+export interface AuthProfile {
+  phone: string | null;
+  institution: string | null;
+  organizationalUnit: string | null;
+  contactAddress: string | null;
+}
+
+export interface AuthResearcherProfile {
+  researchArea: string | null;
+  position: string | null;
+}
+
+export interface AuthCoepData {
+  caae: string;
+  opinionNumber: string;
+  approvalDate: string;
+  documentFilename: string;
+}
+
+export interface AuthCommitteeProfile {
+  specialty: {
+    id: number;
+    code: string;
+    name: string;
+    description: string;
+    guidanceContext: string;
+    isActive: boolean;
+  };
+}
+
 /** Usuário autenticado disponível para as telas da plataforma. */
 export interface AuthUser {
   id: number;
@@ -18,6 +48,10 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   accountStatus: UserAccountStatus;
+  profile?: AuthProfile;
+  researcherProfile?: AuthResearcherProfile;
+  coep?: AuthCoepData;
+  committeeProfile?: AuthCommitteeProfile;
 }
 
 /** Entrada do cadastro como a UI produz (camelCase). */

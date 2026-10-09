@@ -12,6 +12,32 @@ export type PlatformSessionUser = {
   name: string;
   role: UserRole;
   accountStatus: UserAccountStatus;
+  profile?: {
+    phone: string | null;
+    institution: string | null;
+    organizationalUnit: string | null;
+    contactAddress: string | null;
+  };
+  researcherProfile?: {
+    researchArea: string | null;
+    position: string | null;
+  };
+  coep?: {
+    caae: string;
+    opinionNumber: string;
+    approvalDate: string;
+    documentFilename: string;
+  };
+  committeeProfile?: {
+    specialty: {
+      id: number;
+      code: string;
+      name: string;
+      description: string;
+      guidanceContext: string;
+      isActive: boolean;
+    };
+  };
 };
 
 export const isProtectedRoute = (pathname: string) =>

@@ -26,6 +26,32 @@ export type AuthenticatedUser = {
   full_name: string;
   role: UserRole;
   account_status: UserAccountStatus;
+  profile?: {
+    phone: string | null;
+    institution: string | null;
+    organizational_unit: string | null;
+    contact_address: string | null;
+  };
+  researcher_profile?: {
+    research_area: string | null;
+    position: string | null;
+  };
+  coep?: {
+    caae: string;
+    opinion_number: string;
+    approval_date: string;
+    document_filename: string;
+  };
+  committee_profile?: {
+    specialty: {
+      id: number;
+      code: string;
+      name: string;
+      description: string;
+      guidance_context: string;
+      is_active: boolean;
+    };
+  };
 };
 
 async function request<T>(path: string, options: RequestInit = {}) {
