@@ -12,7 +12,7 @@ import {
   selectIsLoading,
 } from '../../store/users/users.slice';
 import type {
-  ApiError,
+  UserApiError,
   CoepUserFormFields,
   CreateUserInput,
   ResearcherProfileFormFields,
@@ -33,7 +33,7 @@ function RegistrationForm({
   apiError,
   onCreated,
 }: {
-  apiError: ApiError | null;
+  apiError: UserApiError | null;
   onCreated?: (user: User) => void;
 }) {
   const dispatch = useAppDispatch();

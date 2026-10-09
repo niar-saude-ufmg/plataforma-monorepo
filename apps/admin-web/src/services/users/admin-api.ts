@@ -1,4 +1,4 @@
-import type { ApiError, CreateUserInput, User } from '../../types/user.types';
+import type { UserApiError, CreateUserInput, User } from '../../types/user.types';
 
 type ApiValidationIssue = {
   message: string;
@@ -80,7 +80,7 @@ function toUiField(path?: string[]) {
     return field;
   }
 
-  const nestedFields: Record<string, keyof NonNullable<ApiError['fieldErrors']>> = {
+  const nestedFields: Record<string, keyof NonNullable<UserApiError['fieldErrors']>> = {
     'profile.phone': 'phone',
     'profile.institution': 'institution',
     'profile.organizational_unit': 'organizationalUnit',
@@ -100,8 +100,8 @@ function toUiField(path?: string[]) {
   return undefined;
 }
 
-function normalizeValidationError(status: number, issues: ApiValidationIssue[]): ApiError {
-  const fieldErrors: ApiError['fieldErrors'] = {};
+function normalizeValidationError(status: number, issues: ApiValidationIssue[]): UserApiError {
+  const fieldErrors: UserApiError['fieldErrors'] = {};
 
   for (const issue of issues) {
     const field = toUiField(issue.path);
@@ -167,7 +167,7 @@ export async function createUserRequest(input: CreateUserInput): Promise<User> {
 export function normalizeUserApiError(
   status: number | string,
   body: unknown,
-): ApiError {
+): UserApiError {
   const numericStatus = typeof status === 'number' ? status : undefined;
 
   if (numericStatus === 400 && typeof body === 'object' && body !== null && 'errors' in body) {

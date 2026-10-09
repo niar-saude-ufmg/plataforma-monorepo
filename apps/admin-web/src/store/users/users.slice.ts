@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { User } from '../../types/user.types';
-import type { ApiError } from '../../types/user.types';
+import type { UserApiError } from '../../types/user.types';
 import { createUser } from './users.api';
 
 export type UsersStatus = 'idle' | 'pending' | 'succeeded' | 'failed';
@@ -9,7 +9,7 @@ export type UsersState = {
   selectedUser: User | null;
   lastCreatedUser: User | null;
   status: UsersStatus;
-  error: ApiError | null;
+  error: UserApiError | null;
 };
 
 const initialState: UsersState = {
