@@ -40,7 +40,6 @@ export function toDocument(raw: any): ProjectDocument {
     documentType: raw.document_type,
     originalFilename: raw.original_filename,
     createdAt: raw.created_at,
-    downloadUrl: raw.download_url,
   };
 }
 
@@ -103,18 +102,28 @@ function authHeaders(): HeadersInit {
 }
 
 export async function getProjectsRequest(
-  params: ProjectListParams,
+  params: ProjectListParams = {},
 ): Promise<ProjectListResponse> {
   const query = new URLSearchParams();
   if (params.page !== undefined) query.set("page", String(params.page));
   if (params.pageSize !== undefined) query.set("page_size", String(params.pageSize));
+  if (params.status) query.set("status", params.status);
   if (params.evaluationStatus) query.set("evaluation_status", params.evaluationStatus);
+  if (params.submittedFrom) query.set("submitted_from", params.submittedFrom);
+  if (params.submittedTo) query.set("submitted_to", params.submittedTo);
+  if (params.updatedFrom) query.set("updated_from", params.updatedFrom);
+  if (params.updatedTo) query.set("updated_to", params.updatedTo);
+  if (params.versionNumber !== undefined) query.set("version_number", String(params.versionNumber));
+  if (params.documentType) query.set("document_type", params.documentType);
+  if (params.hasDocument !== undefined) query.set("has_document", String(params.hasDocument));
+  if (params.search) query.set("search", params.search);
+  if (params.orderBy) query.set("order_by", params.orderBy);
+  if (params.orderDirection) query.set("order_direction", params.orderDirection);
 
-  const response = await fetch(
-    `${getAdminApiBaseUrl()}/projects?${query.toString()}`,
-    { headers: authHeaders() },
-  );
+  const queryString = query.toString();
+  const url = `${getAdminApiBaseUrl()}/projects${queryString ? `?${queryString}` : ""}`;
 
+  const response = await fetch(url, { headers: authHeaders() });
 
   if (!response.ok) {
     const body = await response.json().catch(() => undefined);

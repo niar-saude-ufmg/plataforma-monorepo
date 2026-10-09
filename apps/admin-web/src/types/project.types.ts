@@ -13,6 +13,15 @@ export type EvaluationStatus =
   | "needs_changes"
   | "rejected";
 
+/** Status do fluxo do projeto. Deve acompanhar o contrato da API. */
+export type ProjectStatus =
+  | "submitted_to_committee"
+  | "resubmitted_to_committee"
+  | "under_review"
+  | "needs_changes"
+  | "approved"
+  | "rejected";
+
 /** Pesquisador dono do projeto (resumo exibido na lista). */
 export interface ResearcherSummary {
   id: number;
@@ -36,17 +45,6 @@ export interface ProjectDocument {
   documentType: string;
   originalFilename: string;
   createdAt: string;
-  downloadUrl: string;
-}
-
-/** Documento vinculado a uma versão do projeto. */
-export interface ProjectDocument {
-  id: number;
-  versionNumber: number;
-  documentType: string;
-  originalFilename: string;
-  createdAt: string;
-  downloadUrl: string;
 }
 
 /** Membro do comitê responsável pela avaliação. */
@@ -68,7 +66,6 @@ export interface ProjectEvaluation {
   responsibleMember: ResponsibleMember;
   evaluatedAt: string | null;
   updatedAt: string;
-
 }
 
 /**
@@ -99,7 +96,18 @@ export interface Pagination {
 export interface ProjectListParams {
   page?: number;
   pageSize?: number;
+  status?: ProjectStatus;
   evaluationStatus?: EvaluationStatus;
+  submittedFrom?: string;
+  submittedTo?: string;
+  updatedFrom?: string;
+  updatedTo?: string;
+  versionNumber?: number;
+  documentType?: string;
+  hasDocument?: boolean;
+  search?: string;
+  orderBy?: "updated_at" | "submitted_at" | "title" | "id";
+  orderDirection?: "asc" | "desc";
 }
 
 export interface ProjectListResponse {

@@ -120,7 +120,6 @@ describe("admin-api projects service", () => {
             documentType: "project_docx",
             originalFilename: "projeto-v1.docx",
             createdAt: "2026-09-20T10:00:00.000Z",
-            downloadUrl: "/api/admin/projects/42/documents/101/download",
           },
         ],
         evaluationStatus: "waiting",
@@ -209,7 +208,7 @@ describe("admin-api projects service", () => {
       );
     });
 
-    it("monta a query string com page, page_size e evaluation_status", async () => {
+    it("monta a query string com todos os filtros suportados pela listagem", async () => {
       const fetchMock = mockFetchOnce({
         ok: true,
         status: 200,
@@ -219,13 +218,35 @@ describe("admin-api projects service", () => {
       await getProjectsRequest({
         page: 2,
         pageSize: 10,
+        status: "under_review",
         evaluationStatus: "waiting",
+        submittedFrom: "2026-09-01",
+        submittedTo: "2026-09-30",
+        updatedFrom: "2026-09-01T00:00:00.000Z",
+        updatedTo: "2026-09-30T23:59:59.999Z",
+        versionNumber: 2,
+        documentType: "project_docx",
+        hasDocument: true,
+        search: "oncologia",
+        orderBy: "title",
+        orderDirection: "asc",
       });
 
       const url = String(fetchMock.mock.calls[0][0]);
       expect(url).toContain("page=2");
       expect(url).toContain("page_size=10");
+      expect(url).toContain("status=under_review");
       expect(url).toContain("evaluation_status=waiting");
+      expect(url).toContain("submitted_from=2026-09-01");
+      expect(url).toContain("submitted_to=2026-09-30");
+      expect(url).toContain("updated_from=2026-09-01T00%3A00%3A00.000Z");
+      expect(url).toContain("updated_to=2026-09-30T23%3A59%3A59.999Z");
+      expect(url).toContain("version_number=2");
+      expect(url).toContain("document_type=project_docx");
+      expect(url).toContain("has_document=true");
+      expect(url).toContain("search=oncologia");
+      expect(url).toContain("order_by=title");
+      expect(url).toContain("order_direction=asc");
     });
 
     it("não inclui parâmetros ausentes na query string", async () => {
@@ -241,6 +262,7 @@ describe("admin-api projects service", () => {
       expect(url).not.toContain("page=");
       expect(url).not.toContain("page_size=");
       expect(url).not.toContain("evaluation_status=");
+      expect(url).not.toContain("?");
     });
 
     it("não envia researcher_id na URL (escopo é do backend)", async () => {
