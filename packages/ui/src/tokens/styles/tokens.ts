@@ -8,6 +8,27 @@ export default {
       charcoal: "#4a4a4a",
       light: "#f5f5f5",
     },
+    global: {
+      black: "#000000",
+      gray: "#e4e7ec",
+      overlay: "rgba(0, 0, 0, 0.5)",
+      red: {
+        light: "#fde2e2",
+        dark: "#9b2c2c",
+      },
+      green: {
+        light: "#d9f2e6",
+        dark: "#176b4d",
+      },
+      yellow: {
+        light: "#fff1c2",
+        dark: "#765400",
+      },
+      blue: {
+        light: "#dcecf7",
+        dark: "#1c355e",
+      },
+    },
     brand: {
       deep: "#0f1f5b",
       cyan: "#3fa9d9",
@@ -33,10 +54,12 @@ export default {
       digital: "#3fa9d9",
     },
     surface: {
-      page: "#f5f5f5",
-      card: "#ffffff",
+      white: "#ffffff",
+      light: "#f5f5f5",
+      deep: "#0f1f5b",
     },
-    border: "rgba(28, 53, 94, 0.12)",
+    border: "#e4e7ec",
+    overlay: "rgba(0, 0, 0, 0.5)",
     focus: "#3fa9d9",
     feedback: {
       success: "#176b4d",
@@ -104,6 +127,6 @@ export default {
     none: "0px",
   },
   shadow: {
-    card: "0 1px 2px rgba(15, 31, 91, 0.06), 0 8px 24px rgba(15, 31, 91, 0.06)",
+    md: "0 1px 2px rgba(15, 31, 91, 0.06), 0 8px 24px rgba(15, 31, 91, 0.06)",
   },
 };

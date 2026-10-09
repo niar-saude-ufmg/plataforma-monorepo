@@ -38,26 +38,26 @@ const niarThemeOptions: ThemeOptions = {
     success: {
       main: niar.colors.feedback.success,
       light: niar.colors.feedback.successSurface,
-      contrastText: niar.colors.base.white,
+      contrastText: niar.colors.neutral.white,
     },
     warning: {
       main: niar.colors.feedback.warning,
       light: niar.colors.feedback.warningSurface,
-      contrastText: niar.colors.base.white,
+      contrastText: niar.colors.neutral.white,
     },
     error: {
       main: niar.colors.feedback.error,
       light: niar.colors.feedback.errorSurface,
-      contrastText: niar.colors.base.white,
+      contrastText: niar.colors.neutral.white,
     },
     info: {
       main: niar.colors.feedback.info,
       light: niar.colors.feedback.infoSurface,
-      contrastText: niar.colors.base.white,
+      contrastText: niar.colors.neutral.white,
     },
     background: {
-      default: niar.colors.surface.page,
-      paper: niar.colors.surface.card,
+      default: niar.colors.surface.light,
+      paper: niar.colors.surface.white,
     },
     text: {
       primary: niar.colors.text.body,
@@ -85,10 +85,10 @@ const niarThemeOptions: ThemeOptions = {
     MuiInputBase: {
       styleOverrides: {
         root: {
-          backgroundColor: niar.colors.surface.card,
+          backgroundColor: niar.colors.surface.white,
         },
         input: {
-          backgroundColor: niar.colors.surface.card,
+          backgroundColor: niar.colors.surface.white,
         },
       },
     },
