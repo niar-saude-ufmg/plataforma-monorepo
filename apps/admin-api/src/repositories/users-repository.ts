@@ -143,6 +143,14 @@ export const usersRepository = {
   // O middleware de auth usa isso: token só tem o id, precisa buscar a role.
   findById: (id: number) => prisma.user.findUnique({ where: { id } }),
 
+  // PATCH /auth/me: só os três campos que o próprio usuário pode editar.
+  // role e accountStatus ficam de fora de propósito — não existe caminho
+  // por aqui para alguém mudar o próprio papel ou reativar a conta.
+  updateBasicData: (
+    id: number,
+    data: { fullName?: string; email?: string; hashedPassword?: string }
+  ) => prisma.user.update({ where: { id }, data }),
+
   findAuthEvaluationTarget: (id: number): Promise<UserAuthEvaluationTarget | null> =>
     prisma.user.findUnique({
       where: { id },

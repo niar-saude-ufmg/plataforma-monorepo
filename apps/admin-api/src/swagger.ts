@@ -138,6 +138,27 @@ const options = {
             account_status: { type: 'string', enum: ['pending', 'active', 'rejected', 'disabled'], example: 'active' },
           },
         },
+        UpdateMe: {
+          type: 'object',
+          description:
+            'Edição do próprio perfil. Todos os campos são opcionais, mas ao menos um entre full_name, email e password deve ser enviado. Campos fora desta lista são recusados com 400.',
+          properties: {
+            full_name: { type: 'string', example: 'Novo Nome Completo' },
+            email: { type: 'string', format: 'email', example: 'novo.email@niar.local' },
+            current_password: {
+              type: 'string',
+              format: 'password',
+              description: 'Obrigatório quando password é enviado.',
+              example: 'senha-atual',
+            },
+            password: {
+              type: 'string',
+              format: 'password',
+              minLength: 8,
+              example: 'nova-senha-segura',
+            },
+          },
+        },
         PublicUserCreatedResponse: {
           allOf: [
             { $ref: '#/components/schemas/UserResponse' },
