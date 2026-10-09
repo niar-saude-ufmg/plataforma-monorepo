@@ -62,6 +62,20 @@ export const usersController = {
     }
   },
 
+  detail: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      if (!request.user) {
+        throw new AppError("Não autenticado", 401);
+      }
+
+      const { user_id } = userAuthEvaluationParamsSchema.parse(request.params);
+      const user = await usersService.getUser(user_id, request.user);
+      response.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
+  },
+
   create: async (request: Request, response: Response, next: NextFunction) => {
     try {
       const data = parseResearcherMultipartRequest(request);

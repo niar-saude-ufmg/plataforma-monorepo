@@ -100,6 +100,138 @@ const options = {
             created_at: { type: 'string', format: 'date-time' },
           },
         },
+        UserProfileResponse: {
+          type: 'object',
+          required: ['phone', 'institution', 'organizational_unit', 'contact_address'],
+          properties: {
+            phone: { type: 'string', nullable: true, example: '(31) 99999-9999' },
+            institution: { type: 'string', nullable: true, example: 'UFMG' },
+            organizational_unit: { type: 'string', nullable: true, example: 'Faculdade de Medicina' },
+            contact_address: { type: 'string', nullable: true, example: 'Belo Horizonte - MG' },
+          },
+        },
+        ResearcherProfileResponse: {
+          type: 'object',
+          required: ['research_area', 'position'],
+          properties: {
+            research_area: { type: 'string', nullable: true, example: 'Saúde pública' },
+            position: { type: 'string', nullable: true, example: 'Professor' },
+          },
+        },
+        CoepResponse: {
+          type: 'object',
+          required: ['caae', 'opinion_number', 'approval_date', 'document_filename'],
+          properties: {
+            caae: { type: 'string', example: '12345678.9.0000.0000' },
+            opinion_number: { type: 'string', example: '1234.567' },
+            approval_date: { type: 'string', format: 'date', example: '2026-09-25' },
+            document_filename: { type: 'string', example: 'parecer-coep.pdf' },
+          },
+        },
+        CommitteeProfileResponse: {
+          type: 'object',
+          required: ['specialty'],
+          properties: {
+            specialty: {
+              type: 'object',
+              required: ['id', 'code', 'name'],
+              properties: {
+                id: { type: 'integer', example: 2 },
+                code: { type: 'string', example: 'CC' },
+                name: { type: 'string', example: 'Ciência da Computação' },
+              },
+            },
+          },
+        },
+        ConsolidatedUserResponse: {
+          type: 'object',
+          description: 'Dados administrativos consolidados. Nunca inclui senha, token ou caminho interno do documento.',
+          required: [
+            'id',
+            'email',
+            'full_name',
+            'role',
+            'account_status',
+            'created_at',
+            'profile',
+            'researcher_profile',
+            'committee_profile',
+            'coep',
+            'latest_auth_evaluation',
+          ],
+          properties: {
+            id: { type: 'integer', example: 10 },
+            email: { type: 'string', format: 'email', example: 'pesquisador@exemplo.com' },
+            full_name: { type: 'string', example: 'Pesquisador Teste' },
+            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
+            account_status: {
+              type: 'string',
+              enum: ['pending', 'active', 'rejected', 'disabled'],
+              example: 'pending',
+            },
+            created_at: { type: 'string', format: 'date-time' },
+            profile: {
+              nullable: true,
+              allOf: [{ $ref: '#/components/schemas/UserProfileResponse' }],
+            },
+            researcher_profile: {
+              nullable: true,
+              allOf: [{ $ref: '#/components/schemas/ResearcherProfileResponse' }],
+            },
+            committee_profile: {
+              nullable: true,
+              allOf: [{ $ref: '#/components/schemas/CommitteeProfileResponse' }],
+            },
+            coep: {
+              nullable: true,
+              allOf: [{ $ref: '#/components/schemas/CoepResponse' }],
+            },
+            latest_auth_evaluation: {
+              type: 'object',
+              nullable: true,
+              required: [
+                'id',
+                'user_id',
+                'status',
+                'justification',
+                'evaluated_by_user_id',
+                'evaluated_at',
+                'created_at',
+                'user_coep_data_id',
+              ],
+              properties: {
+                id: { type: 'integer', example: 12 },
+                user_id: { type: 'integer', example: 10 },
+                status: { type: 'string', enum: ['pending', 'active', 'rejected', 'disabled'] },
+                justification: { type: 'string', nullable: true, example: 'Cadastro aprovado.' },
+                evaluated_by_user_id: { type: 'integer', nullable: true, example: 7 },
+                evaluated_at: { type: 'string', format: 'date-time', nullable: true },
+                created_at: { type: 'string', format: 'date-time' },
+                user_coep_data_id: { type: 'integer', nullable: true, example: 4 },
+              },
+            },
+          },
+        },
+        PaginatedUsersResponse: {
+          type: 'object',
+          required: ['items', 'pagination'],
+          properties: {
+            items: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ConsolidatedUserResponse' },
+            },
+            pagination: {
+              type: 'object',
+              required: ['page', 'page_size', 'total_items', 'total_pages'],
+              properties: {
+                page: { type: 'integer', example: 1 },
+                page_size: { type: 'integer', example: 20 },
+                total_items: { type: 'integer', example: 42 },
+                total_pages: { type: 'integer', example: 3 },
+              },
+            },
+          },
+        },
         UserAuthEvaluationResponse: {
           type: 'object',
           required: [
@@ -137,49 +269,20 @@ const options = {
             role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
             account_status: { type: 'string', enum: ['pending', 'active', 'rejected', 'disabled'], example: 'active' },
             profile: {
-              type: 'object',
               description: 'Presente para pesquisadores quando houver perfil cadastrado.',
-              properties: {
-                phone: { type: 'string', nullable: true, example: '(31) 99999-9999' },
-                institution: { type: 'string', nullable: true, example: 'UFMG' },
-                organizational_unit: { type: 'string', nullable: true, example: 'DCC' },
-                contact_address: { type: 'string', nullable: true, example: 'Belo Horizonte - MG' },
-              },
+              allOf: [{ $ref: '#/components/schemas/UserProfileResponse' }],
             },
             researcher_profile: {
-              type: 'object',
               description: 'Presente para pesquisadores quando houver perfil cadastrado.',
-              properties: {
-                research_area: { type: 'string', nullable: true, example: 'Saúde pública' },
-                position: { type: 'string', nullable: true, example: 'Professor' },
-              },
+              allOf: [{ $ref: '#/components/schemas/ResearcherProfileResponse' }],
             },
             coep: {
-              type: 'object',
               description: 'Metadados do parecer mais recente. O arquivo é obtido pelo endpoint de download.',
-              properties: {
-                caae: { type: 'string', example: '12345678.9.0000.0000' },
-                opinion_number: { type: 'string', example: '1234.567' },
-                approval_date: { type: 'string', format: 'date', example: '2026-09-25' },
-                document_filename: { type: 'string', example: 'parecer-coep.pdf' },
-              },
+              allOf: [{ $ref: '#/components/schemas/CoepResponse' }],
             },
             committee_profile: {
-              type: 'object',
               description: 'Presente para membros do comitê.',
-              properties: {
-                specialty: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'integer', example: 1 },
-                    code: { type: 'string', example: 'CC' },
-                    name: { type: 'string', example: 'Ciência da Computação' },
-                    description: { type: 'string', example: '...' },
-                    guidance_context: { type: 'string', example: 'Responsável por...' },
-                    is_active: { type: 'boolean', example: true },
-                  },
-                },
-              },
+              allOf: [{ $ref: '#/components/schemas/CommitteeProfileResponse' }],
             },
           },
         },
@@ -218,29 +321,13 @@ const options = {
               description: 'Não inclui password, hashed_password nem document_storage_path.',
               properties: {
                 profile: {
-                  type: 'object',
-                  properties: {
-                    phone: { type: 'string', example: '(31) 99999-9999' },
-                    institution: { type: 'string', example: 'UFMG' },
-                    organizational_unit: { type: 'string', example: 'Faculdade de Medicina' },
-                    contact_address: { type: 'string', example: 'Belo Horizonte - MG' },
-                  },
+                  $ref: '#/components/schemas/UserProfileResponse',
                 },
                 researcher_profile: {
-                  type: 'object',
-                  properties: {
-                    research_area: { type: 'string', example: 'Saúde pública' },
-                    position: { type: 'string', example: 'Professor' },
-                  },
+                  $ref: '#/components/schemas/ResearcherProfileResponse',
                 },
                 coep: {
-                  type: 'object',
-                  properties: {
-                    caae: { type: 'string', example: '12345678.9.0000.0000' },
-                    opinion_number: { type: 'string', example: '1234.567' },
-                    approval_date: { type: 'string', format: 'date', example: '2026-09-25' },
-                    document_filename: { type: 'string', example: 'parecer-coep.pdf' },
-                  },
+                  $ref: '#/components/schemas/CoepResponse',
                 },
               },
             },

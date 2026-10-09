@@ -1,5 +1,11 @@
 import { z } from "zod";
 import type { UserAccountStatus, UserRole } from "@niar/contracts";
+import type {
+  CoepResponse,
+  CommitteeProfileResponse,
+  ResearcherProfileResponse,
+  UserProfileResponse
+} from "./user-schema.js";
 
 export const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -43,30 +49,8 @@ export type SessionUserResponse = {
   full_name: string;
   role: UserRole;
   account_status: UserAccountStatus;
-  profile?: {
-    phone: string | null;
-    institution: string | null;
-    organizational_unit: string | null;
-    contact_address: string | null;
-  };
-  researcher_profile?: {
-    research_area: string | null;
-    position: string | null;
-  };
-  coep?: {
-    caae: string;
-    opinion_number: string;
-    approval_date: string;
-    document_filename: string;
-  };
-  committee_profile?: {
-    specialty: {
-      id: number;
-      code: string;
-      name: string;
-      description: string;
-      guidance_context: string;
-      is_active: boolean;
-    };
-  };
+  profile?: UserProfileResponse;
+  researcher_profile?: ResearcherProfileResponse;
+  coep?: CoepResponse;
+  committee_profile?: CommitteeProfileResponse;
 };

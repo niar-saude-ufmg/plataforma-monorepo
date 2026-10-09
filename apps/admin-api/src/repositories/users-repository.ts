@@ -3,19 +3,19 @@ import type { UserRole } from "@niar/contracts";
 import { AppError } from "../errors/app-error.js";
 import { auditRepository } from "./audit-repository.js";
 
-// hashedPassword fica de fora de propósito: como o select já não busca o
-// campo, ele nunca existe em memória nas camadas acima (service/controller),
-// então não tem como vazar por esquecimento na resposta da API.
-const userListSelect = {
+const userIdentitySelect = {
   id: true,
   email: true,
   fullName: true,
   role: true,
   accountStatus: true,
-  createdAt: true
-};
+  createdAt: true,
+} as const;
 
-export const sessionUserInclude = {
+// As consultas de leitura selecionam explicitamente só os campos públicos.
+// Senha, caminho interno do COEP e demais dados sensíveis nunca chegam ao service.
+const consolidatedUserSelect = {
+  ...userIdentitySelect,
   profile: {
     select: {
       phone: true,
@@ -36,10 +36,62 @@ export const sessionUserInclude = {
         select: {
           id: true,
           code: true,
-          name: true,
-          description: true,
-          guidanceContext: true,
-          isActive: true
+          name: true
+        }
+      }
+    }
+  },
+  coepData: {
+    select: {
+      caae: true,
+      opinionNumber: true,
+      approvalDate: true,
+      documentFilename: true
+    },
+    orderBy: [{ createdAt: "desc" as const }, { id: "desc" as const }],
+    take: 1
+  },
+  authEvaluations: {
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      justification: true,
+      evaluatedByUserId: true,
+      evaluatedAt: true,
+      createdAt: true,
+      userCoepDataId: true
+    },
+    orderBy: [{ createdAt: "desc" as const }, { id: "desc" as const }],
+    take: 1
+  }
+} satisfies Prisma.UserSelect;
+
+export type ConsolidatedUserRecord = Prisma.UserGetPayload<{ select: typeof consolidatedUserSelect }>;
+
+export const sessionUserSelect = {
+  ...userIdentitySelect,
+  profile: {
+    select: {
+      phone: true,
+      institution: true,
+      organizationalUnit: true,
+      contactAddress: true
+    }
+  },
+  researcherProfile: {
+    select: {
+      researchArea: true,
+      position: true
+    }
+  },
+  committeeProfile: {
+    select: {
+      specialty: {
+        select: {
+          id: true,
+          code: true,
+          name: true
         }
       }
     }
@@ -54,26 +106,28 @@ export const sessionUserInclude = {
       documentFilename: true
     }
   }
-} satisfies Prisma.UserInclude;
+} satisfies Prisma.UserSelect;
 
 export type SessionUserRecord = Prisma.UserGetPayload<{
-  include: typeof sessionUserInclude;
+  select: typeof sessionUserSelect;
 }>;
-
-export type UserListRecord = {
-  id: number;
-  email: string;
-  fullName: string;
-  role: UserRole; // O papel vem do UserRole de @niar/contracts, nao de uma lista escrita a mao acho que fica mais fácil
-  accountStatus: user_account_status;
-  createdAt: Date;
-};
 
 export type UserListFilter = {
   role?: UserRole;
+  accountStatus?: user_account_status;
   page: number;
   pageSize: number;
 };
+
+export type UserListPage = {
+  items: ConsolidatedUserRecord[];
+  totalItems: number;
+};
+
+const buildUserWhere = (filter: Pick<UserListFilter, "role" | "accountStatus">): Prisma.UserWhereInput => ({
+  ...(filter.role ? { role: filter.role } : {}),
+  ...(filter.accountStatus ? { accountStatus: filter.accountStatus } : {})
+});
 
 export type UserAuthEvaluationTarget = {
   id: number;
@@ -173,14 +227,28 @@ export type CreatedResearcherRecord = {
 };
 
 export const usersRepository = {
-  // Única camada que acessa o Prisma/banco. Service e controller não sabem que existe um Postgres por trás disso.
-  findAll: (filter: UserListFilter): Promise<UserListRecord[]> =>
-    prisma.user.findMany({
-      select: userListSelect,
-      where: filter.role ? { role: filter.role } : undefined,
-      orderBy: { id: "asc" },
-      skip: (filter.page - 1) * filter.pageSize,
-      take: filter.pageSize
+  // Relações são carregadas pelo próprio Prisma para a página inteira; não há
+  // consultas disparadas dentro de um loop por usuário.
+  findAll: async (filter: UserListFilter): Promise<UserListPage> => {
+    const where = buildUserWhere(filter);
+    const [items, totalItems] = await prisma.$transaction([
+      prisma.user.findMany({
+        select: consolidatedUserSelect,
+        where,
+        orderBy: { id: "asc" },
+        skip: (filter.page - 1) * filter.pageSize,
+        take: filter.pageSize
+      }),
+      prisma.user.count({ where })
+    ]);
+
+    return { items, totalItems };
+  },
+
+  findDetailById: (id: number, role?: UserRole): Promise<ConsolidatedUserRecord | null> =>
+    prisma.user.findFirst({
+      where: { id, ...(role ? { role } : {}) },
+      select: consolidatedUserSelect
     }),
 
   findByEmail: (email: string) => prisma.user.findUnique({ where: { email } }),
@@ -189,7 +257,7 @@ export const usersRepository = {
   findById: (id: number) => prisma.user.findUnique({ where: { id } }),
 
   findSessionById: (id: number): Promise<SessionUserRecord | null> =>
-    prisma.user.findUnique({ where: { id }, include: sessionUserInclude }),
+    prisma.user.findUnique({ where: { id }, select: sessionUserSelect }),
 
   // PATCH /auth/me: dados básicos da conta e telefone do perfil do pesquisador.
   // role e accountStatus ficam de fora de propósito — não existe caminho
@@ -219,7 +287,7 @@ export const usersRepository = {
 
       const updated = await transaction.user.findUnique({
         where: { id },
-        include: sessionUserInclude
+        select: sessionUserSelect
       });
 
       if (!updated) {

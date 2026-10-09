@@ -51,10 +51,7 @@ const toSessionUser = (user: SessionUserRecord): SessionUserResponse => {
       specialty: {
         id: user.committeeProfile.specialty.id,
         code: user.committeeProfile.specialty.code,
-        name: user.committeeProfile.specialty.name,
-        description: user.committeeProfile.specialty.description,
-        guidance_context: user.committeeProfile.specialty.guidanceContext,
-        is_active: user.committeeProfile.specialty.isActive
+        name: user.committeeProfile.specialty.name
       }
     };
   }

@@ -4,7 +4,7 @@ import type { UserRole } from "@niar/contracts";
 import type { user_account_status } from "@niar/database";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
-import { usersRepository } from "../repositories/users-repository.js";
+import { usersRepository, type ConsolidatedUserRecord } from "../repositories/users-repository.js";
 import {
   removeStoredCoepDocument,
   resolveStoredCoepDocument,
@@ -21,6 +21,8 @@ import {
   PublicUserCreatedResponse,
   ListUsersQuery,
   CreateUserAuthEvaluationInput,
+  ConsolidatedUserResponse,
+  PaginatedUsersResponse,
   UserAuthEvaluationResponse,
   UserResponse,
 } from "../schemas/user-schema.js";
@@ -88,29 +90,104 @@ const toUserResponse = (user: {
   created_at: user.createdAt.toISOString(),
 });
 
-export const usersService = {
-  listUsers: async (query: ListUsersQuery, currentUser: AuthenticatedUser): Promise<UserResponse[]> => {
-    let role = query.role;
+const toConsolidatedUserResponse = (user: ConsolidatedUserRecord): ConsolidatedUserResponse => {
+  const coep = user.coepData[0];
+  const latestAuthEvaluation = user.authEvaluations[0];
 
-    // Committee só vê researcher, mesmo sem filtro. Se solicitar outro papel
-    // explicitamente, a requisição é negada em vez de filtrada
-    // silenciosamente, deixando claro que o pedido está fora do escopo.
-    if (currentUser.role === "committee") {
-      if (role && role !== "researcher") {
-        throw new AppError("Comitê só pode listar pesquisadores", 403);
+  return {
+    id: user.id,
+    email: user.email,
+    full_name: user.fullName,
+    role: user.role,
+    account_status: user.accountStatus,
+    created_at: user.createdAt.toISOString(),
+    profile: user.profile
+      ? {
+          phone: user.profile.phone,
+          institution: user.profile.institution,
+          organizational_unit: user.profile.organizationalUnit,
+          contact_address: user.profile.contactAddress
+        }
+      : null,
+    researcher_profile: user.researcherProfile
+      ? {
+          research_area: user.researcherProfile.researchArea,
+          position: user.researcherProfile.position
+        }
+      : null,
+    committee_profile: user.committeeProfile
+      ? {
+          specialty: {
+            id: user.committeeProfile.specialty.id,
+            code: user.committeeProfile.specialty.code,
+            name: user.committeeProfile.specialty.name
+          }
+        }
+      : null,
+    coep: coep
+      ? {
+          caae: coep.caae,
+          opinion_number: coep.opinionNumber,
+          approval_date: coep.approvalDate.toISOString().slice(0, 10),
+          document_filename: basename(coep.documentFilename)
+        }
+      : null,
+    latest_auth_evaluation: latestAuthEvaluation
+      ? {
+          id: latestAuthEvaluation.id,
+          user_id: latestAuthEvaluation.userId,
+          status: latestAuthEvaluation.status,
+          justification: latestAuthEvaluation.justification,
+          evaluated_by_user_id: latestAuthEvaluation.evaluatedByUserId,
+          evaluated_at: latestAuthEvaluation.evaluatedAt?.toISOString() ?? null,
+          created_at: latestAuthEvaluation.createdAt.toISOString(),
+          user_coep_data_id: latestAuthEvaluation.userCoepDataId
+        }
+      : null
+  };
+};
+
+const scopedRoleFor = (requestedRole: UserRole | undefined, currentUser: AuthenticatedUser): UserRole | undefined => {
+  if (currentUser.role !== "committee") return requestedRole;
+
+  if (requestedRole && requestedRole !== "researcher") {
+    throw new AppError("Comitê só pode consultar pesquisadores", 403);
+  }
+
+  return "researcher";
+};
+
+export const usersService = {
+  listUsers: async (query: ListUsersQuery, currentUser: AuthenticatedUser): Promise<PaginatedUsersResponse> => {
+    const result = await usersRepository.findAll({
+      role: scopedRoleFor(query.role, currentUser),
+      accountStatus: query.account_status,
+      page: query.page,
+      pageSize: query.page_size
+    });
+
+    return {
+      items: result.items.map(toConsolidatedUserResponse),
+      pagination: {
+        page: query.page,
+        page_size: query.page_size,
+        total_items: result.totalItems,
+        total_pages: Math.ceil(result.totalItems / query.page_size)
       }
-      role = "researcher";
+    };
+  },
+
+  getUser: async (userId: number, currentUser: AuthenticatedUser): Promise<ConsolidatedUserResponse> => {
+    const user = await usersRepository.findDetailById(
+      userId,
+      currentUser.role === "committee" ? "researcher" : undefined
+    );
+
+    if (!user) {
+      throw new AppError("Usuário não encontrado", 404);
     }
 
-    const users = await usersRepository.findAll({ role, page: query.page, pageSize: query.page_size });
-
-    return users.map((user) => ({
-      id: user.id,
-      email: user.email,
-      full_name: user.fullName,
-      role: user.role,
-      created_at: user.createdAt.toISOString()
-    }));
+    return toConsolidatedUserResponse(user);
   },
 
     // Cadastro público: cria pesquisador, perfil, dados acadêmicos e COEP numa transação só. A role nunca vem do cliente, é sempre researcher.
