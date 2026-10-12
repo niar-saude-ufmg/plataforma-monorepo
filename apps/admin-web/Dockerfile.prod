@@ -8,6 +8,7 @@ COPY packages ./packages
 COPY scripts ./scripts
 
 RUN corepack enable && pnpm install --frozen-lockfile
+RUN pnpm --filter @niar/ui build
 
 ARG VITE_REMOTE_BASE=/remotes/admin/
 ENV VITE_REMOTE_BASE=$VITE_REMOTE_BASE
