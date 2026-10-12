@@ -44,7 +44,7 @@ describe("Shell App", () => {
         email: "pesquisador@niar.local",
         full_name: "Pesquisador NIAR",
         role: "researcher",
-        is_active: true
+        account_status: "active"
       }
     });
 
@@ -73,31 +73,19 @@ describe("Shell App", () => {
     expect(await screen.findByRole("heading", { name: "Cadastro de pesquisador" })).toBeInTheDocument();
   });
 
-  it("disponibiliza a identidade visual sem exigir login", () => {
-    render(
-      <MemoryRouter initialEntries={["/identidade-visual"]}>
-        <App />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByTitle("Design System NIAR")).toHaveAttribute("src", "http://localhost:6006");
-  });
-
-  it("renderiza a Sala Segura sem exigir login", () => {
-    render(
-      <MemoryRouter initialEntries={["/sala-segura"]}>
-        <App />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByRole("heading", { name: /pesquisas que exigem governança/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Cadastrar-se como pesquisador" })).toHaveAttribute("href", "/cadastro/pesquisador");
-    expect(screen.getByRole("link", { name: "Usar o assistente" })).toHaveAttribute("href", "/assistente");
-  });
-
   it("mostra 404 em rotas desconhecidas da shell", () => {
     render(
       <MemoryRouter initialEntries={["/rota-inexistente"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("heading", { name: "Página não encontrada" })).toBeInTheDocument();
+  });
+
+  it("não expõe o caminho interno legado do Storybook", () => {
+    render(
+      <MemoryRouter initialEntries={["/storybook"]}>
         <App />
       </MemoryRouter>
     );
@@ -113,7 +101,7 @@ describe("Shell App", () => {
         email: "pesquisador@niar.local",
         full_name: "Pesquisador NIAR",
         role: "researcher",
-        is_active: true
+        account_status: "active"
       }
     });
 
@@ -143,7 +131,7 @@ describe("Shell App", () => {
         email: "admin@niar.local",
         full_name: "Administrador NIAR",
         role: "admin",
-        is_active: true
+        account_status: "active"
       }
     });
 
@@ -169,7 +157,7 @@ describe("Shell App", () => {
       email: "pesquisador@niar.local",
       full_name: "Pesquisador NIAR",
       role: "researcher",
-      is_active: true
+      account_status: "active"
     });
 
     render(
@@ -178,7 +166,7 @@ describe("Shell App", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Carregando sessão...")).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Carregando sessão" })).toBeInTheDocument();
 
     await waitFor(() => {
       expect(getCurrentUser).toHaveBeenCalledWith("token-de-teste");
@@ -189,7 +177,8 @@ describe("Shell App", () => {
       id: 4,
       email: "pesquisador@niar.local",
       name: "Pesquisador NIAR",
-      role: "researcher"
+      role: "researcher",
+      accountStatus: "active"
     });
   });
 });

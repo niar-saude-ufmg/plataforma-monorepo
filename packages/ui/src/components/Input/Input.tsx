@@ -17,17 +17,32 @@ export type InputProps = Omit<
   | "slots"
   | "slotProps"
 > & {
-  type?: "text" | "email" | "password";
+  type?: "text" | "email" | "password" | "date" | "tel";
   showPasswordLabel?: string;
   hidePasswordLabel?: string;
 };
 
 export const Input = forwardRef<HTMLDivElement, InputProps>(function Input(
-  { type = "text", disabled, showPasswordLabel = "Mostrar senha", hidePasswordLabel = "Ocultar senha", ...props },
+  {
+    type = "text",
+    disabled,
+    placeholder,
+    value,
+    defaultValue,
+    onFocus,
+    onBlur,
+    showPasswordLabel = "Mostrar senha",
+    hidePasswordLabel = "Ocultar senha",
+    ...props
+  },
   ref,
 ) {
   const [showPassword, setShowPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const isPassword = type === "password";
+  const hasValue = [value, defaultValue].some(
+    (inputValue) => inputValue !== undefined && inputValue !== null && String(inputValue).length > 0,
+  );
 
   return (
     <TextField
@@ -37,6 +52,17 @@ export const Input = forwardRef<HTMLDivElement, InputProps>(function Input(
       size="medium"
       disabled={disabled}
       type={isPassword && showPassword ? "text" : type}
+      value={value}
+      defaultValue={defaultValue}
+      placeholder={isFocused ? placeholder : undefined}
+      onFocus={(event) => {
+        setIsFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        setIsFocused(false);
+        onBlur?.(event);
+      }}
       slotProps={{
         input: {
           endAdornment: isPassword ? (
@@ -59,6 +85,9 @@ export const Input = forwardRef<HTMLDivElement, InputProps>(function Input(
               </IconButton>
             </InputAdornment>
           ) : undefined,
+        },
+        inputLabel: {
+          shrink: type === "date" || isFocused || hasValue,
         },
       }}
     />

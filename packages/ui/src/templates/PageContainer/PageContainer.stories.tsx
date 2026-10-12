@@ -14,8 +14,52 @@ const meta = {
   component: PageContainer,
   parameters: { layout: "fullscreen", docs: { codePanel: true } },
   argTypes: {
-    children: { control: false, description: "Conteúdo da rota renderizado na área principal.", table: { category: "PROPS" } },
-    tabs: { control: "object", description: "Abas exibidas no cabeçalho institucional, com value e label.", table: { category: "PROPS" } },
+    children: {
+      control: false,
+      description: "Conteúdo da rota renderizado na área principal.",
+      table: { category: "CONTENT" },
+    },
+    tabs: {
+      control: "object",
+      description: "Abas exibidas no cabeçalho, com value e label.",
+      table: { category: "NAVIGATION" },
+    },
+    navigation: {
+      control: "select",
+      options: ["tabs", "menu", "sidebar"],
+      description: "Modo de navegação exibido pelo PageHeader.",
+      table: { category: "NAVIGATION", defaultValue: { summary: "tabs" } },
+    },
+    sidebarItems: {
+      control: "object",
+      description: "Itens e subitens usados quando navigation é sidebar.",
+      table: { category: "NAVIGATION" },
+    },
+    menuGroups: {
+      control: "object",
+      description: "Grupos e itens usados quando navigation é menu.",
+      table: { category: "NAVIGATION" },
+    },
+    activeItem: {
+      control: "text",
+      description: "Item ativo para tabs, menu ou sidebar, normalmente derivado da rota atual.",
+      table: { category: "NAVIGATION" },
+    },
+    showAvatar: {
+      control: "boolean",
+      description: "Controla a exibição do avatar no cabeçalho.",
+      table: { category: "HEADER", defaultValue: { summary: "true" } },
+    },
+    actions: {
+      control: false,
+      description: "Conteúdo adicional exibido no final do cabeçalho, como ações da página.",
+      table: { category: "HEADER" },
+    },
+    onItemChange: {
+      action: "item changed",
+      description: "Chamado quando o usuário seleciona uma tab, item de menu ou item de sidebar.",
+      table: { category: "EVENTS" },
+    },
   },
 } satisfies Meta<typeof PageContainer>;
 
@@ -23,8 +67,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {
-  render: () => (
-    <PageContainer>
+  render: (args) => (
+    <PageContainer {...args}>
       {({ activeTab }) => {
         if (activeTab === "register") {
           return (

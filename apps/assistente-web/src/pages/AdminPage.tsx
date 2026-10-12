@@ -6,7 +6,7 @@ type AdminUser = {
   email: string;
   full_name: string;
   role: string;
-  is_active: boolean;
+  account_status: string;
 };
 
 export default function AdminPage() {
@@ -130,7 +130,7 @@ export default function AdminPage() {
                 <td>{u.full_name}</td>
                 <td>{u.email}</td>
                 <td>{roleLabel(u.role)}</td>
-                <td>{u.is_active ? 'Ativo' : 'Inativo'}</td>
+                <td>{u.account_status}</td>
               </tr>
             ))}
             {users.length === 0 && (

@@ -1,10 +1,10 @@
 declare module "admin/App" {
   import { ComponentType } from "react";
-  import type { UserRole } from "@niar/contracts";
+  import type { PlatformSessionUser } from "@niar/auth";
 
   const AdminApp: ComponentType<{
     mode?: "admin" | "public";
-    currentUser?: { name: string; email: string; role: UserRole };
+    currentUser?: PlatformSessionUser;
   }>;
   export default AdminApp;
 }
@@ -14,4 +14,8 @@ declare module "assistant/App" {
 
   const AssistantApp: ComponentType;
   export default AssistantApp;
+}
+
+declare module "institutional/mount" {
+  export function mountInstitutional(target: HTMLElement): unknown;
 }

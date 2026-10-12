@@ -3,16 +3,16 @@ import { alpha } from "@mui/material/styles";
 
 export const footerStyles = {
   backgroundColor: niar.colors.brand.deep,
-  color: niar.colors.surface.card,
+  color: niar.colors.surface.white,
   display: "flex",
   flexDirection: "column",
   fontFamily: niar.fontFamily,
   width: "100%",
   "& .MuiTypography-root": {
-    color: niar.colors.surface.card,
+    color: niar.colors.surface.white,
   },
   "& .MuiTypography-overline": {
-    color: alpha(niar.colors.surface.card, 0.64),
+    color: alpha(niar.colors.surface.white, 0.64),
     fontSize: niar.fontSize.caption,
     fontWeight: niar.fontWeight.bold,
     letterSpacing: "0.04em",
@@ -36,7 +36,7 @@ export const footerLogoStyles = {
 };
 
 export const footerHeadingStyles = {
-  color: niar.colors.surface.card,
+  color: niar.colors.surface.white,
   fontSize: niar.fontSize.body,
   lineHeight: 1.6,
   marginTop: niar.spacing.sm,
@@ -55,12 +55,12 @@ export const footerPartnerStyles = {
 
 export const footerBottomStyles = {
   alignItems: "center",
-  borderTop: `${niar.borderWidth.default} solid ${alpha(niar.colors.surface.card, 0.2)}`,
-  color: niar.colors.surface.card,
+  borderTop: `${niar.borderWidth.default} solid ${alpha(niar.colors.surface.white, 0.2)}`,
+  color: niar.colors.surface.white,
   display: "flex",
   justifyContent: "space-between",
   padding: `${niar.spacing.md} ${niar.spacing["2xl"]}`,
   "& .MuiTypography-body2": {
-    color: alpha(niar.colors.surface.card, 0.64),
+    color: alpha(niar.colors.surface.white, 0.64),
   },
 };

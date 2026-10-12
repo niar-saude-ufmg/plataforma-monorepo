@@ -1,5 +1,5 @@
 import { APP_ROUTES } from "@niar/config";
-import { UserRole } from "@niar/contracts";
+import { UserAccountStatus, UserRole } from "@niar/contracts";
 
 export const SESSION_STORAGE_KEY = "niar.platform.session";
 export const ACCESS_TOKEN_STORAGE_KEY = "token";
@@ -11,6 +11,33 @@ export type PlatformSessionUser = {
   email: string;
   name: string;
   role: UserRole;
+  accountStatus: UserAccountStatus;
+  profile?: {
+    phone: string | null;
+    institution: string | null;
+    organizationalUnit: string | null;
+    contactAddress: string | null;
+  };
+  researcherProfile?: {
+    researchArea: string | null;
+    position: string | null;
+  };
+  coep?: {
+    caae: string;
+    opinionNumber: string;
+    approvalDate: string;
+    documentFilename: string;
+  };
+  committeeProfile?: {
+    specialty: {
+      id: number;
+      code: string;
+      name: string;
+      description: string;
+      guidanceContext: string;
+      isActive: boolean;
+    };
+  };
 };
 
 export const isProtectedRoute = (pathname: string) =>

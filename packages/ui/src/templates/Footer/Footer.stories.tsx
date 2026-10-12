@@ -52,7 +52,7 @@ export const Playground: Story = {
     partners: (
       <Box>
         <Typography variant="overline">Realização e parcerias</Typography>
-        <Box sx={{ alignItems: "center", backgroundColor: niar.colors.surface.card, borderRadius: niar.radius.medium, display: "flex", flexWrap: "wrap", gap: niar.spacing.md, height: { xs: "auto", sm: 44 }, justifyContent: "space-around", maxWidth: "100%", overflow: "hidden", padding: niar.spacing.xs }}>
+        <Box sx={{ alignItems: "center", backgroundColor: niar.colors.surface.white, borderRadius: niar.radius.medium, display: "flex", flexWrap: "wrap", gap: niar.spacing.md, height: { xs: "auto", sm: 44 }, justifyContent: "space-around", maxWidth: "100%", overflow: "hidden", padding: niar.spacing.xs }}>
           <Box component="img" src="/ufmg.png" alt="UFMG" sx={{ maxHeight: 22, maxWidth: "22%", objectFit: "contain" }} />
           <Box component="img" src="/sus.png" alt="SUS 35 Anos" sx={{ maxHeight: 24, maxWidth: "22%", objectFit: "contain" }} />
           <Box component="img" src="/ministerio-saude.png" alt="Ministério da Saúde" sx={{ maxHeight: 22, maxWidth: "28%", objectFit: "contain" }} />

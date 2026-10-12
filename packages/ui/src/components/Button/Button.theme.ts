@@ -20,34 +20,34 @@ export const buttonTheme: Components<Theme>["MuiButton"] = {
         {
           props: { color: "inverse", variant: "contained" },
           style: {
-            backgroundColor: niar.colors.surface.card,
-            border: `${niar.borderWidth.default} solid ${niar.colors.surface.card}`,
+            backgroundColor: niar.colors.surface.white,
+            border: `${niar.borderWidth.default} solid ${niar.colors.surface.white}`,
             color: niar.colors.brand.deep,
-            "&:hover": { backgroundColor: alpha(niar.colors.surface.card, 0.82) },
+            "&:hover": { backgroundColor: alpha(niar.colors.surface.white, 0.82) },
           },
         },
         {
           props: { color: "inverse", variant: "outlined" },
           style: {
             backgroundColor: "transparent",
-            borderColor: niar.colors.surface.card,
-            color: niar.colors.surface.card,
-            "&:hover": { backgroundColor: alpha(niar.colors.surface.card, 0.12) },
+            borderColor: niar.colors.surface.white,
+            color: niar.colors.surface.white,
+            "&:hover": { backgroundColor: alpha(niar.colors.surface.white, 0.12) },
           },
         },
         {
           props: { color: "inverse", variant: "text" },
           style: {
-            color: niar.colors.surface.card,
-            "&:hover": { backgroundColor: alpha(niar.colors.surface.card, 0.12) },
+            color: niar.colors.surface.white,
+            "&:hover": { backgroundColor: alpha(niar.colors.surface.white, 0.12) },
           },
         },
         {
           props: { variant: "inverse" },
           style: {
-            backgroundColor: niar.colors.surface.card,
+            backgroundColor: niar.colors.surface.white,
             color: niar.colors.brand.deep,
-            "&:hover": { backgroundColor: alpha(niar.colors.surface.card, 0.82) },
+            "&:hover": { backgroundColor: alpha(niar.colors.surface.white, 0.82) },
           },
         },
         {

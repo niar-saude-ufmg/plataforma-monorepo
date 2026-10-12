@@ -8,7 +8,7 @@ export const linkStyles = {
 };
 
 export const inverseLinkStyles = {
-  color: niar.colors.surface.card,
+  color: niar.colors.surface.white,
   "&:hover": {
     color: niar.colors.brand.cyan,
   },

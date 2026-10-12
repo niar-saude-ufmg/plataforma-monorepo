@@ -1,7 +1,9 @@
 import { niar } from "../../tokens/index";
 
+const headerHeight = `calc(${niar.spacing["4xl"]} + ${niar.spacing.xs})`;
+
 export const pageContainerRootStyles = {
-  backgroundColor: niar.colors.surface.page,
+  backgroundColor: niar.colors.surface.light,
   boxSizing: "border-box",
   display: "flex",
   flexDirection: "column",
@@ -13,7 +15,7 @@ export const pageContainerMainStyles = {
   boxSizing: "border-box",
   flex: 1,
   minWidth: 0,
-  padding: { xs: `calc(${niar.spacing["3xl"]} + ${niar.spacing.xl}) ${niar.spacing.xl} ${niar.spacing.xl}`, md: `calc(${niar.spacing["4xl"]} + ${niar.spacing.xl}) ${niar.spacing["3xl"]} ${niar.spacing["3xl"]}` },
+  padding: { xs: `${headerHeight} ${niar.spacing.xl} ${niar.spacing.xl}`, md: `${headerHeight} ${niar.spacing["3xl"]} ${niar.spacing["3xl"]}` },
   width: "100%",
 };
 

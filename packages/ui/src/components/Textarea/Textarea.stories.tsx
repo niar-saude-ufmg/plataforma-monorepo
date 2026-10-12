@@ -11,6 +11,11 @@ const meta = {
       description: "Rótulo visível do campo.",
       table: { category: "PROPS" },
     },
+    fullWidth: {
+      control: "boolean",
+      description: "Ocupa toda a largura disponível.",
+      table: { category: "PROPS", defaultValue: { summary: "false" } },
+    },
     minRows: {
       control: "number",
       description: "Quantidade mínima de linhas exibidas.",

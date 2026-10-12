@@ -1,5 +1,7 @@
 export type UserRole = "researcher" | "admin" | "committee";
 
+export type UserAccountStatus = "pending" | "active" | "rejected" | "disabled";
+
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   researcher: "Pesquisador",
   admin: "Gestor",

@@ -54,8 +54,8 @@ export function Menu({ groups }: MenuProps) {
                     style={(state) => ({
                       ...menuItemStyles,
                       backgroundColor: state.highlighted
-                        ? niar.colors.surface.page
-                        : niar.colors.surface.card,
+                        ? niar.colors.surface.light
+                        : niar.colors.surface.white,
                     })}
                   >
                     {item.label}

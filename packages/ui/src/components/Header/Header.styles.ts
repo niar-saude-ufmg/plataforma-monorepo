@@ -1,9 +1,13 @@
 import { niar } from "../../tokens/index";
 
 export const headerAppBarStyles = { width: "100%" };
+export const headerHeight = `calc(${niar.spacing["4xl"]} + ${niar.spacing.xs})`;
 export const headerToolbarStyles = {
+  boxSizing: "border-box",
   borderBottom: `${niar.borderWidth.default} solid ${niar.colors.border}`,
-  minHeight: `calc(${niar.spacing["4xl"]} + ${niar.spacing.xs})`,
+  height: headerHeight,
+  minHeight: headerHeight,
+  maxHeight: headerHeight,
 };
 export const headerLogoWrapperStyles = {
   alignItems: "center",

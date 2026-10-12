@@ -36,7 +36,7 @@ describe("shell auth api", () => {
           email: "pesquisador@plataforma.local",
           full_name: "Pesquisador Plataforma",
           role: "researcher",
-          is_active: true,
+          account_status: "active",
         }), {
           status: 200,
           headers: { "Content-Type": "application/json" },
@@ -75,7 +75,7 @@ describe("shell auth api", () => {
         email: "pesquisador@plataforma.local",
         full_name: "Pesquisador Plataforma",
         role: "researcher",
-        is_active: true,
+        account_status: "active",
       },
     });
   });

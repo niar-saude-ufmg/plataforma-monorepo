@@ -8,8 +8,10 @@ export type LogoProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "style
 };
 
 const logoSources: Record<LogoVariant, string> = {
-  default: "niar-logo.png",
-  inverse: "niar-logo-footer.png",
+  // Resolve os assets pelo bundle para que o logo não dependa da raiz da shell.
+  // Isso é importante quando o componente é consumido como microfrontend.
+  default: new URL("../../../public/niar-logo.png", import.meta.url).href,
+  inverse: new URL("../../../public/niar-logo-footer.png", import.meta.url).href,
 };
 
 /** Centraliza a marca NIAR para que Header e Footer compartilhem a mesma API. */

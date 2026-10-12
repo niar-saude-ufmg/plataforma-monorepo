@@ -8,7 +8,7 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_admin
 from app.core.security import get_password_hash
-from app.models import AppSetting, AuditLog, CatalogColumn, CatalogTable, Dataset, TableRelationship, User, UserRole
+from app.models import AppSetting, AuditLog, CatalogColumn, CatalogTable, Dataset, TableRelationship, User, UserAccountStatus, UserRole
 from app.schemas import (
     AppSettingOut,
     AppSettingUpdate,
@@ -262,7 +262,7 @@ async def create_user(
         full_name=body.full_name.strip(),
         hashed_password=get_password_hash(body.password),
         role=role,
-        is_active=True,
+        account_status=UserAccountStatus.active,
     )
     db.add(user)
     await db.flush()

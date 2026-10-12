@@ -16,7 +16,14 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title=settings.app_name, lifespan=lifespan)
+    api_prefix = "/api/assistente"
+    app = FastAPI(
+        title=settings.app_name,
+        lifespan=lifespan,
+        docs_url=f"{api_prefix}/docs",
+        redoc_url=f"{api_prefix}/redoc",
+        openapi_url=f"{api_prefix}/openapi.json",
+    )
 
     origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
     app.add_middleware(
@@ -27,7 +34,6 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    api_prefix = "/api/assistente"
     app.include_router(auth.router, prefix=api_prefix)
     app.include_router(admin.router, prefix=api_prefix)
     app.include_router(projects.router, prefix=api_prefix)

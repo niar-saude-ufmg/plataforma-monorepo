@@ -5,6 +5,7 @@ import DialogActions from "@mui/material/DialogActions";
 import { type ReactNode } from "react";
 import IconButton from "@mui/material/IconButton";
 import Close from "@mui/icons-material/Close";
+import { niar } from "../../tokens";
 export type DialogProps = {
   open: boolean;
   title?: ReactNode;
@@ -51,7 +52,11 @@ export function Dialog({
         </DialogTitle>
       )}
       <DialogContent>{children}</DialogContent>
-      {actions && <DialogActions>{actions}</DialogActions>}
+      {actions && (
+        <DialogActions sx={{ px: niar.spacing.xl, pb: niar.spacing.md }}>
+          {actions}
+        </DialogActions>
+      )}
     </MuiDialog>
   );
 }

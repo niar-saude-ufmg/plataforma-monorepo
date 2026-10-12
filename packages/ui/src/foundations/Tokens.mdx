@@ -9,7 +9,7 @@ Os tokens mantêm as decisões visuais do NIAR em uma fonte única e entregam os
 
 ## Global e marca
 
-`global.json` contém valores básicos: paleta bruta, escala de espaçamento, tipografia, raios e sombras. Ele é separado fisicamente para organizar a manutenção, mas não adiciona `global` nos nomes públicos. `brand.json` atribui significado a esses valores e gera a API usada no produto, como `niar.colors.action.primary`.
+`global.json` contém os valores de referência: a paleta institucional do NIAR em `colors.base`, cores globais de apoio em `colors.global`, além de espaçamento, tipografia, raios e sombras. `brand.json` atribui significado de interface a esses valores e gera a API usada no produto, como `niar.colors.action.primary`.
 
 Componentes e páginas devem usar principalmente os tokens definidos em `brand.json`. Isso permite alterar a aplicação da marca sem procurar valores hexadecimais ou medidas espalhados pelo código. Os valores de `global.json` servem para construir e manter esses papéis.
 
@@ -17,7 +17,7 @@ Componentes e páginas devem usar principalmente os tokens definidos em `brand.j
   <table className="docs-table">
     <thead><tr><th>Camada</th><th>Responsabilidade</th><th>Exemplo</th></tr></thead>
     <tbody>
-      <tr><td>Global</td><td>Valores-base e escalas</td><td><code>colors.descriptive</code></td></tr>
+      <tr><td>Global</td><td>Paleta institucional, cores de apoio e escalas</td><td><code>colors.base.descriptive</code><br /><code>colors.global.red.light</code></td></tr>
       <tr><td>Marca</td><td>Papéis usados na interface</td><td><code>niar.colors.action.primary</code></td></tr>
       <tr><td>Componente</td><td>Combinação dos papéis em uma experiência</td><td><code>Button color="primary"</code></td></tr>
     </tbody>
@@ -35,7 +35,7 @@ Componentes e páginas devem usar principalmente os tokens definidos em `brand.j
       <tr><td>Tipografia</td><td><code>niar.fontSize.body</code><br /><code>niar.fontWeight.semibold</code></td><td>Família, pesos e tamanhos</td></tr>
       <tr><td>Raios</td><td><code>niar.radius.small</code><br /><code>niar.radius.medium</code></td><td>Controles e superfícies</td></tr>
       <tr><td>Bordas</td><td><code>niar.borderWidth.default</code></td><td>Contornos e indicadores de foco</td></tr>
-      <tr><td>Sombras</td><td><code>niar.shadow.card</code></td><td>Elevação discreta</td></tr>
+      <tr><td>Sombras</td><td><code>niar.shadow.md</code></td><td>Elevação discreta</td></tr>
     </tbody>
   </table>
 </div>
@@ -85,7 +85,7 @@ CSS importa as variáveis uma vez na entrada da aplicação:
 .project-page {
   color: var(--niar-colors-text-body);
   padding: var(--niar-spacing-xl);
-  background: var(--niar-colors-surface-page);
+  background: var(--niar-colors-surface-light);
 }
 ```
 

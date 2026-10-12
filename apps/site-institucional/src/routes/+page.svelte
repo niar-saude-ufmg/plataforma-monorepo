@@ -132,12 +132,16 @@
 				{m.hero_cta_project()}
 			</Button>
 			<!-- Secundário rebaixado de propósito: a hierarquia se constrói tanto elevando
-			     o primário quanto recuando este. -->
+			     o primário quanto recuando este.
+
+			     Leva à Sala Segura, e não mais às publicações: estas já têm seção própria logo
+			     abaixo, com o link de "ver todas". Assim as duas ações do hero atendem os dois
+			     públicos do site — quem quer conhecer o núcleo e quem quer submeter um projeto. -->
 			<a
-				href={localizeHref(resolve('/publications'))}
+				href={localizeHref(resolve('/sala-segura'))}
 				class="inline-flex items-center gap-1 text-base font-medium text-white/80 transition-colors hover:text-white hover:underline"
 			>
-				{m.hero_cta_publications()} <span aria-hidden="true">&rarr;</span>
+				{m.hero_cta_secure_room()} <span aria-hidden="true">&rarr;</span>
 			</a>
 		</div>
 	</div>

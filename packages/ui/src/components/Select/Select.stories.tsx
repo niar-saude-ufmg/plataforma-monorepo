@@ -23,6 +23,11 @@ const meta = {
       description: "Rótulo visível do campo.",
       table: { category: "PROPS" },
     },
+    fullWidth: {
+      control: "boolean",
+      description: "Ocupa toda a largura disponível.",
+      table: { category: "PROPS", defaultValue: { summary: "false" } },
+    },
     options: {
       control: "object",
       description: "Opções com value, label e disabled opcional.",

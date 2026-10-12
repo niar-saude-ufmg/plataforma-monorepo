@@ -50,7 +50,7 @@ export const switchTheme: Components<Theme>["MuiSwitch"] = {
     },
     thumb: {
       backgroundColor: niar.colors.neutral.white,
-      boxShadow: "0 1px 3px rgba(15, 31, 91, 0.28)",
+      boxShadow: niar.shadow.md,
       height: niar.sizing.lg,
       width: niar.sizing.lg,
     },

@@ -39,7 +39,7 @@ export const Playground: Story = {
         background:
           args.variant === "inverse"
             ? niar.colors.brand.deep
-            : niar.colors.surface.card,
+            : niar.colors.surface.white,
         padding: niar.spacing.xl,
       }}
     >
