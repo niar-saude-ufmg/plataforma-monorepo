@@ -51,3 +51,13 @@ export type SpecialtyResponse = {
   created_at: string;
   updated_at: string;
 };
+
+export type SpecialtiesListResponse = {
+  items: SpecialtyResponse[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_items: number;
+    total_pages: number;
+  };
+};

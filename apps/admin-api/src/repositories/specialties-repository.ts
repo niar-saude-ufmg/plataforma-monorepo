@@ -1,4 +1,5 @@
-import { prisma } from "@niar/database";
+import { Prisma, prisma } from "@niar/database";
+import { AppError } from "../errors/app-error.js";
 
 export type SpecialtyRecord = {
   id: number;
@@ -19,6 +20,11 @@ export type SpecialtyListFilter = {
   pageSize: number;
 };
 
+export type SpecialtyListResult = {
+  items: SpecialtyRecord[];
+  total: number;
+};
+
 export type CreateSpecialtyData = {
   code: string;
   name: string;
@@ -35,22 +41,39 @@ export type UpdateSpecialtyData = {
   isActive?: boolean;
 };
 
+const buildWhere = (filter: Pick<SpecialtyListFilter, "query" | "isActive">): Prisma.SpecialtyWhereInput => ({
+  isActive: filter.isActive,
+  OR: filter.query
+    ? [{ name: { contains: filter.query, mode: "insensitive" } }, { code: { contains: filter.query, mode: "insensitive" } }]
+    : undefined
+});
+
+const rethrowSpecialtyWriteError = (error: unknown): never => {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    const target = String(error.meta?.target ?? "").toLowerCase();
+    const field = target.includes("code") ? "código" : "nome";
+
+    throw new AppError(`Já existe uma especialidade com este ${field}`, 409);
+  }
+
+  throw error;
+};
+
 export const specialtiesRepository = {
-  findAll: (filter: SpecialtyListFilter): Promise<SpecialtyRecord[]> =>
-    prisma.specialty.findMany({
-      where: {
-        isActive: filter.isActive,
-        // "mode: insensitive" é o que faz o Postgres ignorar maiúscula/
-        // minúscula na busca (sem isso, "epidemio" não encontraria
-        // "Epidemiologia", porque o LIKE do Postgres é case-sensitive).
-        OR: filter.query
-          ? [{ name: { contains: filter.query, mode: "insensitive" } }, { code: { contains: filter.query, mode: "insensitive" } }]
-          : undefined
-      },
-      orderBy: { id: "asc" },
-      skip: (filter.page - 1) * filter.pageSize,
-      take: filter.pageSize
-    }),
+  findAll: async (filter: SpecialtyListFilter): Promise<SpecialtyListResult> => {
+    const where = buildWhere(filter);
+    const [items, total] = await prisma.$transaction([
+      prisma.specialty.findMany({
+        where,
+        orderBy: { id: "asc" },
+        skip: (filter.page - 1) * filter.pageSize,
+        take: filter.pageSize
+      }),
+      prisma.specialty.count({ where })
+    ]);
+
+    return { items, total };
+  },
 
   findById: (id: number) => prisma.specialty.findUnique({ where: { id } }),
 
@@ -58,10 +81,21 @@ export const specialtiesRepository = {
 
   findByNameNormalized: (nameNormalized: string) => prisma.specialty.findUnique({ where: { nameNormalized } }),
 
-  create: (data: CreateSpecialtyData) => prisma.specialty.create({ data }),
+  create: async (data: CreateSpecialtyData) => {
+    try {
+      return await prisma.specialty.create({ data });
+    } catch (error) {
+      return rethrowSpecialtyWriteError(error);
+    }
+  },
 
   // "updated_at" não é gerenciado pelo Prisma automaticamente (não usa
   // @updatedAt no schema), por isso precisa ser setado aqui a cada edição.
-  update: (id: number, data: UpdateSpecialtyData) =>
-    prisma.specialty.update({ where: { id }, data: { ...data, updatedAt: new Date() } })
+  update: async (id: number, data: UpdateSpecialtyData) => {
+    try {
+      return await prisma.specialty.update({ where: { id }, data: { ...data, updatedAt: new Date() } });
+    } catch (error) {
+      return rethrowSpecialtyWriteError(error);
+    }
+  }
 };

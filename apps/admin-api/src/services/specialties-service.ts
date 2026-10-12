@@ -1,6 +1,12 @@
 import { AppError } from "../errors/app-error.js";
 import { specialtiesRepository } from "../repositories/specialties-repository.js";
-import { CreateSpecialtyInput, ListSpecialtiesQuery, SpecialtyResponse, UpdateSpecialtyInput } from "../schemas/specialty-schema.js";
+import {
+  CreateSpecialtyInput,
+  ListSpecialtiesQuery,
+  SpecialtiesListResponse,
+  SpecialtyResponse,
+  UpdateSpecialtyInput
+} from "../schemas/specialty-schema.js";
 
 // Usada para achar duplicidade de nome mesmo com diferença de
 // maiúsculas/minúsculas ou espaços nas pontas (ex: "Epidemiologia " e
@@ -8,7 +14,7 @@ import { CreateSpecialtyInput, ListSpecialtiesQuery, SpecialtyResponse, UpdateSp
 const normalizeName = (name: string) => name.trim().toLowerCase();
 
 export const specialtiesService = {
-  listSpecialties: async (query: ListSpecialtiesQuery): Promise<SpecialtyResponse[]> => {
+  listSpecialties: async (query: ListSpecialtiesQuery): Promise<SpecialtiesListResponse> => {
     let isActive: boolean | undefined;
     if (query.is_active === "true") {
       isActive = true;
@@ -17,23 +23,33 @@ export const specialtiesService = {
       isActive = false;
     }
 
-    const specialties = await specialtiesRepository.findAll({
+    const filter = {
       query: query.query,
       isActive,
       page: query.page,
       pageSize: query.page_size
-    });
+    };
 
-    return specialties.map((specialty) => ({
-      id: specialty.id,
-      code: specialty.code,
-      name: specialty.name,
-      description: specialty.description,
-      guidance_context: specialty.guidanceContext,
-      is_active: specialty.isActive,
-      created_at: specialty.createdAt.toISOString(),
-      updated_at: specialty.updatedAt.toISOString()
-    }));
+    const result = await specialtiesRepository.findAll(filter);
+
+    return {
+      items: result.items.map((specialty) => ({
+        id: specialty.id,
+        code: specialty.code,
+        name: specialty.name,
+        description: specialty.description,
+        guidance_context: specialty.guidanceContext,
+        is_active: specialty.isActive,
+        created_at: specialty.createdAt.toISOString(),
+        updated_at: specialty.updatedAt.toISOString()
+      })),
+      pagination: {
+        page: query.page,
+        page_size: query.page_size,
+        total_items: result.total,
+        total_pages: Math.ceil(result.total / query.page_size)
+      }
+    };
   },
 
   createSpecialty: async (data: CreateSpecialtyInput): Promise<SpecialtyResponse> => {

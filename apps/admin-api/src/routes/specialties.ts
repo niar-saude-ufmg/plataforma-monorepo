@@ -34,7 +34,11 @@ export const specialtiesRouter = Router();
  *           type: integer
  *     responses:
  *       200:
- *         description: Lista de especialidades
+ *         description: Lista paginada de especialidades
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SpecialtiesListResponse'
  *       401:
  *         description: Não autenticado
  *       403:
@@ -50,9 +54,19 @@ specialtiesRouter.get("/", authenticate, restrictTo("admin"), specialtiesControl
  *     tags: [Specialties]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateSpecialty'
  *     responses:
  *       201:
  *         description: Especialidade criada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SpecialtyResponse'
  *       400:
  *         description: Dados inválidos (validação do Zod)
  *       401:
@@ -72,9 +86,25 @@ specialtiesRouter.post("/", authenticate, restrictTo("admin"), specialtiesContro
  *     tags: [Specialties]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateSpecialty'
  *     responses:
  *       200:
  *         description: Especialidade atualizada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SpecialtyResponse'
  *       400:
  *         description: Dados inválidos (validação do Zod)
  *       401:
@@ -97,9 +127,25 @@ specialtiesRouter.patch("/:id", authenticate, restrictTo("admin"), specialtiesCo
  *     tags: [Specialties]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateSpecialtyStatus'
  *     responses:
  *       200:
  *         description: Especialidade atualizada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SpecialtyResponse'
  *       400:
  *         description: Dados inválidos (validação do Zod)
  *       401:
