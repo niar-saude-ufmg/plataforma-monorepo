@@ -2,16 +2,29 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type {
   Project,
   Pagination,
+  ProjectListParams,
 } from "../../types/project.types";
 import type { ApiError } from "../../types/api.types";
 import { getProjects, getProject } from "./projects.api";
 
 export type ProjectsStatus = "idle" | "pending" | "succeeded" | "failed";
 
+export type ProjectsFilters = Pick<
+  ProjectListParams,
+  "search" | "status" | "evaluationStatus"
+>;
+
+export const DEFAULT_PROJECTS_PAGE_SIZE = 20;
+
+const createDefaultProjectsFilters = (): ProjectsFilters => ({});
+
 export type ProjectsState = {
   projects: Project[];
   selectedProject: Project | null;
   pagination: Pagination | null;
+  filters: ProjectsFilters;
+  page: number;
+  pageSize: number;
   status: ProjectsStatus;
   error: ApiError | null;
 };
@@ -20,6 +33,9 @@ const initialState: ProjectsState = {
   projects: [],
   selectedProject: null,
   pagination: null,
+  filters: createDefaultProjectsFilters(),
+  page: 1,
+  pageSize: DEFAULT_PROJECTS_PAGE_SIZE,
   status: "idle",
   error: null,
 };
@@ -38,8 +54,26 @@ const projectsSlice = createSlice({
       state.projects = [];
       state.selectedProject = null;
       state.pagination = null;
+      state.filters = createDefaultProjectsFilters();
+      state.page = 1;
+      state.pageSize = DEFAULT_PROJECTS_PAGE_SIZE;
       state.status = "idle";
       state.error = null;
+    },
+    setProjectsFilters(state, action: PayloadAction<ProjectsFilters>) {
+      state.filters = action.payload;
+      state.page = 1;
+    },
+    clearProjectsFilters(state) {
+      state.filters = createDefaultProjectsFilters();
+      state.page = 1;
+    },
+    setProjectsPage(state, action: PayloadAction<number>) {
+      state.page = Math.max(1, action.payload);
+    },
+    setProjectsPageSize(state, action: PayloadAction<number>) {
+      state.pageSize = Math.max(1, action.payload);
+      state.page = 1;
     },
     clearProjectsError(state) {
       state.error = null;
@@ -91,6 +125,10 @@ export const {
   clearSelectedProject,
   clearProjectsState,
   clearProjectsError,
+  setProjectsFilters,
+  clearProjectsFilters,
+  setProjectsPage,
+  setProjectsPageSize,
 } = projectsSlice.actions;
 
 export default projectsSlice.reducer;

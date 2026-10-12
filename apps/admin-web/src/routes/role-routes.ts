@@ -25,23 +25,26 @@ const commonRoleRouteDefinitions: readonly RoleRouteDefinition[] = [
 const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
   admin: [
     ...commonRoleRouteDefinitions,
-    { label: "Projetos", section: "projetos" },
+    // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o administrador
   ],
   researcher: [
     ...commonRoleRouteDefinitions,
-    { label: "Projetos", section: "projetos" },
+    // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o pesquisador
   ],
   committee: [
     ...commonRoleRouteDefinitions,
-    { label: "Projetos", section: "projetos" },
+    // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o comitê
   ],
 };
 
-export const getRoleBasePath = (role: UserRole) => `/admin/${rolePathSegments[role]}`;
+export const getRoleBasePath = (role: UserRole) =>
+  `/admin/${rolePathSegments[role]}`;
 
-export const getRoleHomePath = (role: UserRole) => `${getRoleBasePath(role)}/home`;
+export const getRoleHomePath = (role: UserRole) =>
+  `${getRoleBasePath(role)}/home`;
 
-export const getRoleRouteDefinitions = (role: UserRole) => roleRouteDefinitions[role];
+export const getRoleRouteDefinitions = (role: UserRole) =>
+  roleRouteDefinitions[role];
 
 export const getRoleRoutePath = (role: UserRole, section: RoleSection) =>
   `${getRoleBasePath(role)}/${section}`;

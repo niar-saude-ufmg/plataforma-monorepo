@@ -9,31 +9,7 @@ import {
   type UseFormReturn,
 } from 'react-hook-form';
 import type { z } from 'zod';
-
-type FormApiError = {
-  message: string;
-  fieldErrors?: Record<string, string>;
-};
-
-function getApiErrorPayload(error: unknown): FormApiError | undefined {
-  if (typeof error !== 'object' || error === null) {
-    return undefined;
-  }
-
-  if ('data' in error && typeof error.data === 'object' && error.data !== null) {
-    return getApiErrorPayload(error.data);
-  }
-
-  if ('message' in error && typeof error.message === 'string') {
-    return error as FormApiError;
-  }
-
-  return undefined;
-}
-
-export function getApiErrorMessage(error: unknown, fallbackMessage: string) {
-  return getApiErrorPayload(error)?.message ?? fallbackMessage;
-}
+import { getApiErrorPayload } from '../../../utils/api-error';
 
 type UseFormOptions<TFieldValues extends FieldValues> = {
   schema: z.ZodType<TFieldValues>;

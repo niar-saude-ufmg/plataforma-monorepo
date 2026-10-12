@@ -1,7 +1,7 @@
 import { APP_ROUTES } from '@niar/config';
 import { Button, Form, Icon, Link, Snackbar } from '@niar/ui';
 import { useEffect, useState } from 'react';
-import { getApiErrorMessage } from '../../hooks/forms/use-form/use-form';
+import { useApiError } from '../../hooks/use-api-error/use-api-error';
 import { usePublicUserForm, DEFAULT_PUBLIC_USER_VALUES } from '../../hooks/forms/use-public-user-form/use-public-user-form';
 import { textFieldProps } from '../../hooks/forms/utils/props';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -154,9 +154,11 @@ export function PublicUser() {
   const [isApprovalDialogOpen, setApprovalDialogOpen] = useState(false);
   const dispatch = useAppDispatch();
   const apiError = useAppSelector(selectError);
-  const apiErrorMessage = apiError
-    ? getApiErrorMessage(apiError, 'Não foi possível cadastrar o pesquisador. Tente novamente.')
-    : '';
+  const apiErrorSnackbar = useApiError(
+    apiError,
+    () => dispatch(clearUsersError()),
+    'Não foi possível cadastrar o pesquisador. Tente novamente.',
+  );
 
   function handleCreated() {
     setApprovalDialogOpen(true);
@@ -191,13 +193,7 @@ export function PublicUser() {
           </div>
         </Form>
       </div>
-      <Snackbar
-        open={Boolean(apiErrorMessage)}
-        message={apiErrorMessage}
-        severity="error"
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        onClose={() => dispatch(clearUsersError())}
-      />
+      <Snackbar {...apiErrorSnackbar} />
       <RegistrationApprovalDialog
         open={isApprovalDialogOpen}
         onClose={handleApprovalDialogClose}

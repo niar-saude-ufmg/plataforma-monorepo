@@ -5,9 +5,14 @@ import type { Pagination, Project } from "../../types/project.types";
 import { getProject, getProjects } from "./projects.api";
 import projectsReducer, {
   clearProjectsError,
+  clearProjectsFilters,
   clearProjectsState,
   clearSelectedProject,
+  setProjectsFilters,
+  setProjectsPage,
+  setProjectsPageSize,
   setSelectedProject,
+  type ProjectsState,
 } from "./projects.slice";
 import {
   selectError,
@@ -57,6 +62,20 @@ const buildApiError = (overrides: Partial<ApiError> = {}): ApiError => ({
 
 function makeTestStore() {
   return configureStore({ reducer: { projects: projectsReducer } });
+}
+
+function buildSliceState(overrides: Partial<ProjectsState> = {}): ProjectsState {
+  return {
+    projects: [],
+    selectedProject: null,
+    pagination: null,
+    filters: {},
+    page: 1,
+    pageSize: 20,
+    status: "idle",
+    error: null,
+    ...overrides,
+  };
 }
 
 describe("projects slice", () => {
@@ -122,6 +141,9 @@ describe("projects slice", () => {
       expect(state.projects).toEqual([]);
       expect(state.selectedProject).toBeNull();
       expect(state.pagination).toBeNull();
+      expect(state.filters).toEqual({});
+      expect(state.page).toBe(1);
+      expect(state.pageSize).toBe(20);
       expect(state.status).toBe("idle");
       expect(state.error).toBeNull();
     });
@@ -156,6 +178,38 @@ describe("projects slice", () => {
       // status está "idle" por padrão
       store.dispatch(clearProjectsError());
       expect(store.getState().projects.status).toBe("idle");
+    });
+  });
+
+  describe("consulta da listagem", () => {
+    it("armazena filtros e volta para a primeira página", () => {
+      const store = makeTestStore();
+
+      store.dispatch(setProjectsPage(3));
+      store.dispatch(
+        setProjectsFilters({
+          search: "oncologia",
+          status: "under_review",
+        }),
+      );
+
+      expect(store.getState().projects.filters).toEqual({
+        search: "oncologia",
+        status: "under_review",
+      });
+      expect(store.getState().projects.page).toBe(1);
+    });
+
+    it("limpa filtros e altera o tamanho da página", () => {
+      const store = makeTestStore();
+
+      store.dispatch(setProjectsFilters({ search: "oncologia" }));
+      store.dispatch(setProjectsPageSize(50));
+      store.dispatch(clearProjectsFilters());
+
+      expect(store.getState().projects.filters).toEqual({});
+      expect(store.getState().projects.page).toBe(1);
+      expect(store.getState().projects.pageSize).toBe(50);
     });
   });
 
@@ -232,86 +286,37 @@ describe("projects slice", () => {
   describe("selectors", () => {
     it("selectProjects retorna a lista", () => {
       const items = [buildProject()];
-      const state = {
-        projects: {
-          projects: items,
-          selectedProject: null,
-          pagination: null,
-          status: "idle" as const,
-          error: null,
-        },
-      };
+      const state = { projects: buildSliceState({ projects: items }) };
       expect(selectProjects(state)).toEqual(items);
     });
 
     it("selectSelectedProject retorna o projeto selecionado", () => {
       const project = buildProject();
-      const state = {
-        projects: {
-          projects: [],
-          selectedProject: project,
-          pagination: null,
-          status: "idle" as const,
-          error: null,
-        },
-      };
+      const state = { projects: buildSliceState({ selectedProject: project }) };
       expect(selectSelectedProject(state)).toEqual(project);
     });
 
     it("selectPagination retorna a paginação", () => {
       const pagination = buildPagination();
-      const state = {
-        projects: {
-          projects: [],
-          selectedProject: null,
-          pagination,
-          status: "idle" as const,
-          error: null,
-        },
-      };
+      const state = { projects: buildSliceState({ pagination }) };
       expect(selectPagination(state)).toEqual(pagination);
     });
 
     it("selectError retorna o erro", () => {
       const error = buildApiError();
-      const state = {
-        projects: {
-          projects: [],
-          selectedProject: null,
-          pagination: null,
-          status: "failed" as const,
-          error,
-        },
-      };
+      const state = { projects: buildSliceState({ status: "failed", error }) };
       expect(selectError(state)).toEqual(error);
     });
 
     it("selectIsLoading é true somente em pending", () => {
-      const baseState = {
-        projects: {
-          projects: [],
-          selectedProject: null,
-          pagination: null,
-          error: null,
-        },
-      };
-
-      expect(selectIsLoading({ projects: { ...baseState.projects, status: "idle" } })).toBe(false);
-      expect(selectIsLoading({ projects: { ...baseState.projects, status: "pending" } })).toBe(true);
-      expect(selectIsLoading({ projects: { ...baseState.projects, status: "succeeded" } })).toBe(false);
-      expect(selectIsLoading({ projects: { ...baseState.projects, status: "failed" } })).toBe(false);
+      expect(selectIsLoading({ projects: buildSliceState({ status: "idle" }) })).toBe(false);
+      expect(selectIsLoading({ projects: buildSliceState({ status: "pending" }) })).toBe(true);
+      expect(selectIsLoading({ projects: buildSliceState({ status: "succeeded" }) })).toBe(false);
+      expect(selectIsLoading({ projects: buildSliceState({ status: "failed" }) })).toBe(false);
     });
 
     it("selectHasProjects reflete se a lista está vazia", () => {
-      const empty = {
-        projects: {
-          projects: [],
-          selectedProject: null,
-          pagination: null,
-          status: "idle" as const,
-          error: null,
-        },
-      };
+      const empty = { projects: buildSliceState() };
       const filled = {
         projects: {
           ...empty.projects,
