@@ -25,7 +25,7 @@ const { getProjectsRequest, getProjectRequest, normalizeProjectApiError } =
     normalizeProjectApiError: vi.fn(),
   }));
 
-vi.mock("../../services/projects/admin-api", () => ({
+vi.mock("../../services/projects/projects.service", () => ({
   getProjectsRequest,
   getProjectRequest,
   normalizeProjectApiError,

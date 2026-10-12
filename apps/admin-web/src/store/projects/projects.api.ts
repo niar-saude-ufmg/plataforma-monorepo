@@ -3,7 +3,7 @@ import {
   getProjectsRequest,
   getProjectRequest,
   normalizeProjectApiError,
-} from '../../services/projects/admin-api';
+} from '../../services/projects/projects.service';
 import type { Project, ProjectListParams, ProjectListResponse } from '../../types/project.types';
 import type { ApiError } from "../../types/api.types";
 

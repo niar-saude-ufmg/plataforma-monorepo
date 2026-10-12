@@ -11,7 +11,7 @@ import type {
   ResearcherSummary,
   ResponsibleMember,
 } from "../../types/project.types";
-import { getAdminApiBaseUrl } from "../users/admin-api";
+import { getAdminApiBaseUrl } from "../auth/auth.service";
 import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 
 

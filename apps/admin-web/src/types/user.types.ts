@@ -6,7 +6,7 @@ import type { ApiError } from "./api.types";
  * Contratos de dados usados pela interface do admin.
  *
  * Regra: a UI só conhece estes tipos. Se o backend mudar o formato,
- * a tradução acontece no service (admin-api.ts), nunca dentro das telas.
+ * a tradução acontece no service (services/users/users.service.ts), nunca dentro das telas.
  */
 
 /** Único perfil criado nesta entrega. Outros perfis voltam na tarefa da gestão de usuários. */

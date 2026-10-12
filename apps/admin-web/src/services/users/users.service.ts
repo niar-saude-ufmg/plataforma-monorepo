@@ -1,4 +1,5 @@
 import type { UserApiError, CreateUserInput, User } from '../../types/user.types';
+import { getAdminApiBaseUrl } from '../auth/auth.service';
 
 type ApiValidationIssue = {
   message: string;
@@ -12,22 +13,6 @@ type CreateUserApiResponse = {
   role: 'researcher' | 'admin' | 'committee';
   created_at: string;
 };
-
-const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
-
-export function getAdminApiBaseUrl() {
-  const configuredUrl = import.meta.env.VITE_ADMIN_API_URL?.trim();
-
-  if (configuredUrl) {
-    return trimTrailingSlash(configuredUrl);
-  }
-
-  if (typeof window !== 'undefined' && window.location?.origin) {
-    return `${window.location.origin}/api/admin`;
-  }
-
-  return '/api/admin';
-}
 
 export function toUser(response: CreateUserApiResponse): User {
   return {

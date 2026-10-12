@@ -6,7 +6,7 @@ import {
   normalizeProjectApiError,
   toPagination,
   toProject,
-} from "./admin-api";
+} from "./projects.service";
 
 const rawProjectFromApi = {
   id: 42,
@@ -78,7 +78,7 @@ function mockFetchOnce(response: {
   return fetchMock;
 }
 
-describe("admin-api projects service", () => {
+describe("projects service", () => {
   beforeEach(() => {
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
     vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");

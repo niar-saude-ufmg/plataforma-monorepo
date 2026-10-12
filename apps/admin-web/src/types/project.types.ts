@@ -2,7 +2,7 @@
  * Contratos de dados do módulo de projetos.
  *
  * Regra: a UI só conhece estes tipos (camelCase). A API devolve snake_case.
- * A conversão acontece no service (services/projects/admin-api.ts).
+ * A conversão acontece no service (services/projects/projects.service.ts).
  */
 
 /** Resultado da avaliação da comissão. */

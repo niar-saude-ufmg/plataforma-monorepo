@@ -2,7 +2,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
   createUserRequest,
   normalizeUserApiError,
-} from '../../services/users/admin-api';
+} from '../../services/users/users.service';
 import type { UserApiError, CreateUserInput, User } from '../../types/user.types';
 
 export const createUser = createAsyncThunk<
