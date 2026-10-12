@@ -8,6 +8,7 @@ COPY packages ./packages
 COPY scripts ./scripts
 
 RUN corepack enable && pnpm install --frozen-lockfile
+RUN pnpm --filter @niar/ui build
 
 ARG VITE_ADMIN_API_URL=/api/admin
 ARG VITE_INSTITUTIONAL_REMOTE_URL=/remotes/institutional/assets/remoteEntry.js
