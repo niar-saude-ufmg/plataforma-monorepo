@@ -2,6 +2,9 @@ import { jest } from "@jest/globals";
 
 const create = jest.fn<(args: unknown) => Promise<unknown>>();
 const update = jest.fn<(args: unknown) => Promise<unknown>>();
+const findMany = jest.fn<(args: unknown) => Promise<unknown[]>>();
+const count = jest.fn<(args: unknown) => Promise<number>>();
+const transaction = jest.fn(async (operations: readonly Promise<unknown>[]) => Promise.all(operations));
 
 class PrismaClientKnownRequestError extends Error {
   code: string;
@@ -16,7 +19,8 @@ class PrismaClientKnownRequestError extends Error {
 
 jest.unstable_mockModule("@niar/database", () => ({
   prisma: {
-    specialty: { create, update }
+    specialty: { create, update, findMany, count },
+    $transaction: transaction
   },
   Prisma: { PrismaClientKnownRequestError }
 }));
@@ -36,6 +40,37 @@ beforeEach(() => {
 });
 
 describe("specialtiesRepository", () => {
+  it("aplica os mesmos filtros na lista e na contagem e pagina os resultados", async () => {
+    const items = [{ id: 3, code: "epi", name: "Epidemiologia" }];
+    findMany.mockResolvedValueOnce(items);
+    count.mockResolvedValueOnce(21);
+
+    const result = await specialtiesRepository.findAll({
+      query: "epi",
+      isActive: false,
+      page: 3,
+      pageSize: 5
+    });
+
+    const where = {
+      isActive: false,
+      OR: [
+        { name: { contains: "epi", mode: "insensitive" } },
+        { code: { contains: "epi", mode: "insensitive" } }
+      ]
+    };
+
+    expect(findMany).toHaveBeenCalledWith({
+      where,
+      orderBy: { id: "asc" },
+      skip: 10,
+      take: 5
+    });
+    expect(count).toHaveBeenCalledWith({ where });
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ items, total: 21 });
+  });
+
   it("converte conflito de código do Prisma em erro 409", async () => {
     create.mockRejectedValueOnce(new PrismaClientKnownRequestError("P2002", ["code"]));
 

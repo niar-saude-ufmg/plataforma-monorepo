@@ -214,6 +214,41 @@ describe("POST /api/admin/specialties", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
+  it("retorna 400 quando código ou nome contêm apenas espaços", async () => {
+    findUserById.mockResolvedValueOnce(buildAuthUser());
+
+    const response = await request(app)
+      .post("/api/admin/specialties")
+      .set("Authorization", `Bearer ${tokenFor(10)}`)
+      .send({ code: "   ", name: "   " });
+
+    expect(response.status).toBe(400);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("remove espaços externos antes de validar e persistir código e nome", async () => {
+    findUserById.mockResolvedValueOnce(buildAuthUser());
+    findByCode.mockResolvedValueOnce(null);
+    findByNameNormalized.mockResolvedValueOnce(null);
+    create.mockResolvedValueOnce(buildSpecialty({ code: "epi", name: "Epidemiologia" }));
+
+    const response = await request(app)
+      .post("/api/admin/specialties")
+      .set("Authorization", `Bearer ${tokenFor(10)}`)
+      .send({ code: "  epi  ", name: "  Epidemiologia  " });
+
+    expect(response.status).toBe(201);
+    expect(findByCode).toHaveBeenCalledWith("epi");
+    expect(findByNameNormalized).toHaveBeenCalledWith("epidemiologia");
+    expect(create).toHaveBeenCalledWith({
+      code: "epi",
+      name: "Epidemiologia",
+      nameNormalized: "epidemiologia",
+      description: "",
+      guidanceContext: ""
+    });
+  });
+
   it("retorna 409 quando o código já existe", async () => {
     findUserById.mockResolvedValueOnce(buildAuthUser());
     findByCode.mockResolvedValueOnce(buildSpecialty());

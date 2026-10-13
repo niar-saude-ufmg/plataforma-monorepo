@@ -53,13 +53,15 @@ export const specialtiesService = {
   },
 
   createSpecialty: async (data: CreateSpecialtyInput): Promise<SpecialtyResponse> => {
-    const existingCode = await specialtiesRepository.findByCode(data.code);
+    const code = data.code.trim();
+    const name = data.name.trim();
+    const existingCode = await specialtiesRepository.findByCode(code);
 
     if (existingCode) {
       throw new AppError("Já existe uma especialidade com este código", 409);
     }
 
-    const nameNormalized = normalizeName(data.name);
+    const nameNormalized = normalizeName(name);
     const existingName = await specialtiesRepository.findByNameNormalized(nameNormalized);
 
     if (existingName) {
@@ -67,8 +69,8 @@ export const specialtiesService = {
     }
 
     const specialty = await specialtiesRepository.create({
-      code: data.code,
-      name: data.name,
+      code,
+      name,
       nameNormalized,
       description: data.description ?? "",
       guidanceContext: data.guidance_context ?? ""
@@ -93,10 +95,11 @@ export const specialtiesService = {
       throw new AppError("Especialidade não encontrada", 404);
     }
 
+    const name = data.name?.trim();
     let nameNormalized: string | undefined;
 
-    if (data.name !== undefined) {
-      nameNormalized = normalizeName(data.name);
+    if (name !== undefined) {
+      nameNormalized = normalizeName(name);
       const existingName = await specialtiesRepository.findByNameNormalized(nameNormalized);
 
       if (existingName && existingName.id !== id) {
@@ -105,7 +108,7 @@ export const specialtiesService = {
     }
 
     const updated = await specialtiesRepository.update(id, {
-      name: data.name,
+      name,
       nameNormalized,
       description: data.description,
       guidanceContext: data.guidance_context
