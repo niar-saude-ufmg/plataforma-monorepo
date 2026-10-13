@@ -2,27 +2,36 @@ import { describe, expect, it } from 'vitest';
 import reducer, {
   clearUsersError,
   clearUsersState,
-  selectError,
-  setLastCreatedUser,
   setSelectedUser,
 } from './users.slice';
+import { selectUsersError } from './users.selectors';
+import type { UserListItem } from '../../types/user.types';
 
-const user = {
+const user: UserListItem = {
   id: 3,
   fullName: 'Ana Beatriz Souza',
   email: 'ana.souza@niar-saude.org',
   role: 'researcher' as const,
   createdAt: '2026-08-31T12:00:00.000Z',
+  accountStatus: 'pending',
+  profile: null,
+  researcherProfile: null,
+  committeeProfile: null,
+  coep: null,
+  latestAuthEvaluation: null,
 };
 
 describe('usersSlice', () => {
-  it('armazena o usuário selecionado e o último usuário criado', () => {
-    const selectedState = reducer(undefined, setSelectedUser(user));
-    const state = reducer(selectedState, setLastCreatedUser(user));
+  it('armazena o usuário selecionado', () => {
+    const state = reducer(undefined, setSelectedUser(user));
 
     expect(state).toEqual({
+      users: [],
       selectedUser: user,
-      lastCreatedUser: user,
+      pagination: null,
+      filters: {},
+      page: 1,
+      pageSize: 20,
       status: 'idle',
       error: null,
     });
@@ -30,13 +39,21 @@ describe('usersSlice', () => {
 
   it('limpa o estado local de usuários', () => {
     expect(reducer({
+      users: [user],
       selectedUser: user,
-      lastCreatedUser: user,
+      pagination: { page: 1, pageSize: 20, totalItems: 1, totalPages: 1 },
+      filters: { role: 'researcher' },
+      page: 2,
+      pageSize: 10,
       status: 'failed',
       error: { message: 'Falha' },
     }, clearUsersState())).toEqual({
+      users: [],
       selectedUser: null,
-      lastCreatedUser: null,
+      pagination: null,
+      filters: {},
+      page: 1,
+      pageSize: 20,
       status: 'idle',
       error: null,
     });
@@ -45,18 +62,26 @@ describe('usersSlice', () => {
   it('expõe null no seletor quando não há erro', () => {
     const state = reducer(undefined, { type: 'unknown' });
 
-    expect(selectError({ users: state })).toBeNull();
+    expect(selectUsersError({ users: state })).toBeNull();
   });
 
   it('limpa apenas o erro da API depois que o snackbar fecha', () => {
     expect(reducer({
+      users: [user],
       selectedUser: user,
-      lastCreatedUser: null,
+      pagination: null,
+      filters: {},
+      page: 1,
+      pageSize: 20,
       status: 'failed',
       error: { message: 'Falha' },
     }, clearUsersError())).toEqual({
+      users: [user],
       selectedUser: user,
-      lastCreatedUser: null,
+      pagination: null,
+      filters: {},
+      page: 1,
+      pageSize: 20,
       status: 'idle',
       error: null,
     });

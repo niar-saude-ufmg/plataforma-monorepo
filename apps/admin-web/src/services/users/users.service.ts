@@ -1,4 +1,13 @@
-import type { UserApiError, CreateUserInput, User } from '../../types/user.types';
+import { ACCESS_TOKEN_STORAGE_KEY } from '@niar/auth';
+import type { ApiError } from '../../types/api.types';
+import type {
+  UserApiError,
+  CreateUserInput,
+  User,
+  UserListItem,
+  UserListParams,
+  UserListResponse,
+} from '../../types/user.types';
 import { getAdminApiBaseUrl } from '../auth/auth.service';
 
 type ApiValidationIssue = {
@@ -14,6 +23,60 @@ type CreateUserApiResponse = {
   created_at: string;
 };
 
+type UserListApiResponse = {
+  id: number;
+  full_name: string;
+  email: string;
+  role: 'researcher' | 'admin' | 'committee';
+  account_status: UserListItem['accountStatus'];
+  created_at: string;
+  profile: {
+    phone: string | null;
+    institution: string | null;
+    organizational_unit: string | null;
+    contact_address: string | null;
+  } | null;
+  researcher_profile: {
+    research_area: string | null;
+    position: string | null;
+  } | null;
+  committee_profile: {
+    specialty: {
+      id: number;
+      code: string;
+      name: string;
+    };
+  } | null;
+  coep: {
+    caae: string;
+    opinion_number: string;
+    approval_date: string;
+    document_filename: string;
+  } | null;
+  latest_auth_evaluation: {
+    id: number;
+    user_id: number;
+    status: UserListItem['accountStatus'];
+    justification: string | null;
+    evaluated_by_user_id: number | null;
+    evaluated_at: string | null;
+    created_at: string;
+    user_coep_data_id: number | null;
+  } | null;
+};
+
+type UserListApiPage = {
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+};
+
+function authHeaders(): HeadersInit {
+  const token = window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export function toUser(response: CreateUserApiResponse): User {
   return {
     id: response.id,
@@ -21,6 +84,97 @@ export function toUser(response: CreateUserApiResponse): User {
     email: response.email,
     role: response.role,
     createdAt: response.created_at,
+  };
+}
+
+export function toUserListItem(response: UserListApiResponse): UserListItem {
+  return {
+    id: response.id,
+    fullName: response.full_name,
+    email: response.email,
+    role: response.role,
+    accountStatus: response.account_status,
+    createdAt: response.created_at,
+    profile: response.profile
+      ? {
+          phone: response.profile.phone,
+          institution: response.profile.institution,
+          organizationalUnit: response.profile.organizational_unit,
+          contactAddress: response.profile.contact_address,
+        }
+      : null,
+    researcherProfile: response.researcher_profile
+      ? {
+          researchArea: response.researcher_profile.research_area,
+          position: response.researcher_profile.position,
+        }
+      : null,
+    committeeProfile: response.committee_profile
+      ? {
+          specialty: response.committee_profile.specialty,
+        }
+      : null,
+    coep: response.coep
+      ? {
+          caae: response.coep.caae,
+          opinionNumber: response.coep.opinion_number,
+          approvalDate: response.coep.approval_date,
+          documentFilename: response.coep.document_filename,
+        }
+      : null,
+    latestAuthEvaluation: response.latest_auth_evaluation
+      ? {
+          id: response.latest_auth_evaluation.id,
+          userId: response.latest_auth_evaluation.user_id,
+          status: response.latest_auth_evaluation.status,
+          justification: response.latest_auth_evaluation.justification,
+          evaluatedByUserId: response.latest_auth_evaluation.evaluated_by_user_id,
+          evaluatedAt: response.latest_auth_evaluation.evaluated_at,
+          createdAt: response.latest_auth_evaluation.created_at,
+          userCoepDataId: response.latest_auth_evaluation.user_coep_data_id,
+        }
+      : null,
+  };
+}
+
+export function toUserPagination(response: UserListApiPage) {
+  return {
+    page: response.page,
+    pageSize: response.page_size,
+    totalItems: response.total_items,
+    totalPages: response.total_pages,
+  };
+}
+
+export async function getUsersRequest(
+  params: UserListParams = {},
+): Promise<UserListResponse> {
+  const query = new URLSearchParams();
+  if (params.role) query.set('role', params.role);
+  if (params.accountStatus) query.set('account_status', params.accountStatus);
+  if (params.page !== undefined) query.set('page', String(params.page));
+  if (params.pageSize !== undefined) query.set('page_size', String(params.pageSize));
+
+  const queryString = query.toString();
+  const url = `${getAdminApiBaseUrl()}/users${queryString ? `?${queryString}` : ''}`;
+
+  let response: Response;
+  try {
+    response = await fetch(url, { headers: authHeaders() });
+  } catch {
+    throw normalizeUserListApiError('FETCH_ERROR', undefined);
+  }
+
+  const body = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    throw normalizeUserListApiError(response.status, body);
+  }
+
+  const list = body as { items: UserListApiResponse[]; pagination: UserListApiPage };
+  return {
+    items: list.items.map(toUserListItem),
+    pagination: toUserPagination(list.pagination),
   };
 }
 
@@ -147,6 +301,34 @@ export async function createUserRequest(input: CreateUserInput): Promise<User> {
   }
 
   return toUser(body as CreateUserApiResponse);
+}
+
+export function normalizeUserListApiError(
+  status: number | string,
+  _body: unknown,
+): ApiError {
+  const numericStatus = typeof status === 'number' ? status : undefined;
+
+  if (numericStatus === 401) {
+    return { status: 401, message: 'Sessão expirada. Faça login novamente.' };
+  }
+
+  if (numericStatus === 403) {
+    return { status: 403, message: 'Você não tem acesso a estes usuários.' };
+  }
+
+  if (numericStatus === 400 || numericStatus === 422) {
+    return { status: numericStatus, message: 'Revise os filtros informados.' };
+  }
+
+  if (numericStatus === 500) {
+    return { status: 500, message: 'Erro no servidor. Tente novamente.' };
+  }
+
+  return {
+    status: numericStatus,
+    message: 'Não foi possível carregar os usuários. Tente novamente.',
+  };
 }
 
 export function normalizeUserApiError(

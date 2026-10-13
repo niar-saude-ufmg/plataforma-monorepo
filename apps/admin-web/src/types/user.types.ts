@@ -88,6 +88,75 @@ export interface User {
   createdAt: string;
 }
 
+export interface UserListProfile {
+  phone: string | null;
+  institution: string | null;
+  organizationalUnit: string | null;
+  contactAddress: string | null;
+}
+
+export interface UserListResearcherProfile {
+  researchArea: string | null;
+  position: string | null;
+}
+
+export interface UserListCommitteeProfile {
+  specialty: {
+    id: number;
+    code: string;
+    name: string;
+  };
+}
+
+export interface UserListCoep {
+  caae: string;
+  opinionNumber: string;
+  approvalDate: string;
+  documentFilename: string;
+}
+
+export interface UserListEvaluation {
+  id: number;
+  userId: number;
+  status: UserAccountStatus;
+  justification: string | null;
+  evaluatedByUserId: number | null;
+  evaluatedAt: string | null;
+  createdAt: string;
+  userCoepDataId: number | null;
+}
+
+/** Usuário consolidado usado nas listagens administrativas. */
+export interface UserListItem extends User {
+  accountStatus: UserAccountStatus;
+  profile: UserListProfile | null;
+  researcherProfile: UserListResearcherProfile | null;
+  committeeProfile: UserListCommitteeProfile | null;
+  coep: UserListCoep | null;
+  latestAuthEvaluation: UserListEvaluation | null;
+}
+
+export interface UserListParams {
+  role?: UserRole;
+  accountStatus?: UserAccountStatus;
+  page?: number;
+  pageSize?: number;
+}
+
+export type UserListFilters = Pick<UserListParams, 'role' | 'accountStatus'>;
+
+export interface UserPagination {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface UserListResponse {
+  items: UserListItem[];
+  pagination: UserPagination;
+}
+
 export interface UserFormFieldErrors {
   fullName?: string;
   email?: string;

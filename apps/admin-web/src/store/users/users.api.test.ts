@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CreateUserInput } from '../../types/user.types';
-import { createUser } from './users.api';
+import { createUser, getUsers } from './users.api';
 import usersReducer from './users.slice';
 
 const fetchMock = vi.hoisted(() => {
@@ -98,5 +98,49 @@ describe('users api', () => {
         fieldErrors: { email: 'Este e-mail já está cadastrado.' },
       },
     }));
+  });
+
+  it('carrega a lista consolidada com filtros e paginação', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({
+        items: [{
+          id: 8,
+          full_name: 'Bruno Lima',
+          email: 'bruno.lima@niar-saude.org',
+          role: 'admin',
+          account_status: 'active',
+          created_at: '2026-09-04T10:00:00.000Z',
+          profile: null,
+          researcher_profile: null,
+          committee_profile: null,
+          coep: null,
+          latest_auth_evaluation: null,
+        }],
+        pagination: { page: 2, page_size: 10, total_items: 11, total_pages: 2 },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    const store = createTestStore();
+
+    await store.dispatch(getUsers({ role: 'admin', accountStatus: 'active', page: 2, pageSize: 10 }));
+
+    expect(store.getState().users).toMatchObject({
+      status: 'succeeded',
+      filters: { role: 'admin', accountStatus: 'active' },
+      page: 2,
+      pageSize: 10,
+      pagination: { page: 2, pageSize: 10, totalItems: 11, totalPages: 2 },
+      users: [{
+        id: 8,
+        fullName: 'Bruno Lima',
+        accountStatus: 'active',
+      }],
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/admin/users?role=admin&account_status=active&page=2&page_size=10'),
+      expect.anything(),
+    );
   });
 });

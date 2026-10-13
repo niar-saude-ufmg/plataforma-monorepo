@@ -15,10 +15,10 @@ import projectsReducer, {
   type ProjectsState,
 } from "./projects.slice";
 import {
-  selectError,
-  selectHasProjects,
-  selectIsLoading,
-  selectPagination,
+  selectProjectsError,
+  selectProjectsHasItems,
+  selectProjectsLoading,
+  selectProjectsPagination,
   selectProjects,
   selectSelectedProject,
 } from "./projects.selectors";
@@ -296,26 +296,26 @@ describe("projects slice", () => {
       expect(selectSelectedProject(state)).toEqual(project);
     });
 
-    it("selectPagination retorna a paginação", () => {
+    it("selectProjectsPagination retorna a paginação", () => {
       const pagination = buildPagination();
       const state = { projects: buildSliceState({ pagination }) };
-      expect(selectPagination(state)).toEqual(pagination);
+      expect(selectProjectsPagination(state)).toEqual(pagination);
     });
 
-    it("selectError retorna o erro", () => {
+    it("selectProjectsError retorna o erro", () => {
       const error = buildApiError();
       const state = { projects: buildSliceState({ status: "failed", error }) };
-      expect(selectError(state)).toEqual(error);
+      expect(selectProjectsError(state)).toEqual(error);
     });
 
-    it("selectIsLoading é true somente em pending", () => {
-      expect(selectIsLoading({ projects: buildSliceState({ status: "idle" }) })).toBe(false);
-      expect(selectIsLoading({ projects: buildSliceState({ status: "pending" }) })).toBe(true);
-      expect(selectIsLoading({ projects: buildSliceState({ status: "succeeded" }) })).toBe(false);
-      expect(selectIsLoading({ projects: buildSliceState({ status: "failed" }) })).toBe(false);
+    it("selectProjectsLoading é true somente em pending", () => {
+      expect(selectProjectsLoading({ projects: buildSliceState({ status: "idle" }) })).toBe(false);
+      expect(selectProjectsLoading({ projects: buildSliceState({ status: "pending" }) })).toBe(true);
+      expect(selectProjectsLoading({ projects: buildSliceState({ status: "succeeded" }) })).toBe(false);
+      expect(selectProjectsLoading({ projects: buildSliceState({ status: "failed" }) })).toBe(false);
     });
 
-    it("selectHasProjects reflete se a lista está vazia", () => {
+    it("selectProjectsHasItems reflete se a lista está vazia", () => {
       const empty = { projects: buildSliceState() };
       const filled = {
         projects: {
@@ -324,8 +324,8 @@ describe("projects slice", () => {
         },
       };
 
-      expect(selectHasProjects(empty)).toBe(false);
-      expect(selectHasProjects(filled)).toBe(true);
+      expect(selectProjectsHasItems(empty)).toBe(false);
+      expect(selectProjectsHasItems(filled)).toBe(true);
     });
   });
 });
