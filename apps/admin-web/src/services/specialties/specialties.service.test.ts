@@ -5,7 +5,7 @@ import {
   listSpecialties,
   updateSpecialty,
   updateSpecialtyStatus,
-} from './admin-api';
+} from './specialties.service';
 
 const specialtyResponse = {
   id: 7,

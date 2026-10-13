@@ -1,3 +1,5 @@
+import type { ApiError } from './api.types';
+
 export type Specialty = {
   id: number;
   code: string;
@@ -28,6 +30,8 @@ export type FetchSpecialtiesParams = {
   pageSize?: number;
 };
 
+export type SpecialtiesFilters = Pick<FetchSpecialtiesParams, 'query' | 'isActive'>;
+
 export type CreateSpecialtyInput = {
   code: string;
   name: string;
@@ -52,8 +56,6 @@ export type UpdateSpecialtyStatusRequest = {
 
 export type SpecialtyField = 'code' | 'name' | 'description' | 'guidanceContext' | 'isActive';
 
-export type ApiError = {
-  message: string;
-  status?: number;
+export interface SpecialtyApiError extends ApiError {
   fieldErrors?: Partial<Record<SpecialtyField, string>>;
-};
+}

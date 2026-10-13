@@ -1,10 +1,11 @@
 import { ACCESS_TOKEN_STORAGE_KEY } from '@niar/auth';
+import { getAdminApiBaseUrl } from '../auth/auth.service';
 import type {
-  ApiError,
   CreateSpecialtyInput,
   FetchSpecialtiesParams,
   SpecialtiesList,
   Specialty,
+  SpecialtyApiError,
   SpecialtyField,
   UpdateSpecialtyInput,
 } from '../../types/specialty.types';
@@ -40,16 +41,6 @@ type ApiErrorBody = {
   errors?: ApiValidationIssue[];
 };
 
-const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
-
-export const getAdminApiBaseUrl = () => {
-  const configuredUrl = import.meta.env.VITE_ADMIN_API_URL?.trim();
-
-  if (configuredUrl) return trimTrailingSlash(configuredUrl);
-  if (typeof window !== 'undefined' && window.location?.origin) return `${window.location.origin}/api/admin`;
-  return '/api/admin';
-};
-
 const specialtyFieldByApiField: Record<string, SpecialtyField> = {
   code: 'code',
   name: 'name',
@@ -81,8 +72,8 @@ const readJsonBody = async (response: Response): Promise<ApiErrorBody | Specialt
   }
 };
 
-const validationError = (status: number, issues: ApiValidationIssue[]): ApiError => {
-  const fieldErrors: ApiError['fieldErrors'] = {};
+const validationError = (status: number, issues: ApiValidationIssue[]): SpecialtyApiError => {
+  const fieldErrors: SpecialtyApiError['fieldErrors'] = {};
 
   for (const issue of issues) {
     const field = specialtyFieldByApiField[String(issue.path?.[0])];
@@ -94,7 +85,7 @@ const validationError = (status: number, issues: ApiValidationIssue[]): ApiError
   return { status, message: 'Revise os campos informados.', fieldErrors };
 };
 
-const httpError = (status: number, body: ApiErrorBody | null): ApiError => {
+const httpError = (status: number, body: ApiErrorBody | null): SpecialtyApiError => {
   if ((status === 400 || status === 422) && Array.isArray(body?.errors)) {
     return validationError(status, body.errors);
   }
@@ -134,7 +125,7 @@ const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
   try {
     response = await fetch(`${getAdminApiBaseUrl()}${path}`, { ...init, headers });
   } catch {
-    throw { message: 'Não foi possível conectar ao servidor.' } satisfies ApiError;
+    throw { message: 'Não foi possível conectar ao servidor.' } satisfies SpecialtyApiError;
   }
 
   const body = await readJsonBody(response);

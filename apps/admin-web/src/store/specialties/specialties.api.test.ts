@@ -1,6 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ApiError, SpecialtiesList, Specialty } from '../../types/specialty.types';
+import type { SpecialtiesList, Specialty, SpecialtyApiError } from '../../types/specialty.types';
+import authReducer from '../auth/auth.slice';
+import { adminApi } from '../api/admin.api';
+import projectsReducer from '../projects/projects.slice';
+import usersReducer from '../users/users.slice';
 
 const serviceMocks = vi.hoisted(() => ({
   listSpecialties: vi.fn(),
@@ -9,7 +13,7 @@ const serviceMocks = vi.hoisted(() => ({
   updateSpecialtyStatus: vi.fn(),
 }));
 
-vi.mock('../../services/specialties/admin-api', () => serviceMocks);
+vi.mock('../../services/specialties/specialties.service', () => serviceMocks);
 
 import { createSpecialty, fetchSpecialties, updateSpecialty, updateSpecialtyStatus } from './specialties.api';
 import {
@@ -25,6 +29,7 @@ import {
   selectSpecialtiesError,
   selectSpecialtiesLoading,
   selectSpecialtiesPagination,
+  selectSpecialtiesStatus,
 } from './specialties.selectors';
 
 const buildSpecialty = (overrides: Partial<Specialty> = {}): Specialty => ({
@@ -44,14 +49,23 @@ const listResponse = (items: Specialty[] = [buildSpecialty()]): SpecialtiesList 
   pagination: { page: 1, pageSize: 20, totalItems: items.length, totalPages: items.length ? 1 : 0 },
 });
 
-const makeStore = () => configureStore({ reducer: { specialties: specialtiesReducer } });
+const makeStore = () => configureStore({
+  reducer: {
+    auth: authReducer,
+    specialties: specialtiesReducer,
+    users: usersReducer,
+    projects: projectsReducer,
+    [adminApi.reducerPath]: adminApi.reducer,
+  },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
+});
 
 describe('specialties thunks, reducer and selectors', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('fica pendente durante a busca e armazena a listagem paginada sem duplicar ids', async () => {
+  it('fica pendente durante a busca e armazena a listagem paginada', async () => {
     let resolveRequest!: (value: SpecialtiesList) => void;
     serviceMocks.listSpecialties.mockReturnValue(new Promise((resolve) => {
       resolveRequest = resolve;
@@ -64,17 +78,20 @@ describe('specialties thunks, reducer and selectors', () => {
     expect(selectSpecialtiesLoading(store.getState())).toBe(true);
 
     const newerSpecialty = buildSpecialty({ name: 'Epidemiologia atualizada' });
-    resolveRequest(listResponse([buildSpecialty(), newerSpecialty]));
+    resolveRequest(listResponse([newerSpecialty]));
     await request;
 
     expect(serviceMocks.listSpecialties).toHaveBeenCalledWith({ query: 'epidemio', isActive: true, page: 1, pageSize: 20 });
     expect(selectSpecialties(store.getState())).toEqual([newerSpecialty]);
-    expect(selectSpecialtiesPagination(store.getState())).toEqual({ page: 1, pageSize: 20, totalItems: 2, totalPages: 1 });
+    expect(selectSpecialtiesPagination(store.getState())).toEqual({ page: 1, pageSize: 20, totalItems: 1, totalPages: 1 });
+    expect(store.getState().specialties.filters).toEqual({ query: 'epidemio', isActive: true });
+    expect(store.getState().specialties.page).toBe(1);
+    expect(store.getState().specialties.pageSize).toBe(20);
     expect(store.getState().specialties.status).toBe('succeeded');
   });
 
   it('expõe o erro normalizado quando um thunk é rejeitado', async () => {
-    const error: ApiError = { status: 409, message: 'Nome duplicado', fieldErrors: { name: 'Nome duplicado' } };
+    const error: SpecialtyApiError = { status: 409, message: 'Nome duplicado', fieldErrors: { name: 'Nome duplicado' } };
     serviceMocks.createSpecialty.mockRejectedValue(error);
     const store = makeStore();
 
@@ -87,6 +104,7 @@ describe('specialties thunks, reducer and selectors', () => {
   it('adiciona a criação à lista e à seleção', async () => {
     const created = buildSpecialty();
     serviceMocks.createSpecialty.mockResolvedValue(created);
+    serviceMocks.listSpecialties.mockResolvedValue(listResponse([created]));
     const store = makeStore();
 
     await store.dispatch(createSpecialty({ code: created.code, name: created.name }));
@@ -95,9 +113,11 @@ describe('specialties thunks, reducer and selectors', () => {
     expect(selectSelectedSpecialty(store.getState())).toEqual(created);
   });
 
-  it('substitui a especialidade editada sem duplicar e mantém a seleção sincronizada', async () => {
-    serviceMocks.listSpecialties.mockResolvedValue(listResponse());
+  it('atualiza a lista após editar sem duplicar e mantém a seleção sincronizada', async () => {
     const updated = buildSpecialty({ name: 'Epidemiologia clínica', description: 'Nova descrição' });
+    serviceMocks.listSpecialties
+      .mockResolvedValueOnce(listResponse())
+      .mockResolvedValueOnce(listResponse([updated]));
     serviceMocks.updateSpecialty.mockResolvedValue(updated);
     const store = makeStore();
     await store.dispatch(fetchSpecialties(undefined));
@@ -109,9 +129,28 @@ describe('specialties thunks, reducer and selectors', () => {
     expect(selectSelectedSpecialty(store.getState())).toEqual(updated);
   });
 
+  it('refaz a busca da página atual com os filtros armazenados após a mutação', async () => {
+    const filters = { query: 'epidemio', isActive: true, page: 2, pageSize: 10 };
+    const updated = buildSpecialty({ name: 'Epidemiologia clínica' });
+    serviceMocks.listSpecialties
+      .mockResolvedValueOnce(listResponse([buildSpecialty()]))
+      .mockResolvedValueOnce(listResponse([updated]));
+    serviceMocks.updateSpecialty.mockResolvedValue(updated);
+    const store = makeStore();
+
+    await store.dispatch(fetchSpecialties(filters));
+    await store.dispatch(updateSpecialty({ id: updated.id, name: updated.name }));
+
+    expect(serviceMocks.listSpecialties).toHaveBeenNthCalledWith(2, filters);
+    expect(selectSpecialties(store.getState())).toEqual([updated]);
+  });
+
   it.each([true, false])('altera o status para %s pelo thunk dedicado, atualizando lista e seleção', async (isActive) => {
-    serviceMocks.listSpecialties.mockResolvedValue(listResponse([buildSpecialty({ isActive: !isActive })]));
+    const initial = buildSpecialty({ isActive: !isActive });
     const updated = buildSpecialty({ isActive });
+    serviceMocks.listSpecialties
+      .mockResolvedValueOnce(listResponse([initial]))
+      .mockResolvedValueOnce(listResponse([updated]));
     serviceMocks.updateSpecialtyStatus.mockResolvedValue(updated);
     const store = makeStore();
     await store.dispatch(fetchSpecialties(undefined));
@@ -121,6 +160,27 @@ describe('specialties thunks, reducer and selectors', () => {
     expect(serviceMocks.updateSpecialtyStatus).toHaveBeenCalledWith(1, isActive);
     expect(selectSpecialties(store.getState())).toEqual([updated]);
     expect(selectSelectedSpecialty(store.getState())).toEqual(updated);
+  });
+
+  it('usa o mesmo status para carregamento da lista e mutações', async () => {
+    serviceMocks.listSpecialties.mockResolvedValue(listResponse());
+    let resolveMutation!: (value: Specialty) => void;
+    serviceMocks.updateSpecialty.mockReturnValue(new Promise((resolve) => {
+      resolveMutation = resolve;
+    }));
+    const store = makeStore();
+    await store.dispatch(fetchSpecialties({ isActive: true, page: 1, pageSize: 20 }));
+
+    const request = store.dispatch(updateSpecialty({ id: 1, name: 'Novo nome' }));
+
+    expect(selectSpecialtiesLoading(store.getState())).toBe(true);
+    expect(selectSpecialtiesStatus(store.getState())).toBe('pending');
+
+    resolveMutation(buildSpecialty({ name: 'Novo nome' }));
+    await request;
+
+    expect(selectSpecialtiesLoading(store.getState())).toBe(false);
+    expect(selectSpecialtiesStatus(store.getState())).toBe('succeeded');
   });
 
   it('define e limpa a especialidade selecionada', () => {
@@ -148,6 +208,9 @@ describe('specialties thunks, reducer and selectors', () => {
       specialties: [],
       selectedSpecialty: null,
       pagination: null,
+      filters: {},
+      page: 1,
+      pageSize: 20,
       status: 'idle',
       error: null,
     });
