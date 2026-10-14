@@ -418,6 +418,65 @@ const options = {
             updated_at: { type: 'string', format: 'date-time' },
           },
         },
+        SpecialtyResponse: {
+          type: 'object',
+          required: ['id', 'code', 'name', 'description', 'guidance_context', 'is_active', 'created_at', 'updated_at'],
+          properties: {
+            id: { type: 'integer', example: 1 },
+            code: { type: 'string', example: 'epidemiology' },
+            name: { type: 'string', example: 'Epidemiologia' },
+            description: { type: 'string' },
+            guidance_context: { type: 'string' },
+            is_active: { type: 'boolean', example: true },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' },
+          },
+        },
+        SpecialtiesListResponse: {
+          type: 'object',
+          required: ['items', 'pagination'],
+          properties: {
+            items: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/SpecialtyResponse' },
+            },
+            pagination: {
+              type: 'object',
+              required: ['page', 'page_size', 'total_items', 'total_pages'],
+              properties: {
+                page: { type: 'integer', example: 1 },
+                page_size: { type: 'integer', example: 20 },
+                total_items: { type: 'integer', example: 42 },
+                total_pages: { type: 'integer', example: 3 },
+              },
+            },
+          },
+        },
+        CreateSpecialty: {
+          type: 'object',
+          required: ['code', 'name'],
+          properties: {
+            code: { type: 'string', maxLength: 100 },
+            name: { type: 'string', maxLength: 255 },
+            description: { type: 'string', maxLength: 2000 },
+            guidance_context: { type: 'string', maxLength: 4000 },
+          },
+        },
+        UpdateSpecialty: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', maxLength: 255 },
+            description: { type: 'string', maxLength: 2000 },
+            guidance_context: { type: 'string', maxLength: 4000 },
+          },
+        },
+        UpdateSpecialtyStatus: {
+          type: 'object',
+          required: ['is_active'],
+          properties: {
+            is_active: { type: 'boolean' },
+          },
+        },
         ErrorResponse: {
           type: 'object',
           properties: {

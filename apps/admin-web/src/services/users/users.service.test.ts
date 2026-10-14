@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import type { CreateUserInput } from "../../types/user.types";
 import {
+  getUsersRequest,
   normalizeUserApiError,
+  toUserListItem,
   toCreateUserFormData,
   toUser,
 } from "./users.service";
@@ -30,10 +33,62 @@ const input: CreateUserInput = {
   },
 };
 
+const rawListUser = {
+  id: 7,
+  full_name: "Ana Beatriz Souza",
+  email: "ana.souza@niar-saude.org",
+  role: "researcher" as const,
+  account_status: "pending" as const,
+  created_at: "2026-09-04T10:00:00.000Z",
+  profile: {
+    phone: "(31) 99999-9999",
+    institution: "UFMG",
+    organizational_unit: "Faculdade de Medicina",
+    contact_address: "Belo Horizonte - MG",
+  },
+  researcher_profile: {
+    research_area: "Saúde pública",
+    position: "Professora",
+  },
+  committee_profile: null,
+  coep: null,
+  latest_auth_evaluation: null,
+};
+
 describe("user service", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
+    window.localStorage.clear();
+  });
+
+  it("converte a resposta consolidada e envia filtros paginados", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        items: [rawListUser],
+        pagination: { page: 2, page_size: 10, total_items: 11, total_pages: 2 },
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getUsersRequest({
+      role: "researcher",
+      accountStatus: "pending",
+      page: 2,
+      pageSize: 10,
+    })).resolves.toEqual({
+      items: [toUserListItem(rawListUser)],
+      pagination: { page: 2, pageSize: 10, totalItems: 11, totalPages: 2 },
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3333/api/admin/users?role=researcher&account_status=pending&page=2&page_size=10",
+      { headers: { Authorization: "Bearer fake-token" } },
+    );
   });
 
   it("monta o cadastro público como multipart com os blocos esperados", () => {

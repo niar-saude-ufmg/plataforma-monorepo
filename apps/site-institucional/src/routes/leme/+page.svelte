@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
 	import { resolve } from '$app/paths';
 	import { pageTitle } from '$lib/seo';
 	import { localizeHref } from '$lib/paraglide/runtime';
@@ -14,16 +13,18 @@
 	import Sparkles from 'lucide-svelte/icons/sparkles';
 	import Info from 'lucide-svelte/icons/info';
 
-	// Base URL do rag-api (apps/rag-api), já com o prefixo /api/rag. Vem do .env da
-	// raiz do monorepo (kit.env.dir) ou do build arg do Docker:
-	//   dev      -> http://localhost:8001/api/rag (fallback abaixo se não houver .env)
-	//   produção -> /api/rag (mesma origem; o Caddy repassa para rag-api:8001)
+	// O site é estático, então a API de produção precisa ser um caminho relativo
+	// encaminhado pelo Caddy. A variável pública continua útil no desenvolvimento,
+	// mas não deve controlar a configuração do bundle publicado.
 	//
-	// O fallback localhost só vale em dev. No build de produção, sem a variável, a
-	// página entra em modo "em breve": campo e sugestões desabilitados e NENHUMA
-	// requisição sai do navegador. Com o adapter estático, um localhost embutido no
-	// bundle faria cada visitante mandar a pergunta para a PRÓPRIA máquina.
-	const API_BASE = env.PUBLIC_RAG_API_URL ?? (dev ? 'http://localhost:8001/api/rag' : '');
+	//   dev      -> valor do .env ou http://localhost:8001/api/rag
+	//   produção -> /api/rag (mesma origem; o Caddy repassa para rag-api:8001)
+	const isLocalDevelopment =
+		typeof window !== 'undefined' &&
+		['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+	const API_BASE = isLocalDevelopment
+		? env.PUBLIC_RAG_API_URL?.trim() || 'http://localhost:8001/api/rag'
+		: '/api/rag';
 	const apiConfigured = Boolean(API_BASE);
 
 	type Fonte = {

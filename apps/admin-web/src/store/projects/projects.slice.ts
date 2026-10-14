@@ -84,9 +84,16 @@ const projectsSlice = createSlice({
   },
   extraReducers: (builder) => {
     // ---------- getProjects ----------
-    builder.addCase(getProjects.pending, (state) => {
+    builder.addCase(getProjects.pending, (state, action) => {
       state.status = "pending";
       state.error = null;
+      state.filters = {
+        ...(action.meta.arg.search ? { search: action.meta.arg.search } : {}),
+        ...(action.meta.arg.status ? { status: action.meta.arg.status } : {}),
+        ...(action.meta.arg.evaluationStatus ? { evaluationStatus: action.meta.arg.evaluationStatus } : {}),
+      };
+      state.page = action.meta.arg.page ?? 1;
+      state.pageSize = action.meta.arg.pageSize ?? DEFAULT_PROJECTS_PAGE_SIZE;
     });
     builder.addCase(getProjects.fulfilled, (state, action) => {
       state.status = "succeeded";

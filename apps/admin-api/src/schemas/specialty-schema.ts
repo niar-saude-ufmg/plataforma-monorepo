@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const createSpecialtySchema = z.object({
-  code: z.string().min(1, { message: "Code is required" }).max(100),
-  name: z.string().min(1, { message: "Name is required" }).max(255),
+  code: z.string().trim().min(1, { message: "Code is required" }).max(100),
+  name: z.string().trim().min(1, { message: "Name is required" }).max(255),
   description: z.string().max(2000).optional(),
   guidance_context: z.string().max(4000).optional()
 });
@@ -12,7 +12,7 @@ export type CreateSpecialtyInput = z.infer<typeof createSpecialtySchema>;
 // "code" não entra aqui de propósito: o card pede que ele seja estável,
 // então só é definido na criação.
 export const updateSpecialtySchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }).max(255).optional(),
+  name: z.string().trim().min(1, { message: "Name is required" }).max(255).optional(),
   description: z.string().max(2000).optional(),
   guidance_context: z.string().max(4000).optional()
 });
@@ -30,7 +30,7 @@ export const specialtyIdParamSchema = z.object({
 });
 
 export const listSpecialtiesQuerySchema = z.object({
-  query: z.string().min(1).optional(),
+  query: z.string().trim().min(1).optional(),
   // Fica como string aqui de propósito (não dá pra usar z.coerce.boolean():
   // Boolean("false") é true em JS). A conversão pra boolean é feita no service.
   is_active: z.enum(["true", "false"]).optional(),
@@ -50,4 +50,14 @@ export type SpecialtyResponse = {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type SpecialtiesListResponse = {
+  items: SpecialtyResponse[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_items: number;
+    total_pages: number;
+  };
 };
