@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './swagger.js';
 import { AppError } from "./errors/app-error.js";
 import { adminRouter } from "./routes/admin.js";
+import { auditorEvaluationsRouter } from "./routes/auditor-evaluations.js";
 import { authRouter } from "./routes/auth.js";
 import { committeeEvaluationsRouter } from "./routes/committee-evaluations.js";
 import { healthRouter } from "./routes/health.js";
@@ -25,6 +26,7 @@ app.get('/api/admin/docs.json', (req, res) => {
 
 app.use("/health", healthRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/admin/project-versions", auditorEvaluationsRouter);
 app.use("/api/admin/users", usersRouter);
 app.use("/api/admin/auth", authRouter);
 app.use("/api/admin/specialties", specialtiesRouter);
