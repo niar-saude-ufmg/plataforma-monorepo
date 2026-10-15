@@ -226,7 +226,7 @@ describe("GET /api/admin/projects", () => {
         status: [
           {
             code: "submitted_to_committee",
-            label: "Enviado à comissão",
+            label: "Enviado ao comitê",
             version_number: 1,
             created_at: "2026-09-20T10:00:00.000Z",
             notes: null
