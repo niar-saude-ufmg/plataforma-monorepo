@@ -59,6 +59,7 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 };
 
 export type EvaluationStatus =
+  | "waiting"
   | "to_review"
   | "sent_to_committee"
   | "approved_by_committee"
@@ -69,7 +70,8 @@ export type EvaluationStatus =
   | "rejected";
 
 export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
-  to_review: "Em avaliação",
+  waiting: "Aguardando atribuição",
+  to_review: "Aguardando avaliação",
   sent_to_committee: "Enviado ao comitê",
   approved_by_committee: "Aprovado pelo comitê",
   rejected_by_committee: "Rejeitado pelo comitê",

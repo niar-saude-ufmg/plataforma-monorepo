@@ -30,6 +30,8 @@ describe("admin api", () => {
     expect(response.status).toBe(200);
     expect(response.body.module).toBe("admin");
     expect(response.body.projectStatuses.draft).toBe("Rascunho");
+    expect(response.body.evaluationStatuses.waiting).toBe("Aguardando atribuição");
+    expect(response.body.evaluationStatuses.to_review).toBe("Aguardando avaliação");
     expect(response.body.evaluationStatuses.approved_by_committee).toBe("Aprovado pelo comitê");
   });
   
