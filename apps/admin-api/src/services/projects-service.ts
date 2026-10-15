@@ -14,11 +14,11 @@ import type {
 
 const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
   submitted_for_review: "Enviado para avaliação",
-  submitted_to_committee: "Enviado à comissão",
+  submitted_to_committee: "Enviado ao comitê",
   approved_to_schedule: "Aprovado para agendamento",
   rejected_to_safe_room: "Rejeitado para sala segura",
   resubmitted_for_review: "Reenviado para avaliação",
-  resubmitted_to_committee: "Reenviado à comissão",
+  resubmitted_to_committee: "Reenviado ao comitê",
   under_review: "Em avaliação",
   scheduled_for_safe_room: "Sala segura agendada",
   approved_for_safe_room: "Aprovado para sala segura",

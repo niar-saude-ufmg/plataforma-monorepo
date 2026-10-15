@@ -30,6 +30,7 @@ describe("admin api", () => {
     expect(response.status).toBe(200);
     expect(response.body.module).toBe("admin");
     expect(response.body.projectStatuses.draft).toBe("Rascunho");
+    expect(response.body.evaluationStatuses.approved_by_committee).toBe("Aprovado pelo comitê");
   });
   
   it("expõe os papéis do domínio, com admin rotulado como Gestor", async () => {
@@ -39,7 +40,7 @@ describe("admin api", () => {
       researcher: "Pesquisador",
       admin: "Gestor",
       auditor: "Auditor",
-      committee: "Comissão"
+      committee: "Comitê"
     });
   });
 });

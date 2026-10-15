@@ -6,7 +6,7 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   researcher: "Pesquisador",
   admin: "Gestor",
   auditor: "Auditor",
-  committee: "Comissão"
+  committee: "Comitê"
 };
 
 export type ProjectStatus =
@@ -37,11 +37,11 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   draft: "Rascunho",
   saved: "Salvo",
   submitted_for_review: "Enviado para avaliação",
-  submitted_to_committee: "Enviado para comissão",
+  submitted_to_committee: "Enviado ao comitê",
   approved_to_schedule: "Aprovado para agendamento",
   rejected_to_safe_room: "Rejeitado para sala segura",
   resubmitted_for_review: "Reenviado para avaliação",
-  resubmitted_to_committee: "Reenviado para comissão",
+  resubmitted_to_committee: "Reenviado ao comitê",
   under_review: "Em avaliação",
   scheduled_for_safe_room: "Sala segura agendada",
   approved_for_safe_room: "Aprovado para sala segura",
@@ -56,4 +56,25 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   approved: "Aprovado",
   rejected: "Rejeitado",
   changes_requested: "Ajustes solicitados"
+};
+
+export type EvaluationStatus =
+  | "to_review"
+  | "sent_to_committee"
+  | "approved_by_committee"
+  | "rejected_by_committee"
+  | "needs_changes_by_committee"
+  | "needs_changes"
+  | "approved"
+  | "rejected";
+
+export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
+  to_review: "Em avaliação",
+  sent_to_committee: "Enviado ao comitê",
+  approved_by_committee: "Aprovado pelo comitê",
+  rejected_by_committee: "Rejeitado pelo comitê",
+  needs_changes_by_committee: "Há alterações pelo comitê",
+  needs_changes: "Precisa de alterações",
+  approved: "Aprovado",
+  rejected: "Rejeitado"
 };
