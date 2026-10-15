@@ -15,6 +15,7 @@ export type RoleRouteDefinition = {
 const rolePathSegments: Record<UserRole, string> = {
   admin: "administrador",
   researcher: "pesquisador",
+  auditor: "auditor",
   committee: "comite",
 };
 
@@ -30,6 +31,9 @@ const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
   researcher: [
     ...commonRoleRouteDefinitions,
     // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o pesquisador
+  ],
+  auditor: [
+    ...commonRoleRouteDefinitions,
   ],
   committee: [
     ...commonRoleRouteDefinitions,
