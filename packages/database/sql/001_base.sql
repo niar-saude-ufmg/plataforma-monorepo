@@ -12,7 +12,7 @@ BEGIN
     JOIN pg_namespace n ON n.oid = t.typnamespace
     WHERE t.typname = 'user_role' AND n.nspname = 'shared'
   ) THEN
-    CREATE TYPE shared.user_role AS ENUM ('researcher', 'admin', 'committee');
+    CREATE TYPE shared.user_role AS ENUM ('researcher', 'admin', 'auditor', 'committee');
   END IF;
 END $$;
 
@@ -34,6 +34,7 @@ BEGIN
 END $$;
 
 ALTER TYPE shared.user_role ADD VALUE IF NOT EXISTS 'committee';
+ALTER TYPE shared.user_role ADD VALUE IF NOT EXISTS 'auditor';
 
 DO $$
 BEGIN
@@ -259,6 +260,40 @@ BEGIN
 END $$;
 
 ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'resubmitted_to_committee';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'submitted_for_review';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'approved_to_schedule';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'rejected_to_safe_room';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'resubmitted_for_review';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'scheduled_for_safe_room';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'approved_for_safe_room';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'under_safe_room';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'report_submitted';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'report_under_review';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'safe_room_reuse_requested';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'rescheduled_for_safe_room';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'reapproved_for_safe_room';
+ALTER TYPE shared.project_status ADD VALUE IF NOT EXISTS 'report_resubmitted';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'evaluation_status' AND n.nspname = 'admin'
+  ) THEN
+    CREATE TYPE admin.evaluation_status AS ENUM (
+      'to_review',
+      'sent_to_committee',
+      'approved_by_committee',
+      'rejected_by_committee',
+      'needs_changes_by_committee',
+      'needs_changes',
+      'approved',
+      'rejected'
+    );
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS admin.projects (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -269,6 +304,23 @@ CREATE TABLE IF NOT EXISTS admin.projects (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS admin.questionnaires (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  questionnaire_key VARCHAR(100) NOT NULL,
+  version VARCHAR(50) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  definition_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  is_active BOOLEAN NOT NULL DEFAULT FALSE,
+  published_at TIMESTAMPTZ NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_admin_questionnaires_key_version
+    UNIQUE (questionnaire_key, version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_questionnaires_active
+  ON admin.questionnaires (is_active);
+
 CREATE TABLE IF NOT EXISTS admin.project_versions (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_id INTEGER NOT NULL
@@ -276,6 +328,8 @@ CREATE TABLE IF NOT EXISTS admin.project_versions (
   version_number INTEGER NOT NULL,
   source_wizard_session_id INTEGER NOT NULL
     REFERENCES assistant.wizard_sessions(id) ON DELETE RESTRICT,
+  questionnaire_id INTEGER NULL
+    REFERENCES admin.questionnaires(id) ON DELETE RESTRICT,
   user_coep_data_id INTEGER NULL,
   characterization_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
   status shared.project_status NOT NULL,
@@ -289,6 +343,9 @@ ALTER TABLE admin.project_versions
   ADD COLUMN IF NOT EXISTS user_coep_data_id INTEGER;
 
 ALTER TABLE admin.project_versions
+  ADD COLUMN IF NOT EXISTS questionnaire_id INTEGER;
+
+ALTER TABLE admin.project_versions
   ALTER COLUMN user_coep_data_id DROP NOT NULL;
 
 ALTER TABLE admin.project_versions
@@ -300,8 +357,48 @@ CREATE INDEX IF NOT EXISTS idx_admin_project_versions_source_wizard_session_id
   ON admin.project_versions (source_wizard_session_id);
 CREATE INDEX IF NOT EXISTS idx_admin_project_versions_user_coep_data_id
   ON admin.project_versions (user_coep_data_id);
+CREATE INDEX IF NOT EXISTS idx_admin_project_versions_questionnaire_id
+  ON admin.project_versions (questionnaire_id);
 CREATE INDEX IF NOT EXISTS idx_admin_projects_owner_user_id
   ON admin.projects (owner_user_id);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_admin_project_versions_questionnaire'
+  ) THEN
+    ALTER TABLE admin.project_versions
+      ADD CONSTRAINT fk_admin_project_versions_questionnaire
+      FOREIGN KEY (questionnaire_id)
+      REFERENCES admin.questionnaires(id)
+      ON DELETE RESTRICT;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS admin.evaluations (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  project_version_id INTEGER NOT NULL
+    REFERENCES admin.project_versions(id) ON DELETE CASCADE,
+  assigned_to_user_id INTEGER NULL
+    REFERENCES shared.users(id) ON DELETE SET NULL,
+  assigned_by_user_id INTEGER NULL
+    REFERENCES shared.users(id) ON DELETE SET NULL,
+  evaluated_by_user_id INTEGER NULL
+    REFERENCES shared.users(id) ON DELETE SET NULL,
+  status admin.evaluation_status NOT NULL,
+  justification TEXT NULL,
+  evaluated_at TIMESTAMPTZ NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_evaluations_project_version_id
+  ON admin.evaluations (project_version_id);
+CREATE INDEX IF NOT EXISTS idx_admin_evaluations_assigned_to_user_id
+  ON admin.evaluations (assigned_to_user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_evaluations_status
+  ON admin.evaluations (status);
 
 CREATE TABLE IF NOT EXISTS admin.project_documents (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -555,8 +652,61 @@ ALTER TABLE admin.committee_evaluations
 ALTER TABLE admin.committee_evaluations
   ALTER COLUMN justification DROP NOT NULL;
 
+INSERT INTO admin.evaluations (
+  project_version_id,
+  assigned_to_user_id,
+  evaluated_by_user_id,
+  status,
+  justification,
+  evaluated_at,
+  created_at,
+  updated_at
+)
+SELECT
+  ce.project_version_id,
+  ce.responsible_member_user_id,
+  ce.responsible_member_user_id,
+  CASE ce.result
+    WHEN 'to_review' THEN 'to_review'::admin.evaluation_status
+    WHEN 'approved' THEN 'approved_by_committee'::admin.evaluation_status
+    WHEN 'needs_changes' THEN 'needs_changes_by_committee'::admin.evaluation_status
+    WHEN 'rejected' THEN 'rejected_by_committee'::admin.evaluation_status
+  END,
+  ce.justification,
+  ce.evaluated_at,
+  ce.created_at,
+  ce.updated_at
+FROM admin.committee_evaluations ce
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM admin.evaluations e
+  WHERE e.project_version_id = ce.project_version_id
+    AND e.created_at = ce.created_at
+    AND e.assigned_to_user_id = ce.responsible_member_user_id
+);
+
 ALTER TABLE shared.project_status_history
   ADD COLUMN IF NOT EXISTS committee_evaluation_id INTEGER;
+
+ALTER TABLE shared.project_status_history
+  ADD COLUMN IF NOT EXISTS evaluation_id INTEGER;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_shared_status_history_evaluation'
+  ) THEN
+    ALTER TABLE shared.project_status_history
+      ADD CONSTRAINT fk_shared_status_history_evaluation
+      FOREIGN KEY (evaluation_id)
+      REFERENCES admin.evaluations(id)
+      ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_shared_status_history_evaluation_id
+  ON shared.project_status_history (evaluation_id);
 
 DO $$
 BEGIN

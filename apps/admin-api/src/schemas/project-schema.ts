@@ -1,9 +1,22 @@
 import { z } from "zod";
 
 export const projectStatusSchema = z.enum([
+  "submitted_for_review",
   "submitted_to_committee",
+  "approved_to_schedule",
+  "rejected_to_safe_room",
+  "resubmitted_for_review",
   "resubmitted_to_committee",
   "under_review",
+  "scheduled_for_safe_room",
+  "approved_for_safe_room",
+  "under_safe_room",
+  "report_submitted",
+  "report_under_review",
+  "safe_room_reuse_requested",
+  "rescheduled_for_safe_room",
+  "reapproved_for_safe_room",
+  "report_resubmitted",
   "needs_changes",
   "approved",
   "rejected"

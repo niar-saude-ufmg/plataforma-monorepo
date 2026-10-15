@@ -201,6 +201,34 @@ describe("GET /api/admin/users", () => {
     expect(findAll).not.toHaveBeenCalled();
   });
 
+  it("auditor recebe somente pesquisadores e pode filtrar pelo status", async () => {
+    findById.mockResolvedValueOnce(buildAuthUser({ id: 4, role: "auditor" }));
+    findAll.mockResolvedValueOnce({ items: [], totalItems: 0 });
+
+    const response = await request(app)
+      .get("/api/admin/users?account_status=active")
+      .set("Authorization", `Bearer ${tokenFor(4)}`);
+
+    expect(response.status).toBe(200);
+    expect(findAll).toHaveBeenCalledWith({
+      role: "researcher",
+      accountStatus: "active",
+      page: 1,
+      pageSize: 20
+    });
+  });
+
+  it("auditor não pode solicitar outro papel", async () => {
+    findById.mockResolvedValueOnce(buildAuthUser({ id: 4, role: "auditor" }));
+
+    const response = await request(app)
+      .get("/api/admin/users?role=admin")
+      .set("Authorization", `Bearer ${tokenFor(4)}`);
+
+    expect(response.status).toBe(403);
+    expect(findAll).not.toHaveBeenCalled();
+  });
+
   it("researcher não acessa a listagem", async () => {
     findById.mockResolvedValueOnce(buildAuthUser({ id: 3, role: "researcher" }));
 
@@ -308,6 +336,19 @@ describe("GET /api/admin/users/:user_id", () => {
     const response = await request(app)
       .get("/api/admin/users/10")
       .set("Authorization", `Bearer ${tokenFor(2)}`);
+
+    expect(response.status).toBe(200);
+    expect(findDetailById).toHaveBeenCalledWith(10, "researcher");
+    expect(response.body).toEqual(expectedConsolidatedUser);
+  });
+
+  it("auditor consulta usuário somente dentro do escopo researcher", async () => {
+    findById.mockResolvedValueOnce(buildAuthUser({ id: 4, role: "auditor" }));
+    findDetailById.mockResolvedValueOnce(buildUserRecord());
+
+    const response = await request(app)
+      .get("/api/admin/users/10")
+      .set("Authorization", `Bearer ${tokenFor(4)}`);
 
     expect(response.status).toBe(200);
     expect(findDetailById).toHaveBeenCalledWith(10, "researcher");

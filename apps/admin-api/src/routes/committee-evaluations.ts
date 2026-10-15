@@ -9,6 +9,8 @@ export const committeeEvaluationsRouter = Router();
  * /admin/project-versions/{project_version_id}/committee-evaluation:
  *   post:
  *     summary: Atribui uma versão a um membro do comitê
+ *     deprecated: true
+ *     description: Endpoint legado. Será substituído pelo fluxo unificado de evaluations.
  *     tags: [Committee evaluations]
  *     security:
  *       - bearerAuth: []
@@ -43,6 +45,8 @@ committeeEvaluationsRouter.post(
  * /admin/project-versions/{project_version_id}/committee-evaluation:
  *   put:
  *     summary: Registra o parecer final do comitê
+ *     deprecated: true
+ *     description: Endpoint legado. Será substituído pelo fluxo unificado de evaluations.
  *     tags: [Committee evaluations]
  *     security:
  *       - bearerAuth: []
@@ -82,6 +86,8 @@ committeeEvaluationsRouter.put(
  * /admin/project-versions/{project_version_id}/committee-evaluation:
  *   get:
  *     summary: Consulta a avaliação de uma versão
+ *     deprecated: true
+ *     description: Endpoint legado. Será substituído pelo fluxo unificado de evaluations.
  *     tags: [Committee evaluations]
  *     security:
  *       - bearerAuth: []

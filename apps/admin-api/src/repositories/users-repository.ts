@@ -162,6 +162,23 @@ type RegistrationAudit = {
   email: string;
 };
 
+type AdministrativeUserData = {
+  fullName: string;
+  email: string;
+  hashedPassword: string;
+  role: UserRole;
+  accountStatus: user_account_status;
+};
+
+const createAdministrativeUser = (
+  data: AdministrativeUserData,
+  audit: RegistrationAudit,
+) => prisma.$transaction(async (tx) => {
+  const user = await tx.user.create({ data });
+  await createRegistrationAudit(tx, user, audit);
+  return user;
+});
+
 const createRegistrationAudit = (
   tx: Prisma.TransactionClient,
   user: { id: number },
@@ -408,11 +425,12 @@ export const usersRepository = {
   createAdministrator: (
     data: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status },
     audit: RegistrationAudit,
-  ) => prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({ data });
-    await createRegistrationAudit(tx, user, audit);
-    return user;
-  }),
+  ) => createAdministrativeUser(data, audit),
+
+  createAuditor: (
+    data: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status },
+    audit: RegistrationAudit,
+  ) => createAdministrativeUser(data, audit),
 
   createCommitteeMember: (data: {
     user: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status };

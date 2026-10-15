@@ -13,9 +13,22 @@ import type {
 } from "../schemas/project-schema.js";
 
 const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
+  submitted_for_review: "Enviado para avaliação",
   submitted_to_committee: "Enviado à comissão",
+  approved_to_schedule: "Aprovado para agendamento",
+  rejected_to_safe_room: "Rejeitado para sala segura",
+  resubmitted_for_review: "Reenviado para avaliação",
   resubmitted_to_committee: "Reenviado à comissão",
   under_review: "Em avaliação",
+  scheduled_for_safe_room: "Sala segura agendada",
+  approved_for_safe_room: "Aprovado para sala segura",
+  under_safe_room: "Em sala segura",
+  report_submitted: "Relatório enviado",
+  report_under_review: "Relatório em avaliação",
+  safe_room_reuse_requested: "Solicitada reutilização da sala segura",
+  rescheduled_for_safe_room: "Sala segura reagendada",
+  reapproved_for_safe_room: "Reaprovado para sala segura",
+  report_resubmitted: "Relatório reenviado",
   needs_changes: "Precisa de alterações",
   approved: "Aprovado",
   rejected: "Rejeitado"

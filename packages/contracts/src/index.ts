@@ -1,28 +1,59 @@
-export type UserRole = "researcher" | "admin" | "committee";
+export type UserRole = "researcher" | "admin" | "auditor" | "committee";
 
 export type UserAccountStatus = "pending" | "active" | "rejected" | "disabled";
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   researcher: "Pesquisador",
   admin: "Gestor",
+  auditor: "Auditor",
   committee: "Comissão"
 };
 
 export type ProjectStatus =
   | "draft"
   | "saved"
+  | "submitted_for_review"
   | "submitted_to_committee"
+  | "approved_to_schedule"
+  | "rejected_to_safe_room"
+  | "resubmitted_for_review"
   | "resubmitted_to_committee"
   | "under_review"
+  | "scheduled_for_safe_room"
+  | "approved_for_safe_room"
+  | "under_safe_room"
+  | "report_submitted"
+  | "report_under_review"
+  | "safe_room_reuse_requested"
+  | "rescheduled_for_safe_room"
+  | "reapproved_for_safe_room"
+  | "report_resubmitted"
+  | "needs_changes"
   | "approved"
+  | "rejected"
   | "changes_requested";
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   draft: "Rascunho",
   saved: "Salvo",
+  submitted_for_review: "Enviado para avaliação",
   submitted_to_committee: "Enviado para comissão",
+  approved_to_schedule: "Aprovado para agendamento",
+  rejected_to_safe_room: "Rejeitado para sala segura",
+  resubmitted_for_review: "Reenviado para avaliação",
   resubmitted_to_committee: "Reenviado para comissão",
   under_review: "Em avaliação",
+  scheduled_for_safe_room: "Sala segura agendada",
+  approved_for_safe_room: "Aprovado para sala segura",
+  under_safe_room: "Em sala segura",
+  report_submitted: "Relatório enviado",
+  report_under_review: "Relatório em avaliação",
+  safe_room_reuse_requested: "Solicitada reutilização da sala segura",
+  rescheduled_for_safe_room: "Sala segura reagendada",
+  reapproved_for_safe_room: "Reaprovado para sala segura",
+  report_resubmitted: "Relatório reenviado",
+  needs_changes: "Precisa de alterações",
   approved: "Aprovado",
+  rejected: "Rejeitado",
   changes_requested: "Ajustes solicitados"
 };

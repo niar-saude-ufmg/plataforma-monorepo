@@ -96,7 +96,7 @@ const options = {
             id: { type: 'integer', example: 1 },
             full_name: { type: 'string', example: 'Pesquisador Teste' },
             email: { type: 'string', example: 'teste@niar.local' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
+            role: { type: 'string', enum: ['researcher', 'admin', 'auditor', 'committee'] },
             created_at: { type: 'string', format: 'date-time' },
           },
         },
@@ -163,7 +163,7 @@ const options = {
             id: { type: 'integer', example: 10 },
             email: { type: 'string', format: 'email', example: 'pesquisador@exemplo.com' },
             full_name: { type: 'string', example: 'Pesquisador Teste' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
+            role: { type: 'string', enum: ['researcher', 'admin', 'auditor', 'committee'] },
             account_status: {
               type: 'string',
               enum: ['pending', 'active', 'rejected', 'disabled'],
@@ -266,7 +266,7 @@ const options = {
             id: { type: 'integer', example: 1 },
             full_name: { type: 'string', example: 'Pesquisador Teste' },
             email: { type: 'string', format: 'email', example: 'teste@niar.local' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
+            role: { type: 'string', enum: ['researcher', 'admin', 'auditor', 'committee'] },
             account_status: { type: 'string', enum: ['pending', 'active', 'rejected', 'disabled'], example: 'active' },
             profile: {
               description: 'Presente para pesquisadores quando houver perfil cadastrado.',

@@ -32,12 +32,13 @@ describe("admin api", () => {
     expect(response.body.projectStatuses.draft).toBe("Rascunho");
   });
   
-  it("expõe os três papéis do domínio, com admin rotulado como Gestor", async () => {
+  it("expõe os papéis do domínio, com admin rotulado como Gestor", async () => {
     const response = await request(app).get("/api/admin/meta");
 
     expect(response.body.userRoles).toEqual({
       researcher: "Pesquisador",
       admin: "Gestor",
+      auditor: "Auditor",
       committee: "Comissão"
     });
   });
