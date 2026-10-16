@@ -48,21 +48,13 @@ export function Users() {
   }, [dispatch, page, pageSize, filters.role, filters.accountStatus]);
 
   const handleFiltersChange = (values: {
-    role?: UserRole | null;
-    accountStatus?: UserAccountStatus | null
+    role?: { value: UserRole; label: string } | null;
+    accountStatus?: { value: UserAccountStatus; label: string } | null;
   }) => {
-    const role = typeof values.role === "object" && values.role !== null
-        ? values.role.value
-        : values.role ?? null;
-
-    const accountStatus = typeof values.accountStatus === "object" && values.accountStatus !== null
-        ? values.accountStatus.value
-        : values.accountStatus ?? null;
-
     dispatch(
       setUsersFilters({
-        role: (role as UserRole) ?? undefined,
-        accountStatus: (accountStatus as UserAccountStatus) ?? undefined,
+        role: values.role?.value ?? undefined,
+        accountStatus: values.accountStatus?.value ?? undefined,
       }),
     );
   };
