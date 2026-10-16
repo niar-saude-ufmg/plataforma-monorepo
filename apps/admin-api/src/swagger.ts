@@ -366,7 +366,8 @@ const options = {
             id: { type: 'integer', example: 42 },
             title: { type: 'string', example: 'Projeto de pesquisa' },
             updated_at: { type: 'string', format: 'date-time' },
-            evaluation_status: { type: 'string', enum: ['waiting', 'to_review', 'approved', 'needs_changes', 'rejected'], example: 'waiting' },
+            evaluation_status: { type: 'string', enum: ['waiting', 'to_review', 'sent_to_committee', 'approved_by_committee', 'rejected_by_committee', 'needs_changes_by_committee', 'approved', 'needs_changes', 'rejected'], example: 'waiting' },
+            evaluation_context: { type: 'string', nullable: true, enum: ['pre_safe_room', 'post_safe_room'], example: 'pre_safe_room' },
             researcher: {
               type: 'object',
               required: ['id', 'full_name', 'email'],

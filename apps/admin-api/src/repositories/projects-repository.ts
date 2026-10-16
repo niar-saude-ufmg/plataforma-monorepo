@@ -1,9 +1,11 @@
 import {
   Prisma,
-  type committee_evaluation_result as CommitteeEvaluationResult,
+  type evaluation_context as EvaluationContext,
+  type evaluation_status as EvaluationStatus,
   type project_status as ProjectStatus,
   prisma
 } from "@niar/database";
+import type { UserRole } from "@niar/contracts";
 
 const projectInclude = {
   owner: {
@@ -38,6 +40,9 @@ const projectInclude = {
             }
           }
         }
+      },
+      evaluations: {
+        orderBy: [{ createdAt: "desc" as const }, { id: "desc" as const }]
       }
     }
   }
@@ -53,9 +58,12 @@ export type ProjectListResult = {
 export type ProjectListFilter = {
   page: number;
   pageSize: number;
+  currentUserId?: number;
+  currentUserRole?: UserRole;
   ownerUserId?: number;
   status?: ProjectStatus;
-  evaluationStatus?: "waiting" | CommitteeEvaluationResult;
+  evaluationStatus?: "waiting" | EvaluationStatus;
+  evaluationContext?: EvaluationContext;
   submittedFrom?: Date;
   submittedTo?: Date;
   updatedFrom?: Date;
@@ -68,14 +76,72 @@ export type ProjectListFilter = {
   orderDirection: "asc" | "desc";
 };
 
+const POST_SAFE_ROOM_STATUSES: ProjectStatus[] = [
+  "under_safe_room",
+  "report_submitted",
+  "report_under_review",
+  "safe_room_reuse_requested",
+  "rescheduled_for_safe_room",
+  "reapproved_for_safe_room",
+  "report_resubmitted"
+];
+
+const visibilityVersionWhere = (
+  role: UserRole | undefined,
+  userId: number | undefined
+): Prisma.ProjectVersionWhereInput | undefined => {
+  if (!userId || role === "admin" || role === "researcher") return undefined;
+
+  if (role === "auditor") {
+    return {
+      status: { notIn: POST_SAFE_ROOM_STATUSES },
+      OR: [
+        { evaluations: { none: {} } },
+        {
+          evaluations: {
+            some: {
+              context: "pre_safe_room",
+              OR: [{ assignedToUserId: userId }, { assignedByUserId: userId }]
+            }
+          }
+        }
+      ]
+    };
+  }
+
+  if (role === "committee") {
+    return {
+      OR: [
+        { status: { in: POST_SAFE_ROOM_STATUSES } },
+        { evaluations: { some: { context: "post_safe_room" } } },
+        {
+          evaluations: {
+            some: {
+              context: "pre_safe_room",
+              assignedToUserId: userId
+            }
+          }
+        }
+      ]
+    };
+  }
+
+  return undefined;
+};
+
 const buildWhere = (filter: Omit<ProjectListFilter, "page" | "pageSize" | "orderBy" | "orderDirection">) => {
   const versionWhere: Prisma.ProjectVersionWhereInput = {};
 
   if (filter.status) versionWhere.status = filter.status;
   if (filter.evaluationStatus === "waiting") {
-    versionWhere.committeeEvaluation = { is: null };
-  } else if (filter.evaluationStatus) {
-    versionWhere.committeeEvaluation = { is: { result: filter.evaluationStatus } };
+    versionWhere.evaluations = { none: {} };
+  } else if (filter.evaluationStatus || filter.evaluationContext) {
+    versionWhere.evaluations = {
+      some: {
+        ...(filter.evaluationContext ? { context: filter.evaluationContext } : {}),
+        ...(filter.evaluationStatus ? { status: filter.evaluationStatus } : {})
+      }
+    };
   }
   if (filter.versionNumber) versionWhere.versionNumber = filter.versionNumber;
   if (filter.submittedFrom || filter.submittedTo) {
@@ -92,6 +158,15 @@ const buildWhere = (filter: Omit<ProjectListFilter, "page" | "pageSize" | "order
     versionWhere.documents = {
       some: filter.documentType ? { documentType: filter.documentType } : {}
     };
+  }
+
+  const visibilityWhere = visibilityVersionWhere(filter.currentUserRole, filter.currentUserId);
+  if (visibilityWhere) {
+    const existingAnd = versionWhere.AND;
+    versionWhere.AND = [
+      ...(Array.isArray(existingAnd) ? existingAnd : existingAnd ? [existingAnd] : []),
+      visibilityWhere
+    ];
   }
 
   const where: Prisma.ProjectWhereInput = {

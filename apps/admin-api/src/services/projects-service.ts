@@ -36,7 +36,12 @@ const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
 
 const evaluationStatusFor = (project: ProjectRecord): ProjectEvaluationStatusCode => {
   const latestVersion = project.versions.at(-1);
-  return latestVersion?.committeeEvaluation?.result ?? "waiting";
+  return latestVersion?.evaluations?.[0]?.status ?? "waiting";
+};
+
+const evaluationContextFor = (project: ProjectRecord) => {
+  const latestVersion = project.versions.at(-1);
+  return latestVersion?.evaluations?.[0]?.context ?? null;
 };
 
 const DEFAULT_EXPORTS_DIR = resolve(process.cwd(), "apps/assistente-api/.local/exports");
@@ -102,6 +107,7 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
 
   if (currentUser.role !== "researcher") {
     response.evaluation_status = evaluationStatusFor(project);
+    response.evaluation_context = evaluationContextFor(project);
     response.evaluations = project.versions.flatMap((version) => {
       const evaluation = version.committeeEvaluation;
       if (!evaluation) return [];
@@ -128,9 +134,6 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
   return response;
 };
 
-const ownerScopeFor = (currentUser: AuthenticatedUser): number | undefined =>
-  currentUser.role === "researcher" ? currentUser.id : undefined;
-
 const assertResearcherFilterAllowed = (researcherId: number | undefined, currentUser: AuthenticatedUser) => {
   if (currentUser.role === "researcher" && researcherId !== undefined && researcherId !== currentUser.id) {
     throw new AppError("Pesquisador só pode consultar os próprios projetos", 403);
@@ -152,9 +155,12 @@ const toRepositoryFilter = (query: ListProjectsQuery, currentUser: Authenticated
   return {
     page: query.page,
     pageSize: query.page_size,
+    currentUserId: currentUser.id,
+    currentUserRole: currentUser.role,
     ownerUserId: currentUser.role === "researcher" ? currentUser.id : query.researcher_id,
     status: query.status,
     evaluationStatus: query.evaluation_status,
+    evaluationContext: query.evaluation_context,
     submittedFrom: query.submitted_from,
     submittedTo: query.submitted_to,
     updatedFrom: query.updated_from,
@@ -183,13 +189,20 @@ export const projectsService = {
   },
 
   getProject: async (projectId: number, currentUser: AuthenticatedUser): Promise<ProjectResponse> => {
-    const project = await projectsRepository.findById(projectId, ownerScopeFor(currentUser));
+    const project = await projectsRepository.findById(
+      projectId,
+      currentUser.role === "researcher" ? currentUser.id : undefined
+    );
     if (!project) throw new AppError("Projeto não encontrado", 404);
     return toProjectResponse(project, currentUser);
   },
 
   getDocumentDownload: async (projectId: number, documentId: number, currentUser: AuthenticatedUser) => {
-    const document = await projectsRepository.findDocument(projectId, documentId, ownerScopeFor(currentUser));
+    const document = await projectsRepository.findDocument(
+      projectId,
+      documentId,
+      currentUser.role === "researcher" ? currentUser.id : undefined
+    );
     if (!document) throw new AppError("Documento não encontrado", 404);
 
     if (currentUser.role !== "admin" && document.documentType !== "project_docx") {

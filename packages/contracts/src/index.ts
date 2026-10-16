@@ -80,3 +80,10 @@ export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
   approved: "Aprovado",
   rejected: "Rejeitado"
 };
+
+export type EvaluationContext = "pre_safe_room" | "post_safe_room";
+
+export const EVALUATION_CONTEXT_LABELS: Record<EvaluationContext, string> = {
+  pre_safe_room: "Pré-sala segura",
+  post_safe_room: "Pós-sala segura"
+};

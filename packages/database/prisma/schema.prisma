@@ -411,6 +411,7 @@ model CommitteeEvaluation {
 model Evaluation {
   id                Int                    @id @default(autoincrement())
   projectVersionId  Int                    @map("project_version_id")
+  context           evaluation_context     @map("evaluation_context")
   assignedToUserId  Int?                   @map("assigned_to_user_id")
   assignedByUserId  Int?                   @map("assigned_by_user_id")
   evaluatedByUserId Int?                   @map("evaluated_by_user_id")
@@ -475,6 +476,13 @@ enum evaluation_status {
   needs_changes
   approved
   rejected
+
+  @@schema("admin")
+}
+
+enum evaluation_context {
+  pre_safe_room
+  post_safe_room
 
   @@schema("admin")
 }

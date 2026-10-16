@@ -34,6 +34,7 @@ const toResponse = (evaluation: AuditorEvaluationDetails) => ({
     : null,
   assigned_by_user_id: evaluation.assignedByUserId,
   evaluated_by_user_id: evaluation.evaluatedByUserId,
+  evaluation_context: evaluation.context,
   status: evaluation.status,
   justification: evaluation.justification,
   evaluated_at: evaluation.evaluatedAt?.toISOString() ?? null,

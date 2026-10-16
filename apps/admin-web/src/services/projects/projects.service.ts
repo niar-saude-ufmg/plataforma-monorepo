@@ -76,9 +76,12 @@ export function toProject(raw: any): Project {
     documents: (raw.documents ?? []).map(toDocument),
   };
 
-  // Só admin/committee recebem esses campos
+  // Só admin/committee/auditor recebem esses campos
   if (raw.evaluation_status !== undefined) {
     project.evaluationStatus = raw.evaluation_status;
+  }
+  if (raw.evaluation_context !== undefined) {
+    project.evaluationContext = raw.evaluation_context;
   }
   if (raw.evaluations !== undefined) {
     project.evaluations = raw.evaluations.map(toEvaluation);
@@ -109,6 +112,7 @@ export async function getProjectsRequest(
   if (params.pageSize !== undefined) query.set("page_size", String(params.pageSize));
   if (params.status) query.set("status", params.status);
   if (params.evaluationStatus) query.set("evaluation_status", params.evaluationStatus);
+  if (params.evaluationContext) query.set("evaluation_context", params.evaluationContext);
   if (params.submittedFrom) query.set("submitted_from", params.submittedFrom);
   if (params.submittedTo) query.set("submitted_to", params.submittedTo);
   if (params.updatedFrom) query.set("updated_from", params.updatedFrom);

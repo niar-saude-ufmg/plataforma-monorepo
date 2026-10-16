@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  EVALUATION_CONTEXT_LABELS,
   EVALUATION_STATUS_LABELS,
   PROJECT_STATUS_LABELS,
   USER_ROLE_LABELS
@@ -12,6 +13,7 @@ adminRouter.get("/meta", (_request, response) => {
     module: "admin",
     userRoles: USER_ROLE_LABELS,
     projectStatuses: PROJECT_STATUS_LABELS,
-    evaluationStatuses: EVALUATION_STATUS_LABELS
+    evaluationStatuses: EVALUATION_STATUS_LABELS,
+    evaluationContexts: EVALUATION_CONTEXT_LABELS
   });
 });

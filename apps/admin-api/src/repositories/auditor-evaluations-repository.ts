@@ -8,6 +8,7 @@ const evaluationDetailsSelect = {
   assignedToUserId: true,
   assignedByUserId: true,
   evaluatedByUserId: true,
+  context: true,
   status: true,
   justification: true,
   evaluatedAt: true,
@@ -113,7 +114,7 @@ export const auditorEvaluationsRepository = {
     prisma.$transaction(async (transaction) => {
       const version = await transaction.projectVersion.findUnique({
         where: { id: data.projectVersionId },
-        select: { id: true }
+        select: { id: true, status: true }
       });
 
       if (!version) throw new AppError("Versão do projeto não encontrada", 404);
@@ -127,18 +128,22 @@ export const auditorEvaluationsRepository = {
         throw new AppError("Usuário responsável precisa ser um auditor ativo", 400);
       }
 
-      const existing = await transaction.evaluation.findFirst({
-        where: { projectVersionId: data.projectVersionId },
-        select: { id: true }
-      });
-
-      if (existing) throw new AppError("Esta versão já possui uma avaliação", 409);
+      const postSafeRoomStatuses = new Set([
+        "report_submitted",
+        "report_under_review",
+        "safe_room_reuse_requested",
+        "rescheduled_for_safe_room",
+        "reapproved_for_safe_room",
+        "report_resubmitted"
+      ]);
+      const context = postSafeRoomStatuses.has(version.status) ? "post_safe_room" : "pre_safe_room";
 
       const evaluation = await transaction.evaluation.create({
         data: {
           projectVersionId: data.projectVersionId,
           assignedToUserId: data.assignedToUserId,
           assignedByUserId: data.actorUserId,
+          context,
           status: "to_review"
         },
         select: { id: true }

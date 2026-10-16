@@ -295,6 +295,33 @@ BEGIN
   END IF;
 END $$;
 
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'evaluation_context' AND n.nspname = 'admin'
+  ) THEN
+    CREATE TYPE admin.evaluation_context AS ENUM (
+      'pre_safe_room',
+      'post_safe_room'
+    );
+  END IF;
+END $$;
+
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'to_review';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'sent_to_committee';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'approved_by_committee';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'rejected_by_committee';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'needs_changes_by_committee';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'needs_changes';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'approved';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'rejected';
+
+ALTER TYPE admin.evaluation_context ADD VALUE IF NOT EXISTS 'pre_safe_room';
+ALTER TYPE admin.evaluation_context ADD VALUE IF NOT EXISTS 'post_safe_room';
+
 CREATE TABLE IF NOT EXISTS admin.projects (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   owner_user_id INTEGER NOT NULL REFERENCES shared.users(id) ON DELETE RESTRICT,
@@ -380,6 +407,7 @@ CREATE TABLE IF NOT EXISTS admin.evaluations (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_version_id INTEGER NOT NULL
     REFERENCES admin.project_versions(id) ON DELETE CASCADE,
+  evaluation_context admin.evaluation_context NOT NULL DEFAULT 'pre_safe_room',
   assigned_to_user_id INTEGER NULL
     REFERENCES shared.users(id) ON DELETE SET NULL,
   assigned_by_user_id INTEGER NULL
@@ -392,6 +420,19 @@ CREATE TABLE IF NOT EXISTS admin.evaluations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE admin.evaluations
+  ADD COLUMN IF NOT EXISTS evaluation_context admin.evaluation_context;
+
+UPDATE admin.evaluations
+SET evaluation_context = 'pre_safe_room'::admin.evaluation_context
+WHERE evaluation_context IS NULL;
+
+ALTER TABLE admin.evaluations
+  ALTER COLUMN evaluation_context SET DEFAULT 'pre_safe_room'::admin.evaluation_context;
+
+ALTER TABLE admin.evaluations
+  ALTER COLUMN evaluation_context SET NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_admin_evaluations_project_version_id
   ON admin.evaluations (project_version_id);
@@ -654,6 +695,7 @@ ALTER TABLE admin.committee_evaluations
 
 INSERT INTO admin.evaluations (
   project_version_id,
+  evaluation_context,
   assigned_to_user_id,
   evaluated_by_user_id,
   status,
@@ -664,6 +706,7 @@ INSERT INTO admin.evaluations (
 )
 SELECT
   ce.project_version_id,
+  'pre_safe_room'::admin.evaluation_context,
   ce.responsible_member_user_id,
   ce.responsible_member_user_id,
   CASE ce.result
@@ -681,8 +724,7 @@ WHERE NOT EXISTS (
   SELECT 1
   FROM admin.evaluations e
   WHERE e.project_version_id = ce.project_version_id
-    AND e.created_at = ce.created_at
-    AND e.assigned_to_user_id = ce.responsible_member_user_id
+    AND e.evaluation_context = 'pre_safe_room'::admin.evaluation_context
 );
 
 ALTER TABLE shared.project_status_history
