@@ -3,7 +3,6 @@ import { useState } from "react";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import MoreVert from "@mui/icons-material/MoreVert";
-import Chip from "@mui/material/Chip";
 import { StatusChip } from "../StatusChip/StatusChip";
 import { Table } from "./Table";
 
@@ -158,10 +157,9 @@ const chipColumns = [
     render: (value: unknown) => {
       const status = String(value);
       return (
-        <Chip
+        <StatusChip
+          status={status === "Aprovado" ? "success" : "warning"}
           label={status}
-          color={status === "Aprovado" ? "success" : "warning"}
-          size="small"
         />
       );
     },

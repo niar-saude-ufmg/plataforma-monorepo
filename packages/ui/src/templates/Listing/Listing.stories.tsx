@@ -1,16 +1,27 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import Button from "@mui/material/Button";
 import { useState } from "react";
+import { StatusChip } from "../../components/StatusChip/StatusChip";
 import { Listing } from "./Listing";
 import { Filter } from "../Filter/Filter";
 
 const columns = [
   { key: "name", label: "Projeto" },
-  { key: "status", label: "Status" },
+  {
+    key: "status",
+    label: "Status",
+    render: (value: unknown) => (
+      <StatusChip
+        status={String(value) === "Aprovado" ? "success" : "warning"}
+        label={String(value)}
+      />
+    ),
+  },
+  { key: "updated", label: "Atualizado" },
 ] as const;
 const rows = [
-  { name: "Projeto A", status: "Em análise" },
-  { name: "Projeto B", status: "Aprovado" },
+  { name: "Projeto A", status: "Em análise", updated: "Hoje" },
+  { name: "Projeto B", status: "Aprovado", updated: "Ontem" },
 ];
 const filter = (
   <Filter
