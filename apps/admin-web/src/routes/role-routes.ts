@@ -26,18 +26,17 @@ const commonRoleRouteDefinitions: readonly RoleRouteDefinition[] = [
 const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
   admin: [
     ...commonRoleRouteDefinitions,
-    // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o administrador
+    { label: "Projetos", section: "projetos" },
   ],
   researcher: [
     ...commonRoleRouteDefinitions,
-    // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o pesquisador
+    { label: "Meus projetos", section: "projetos" },
   ],
   auditor: [
     ...commonRoleRouteDefinitions,
   ],
   committee: [
     ...commonRoleRouteDefinitions,
-    // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o comitê
   ],
 };
 
