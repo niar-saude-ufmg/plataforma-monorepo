@@ -5,7 +5,7 @@ export type RoleRoute = {
   path: string;
 };
 
-export type RoleSection = "home" | "projetos";
+export type RoleSection = "home" | "projetos" | "perfil";
 
 export type RoleRouteDefinition = {
   label: string;
@@ -26,10 +26,12 @@ const commonRoleRouteDefinitions: readonly RoleRouteDefinition[] = [
 const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
   admin: [
     ...commonRoleRouteDefinitions,
+    { label: "Perfil", section: "perfil" },
     // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o administrador
   ],
   researcher: [
     ...commonRoleRouteDefinitions,
+    { label: "Perfil", section: "perfil" },
     // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o pesquisador
   ],
   auditor: [

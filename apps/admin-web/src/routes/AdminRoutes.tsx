@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { RoleGuard } from "../guards/RoleGuard";
 import { AdminLayout } from "../layouts/AdminLayout/AdminLayout";
+import { Profile } from "../pages/Profile/Profile";
 import { RoleHome } from "../pages/RoleHome/RoleHome";
 import { useAppSelector } from "../store/hooks";
 import { selectAuthUser } from "../store/auth/auth.slice";
@@ -24,6 +25,10 @@ function RoleRouteContent({ user }: { user: NonNullable<ReturnType<typeof select
   );
 
   if (!route) return <Navigate replace to={getRoleHomePath(user.role)} />;
+
+  // A rota informa o papel esperado; a página compõe a partir dele e o
+  // RoleGuard continua comparando com o selectAuthUser.
+  if (route.section === "perfil") return <Profile role={user.role} />;
 
   return (
     <RoleGuard allowedRoles={[user.role]}>
