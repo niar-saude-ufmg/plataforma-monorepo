@@ -9,6 +9,7 @@ import {
 import { RoleGuard } from "../guards/RoleGuard";
 import { AdminLayout } from "../layouts/AdminLayout/AdminLayout";
 import { Projects } from "../pages/Projects/Projects";
+import { Profile } from "../pages/Profile/Profile";
 import { RoleHome } from "../pages/RoleHome/RoleHome";
 import { Specialties } from "../pages/Specialties/Specialties";
 import { Users } from "../pages/Users/Users";
@@ -36,9 +37,12 @@ function RoleRouteContent({
     route.section === "projetos" ? <Projects /> :
     route.section === "usuarios" ? <Users /> :
     route.section === "especialidades" ? <Specialties /> :
+    route.section === "perfil" ? <Profile role={user.role} /> :
     <RoleHome section={route.section} userName={user.name} />;
   const allowedRoles =
     route.section === "projetos"
+      ? (["admin", "researcher"] as const)
+      : route.section === "perfil"
       ? (["admin", "researcher"] as const)
       : ([user.role] as const);
 
