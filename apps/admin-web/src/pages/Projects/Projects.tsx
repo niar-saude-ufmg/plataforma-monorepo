@@ -39,6 +39,11 @@ import type {
   ProjectStatus,
   ProjectStatusEntry,
 } from "../../types/project.types";
+import {
+  PROJECT_LIST_CONFIG,
+  type ProjectColumnId,
+  type ProjectFilterKey,
+} from "./Projects.roles";
 
 const PROJECT_STATUS_CODES: readonly ProjectStatus[] = [
   "submitted_to_committee",
@@ -132,7 +137,9 @@ export function Projects() {
   const pageSize = useAppSelector(selectProjectsListPageSize);
   const loading = useAppSelector(selectProjectsListLoading);
   const error = useAppSelector(selectProjectsListError);
-  const isAdmin = user?.role === "admin";
+  const roleConfig =
+    PROJECT_LIST_CONFIG[user?.role ?? "researcher"] ??
+    PROJECT_LIST_CONFIG.researcher!;
 
   useEffect(() => {
     dispatch(
@@ -167,84 +174,72 @@ export function Projects() {
       }
     : null;
 
+  const filterValues: Record<ProjectFilterKey, AutocompleteOption | null> = {
+    search: selectedSearch,
+    status: selectedOption(PROJECT_STATUS_OPTIONS, filters.status),
+  };
+
+  const filterDefinitions: Record<ProjectFilterKey, AutocompleteOption[] | undefined> = {
+    search: searchOptions,
+    status: [...PROJECT_STATUS_OPTIONS],
+  };
+
   const filter = (
     <Filter
-      search={[
-        {
-          key: "search",
-          label: "Buscar projeto",
-          options: searchOptions,
-          freeSolo: true,
-        },
-        {
-          key: "status",
-          label: isAdmin ? "Status do projeto" : "Status",
-          options: PROJECT_STATUS_OPTIONS,
-        },
-      ]}
-      values={{
-        search: selectedSearch,
-        status: selectedOption(PROJECT_STATUS_OPTIONS, filters.status),
-      }}
+      search={roleConfig.filters.map((key) => ({
+        key,
+        label:
+          roleConfig.filterLabels?.[key] ??
+          ({
+            search: "Buscar projeto",
+            status: "Status",
+          } satisfies Record<ProjectFilterKey, string>)[key],
+        options: filterDefinitions[key] ?? [],
+        ...(key === "search" ? { freeSolo: true } : {}),
+      }))}
+      values={Object.fromEntries(
+        roleConfig.filters.map((key) => [key, filterValues[key]]),
+      )}
       onChange={handleFiltersChange}
     />
   );
 
-  const columns: TableColumn<Project>[] = [
-    { key: "title", label: "Projeto" },
-    ...(isAdmin
-      ? [
-          {
-            key: "researcher" as const,
-            label: "Pesquisador",
-            render: (_value: Project[keyof Project], project: Project) =>
-              project.researcher.fullName,
-          },
-        ]
-      : []),
-    {
+  const columnDefinitions: Record<ProjectColumnId, TableColumn<Project>> = {
+    title: { key: "title", label: "Projeto" },
+    researcher: {
+      key: "researcher",
+      label: "Pesquisador",
+      render: (_value, project) => project.researcher.fullName,
+    },
+    status: {
       key: "status",
-      label: isAdmin ? "Status do projeto" : "Status",
+      label: "Status",
       render: (_value, project) => {
         const entry = latestStatus(project);
-        return (
-          <StatusChip
-            label={statusLabel(entry)}
-            status={statusColor(entry)}
-          />
-        );
+        return <StatusChip label={statusLabel(entry)} status={statusColor(entry)} />;
       },
     },
-    ...(isAdmin
-      ? [
-          {
-            key: "evaluationContext" as const,
-            label: "Contexto",
-            render: (_value: Project[keyof Project], project: Project) =>
-              project.evaluationContext
-                ? EVALUATION_CONTEXT_LABELS[project.evaluationContext]
-                : "—",
-          },
-        ]
-      : []),
-    {
+    evaluationContext: {
+      key: "evaluationContext",
+      label: "Contexto",
+      render: (_value, project) =>
+        project.evaluationContext
+          ? EVALUATION_CONTEXT_LABELS[project.evaluationContext]
+          : "—",
+    },
+    updatedAt: {
       key: "updatedAt",
       label: "Atualizado",
       render: (value) => formatDate(String(value)),
     },
-    ...(isAdmin
-      ? [
-          {
-            key: "evaluations" as const,
-            label: "Avaliador",
-            render: (_value: Project[keyof Project], project: Project) =>
-              project.evaluations?.at(-1)?.responsibleMember.fullName ??
-              "A definir",
-          },
-        ]
-      : []),
-    {
-      key: "id",
+    evaluations: {
+      key: "evaluations",
+      label: "Avaliador",
+      render: (_value, project) =>
+        project.evaluations?.at(-1)?.responsibleMember.fullName ?? "A definir",
+    },
+    actions: {
+      variant: "actions",
       label: "Ações",
       render: () => (
         <Button type="button" size="small" variant="outlined">
@@ -252,7 +247,13 @@ export function Projects() {
         </Button>
       ),
     },
-  ];
+  };
+
+  const columns = roleConfig.columnIds.map((columnId) => {
+    const column = columnDefinitions[columnId];
+    const label = roleConfig.columnLabels?.[columnId];
+    return label ? { ...column, label } : column;
+  });
 
   const paginationProps = {
     count: pagination?.totalItems ?? 0,
@@ -266,7 +267,7 @@ export function Projects() {
     },
   };
 
-  const hasActiveFilters = Boolean(filters.search || filters.status);
+  const hasActiveFilters = roleConfig.filters.some((key) => Boolean(filters[key]));
   const emptyStateProps = hasActiveFilters
     ? {
         title: "Nenhum projeto encontrado",
@@ -279,9 +280,7 @@ export function Projects() {
       }
     : {
         title: "Nenhum projeto cadastrado",
-        description: isAdmin
-          ? "Ainda não existem projetos para exibir."
-          : "Você ainda não possui projetos cadastrados.",
+        description: roleConfig.emptyStateDescription,
       };
 
   const errorSnackbar = useApiError(
@@ -293,12 +292,8 @@ export function Projects() {
   return (
     <>
       <Listing
-        title={isAdmin ? "Projetos" : "Meus projetos"}
-        description={
-          isAdmin
-            ? "Gerencie os projetos, documentos e atribuições da comissão."
-            : "Acompanhe seus projetos, documentos e o status de cada etapa."
-        }
+        title={roleConfig.title}
+        description={roleConfig.description}
         filter={filter}
         columns={toListingColumns(columns)}
         rows={toListingRows(projects)}
