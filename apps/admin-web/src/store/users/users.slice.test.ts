@@ -31,7 +31,7 @@ describe('usersSlice', () => {
       pagination: null,
       filters: {},
       page: 1,
-      pageSize: 20,
+      pageSize: 10,
       status: 'idle',
       error: null,
     });
@@ -53,7 +53,7 @@ describe('usersSlice', () => {
       pagination: null,
       filters: {},
       page: 1,
-      pageSize: 20,
+      pageSize: 10,
       status: 'idle',
       error: null,
     });
@@ -72,7 +72,7 @@ describe('usersSlice', () => {
       pagination: null,
       filters: {},
       page: 1,
-      pageSize: 20,
+      pageSize: 10,
       status: 'failed',
       error: { message: 'Falha' },
     }, clearUsersError())).toEqual({
@@ -81,7 +81,7 @@ describe('usersSlice', () => {
       pagination: null,
       filters: {},
       page: 1,
-      pageSize: 20,
+      pageSize: 10,
       status: 'idle',
       error: null,
     });

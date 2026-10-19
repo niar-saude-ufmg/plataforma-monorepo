@@ -226,11 +226,11 @@ describe('Users — disparo inicial e contrato de URL', () => {
     expect(url.searchParams.has('account_status')).toBe(false);
   });
 
-  it('envia page_size igual a DEFAULT_USERS_PAGE_SIZE (20)', async () => {
+  it('envia page_size igual a DEFAULT_USERS_PAGE_SIZE (10)', async () => {
     renderUsers();
 
     await waitFor(() => expect(usersListCalls().length).toBeGreaterThan(0));
-    expect(lastUsersUrl().searchParams.get('page_size')).toBe('20');
+    expect(lastUsersUrl().searchParams.get('page_size')).toBe('10');
   });
 });
 
@@ -413,7 +413,7 @@ describe('Users — paginação', () => {
     await waitFor(() =>
       expect(screen.getByTestId('pagination-count')).toHaveTextContent('3'),
     );
-    expect(screen.getByTestId('pagination-rowsPerPage')).toHaveTextContent('20');
+    expect(screen.getByTestId('pagination-rowsPerPage')).toHaveTextContent('10');
   });
 });
 

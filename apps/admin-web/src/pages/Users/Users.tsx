@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Listing, Filter, Autocomplete, Button, StatusChip, Snackbar, TableColumn, StatusChipStatus } from "@niar/ui";
+import { Listing, Filter, Button, StatusChip, Snackbar, TableColumn, StatusChipStatus } from "@niar/ui";
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   setUsersFilters,
@@ -20,7 +20,7 @@ import {
 import { getUsers } from '../../store/users/users.api';
 import { useApiError } from "../../hooks/use-api-error/use-api-error"
 import { UserListItem, UserRole } from '../../types/user.types';
-import { UserAccountStatus } from 'packages/contracts/src';
+import { UserAccountStatus } from '@niar/contracts';
 
 const toTableColumns = (cols: TableColumn<UserListItem>[]) =>
   cols as unknown as TableColumn<Record<string, unknown>>[];
@@ -142,6 +142,7 @@ export function Users() {
     count: pagination?.totalItems ?? 0,
     page: page - 1,                             // API=1-based → UI=0-based
     rowsPerPage: pageSize,
+    rowsPerPageOptions: [10, 25, 50, 100],
     onPageChange: handlePageChange,
     onRowsPerPageChange: handlePageSizeChange,
   };
