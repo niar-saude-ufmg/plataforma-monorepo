@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import reducer, { clearAuthUser, setAuthUser } from './auth.slice';
+import reducer, { clearSelectedAuthUser, initialAuthState, setSelectedAuthUser } from './auth.slice';
+import { selectAuthSelected } from './auth.selectors';
 
 const user = {
   id: 4,
@@ -26,19 +27,37 @@ const user = {
 };
 
 describe('authSlice', () => {
-  it('armazena o usuário autenticado', () => {
-    expect(reducer(undefined, setAuthUser(user))).toEqual({ user });
+  it('inicia sem usuário autenticado', () => {
+    expect(reducer(undefined, { type: 'unknown' })).toEqual(initialAuthState);
   });
 
-  it('preserva os dados específicos do perfil autenticado', () => {
-    const state = reducer(undefined, setAuthUser(user));
+  it('armazena o usuário autenticado com os dados do perfil', () => {
+    const state = reducer(undefined, setSelectedAuthUser(user));
 
-    expect(state.user?.profile?.phone).toBe('(31) 99999-9999');
-    expect(state.user?.researcherProfile?.researchArea).toBe('Saúde pública');
-    expect(state.user?.coep?.documentFilename).toBe('parecer-coep.pdf');
+    expect(state).toEqual({ selected: user });
+    expect(state.selected?.profile?.phone).toBe('(31) 99999-9999');
+    expect(state.selected?.researcherProfile?.researchArea).toBe('Saúde pública');
+    expect(state.selected?.coep?.documentFilename).toBe('parecer-coep.pdf');
+  });
+
+  it('substitui o usuário quando a sessão retorna dados atualizados', () => {
+    const updatedUser = {
+      ...user,
+      name: 'Pesquisador Atualizado',
+      profile: { ...user.profile, phone: '(31) 98888-8888' },
+    };
+    const state = reducer(reducer(undefined, setSelectedAuthUser(user)), setSelectedAuthUser(updatedUser));
+
+    expect(state.selected).toEqual(updatedUser);
   });
 
   it('limpa o usuário autenticado', () => {
-    expect(reducer({ user }, clearAuthUser())).toEqual({ user: null });
+    expect(reducer({ selected: user }, clearSelectedAuthUser())).toEqual(initialAuthState);
+  });
+
+  it('expõe o usuário selecionado pelo selector', () => {
+    const state = { auth: reducer(undefined, setSelectedAuthUser(user)) };
+
+    expect(selectAuthSelected(state)).toEqual(user);
   });
 });

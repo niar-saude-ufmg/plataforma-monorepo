@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Listing, Filter, Button, StatusChip, Snackbar, TableColumn, StatusChipStatus, type AutocompleteOption } from "@niar/ui";
-import { selectAuthUser } from '../../store/auth/auth.slice';
+import { selectAuthSelected } from '../../store/auth/auth.selectors';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   setUsersFilters,
@@ -57,7 +57,7 @@ const STATUS_CHIP_MAP: Record<UserAccountStatus, StatusChipStatus> = {
 
 export function Users() {
   const dispatch = useAppDispatch();
-  const user = useAppSelector(selectAuthUser);
+  const user = useAppSelector(selectAuthSelected);
   const users = useAppSelector(selectUsersList);
   const filters = useAppSelector(selectUsersListFilters);
   const pagination = useAppSelector(selectUsersListPagination);

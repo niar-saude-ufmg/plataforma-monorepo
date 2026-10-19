@@ -4,7 +4,7 @@ import { Provider, useDispatch } from 'react-redux';
 import { PublicUser } from './pages/PublicUser/PublicUser';
 import { AdminRoutes } from './routes/AdminRoutes';
 import { store } from './store';
-import { setAuthUser } from './store/auth/auth.slice';
+import { setSelectedAuthUser } from './store/auth/auth.slice';
 import type { AuthUser } from './types/user.types';
 import './styles/niar.css';
 
@@ -19,7 +19,7 @@ function AppContent({ mode, currentUser }: AppProps) {
   const [isAuthReady, setIsAuthReady] = useState(isPublicMode);
 
   useEffect(() => {
-    dispatch(setAuthUser(currentUser ?? null));
+    dispatch(setSelectedAuthUser(currentUser ?? null));
     setIsAuthReady(true);
   }, [currentUser, dispatch]);
 
