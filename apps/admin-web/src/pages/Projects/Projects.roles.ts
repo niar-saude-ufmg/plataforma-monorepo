@@ -12,10 +12,11 @@ export type ProjectColumnId =
 
 export type ProjectFilterKey = "search" | "status";
 
-export type ProjectListRoleConfig = RoleListConfig<
-  ProjectColumnId,
-  ProjectFilterKey
->;
+export type ProjectActionId = "details";
+
+export type ProjectListRoleConfig = RoleListConfig<ProjectColumnId, ProjectFilterKey> & {
+  actions: readonly ProjectActionId[];
+};
 
 /**
  * Configuração das colunas e filtros disponíveis por papel na listagem de
@@ -39,6 +40,7 @@ export const PROJECT_LIST_CONFIG: Partial<
       "actions",
     ],
     filters: ["search", "status"],
+    actions: ["details"],
     columnLabels: { status: "Status do projeto" },
     filterLabels: { status: "Status do projeto" },
   },
@@ -48,6 +50,7 @@ export const PROJECT_LIST_CONFIG: Partial<
     emptyStateDescription: "Você ainda não possui projetos cadastrados.",
     columnIds: ["title", "status", "updatedAt", "actions"],
     filters: ["search", "status"],
+    actions: ["details"],
     columnLabels: { status: "Status" },
   },
 };

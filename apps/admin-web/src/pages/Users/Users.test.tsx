@@ -222,6 +222,7 @@ describe('Users — disparo inicial e contrato de URL', () => {
     const url = lastUsersUrl();
     expect(url.pathname.endsWith('/api/admin/users')).toBe(true);
     expect(url.searchParams.get('page')).toBe('1');
+    expect(url.searchParams.has('search')).toBe(false);
     expect(url.searchParams.has('role')).toBe(false);
     expect(url.searchParams.has('account_status')).toBe(false);
   });
@@ -298,6 +299,21 @@ describe('Users — colunas e células', () => {
 });
 
 describe('Users — filtros', () => {
+  it('envia a busca pelo nome e reseta page=1', async () => {
+    const user = userEvent.setup();
+    renderUsers();
+
+    await waitFor(() => expect(screen.getByTestId('row-0')).toBeInTheDocument());
+    const before = usersListCalls().length;
+
+    await user.selectOptions(screen.getByLabelText('Buscar usuário'), 'Alice Pesquisadora');
+
+    await waitFor(() => expect(usersListCalls().length).toBeGreaterThan(before));
+    const url = lastUsersUrl();
+    expect(url.searchParams.get('search')).toBe('Alice Pesquisadora');
+    expect(url.searchParams.get('page')).toBe('1');
+  });
+
   it('envia role e reseta page=1 ao trocar o filtro de perfil', async () => {
     const user = userEvent.setup();
     renderUsers();
@@ -495,6 +511,7 @@ describe('Users — estados de lista', () => {
       const url = lastUsersUrl();
       expect(url.searchParams.has('role')).toBe(false);
       expect(url.searchParams.has('account_status')).toBe(false);
+      expect(url.searchParams.has('search')).toBe(false);
       expect(url.searchParams.get('page')).toBe('1');
     });
   });

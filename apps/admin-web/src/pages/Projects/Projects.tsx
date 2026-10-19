@@ -13,7 +13,7 @@ import {
   PROJECT_STATUS_LABELS,
   type ProjectStatus as ContractProjectStatus,
 } from "@niar/contracts";
-import { useEffect, type ChangeEvent } from "react";
+import { Fragment, useEffect, type ChangeEvent, type ReactNode } from "react";
 import { useApiError } from "../../hooks/use-api-error/use-api-error";
 import { selectAuthSelected } from "../../store/auth/auth.selectors";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -41,6 +41,7 @@ import type {
 } from "../../types/project.types";
 import {
   PROJECT_LIST_CONFIG,
+  type ProjectActionId,
   type ProjectColumnId,
   type ProjectFilterKey,
 } from "./Projects.roles";
@@ -204,6 +205,17 @@ export function Projects() {
     />
   );
 
+  const actionDefinitions: Record<
+    ProjectActionId,
+    (project: Project) => ReactNode
+  > = {
+    details: () => (
+      <Button type="button" size="small" variant="outlined">
+        Detalhes
+      </Button>
+    ),
+  };
+
   const columnDefinitions: Record<ProjectColumnId, TableColumn<Project>> = {
     title: { key: "title", label: "Projeto" },
     researcher: {
@@ -241,10 +253,14 @@ export function Projects() {
     actions: {
       variant: "actions",
       label: "Ações",
-      render: () => (
-        <Button type="button" size="small" variant="outlined">
-          Detalhes
-        </Button>
+      render: (_value, project) => (
+        <>
+          {roleConfig.actions.map((actionId) => (
+            <Fragment key={actionId}>
+              {actionDefinitions[actionId](project)}
+            </Fragment>
+          ))}
+        </>
       ),
     },
   };

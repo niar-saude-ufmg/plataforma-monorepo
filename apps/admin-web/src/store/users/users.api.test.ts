@@ -126,12 +126,12 @@ describe('users api', () => {
     );
     const store = createTestStore();
 
-    await store.dispatch(getUsers({ role: 'admin', accountStatus: 'active', page: 2, pageSize: 10 }));
+    await store.dispatch(getUsers({ search: 'Bruno', role: 'admin', accountStatus: 'active', page: 2, pageSize: 10 }));
 
     expect(store.getState().users).toMatchObject({
       list: {
         status: 'succeeded',
-        filters: { role: 'admin', accountStatus: 'active' },
+        filters: { search: 'Bruno', role: 'admin', accountStatus: 'active' },
         page: 2,
         pageSize: 10,
         pagination: { page: 2, pageSize: 10, totalItems: 11, totalPages: 2 },
@@ -143,7 +143,7 @@ describe('users api', () => {
       },
     });
     expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/api/admin/users?role=admin&account_status=active&page=2&page_size=10'),
+      expect.stringContaining('/api/admin/users?search=Bruno&role=admin&account_status=active&page=2&page_size=10'),
       expect.anything(),
     );
   });

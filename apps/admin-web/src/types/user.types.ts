@@ -137,13 +137,14 @@ export interface UserListItem extends User {
 }
 
 export interface UserListParams {
+  search?: string;
   role?: UserRole;
   accountStatus?: UserAccountStatus;
   page?: number;
   pageSize?: number;
 }
 
-export type UserListFilters = Pick<UserListParams, 'role' | 'accountStatus'>;
+export type UserListFilters = Pick<UserListParams, 'search' | 'role' | 'accountStatus'>;
 
 export interface UserListPagination {
   page: number;

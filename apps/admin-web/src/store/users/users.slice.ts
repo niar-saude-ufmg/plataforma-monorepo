@@ -89,6 +89,7 @@ const usersSlice = createSlice({
       state.list.status = 'pending';
       state.list.error = null;
       state.list.filters = {
+        ...(action.meta.arg.search ? { search: action.meta.arg.search } : {}),
         ...(action.meta.arg.role ? { role: action.meta.arg.role } : {}),
         ...(action.meta.arg.accountStatus ? { accountStatus: action.meta.arg.accountStatus } : {}),
       };
