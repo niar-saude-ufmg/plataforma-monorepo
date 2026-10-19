@@ -440,7 +440,10 @@ export const usersService = {
   },
 
   getCoepDocument: async (userId: number, currentUser: AuthenticatedUser) => {
-    const canDownloadAnyResearcherDocument = currentUser.role === "admin" || currentUser.role === "committee";
+    const canDownloadAnyResearcherDocument =
+      currentUser.role === "admin" ||
+      currentUser.role === "committee" ||
+      currentUser.role === "auditor";
     const isOwnDocument = currentUser.role === "researcher" && currentUser.id === userId;
 
     if (!canDownloadAnyResearcherDocument && !isOwnDocument) {

@@ -147,7 +147,7 @@ usersRouter.get("/:user_id", authenticate, restrictTo("admin", "committee", "aud
  *       401:
  *         description: Não autenticado
  *       403:
- *         description: Pesquisador não pode registrar revisões
+ *         description: Pesquisador não pode registrar revisões; apenas admin, comitê e auditor podem revisar cadastros
  *       404:
  *         description: Usuário não encontrado
  *       409:
@@ -156,7 +156,7 @@ usersRouter.get("/:user_id", authenticate, restrictTo("admin", "committee", "aud
 usersRouter.post(
   "/:user_id/auth-evaluation",
   authenticate,
-  restrictTo("admin", "committee"),
+  restrictTo("admin", "committee", "auditor"),
   usersController.createAuthEvaluation
 );
 
@@ -186,7 +186,7 @@ usersRouter.post(
  *       401:
  *         description: Não autenticado
  *       403:
- *         description: Pesquisador só pode baixar o próprio documento; admin e comitê podem baixar documentos de pesquisadores
+ *         description: Pesquisador só pode baixar o próprio documento; admin, comitê e auditor podem baixar documentos de pesquisadores
  *       404:
  *         description: Usuário, parecer ou arquivo não encontrado
  */
