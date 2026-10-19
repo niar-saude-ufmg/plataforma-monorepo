@@ -31,7 +31,7 @@ describe('usersSlice', () => {
       pagination: null,
       filters: {},
       page: 1,
-      pageSize: 10,
+      pageSize: 20,
       status: 'idle',
       error: null,
     });
@@ -44,7 +44,7 @@ describe('usersSlice', () => {
       pagination: { page: 1, pageSize: 20, totalItems: 1, totalPages: 1 },
       filters: { role: 'researcher' },
       page: 2,
-      pageSize: 10,
+      pageSize: 20,
       status: 'failed',
       error: { message: 'Falha' },
     }, clearUsersState())).toEqual({
@@ -53,7 +53,7 @@ describe('usersSlice', () => {
       pagination: null,
       filters: {},
       page: 1,
-      pageSize: 10,
+      pageSize: 20,
       status: 'idle',
       error: null,
     });

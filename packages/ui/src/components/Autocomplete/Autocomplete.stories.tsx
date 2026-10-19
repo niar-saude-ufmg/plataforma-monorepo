@@ -30,6 +30,24 @@ const meta = {
         defaultValue: { summary: "false" },
       },
     },
+    freeSolo: {
+      description:
+        "Permite digitar um valor que não esteja entre as opções disponíveis. Nesse modo, o MUI pode ocultar a seta do menu por padrão.",
+      table: {
+        category: "PROPS",
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
+      },
+    },
+    forcePopupIcon: {
+      description:
+        "Controla a exibição da seta para abrir o menu de opções. Use true quando o campo aceitar texto livre e ainda precisar manter a seta visível.",
+      table: {
+        category: "PROPS",
+        type: { summary: "boolean | 'auto'" },
+        defaultValue: { summary: "'auto'" },
+      },
+    },
     disabled: {
       description: "Desabilita o campo e impede novas seleções.",
       table: {

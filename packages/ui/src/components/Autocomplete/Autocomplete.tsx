@@ -11,7 +11,7 @@ export type AutocompleteOption = { label: string; value: string };
 export type AutocompleteValue =
   AutocompleteOption | string | readonly (AutocompleteOption | string)[] | null;
 export type AutocompleteProps = Omit<
-  MuiAutocompleteProps<AutocompleteOption | string, boolean, false, false>,
+  MuiAutocompleteProps<AutocompleteOption | string, boolean, false, boolean>,
   "options" | "renderInput" | "onChange"
 > & {
   options: readonly (AutocompleteOption | string)[];
