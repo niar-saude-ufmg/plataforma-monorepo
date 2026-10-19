@@ -3,11 +3,9 @@ import type { UserAccountStatus, UserRole } from '@niar/contracts';
 import {
   ListText,
   Loading,
-  niar,
   PageIntro,
   Snackbar,
   StatusChip,
-  typographyStyle,
   type StatusChipStatus,
 } from '@niar/ui';
 import { ProfileForm, ProfileReadonly } from '../../components/Profile';
@@ -16,6 +14,7 @@ import { useApiError } from '../../hooks/use-api-error/use-api-error';
 import { selectAuthUser } from '../../store/auth/auth.slice';
 import { useAppSelector } from '../../store/hooks';
 import type { AuthUser } from '../../types/user.types';
+import './Profile.scss';
 
 const NOT_PROVIDED = 'Não informado';
 
@@ -46,13 +45,6 @@ const accountStatusTone: Record<UserAccountStatus, StatusChipStatus> = {
   disabled: 'default',
 };
 
-// Ritmo vertical da página usando o token de espaçamento do Design System.
-const pageStyle = { display: 'grid', gap: niar.spacing.xl };
-
-// Mesmos tokens que o ListText usa no rótulo (body2 = caption).
-const statusFieldStyle = { display: 'grid', gap: niar.spacing['2xs'], justifyItems: 'start' };
-const statusLabelStyle = { ...typographyStyle('caption'), color: niar.colors.text.body, margin: 0 };
-
 const orNotProvided = (value?: string | null) =>
   value && value.trim().length > 0 ? value : NOT_PROVIDED;
 
@@ -81,8 +73,8 @@ function PlatformAccess({ role, user }: { role: UserRole; user: AuthUser }) {
         ]}
       />
       {/* Fora do ListText: o value dele vira <p> e o StatusChip é <div>. */}
-      <div style={statusFieldStyle}>
-        <p style={statusLabelStyle}>Status da conta</p>
+      <div className="profile__status-field">
+        <p className="profile__status-label">Status da conta</p>
         <StatusChip
           aria-label="Status da conta"
           label={accountStatusLabels[user.accountStatus]}
@@ -144,7 +136,7 @@ export function Profile({ role, sessionError }: ProfileProps) {
 
   return (
     <RoleGuard allowedRoles={[role]}>
-      <div style={pageStyle}>
+      <div className="profile">
         <PageIntro title="Perfil" description={pageDescriptions[role]} />
 
         <ProfileForm role={role} user={user} mode="readonly" />
