@@ -33,11 +33,17 @@ function RoleRouteContent({
 
   if (!route) return <Navigate replace to={getRoleHomePath(user.role)} />;
 
+  // Workaround temporário: comitê e auditor ainda não possuem página de perfil.
+  const profilePage =
+    user.role === "admin" || user.role === "researcher"
+      ? <Profile role={user.role} />
+      : <Navigate replace to={getRoleHomePath(user.role)} />;
+
   const page =
     route.section === "projetos" ? <Projects /> :
     route.section === "usuarios" ? <Users /> :
     route.section === "especialidades" ? <Specialties /> :
-    route.section === "perfil" ? <Profile role={user.role} /> :
+    route.section === "perfil" ? profilePage :
     <RoleHome section={route.section} userName={user.name} />;
   const allowedRoles =
     route.section === "projetos"

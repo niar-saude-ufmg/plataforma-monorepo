@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { UserAccountStatus, UserRole } from '@niar/contracts';
+import type { UserAccountStatus } from '@niar/contracts';
 import {
   ListText,
   Loading,
@@ -14,21 +14,11 @@ import { useApiError } from '../../hooks/use-api-error/use-api-error';
 import { selectAuthSelected } from '../../store/auth/auth.selectors';
 import { useAppSelector } from '../../store/hooks';
 import type { AuthUser } from '../../types/user.types';
+import type { ProfileRole } from '../../types/role-profile';
+import { PROFILE_ROLE_CONFIG } from './Profile.roles';
 import './Profile.scss';
 
 const NOT_PROVIDED = 'Não informado';
-
-// Textos da tela conforme o Figma do card.
-const pageDescriptions: Partial<Record<UserRole, string>> = {
-  admin: 'Gerencie seus dados pessoais e as permissões de acesso à plataforma.',
-  researcher: 'Gerencie seus dados pessoais, acadêmicos e informações do COEP.',
-};
-
-// O Figma do Perfil mostra "Administrador"; o USER_ROLE_LABELS de @niar/contracts traz "Gestor" para o mesmo papel. segue o Figma.
-const accessProfileLabels: Partial<Record<UserRole, string>> = {
-  admin: 'Administrador',
-  researcher: 'Pesquisador',
-};
 
 // O StatusChip oficial só aceita default/info/success/warning/error.
 const accountStatusLabels: Record<UserAccountStatus, string> = {
@@ -58,18 +48,18 @@ const formatApprovalDate = (value?: string | null) => {
 
 export type ProfileProps = {
   /** Papel esperado pela rota. Compõe a tela; quem autoriza é o RoleGuard. */
-  role: UserRole;
+  role: ProfileRole;
   /** Reservado para o card que trouxer o carregamento da sessão por GET /auth/me. */
   sessionError?: unknown;
 };
 
-function PlatformAccess({ role, user }: { role: UserRole; user: AuthUser }) {
+function PlatformAccess({ role, user }: { role: ProfileRole; user: AuthUser }) {
   return (
     <ProfileReadonly title="Acesso à plataforma">
       <ListText
         aria-label="Acesso à plataforma"
         items={[
-          { label: 'Perfil de acesso', value: accessProfileLabels[role] ?? NOT_PROVIDED },
+          { label: 'Perfil de acesso', value: PROFILE_ROLE_CONFIG[role].accessProfileLabel },
         ]}
       />
       {/* Fora do ListText: o value dele vira <p> e o StatusChip é <div>. */}
@@ -117,6 +107,7 @@ function ResearcherDetails({ user }: { user: AuthUser }) {
 
 export function Profile({ role, sessionError }: ProfileProps) {
   const user = useAppSelector(selectAuthSelected);
+  const roleConfig = PROFILE_ROLE_CONFIG[role];
   const [errorDismissed, setErrorDismissed] = useState(false);
 
   const snackbarProps = useApiError(
@@ -137,12 +128,12 @@ export function Profile({ role, sessionError }: ProfileProps) {
   return (
     <RoleGuard allowedRoles={[role]}>
       <div className="profile">
-        <PageIntro title="Perfil" description={pageDescriptions[role]} />
+        <PageIntro title="Perfil" description={roleConfig.description} />
 
         <ProfileForm role={role} user={user} mode="readonly" />
 
-        {role === 'admin' && <PlatformAccess role={role} user={user} />}
-        {role === 'researcher' && <ResearcherDetails user={user} />}
+        {roleConfig.sections.includes('access') && <PlatformAccess role={role} user={user} />}
+        {roleConfig.sections.includes('researcherDetails') && <ResearcherDetails user={user} />}
       </div>
 
       <Snackbar {...snackbarProps} />

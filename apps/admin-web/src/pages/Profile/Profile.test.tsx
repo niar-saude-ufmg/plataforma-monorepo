@@ -7,6 +7,7 @@ import { Profile } from './Profile';
 import { store } from '../../store';
 import { setSelectedAuthUser } from '../../store/auth/auth.slice';
 import type { AuthUser } from '../../types/user.types';
+import type { ProfileRole } from '../../types/role-profile';
 
 const admin: AuthUser = {
   id: 1,
@@ -43,11 +44,12 @@ const researcher: AuthUser = {
 // Renderiza a página direto, com o usuário já no authSlice.
 function renderPage(user: AuthUser | null, props: Partial<{ sessionError: unknown }> = {}) {
   store.dispatch(setSelectedAuthUser(user));
+  const role: ProfileRole = user?.role === 'researcher' ? 'researcher' : 'admin';
 
   return render(
     <Provider store={store}>
       <MemoryRouter initialEntries={['/admin/administrador/perfil']}>
-        <Profile role={user?.role ?? 'admin'} {...props} />
+        <Profile role={role} {...props} />
       </MemoryRouter>
     </Provider>,
   );
