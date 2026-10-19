@@ -1,8 +1,8 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type {
-  Project,
-  Pagination,
-  ProjectListParams,
+  ProjectListFilters,
+  ProjectListItem,
+  ProjectListPagination,
 } from "../../types/project.types";
 import type { ApiError } from "../../types/api.types";
 import type { AsyncStatus, ResourceState } from "../../types/resource.types";
@@ -10,17 +10,12 @@ import { getProjects, getProject } from "./projects.api";
 
 export type ProjectsStatus = AsyncStatus;
 
-export type ProjectsFilters = Pick<
-  ProjectListParams,
-  "search" | "status" | "evaluationStatus"
->;
-
 export const DEFAULT_PROJECTS_PAGE_SIZE = 20;
 
-const createDefaultProjectsFilters = (): ProjectsFilters => ({});
+const createDefaultProjectsFilters = (): ProjectListFilters => ({});
 
-export type ProjectsState = ResourceState<Project, ProjectsFilters, Pagination, ApiError> & {
-  selected: Project | null;
+export type ProjectsState = ResourceState<ProjectListItem, ProjectListFilters, ProjectListPagination, ApiError> & {
+  selected: ProjectListItem | null;
 };
 
 const initialState: ProjectsState = {
@@ -40,7 +35,7 @@ const projectsSlice = createSlice({
   name: "projects",
   initialState,
   reducers: {
-    setSelectedProject(state, action: PayloadAction<Project | null>) {
+    setSelectedProject(state, action: PayloadAction<ProjectListItem | null>) {
       state.selected = action.payload;
     },
     clearSelectedProject(state) {
@@ -58,7 +53,7 @@ const projectsSlice = createSlice({
       };
       state.selected = null;
     },
-    setProjectsFilters(state, action: PayloadAction<ProjectsFilters>) {
+    setProjectsFilters(state, action: PayloadAction<ProjectListFilters>) {
       state.list.filters = action.payload;
       state.list.page = 1;
     },

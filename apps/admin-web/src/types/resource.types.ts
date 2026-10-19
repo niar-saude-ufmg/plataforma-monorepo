@@ -1,8 +1,8 @@
 export type AsyncStatus = 'idle' | 'pending' | 'succeeded' | 'failed';
 
-export type ListState<Item, Filters, Pagination, ErrorType> = {
+export type ListState<Item, Filters, PaginationType, ErrorType> = {
   items: Item[];
-  pagination: Pagination | null;
+  pagination: PaginationType | null;
   filters: Filters;
   page: number;
   pageSize: number;
@@ -16,8 +16,8 @@ export type MutationState<ErrorType, Operation extends string = string> = {
   error: ErrorType | null;
 };
 
-export type ResourceState<Item, Filters, Pagination, ErrorType, Operation extends string = string> = {
-  list: ListState<Item, Filters, Pagination, ErrorType>;
+export type ResourceState<Item, Filters, PaginationType, ErrorType, Operation extends string = string> = {
+  list: ListState<Item, Filters, PaginationType, ErrorType>;
   selected?: Item | null;
   mutation?: MutationState<ErrorType, Operation>;
 };

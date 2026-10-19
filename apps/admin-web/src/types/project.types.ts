@@ -95,13 +95,20 @@ export interface Project {
   evaluations?: ProjectEvaluation[];
 }
 
+export type ProjectListItem = Project;
+
 /** Paginação padrão da listagem. */
-export interface Pagination {
+export interface ProjectListPagination {
   page: number;
   pageSize: number;
   totalItems: number;
   totalPages: number;
 }
+
+export type ProjectListFilters = Pick<
+  ProjectListParams,
+  "search" | "status" | "evaluationStatus"
+>;
 
 export interface ProjectListParams {
   page?: number;
@@ -122,6 +129,6 @@ export interface ProjectListParams {
 }
 
 export interface ProjectListResponse {
-  items: Project[];
-  pagination: Pagination;
+  items: ProjectListItem[];
+  pagination: ProjectListPagination;
 }

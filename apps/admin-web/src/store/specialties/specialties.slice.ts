@@ -1,5 +1,5 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit';
-import type { FetchSpecialtiesParams, SpecialtiesFilters, SpecialtiesPagination, Specialty, SpecialtyApiError } from '../../types/specialty.types';
+import type { SpecialtyListFilters, SpecialtyListItem, SpecialtyListPagination, SpecialtyApiError } from '../../types/specialty.types';
 import type { AsyncStatus, MutationState, ResourceState } from '../../types/resource.types';
 import { createSpecialty, fetchSpecialties, updateSpecialty, updateSpecialtyStatus } from './specialties.api';
 
@@ -8,16 +8,16 @@ export type SpecialtyMutationOperation = 'create' | 'update' | 'status';
 
 export const DEFAULT_SPECIALTIES_PAGE_SIZE = 20;
 
-const createDefaultSpecialtiesFilters = (): SpecialtiesFilters => ({});
+const createDefaultSpecialtiesFilters = (): SpecialtyListFilters => ({});
 
 export type SpecialtiesState = ResourceState<
-  Specialty,
-  SpecialtiesFilters,
-  SpecialtiesPagination,
+  SpecialtyListItem,
+  SpecialtyListFilters,
+  SpecialtyListPagination,
   SpecialtyApiError,
   SpecialtyMutationOperation
 > & {
-  selected: Specialty | null;
+  selected: SpecialtyListItem | null;
   mutation: MutationState<SpecialtyApiError, SpecialtyMutationOperation>;
 };
 
@@ -39,14 +39,14 @@ const specialtiesSlice = createSlice({
   name: 'specialties',
   initialState: initialSpecialtiesState,
   reducers: {
-    setSelectedSpecialty: (state, action: PayloadAction<Specialty>) => {
+    setSelectedSpecialty: (state, action: PayloadAction<SpecialtyListItem>) => {
       state.selected = action.payload;
     },
     clearSelectedSpecialty: (state) => {
       state.selected = null;
     },
     clearSpecialtiesState: () => initialSpecialtiesState,
-    setSpecialtiesFilters: (state, action: PayloadAction<SpecialtiesFilters>) => {
+    setSpecialtiesFilters: (state, action: PayloadAction<SpecialtyListFilters>) => {
       state.list.filters = action.payload;
       state.list.page = 1;
     },

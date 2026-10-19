@@ -137,7 +137,7 @@ export function toUserListItem(response: UserListApiResponse): UserListItem {
   };
 }
 
-export function toUserPagination(response: UserListApiPage) {
+export function toUserListPagination(response: UserListApiPage) {
   return {
     page: response.page,
     pageSize: response.page_size,
@@ -174,7 +174,7 @@ export async function getUsersRequest(
   const list = body as { items: UserListApiResponse[]; pagination: UserListApiPage };
   return {
     items: list.items.map(toUserListItem),
-    pagination: toUserPagination(list.pagination),
+    pagination: toUserListPagination(list.pagination),
   };
 }
 

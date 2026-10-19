@@ -1,7 +1,7 @@
 import type { ApiError } from "../../types/api.types";
 import type {
   EvaluationStatus,
-  Pagination,
+  ProjectListPagination,
   Project,
   ProjectDocument,
   ProjectEvaluation,
@@ -90,7 +90,7 @@ export function toProject(raw: any): Project {
   return project;
 }
 
-export function toPagination(raw: any): Pagination {
+export function toProjectListPagination(raw: any): ProjectListPagination {
   return {
     page: raw.page,
     pageSize: raw.page_size,
@@ -137,7 +137,7 @@ export async function getProjectsRequest(
   const body = await response.json();
   return {
     items: body.items.map(toProject),
-    pagination: toPagination(body.pagination),
+    pagination: toProjectListPagination(body.pagination),
   };
 }
 

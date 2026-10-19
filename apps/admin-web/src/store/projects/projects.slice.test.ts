@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiError } from "../../types/api.types";
-import type { Pagination, Project } from "../../types/project.types";
+import type { ProjectListPagination, Project } from "../../types/project.types";
 import { getProject, getProjects } from "./projects.api";
 import projectsReducer, {
   clearProjectsError,
@@ -46,7 +46,7 @@ const buildProject = (overrides: Partial<Project> = {}): Project => ({
   ...overrides,
 });
 
-const buildPagination = (overrides: Partial<Pagination> = {}): Pagination => ({
+const buildPagination = (overrides: Partial<ProjectListPagination> = {}): ProjectListPagination => ({
   page: 1,
   pageSize: 20,
   totalItems: 1,

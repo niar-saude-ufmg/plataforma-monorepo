@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SpecialtiesList, Specialty, SpecialtyApiError } from '../../types/specialty.types';
+import type { SpecialtyListResponse, Specialty, SpecialtyApiError } from '../../types/specialty.types';
 import authReducer from '../auth/auth.slice';
 import projectsReducer from '../projects/projects.slice';
 import usersReducer from '../users/users.slice';
@@ -43,7 +43,7 @@ const buildSpecialty = (overrides: Partial<Specialty> = {}): Specialty => ({
   ...overrides,
 });
 
-const listResponse = (items: Specialty[] = [buildSpecialty()]): SpecialtiesList => ({
+const listResponse = (items: Specialty[] = [buildSpecialty()]): SpecialtyListResponse => ({
   items,
   pagination: { page: 1, pageSize: 20, totalItems: items.length, totalPages: items.length ? 1 : 0 },
 });
@@ -63,7 +63,7 @@ describe('specialties thunks, reducer and selectors', () => {
   });
 
   it('fica pendente durante a busca e armazena a listagem paginada', async () => {
-    let resolveRequest!: (value: SpecialtiesList) => void;
+    let resolveRequest!: (value: SpecialtyListResponse) => void;
     serviceMocks.listSpecialties.mockReturnValue(new Promise((resolve) => {
       resolveRequest = resolve;
     }));

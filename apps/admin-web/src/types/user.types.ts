@@ -145,7 +145,7 @@ export interface UserListParams {
 
 export type UserListFilters = Pick<UserListParams, 'role' | 'accountStatus'>;
 
-export interface UserPagination {
+export interface UserListPagination {
   page: number;
   pageSize: number;
   totalItems: number;
@@ -154,7 +154,7 @@ export interface UserPagination {
 
 export interface UserListResponse {
   items: UserListItem[];
-  pagination: UserPagination;
+  pagination: UserListPagination;
 }
 
 export interface UserFormFieldErrors {

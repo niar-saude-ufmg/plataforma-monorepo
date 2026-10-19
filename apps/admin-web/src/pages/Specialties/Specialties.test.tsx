@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SpecialtiesList, Specialty } from '../../types/specialty.types';
+import type { SpecialtyListResponse, Specialty } from '../../types/specialty.types';
 import authReducer from '../../store/auth/auth.slice';
 import projectsReducer from '../../store/projects/projects.slice';
 import {
@@ -39,13 +39,13 @@ const buildSpecialty = (overrides: Partial<Specialty> = {}): Specialty => ({
 
 const listResponse = (
   items: Specialty[] = [buildSpecialty()],
-  pagination: SpecialtiesList['pagination'] = {
+  pagination: SpecialtyListResponse['pagination'] = {
     page: 1,
     pageSize: 20,
     totalItems: items.length,
     totalPages: items.length ? 1 : 0,
   },
-): SpecialtiesList => ({ items, pagination });
+): SpecialtyListResponse => ({ items, pagination });
 
 const makeStore = () => configureStore({
   reducer: {
@@ -125,7 +125,7 @@ describe('Specialties', () => {
   });
 
   it('usa o Skeleton do Listing durante o carregamento', async () => {
-    let resolveRequest!: (value: SpecialtiesList) => void;
+    let resolveRequest!: (value: SpecialtyListResponse) => void;
     serviceMocks.listSpecialties.mockReturnValue(new Promise((resolve) => {
       resolveRequest = resolve;
     }));

@@ -8,8 +8,8 @@ import {
 } from '../../services/specialties/specialties.service';
 import type {
   CreateSpecialtyInput,
-  FetchSpecialtiesParams,
-  SpecialtiesList,
+  SpecialtyListParams,
+  SpecialtyListResponse,
   Specialty,
   UpdateSpecialtyRequest,
   UpdateSpecialtyStatusRequest,
@@ -31,7 +31,7 @@ const refreshSpecialties = async (dispatch: AppDispatch, getState: () => RootSta
   await dispatch(fetchSpecialties({ ...filters, page, pageSize }));
 };
 
-export const fetchSpecialties = createAsyncThunk<SpecialtiesList, FetchSpecialtiesParams | undefined, ThunkConfig>(
+export const fetchSpecialties = createAsyncThunk<SpecialtyListResponse, SpecialtyListParams | undefined, ThunkConfig>(
   'specialties/fetchSpecialties',
   async (params, { rejectWithValue }) => {
     try {

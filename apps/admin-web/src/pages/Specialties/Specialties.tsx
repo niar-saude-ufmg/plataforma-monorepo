@@ -26,7 +26,7 @@ import {
   setSpecialtiesPage,
   setSpecialtiesPageSize,
 } from '../../store/specialties/specialties.slice';
-import type { SpecialtiesFilters } from '../../types/specialty.types';
+import type { SpecialtyListFilters } from '../../types/specialty.types';
 
 const STATUS_OPTIONS = [
   { label: 'Todas', value: 'all' },
@@ -131,7 +131,7 @@ export function Specialties() {
   const handleFilterChange = (values: Readonly<Record<string, unknown>>) => {
     const query = autocompleteValue(values.query);
     const status = typeof values.isActive === 'string' ? values.isActive : undefined;
-    const nextFilters: SpecialtiesFilters = {
+    const nextFilters: SpecialtyListFilters = {
       ...(query ? { query } : {}),
       ...(status === 'true' ? { isActive: true } : status === 'false' ? { isActive: false } : {}),
     };

@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { UserApiError, UserListFilters, UserListItem, UserPagination } from '../../types/user.types';
+import type { UserApiError, UserListFilters, UserListItem, UserListPagination } from '../../types/user.types';
 import type { AsyncStatus, MutationState, ResourceState } from '../../types/resource.types';
 import { createUser, getUsers } from './users.api';
 
@@ -13,7 +13,7 @@ const createDefaultUsersFilters = (): UserListFilters => ({});
 export type UsersState = ResourceState<
   UserListItem,
   UserListFilters,
-  UserPagination,
+  UserListPagination,
   UserApiError,
   UserMutationOperation
 > & {
