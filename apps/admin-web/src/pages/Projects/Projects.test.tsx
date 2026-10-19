@@ -391,9 +391,8 @@ describe("Projects — estados e tabela", () => {
       within(row)
         .getAllByRole("button")
         .map((button) => button.textContent),
-    ).toEqual(["Detalhes", "Documentos"]);
+    ).toEqual(["Detalhes"]);
     await user.click(within(row).getByRole("button", { name: "Detalhes" }));
-    await user.click(within(row).getByRole("button", { name: "Documentos" }));
     expect(projectCalls()).toHaveLength(callsBeforeClick);
 
     cleanup();
@@ -435,85 +434,12 @@ describe("Projects — estados e tabela", () => {
       within(researcherRow)
         .getAllByRole("button")
         .map((button) => button.textContent),
-    ).toEqual(["Detalhes", "Documentos", "Editar"]);
+    ).toEqual(["Detalhes"]);
     expect(
       within(scheduleRow)
         .getAllByRole("button")
         .map((button) => button.textContent),
-    ).toEqual(["Detalhes", "Documentos", "Agendar"]);
-  });
-
-  it("seleciona ações do administrador pelo contexto e status do fluxo", async () => {
-    const user = userEvent.setup();
-    const projectFor = (
-      id: number,
-      code: string,
-      evaluationContext: "pre_safe_room" | "post_safe_room",
-    ) => ({
-      ...PROJECT_RESPONSE.items[0],
-      id,
-      title: `Projeto ${id}`,
-      evaluation_context: evaluationContext,
-      status: [
-        {
-          ...PROJECT_RESPONSE.items[0].status[0],
-          code,
-          label: code,
-        },
-      ],
-    });
-
-    fetchMock.mockImplementation(() =>
-      Promise.resolve(
-        jsonResponse({
-          ...PROJECT_RESPONSE,
-          items: [
-            projectFor(1, "submitted_for_review", "pre_safe_room"),
-            projectFor(2, "report_submitted", "post_safe_room"),
-            projectFor(3, "report_resubmitted", "post_safe_room"),
-            projectFor(4, "scheduled_for_safe_room", "pre_safe_room"),
-            projectFor(5, "rescheduled_for_safe_room", "post_safe_room"),
-            projectFor(6, "approved_for_safe_room", "pre_safe_room"),
-            projectFor(7, "reapproved_for_safe_room", "post_safe_room"),
-            projectFor(8, "under_review", "pre_safe_room"),
-          ],
-        }),
-      ),
-    );
-
-    renderProjects("admin");
-
-    const buttonsFor = async (id: number) =>
-      within(await screen.findByTestId(`project-row-${id}`))
-        .getAllByRole("button")
-        .map((button) => button.textContent);
-
-    expect(await buttonsFor(1)).toEqual(["Detalhes", "Documentos", "Atribuir"]);
-    expect(await buttonsFor(2)).toEqual(["Detalhes", "Documentos", "Atribuir"]);
-    expect(await buttonsFor(3)).toEqual(["Detalhes", "Documentos", "Atribuir"]);
-    expect(await buttonsFor(4)).toEqual(["Detalhes", "Documentos", "Agenda"]);
-    expect(await buttonsFor(5)).toEqual(["Detalhes", "Documentos", "Agenda"]);
-    expect(await buttonsFor(6)).toEqual(["Detalhes", "Documentos", "Presença"]);
-    expect(await buttonsFor(7)).toEqual(["Detalhes", "Documentos", "Presença"]);
-    expect(await buttonsFor(8)).toEqual(["Detalhes", "Documentos"]);
-
-    const callsBeforeClick = projectCalls().length;
-    await user.click(
-      within(screen.getByTestId("project-row-1")).getByRole("button", {
-        name: "Atribuir",
-      }),
-    );
-    await user.click(
-      within(screen.getByTestId("project-row-4")).getByRole("button", {
-        name: "Agenda",
-      }),
-    );
-    await user.click(
-      within(screen.getByTestId("project-row-6")).getByRole("button", {
-        name: "Presença",
-      }),
-    );
-    expect(projectCalls()).toHaveLength(callsBeforeClick);
+    ).toEqual(["Detalhes"]);
   });
 
   it("usa somente um Listing, sem estruturas visuais paralelas", async () => {

@@ -13,19 +13,19 @@ import {
   PROJECT_STATUS_LABELS,
   type ProjectStatus as ContractProjectStatus,
 } from "@niar/contracts";
-import { Fragment, useEffect, type ChangeEvent } from "react";
+import { useEffect, type ChangeEvent } from "react";
 import { useApiError } from "../../hooks/use-api-error/use-api-error";
 import { selectAuthUser } from "../../store/auth/auth.slice";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { getProjects } from "../../store/projects/projects.api";
 import {
-  selectProjects,
-  selectProjectsError,
-  selectProjectsFilters,
-  selectProjectsLoading,
-  selectProjectsPage,
-  selectProjectsPageSize,
-  selectProjectsPagination,
+  selectProjectsList,
+  selectProjectsListError,
+  selectProjectsListFilters,
+  selectProjectsListLoading,
+  selectProjectsListPage,
+  selectProjectsListPageSize,
+  selectProjectsListPagination,
 } from "../../store/projects/projects.selectors";
 import {
   clearProjectsError,
@@ -79,22 +79,6 @@ const PROJECT_STATUS_CHIP: Partial<
   rejected: "error",
 };
 
-const ASSIGNABLE_PRE_SAFE_ROOM_STATUSES = new Set<ContractProjectStatus>([
-  "submitted_for_review",
-]);
-const ASSIGNABLE_POST_SAFE_ROOM_STATUSES = new Set<ContractProjectStatus>([
-  "report_submitted",
-  "report_resubmitted",
-]);
-const AGENDA_STATUSES = new Set<ContractProjectStatus>([
-  "scheduled_for_safe_room",
-  "rescheduled_for_safe_room",
-]);
-const ATTENDANCE_STATUSES = new Set<ContractProjectStatus>([
-  "approved_for_safe_room",
-  "reapproved_for_safe_room",
-]);
-
 const optionValue = (value: unknown): string | undefined => {
   if (typeof value === "string") return value.trim() || undefined;
   if (value && typeof value === "object" && "value" in value) {
@@ -132,34 +116,6 @@ const formatDate = (value: string) => {
     : new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(date);
 };
 
-const actionLabels = (project: Project, isAdmin: boolean) => {
-  const status = latestStatus(project)?.code as
-    | ContractProjectStatus
-    | undefined;
-  const actions = ["Detalhes", "Documentos"];
-
-  if (!status) return actions;
-
-  if (!isAdmin) {
-    if (status === "needs_changes") actions.push("Editar");
-    if (status === "approved_to_schedule") actions.push("Agendar");
-    return actions;
-  }
-
-  const canAssignAuditor =
-    project.evaluationContext === "pre_safe_room" &&
-    ASSIGNABLE_PRE_SAFE_ROOM_STATUSES.has(status);
-  const canAssignCommittee =
-    project.evaluationContext === "post_safe_room" &&
-    ASSIGNABLE_POST_SAFE_ROOM_STATUSES.has(status);
-
-  if (canAssignAuditor || canAssignCommittee) actions.push("Atribuir");
-  if (AGENDA_STATUSES.has(status)) actions.push("Agenda");
-  if (ATTENDANCE_STATUSES.has(status)) actions.push("Presença");
-
-  return actions;
-};
-
 const toListingColumns = (columns: readonly TableColumn<Project>[]) =>
   columns as unknown as readonly TableColumn<Record<string, unknown>>[];
 
@@ -169,13 +125,13 @@ const toListingRows = (projects: readonly Project[]) =>
 export function Projects() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectAuthUser);
-  const projects = useAppSelector(selectProjects);
-  const filters = useAppSelector(selectProjectsFilters);
-  const pagination = useAppSelector(selectProjectsPagination);
-  const page = useAppSelector(selectProjectsPage);
-  const pageSize = useAppSelector(selectProjectsPageSize);
-  const loading = useAppSelector(selectProjectsLoading);
-  const error = useAppSelector(selectProjectsError);
+  const projects = useAppSelector(selectProjectsList);
+  const filters = useAppSelector(selectProjectsListFilters);
+  const pagination = useAppSelector(selectProjectsListPagination);
+  const page = useAppSelector(selectProjectsListPage);
+  const pageSize = useAppSelector(selectProjectsListPageSize);
+  const loading = useAppSelector(selectProjectsListLoading);
+  const error = useAppSelector(selectProjectsListError);
   const isAdmin = user?.role === "admin";
 
   useEffect(() => {
@@ -218,6 +174,7 @@ export function Projects() {
           key: "search",
           label: "Buscar projeto",
           options: searchOptions,
+          freeSolo: true,
         },
         {
           key: "status",
@@ -289,17 +246,10 @@ export function Projects() {
     {
       key: "id",
       label: "Ações",
-      render: (_value, project) => (
-        <>
-          {actionLabels(project, isAdmin).map((label, index) => (
-            <Fragment key={label}>
-              {index > 0 ? " " : null}
-              <Button type="button" size="small" variant="outlined">
-                {label}
-              </Button>
-            </Fragment>
-          ))}
-        </>
+      render: () => (
+        <Button type="button" size="small" variant="outlined">
+          Detalhes
+        </Button>
       ),
     },
   ];
