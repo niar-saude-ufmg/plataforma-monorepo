@@ -158,6 +158,24 @@ describe("GET /api/admin/users", () => {
     });
   });
 
+  it("repassa a busca pelo nome completo ao repositório", async () => {
+    findById.mockResolvedValueOnce(buildAuthUser());
+    findAll.mockResolvedValueOnce({ items: [], totalItems: 0 });
+
+    const response = await request(app)
+      .get("/api/admin/users?search=Ana%20Beatriz&page=1&page_size=20")
+      .set("Authorization", `Bearer ${tokenFor(1)}`);
+
+    expect(response.status).toBe(200);
+    expect(findAll).toHaveBeenCalledWith({
+      search: "Ana Beatriz",
+      role: undefined,
+      accountStatus: undefined,
+      page: 1,
+      pageSize: 20
+    });
+  });
+
   it("calcula zero páginas quando não há resultados", async () => {
     findById.mockResolvedValueOnce(buildAuthUser());
     findAll.mockResolvedValueOnce({ items: [], totalItems: 0 });
@@ -391,14 +409,18 @@ describe("GET /api/admin/users/:user_id", () => {
 });
 
 describe("Swagger de consulta de usuários", () => {
-  it("publica filtro por status, envelope paginado e consulta individual", async () => {
+  it("publica busca por nome, filtro por status, envelope paginado e consulta individual", async () => {
     const response = await request(app).get("/api/admin/docs.json");
     const listOperation = response.body.paths["/admin/users"].get;
+    const searchParameter = listOperation.parameters.find(
+      (parameter: { name: string }) => parameter.name === "search"
+    );
     const accountStatusParameter = listOperation.parameters.find(
       (parameter: { name: string }) => parameter.name === "account_status"
     );
 
     expect(response.status).toBe(200);
+    expect(searchParameter.schema.maxLength).toBe(255);
     expect(accountStatusParameter.schema.enum).toEqual(["pending", "active", "rejected", "disabled"]);
     expect(listOperation.responses["200"].content["application/json"].schema.$ref).toBe(
       "#/components/schemas/PaginatedUsersResponse"

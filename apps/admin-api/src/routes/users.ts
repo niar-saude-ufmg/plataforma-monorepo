@@ -19,6 +19,13 @@ export const usersRouter = Router();
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: search
+ *         description: Busca parcial e sem distinção entre maiúsculas e minúsculas pelo nome completo.
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 255
+ *       - in: query
  *         name: role
  *         schema:
  *           type: string

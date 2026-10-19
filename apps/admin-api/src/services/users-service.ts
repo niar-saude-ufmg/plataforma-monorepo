@@ -163,6 +163,7 @@ export const usersService = {
     const result = await usersRepository.findAll({
       role: scopedRoleFor(query.role, currentUser),
       accountStatus: query.account_status,
+        ...(query.search ? { search: query.search } : {}),
       page: query.page,
       pageSize: query.page_size
     });

@@ -113,6 +113,7 @@ export type SessionUserRecord = Prisma.UserGetPayload<{
 }>;
 
 export type UserListFilter = {
+  search?: string;
   role?: UserRole;
   accountStatus?: user_account_status;
   page: number;
@@ -124,7 +125,10 @@ export type UserListPage = {
   totalItems: number;
 };
 
-const buildUserWhere = (filter: Pick<UserListFilter, "role" | "accountStatus">): Prisma.UserWhereInput => ({
+const buildUserWhere = (
+  filter: Pick<UserListFilter, "search" | "role" | "accountStatus">
+): Prisma.UserWhereInput => ({
+  ...(filter.search ? { fullName: { contains: filter.search, mode: "insensitive" } } : {}),
   ...(filter.role ? { role: filter.role } : {}),
   ...(filter.accountStatus ? { accountStatus: filter.accountStatus } : {})
 });
