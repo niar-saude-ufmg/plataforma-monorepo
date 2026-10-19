@@ -113,8 +113,8 @@ export function Users() {
         />
     },
     {
-      key: "id", // key="id" porque "actions" não é um campo aceito.
       label: "Ações",
+      variant: "actions",
       render: (_value: unknown, user: UserListItem) => (
         <>
           <Button size="small" variant="outlined" color="primary">Detalhes</Button>
@@ -142,7 +142,7 @@ export function Users() {
     count: pagination?.totalItems ?? 0,
     page: page - 1,                             // API=1-based → UI=0-based
     rowsPerPage: pageSize,
-    rowsPerPageOptions: [10, 25, 50, 100],
+    rowsPerPageOptions: [10, 20, 50, 100],
     onPageChange: handlePageChange,
     onRowsPerPageChange: handlePageSizeChange,
   };

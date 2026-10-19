@@ -4,7 +4,6 @@ import {
   Listing,
   Snackbar,
   StatusChip,
-  type AutocompleteOption,
   type TableColumn,
 } from '@niar/ui';
 import { useEffect, type ChangeEvent } from 'react';
@@ -29,10 +28,11 @@ import {
 } from '../../store/specialties/specialties.slice';
 import type { SpecialtiesFilters } from '../../types/specialty.types';
 
-const STATUS_OPTIONS: readonly AutocompleteOption[] = [
-  { label: 'Ativa', value: 'true' },
-  { label: 'Inativa', value: 'false' },
-];
+const STATUS_OPTIONS = [
+  { label: 'Todas', value: 'all' },
+  { label: 'Ativas', value: 'true' },
+  { label: 'Inativas', value: 'false' },
+] as const;
 
 type SpecialtyRow = {
   id: number;
@@ -40,13 +40,11 @@ type SpecialtyRow = {
   code: string;
   description: string;
   isActive: boolean;
-  actions: null;
 };
 
 const columns: readonly TableColumn<SpecialtyRow>[] = [
-  { key: 'name', label: 'Nome' },
   { key: 'code', label: 'Código' },
-  { key: 'description', label: 'Descrição' },
+  { key: 'name', label: 'Especialidade' },
   {
     key: 'isActive',
     label: 'Status',
@@ -59,8 +57,12 @@ const columns: readonly TableColumn<SpecialtyRow>[] = [
     ),
   },
   {
-    key: 'actions',
+    key: 'description',
+    label: 'Descrição',
+  },
+  {
     label: 'Ações',
+    variant: 'actions',
     render: (_, row) => (
       <>
         <Button type="button" variant="outlined" size="small">
@@ -85,11 +87,6 @@ const autocompleteValue = (value: unknown): string | undefined => {
     return value.value.trim() || undefined;
   }
   return undefined;
-};
-
-const statusOptionFor = (isActive: boolean | undefined) => {
-  if (isActive === undefined) return null;
-  return STATUS_OPTIONS.find(({ value }) => value === String(isActive)) ?? null;
 };
 
 export function Specialties() {
@@ -125,7 +122,6 @@ export function Specialties() {
     code: specialty.code,
     description: specialty.description,
     isActive: specialty.isActive,
-    actions: null,
   }));
 
   const searchOptions = Array.from(new Set(
@@ -134,7 +130,7 @@ export function Specialties() {
 
   const handleFilterChange = (values: Readonly<Record<string, unknown>>) => {
     const query = autocompleteValue(values.query);
-    const status = autocompleteValue(values.isActive);
+    const status = typeof values.isActive === 'string' ? values.isActive : undefined;
     const nextFilters: SpecialtiesFilters = {
       ...(query ? { query } : {}),
       ...(status === 'true' ? { isActive: true } : status === 'false' ? { isActive: false } : {}),
@@ -144,8 +140,19 @@ export function Specialties() {
   };
 
   const hasActiveFilters = Boolean(filters.query) || filters.isActive !== undefined;
-  const showListing = !error || rows.length > 0;
-  const emptyState = hasActiveFilters
+  const paginationProps = {
+    count: pagination?.totalItems ?? 0,
+    page: (pagination?.page ?? 1) - 1,
+    rowsPerPage: pagination?.pageSize ?? pageSize,
+    rowsPerPageOptions: [10, 20, 50, 100],
+    onPageChange: (_event: unknown, nextPage: number) => {
+      dispatch(setSpecialtiesPage(nextPage + 1));
+    },
+    onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => {
+      dispatch(setSpecialtiesPageSize(Number(event.target.value)));
+    },
+  };
+  const emptyStateProps = hasActiveFilters
     ? {
         title: 'Nenhuma especialidade encontrada',
         description: 'Não encontramos especialidades com os filtros selecionados.',
@@ -162,49 +169,35 @@ export function Specialties() {
 
   return (
     <>
-      {showListing ? (
-        <Listing
-          title="Especialidades"
-          description="Consulte as especialidades cadastradas na plataforma."
-          aria-label="Lista de especialidades"
-          emptyStateAriaLabel="Lista de especialidades vazia"
-          filter={(
-            <Filter
-              aria-label="Filtros de especialidades"
-              search={[
-                { key: 'query', label: 'Buscar especialidade', options: searchOptions, freeSolo: true },
-                { key: 'isActive', label: 'Status', options: STATUS_OPTIONS },
-              ]}
-              values={{
-                query: filters.query ?? null,
-                isActive: statusOptionFor(filters.isActive),
-              }}
-              onChange={handleFilterChange}
-            />
-          )}
-          columns={columns}
-          rows={rows}
-          loading={loading}
-          pagination={{
-            count: pagination?.totalItems ?? 0,
-            page: (pagination?.page ?? 1) - 1,
-            rowsPerPage: pagination?.pageSize ?? pageSize,
-            rowsPerPageOptions: [10, 20, 50, 100],
-            onPageChange: (_event: unknown, nextPage: number) => {
-              dispatch(setSpecialtiesPage(nextPage + 1));
-            },
-            onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => {
-              dispatch(setSpecialtiesPageSize(Number(event.target.value)));
-            },
-          }}
-          emptyState={emptyState}
-        />
-      ) : null}
-      {error ? (
-        <Button type="button" variant="text" size="small" onClick={() => { void loadSpecialties(); }}>
-          Tentar novamente
-        </Button>
-      ) : null}
+      <Listing
+        title="Especialidades"
+        description="Consulte as especialidades cadastradas na plataforma."
+        aria-label="Lista de especialidades"
+        emptyStateAriaLabel="Lista de especialidades vazia"
+        filter={(
+          <Filter
+            aria-label="Filtros de especialidades"
+            search={[{ key: 'query', label: 'Buscar especialidade', options: searchOptions, freeSolo: true }]}
+            checkedOptions={[{
+              key: 'isActive',
+              label: 'Status',
+              type: 'radio',
+              row: true,
+              options: STATUS_OPTIONS,
+            }]}
+            values={{
+              query: filters.query ?? null,
+              isActive: filters.isActive === undefined ? 'all' : String(filters.isActive),
+            }}
+            onChange={handleFilterChange}
+          />
+        )}
+        columns={columns}
+        rows={rows}
+        loading={loading}
+        pagination={paginationProps}
+        emptyState={emptyStateProps}
+      />
       <Snackbar {...apiErrorSnackbar} />
     </>
   );
