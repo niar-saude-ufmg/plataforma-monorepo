@@ -1,27 +1,39 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { AuthUser } from '../../types/user.types';
+import type { MutationState } from '../../types/resource.types';
 
-type AuthState = {
-  user: AuthUser | null;
+/**
+ * Estado da sessão autenticada.
+ *
+ * A mutação é opcional para que o próximo card possa adicionar a edição do
+ * perfil/troca de senha sem obrigar o fluxo de login a controlar esse estado
+ * antes de ele existir.
+ */
+export type AuthState<MutationError = never, MutationOperation extends string = string> = {
+  list?: never;
+  selected: AuthUser | null;
+  mutation?: MutationState<MutationError, MutationOperation>;
 };
 
-const initialState: AuthState = {
-  user: null,
+export const initialAuthState: AuthState = {
+  selected: null,
 };
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState,
+  initialState: initialAuthState,
   reducers: {
-    setAuthUser(state, action: PayloadAction<AuthUser | null>) {
-      state.user = action.payload;
+    setSelectedAuthUser(state, action: PayloadAction<AuthUser | null>) {
+      state.selected = action.payload;
     },
-    clearAuthUser(state) {
-      state.user = null;
+    clearSelectedAuthUser(state) {
+      state.selected = null;
     },
   },
 });
 
-export const { setAuthUser, clearAuthUser } = authSlice.actions;
-export const selectAuthUser = (state: { auth: AuthState }) => state.auth.user;
+export const {
+  setSelectedAuthUser,
+  clearSelectedAuthUser,
+} = authSlice.actions;
 export default authSlice.reducer;

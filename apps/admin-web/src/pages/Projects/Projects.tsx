@@ -15,7 +15,7 @@ import {
 } from "@niar/contracts";
 import { useEffect, type ChangeEvent } from "react";
 import { useApiError } from "../../hooks/use-api-error/use-api-error";
-import { selectAuthUser } from "../../store/auth/auth.slice";
+import { selectAuthSelected } from "../../store/auth/auth.selectors";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { getProjects } from "../../store/projects/projects.api";
 import {
@@ -129,7 +129,7 @@ const toListingRows = (projects: readonly Project[]) =>
 
 export function Projects() {
   const dispatch = useAppDispatch();
-  const user = useAppSelector(selectAuthUser);
+  const user = useAppSelector(selectAuthSelected);
   const projects = useAppSelector(selectProjectsList);
   const filters = useAppSelector(selectProjectsListFilters);
   const pagination = useAppSelector(selectProjectsListPagination);

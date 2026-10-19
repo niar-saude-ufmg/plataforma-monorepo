@@ -14,7 +14,7 @@ import { RoleHome } from "../pages/RoleHome/RoleHome";
 import { Specialties } from "../pages/Specialties/Specialties";
 import { Users } from "../pages/Users/Users";
 import { useAppSelector } from "../store/hooks";
-import { selectAuthUser } from "../store/auth/auth.slice";
+import { selectAuthSelected } from "../store/auth/auth.selectors";
 import {
   getRoleHomePath,
   getRoleRouteDefinitions,
@@ -24,7 +24,7 @@ import {
 function RoleRouteContent({
   user,
 }: {
-  user: NonNullable<ReturnType<typeof selectAuthUser>>;
+  user: NonNullable<ReturnType<typeof selectAuthSelected>>;
 }) {
   const location = useLocation();
   const route = getRoleRouteDefinitions(user.role).find(
@@ -50,7 +50,7 @@ function RoleRouteContent({
 }
 
 function RoleRoutes() {
-  const user = useAppSelector(selectAuthUser);
+  const user = useAppSelector(selectAuthSelected);
 
   if (!user) return <Navigate replace to="/login" />;
 

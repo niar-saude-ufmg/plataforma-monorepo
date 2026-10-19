@@ -11,7 +11,7 @@ import {
 import { ProfileForm, ProfileReadonly } from '../../components/Profile';
 import { RoleGuard } from '../../guards/RoleGuard';
 import { useApiError } from '../../hooks/use-api-error/use-api-error';
-import { selectAuthUser } from '../../store/auth/auth.slice';
+import { selectAuthSelected } from '../../store/auth/auth.selectors';
 import { useAppSelector } from '../../store/hooks';
 import type { AuthUser } from '../../types/user.types';
 import './Profile.scss';
@@ -116,7 +116,7 @@ function ResearcherDetails({ user }: { user: AuthUser }) {
 }
 
 export function Profile({ role, sessionError }: ProfileProps) {
-  const user = useAppSelector(selectAuthUser);
+  const user = useAppSelector(selectAuthSelected);
   const [errorDismissed, setErrorDismissed] = useState(false);
 
   const snackbarProps = useApiError(

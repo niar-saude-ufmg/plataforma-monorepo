@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import App from '../../App';
 import { Profile } from './Profile';
 import { store } from '../../store';
-import { setAuthUser } from '../../store/auth/auth.slice';
+import { setSelectedAuthUser } from '../../store/auth/auth.slice';
 import type { AuthUser } from '../../types/user.types';
 
 const admin: AuthUser = {
@@ -42,7 +42,7 @@ const researcher: AuthUser = {
 
 // Renderiza a página direto, com o usuário já no authSlice.
 function renderPage(user: AuthUser | null, props: Partial<{ sessionError: unknown }> = {}) {
-  store.dispatch(setAuthUser(user));
+  store.dispatch(setSelectedAuthUser(user));
 
   return render(
     <Provider store={store}>
@@ -56,7 +56,7 @@ function renderPage(user: AuthUser | null, props: Partial<{ sessionError: unknow
 describe('rotas de Perfil', () => {
   afterEach(() => {
     cleanup();
-    store.dispatch(setAuthUser(null));
+    store.dispatch(setSelectedAuthUser(null));
   });
 
   it('abre /admin/administrador/perfil para o Administrador', async () => {
@@ -155,7 +155,7 @@ describe('rotas de Perfil', () => {
 describe('página de Perfil', () => {
   afterEach(() => {
     cleanup();
-    store.dispatch(setAuthUser(null));
+    store.dispatch(setSelectedAuthUser(null));
   });
 
   it('usa o usuário do authSlice para preencher o formulário', () => {

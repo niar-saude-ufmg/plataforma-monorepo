@@ -1,7 +1,8 @@
 import { Button, PageContainer } from "@niar/ui";
 import { clearPlatformSession } from "@niar/auth";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { clearAuthUser, selectAuthUser } from "../../store/auth/auth.slice";
+import { clearSelectedAuthUser } from "../../store/auth/auth.slice";
+import { selectAuthSelected } from "../../store/auth/auth.selectors";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { getRoleNavigation } from "../../routes/role-routes";
 
@@ -9,7 +10,7 @@ export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const user = useAppSelector(selectAuthUser);
+  const user = useAppSelector(selectAuthSelected);
 
   if (!user) return null;
 
@@ -20,7 +21,7 @@ export function AdminLayout() {
 
   const handleLogout = () => {
     clearPlatformSession();
-    dispatch(clearAuthUser());
+    dispatch(clearSelectedAuthUser());
     navigate("/login", { replace: true });
   };
 

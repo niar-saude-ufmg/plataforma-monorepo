@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import { store } from "../../store";
-import { setAuthUser } from "../../store/auth/auth.slice";
+import { setSelectedAuthUser } from "../../store/auth/auth.slice";
 import { clearProjectsState } from "../../store/projects/projects.slice";
 import { getRoleNavigation } from "../../routes/role-routes";
 import type { UserRole } from "../../types/user.types";
@@ -227,7 +227,7 @@ const authUser = (role: UserRole) => ({
 });
 
 const renderProjects = (role: "admin" | "researcher" = "admin") => {
-  store.dispatch(setAuthUser(authUser(role)));
+  store.dispatch(setSelectedAuthUser(authUser(role)));
   return render(
     <Provider store={store}>
       <Projects />
