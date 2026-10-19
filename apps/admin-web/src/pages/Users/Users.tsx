@@ -9,13 +9,13 @@ import {
   clearUsersError,
 } from "../../store/users/users.slice";
 import {
-  selectUsers,
-  selectUsersFilters,
-  selectUsersPagination,
-  selectUsersPage,
-  selectUsersPageSize,
-  selectUsersLoading,
-  selectUsersError,
+  selectUsersList,
+  selectUsersListFilters,
+  selectUsersListPagination,
+  selectUsersListPage,
+  selectUsersListPageSize,
+  selectUsersListLoading,
+  selectUsersListError,
 } from "../../store/users/users.selectors";
 import { getUsers } from '../../store/users/users.api';
 import { useApiError } from "../../hooks/use-api-error/use-api-error"
@@ -30,13 +30,13 @@ const toTableRows = (rows: UserListItem[]) =>
 
 export function Users() {
   const dispatch = useAppDispatch();
-  const users = useAppSelector(selectUsers);
-  const filters = useAppSelector(selectUsersFilters);
-  const pagination = useAppSelector(selectUsersPagination);
-  const page = useAppSelector(selectUsersPage);
-  const pageSize = useAppSelector(selectUsersPageSize);
-  const loading = useAppSelector(selectUsersLoading);
-  const error = useAppSelector(selectUsersError);
+  const users = useAppSelector(selectUsersList);
+  const filters = useAppSelector(selectUsersListFilters);
+  const pagination = useAppSelector(selectUsersListPagination);
+  const page = useAppSelector(selectUsersListPage);
+  const pageSize = useAppSelector(selectUsersListPageSize);
+  const loading = useAppSelector(selectUsersListLoading);
+  const error = useAppSelector(selectUsersListError);
 
   useEffect(() => {
     dispatch(getUsers({

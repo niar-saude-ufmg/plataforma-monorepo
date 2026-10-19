@@ -5,9 +5,10 @@ import type {
   ProjectListParams,
 } from "../../types/project.types";
 import type { ApiError } from "../../types/api.types";
+import type { AsyncStatus, ResourceState } from "../../types/resource.types";
 import { getProjects, getProject } from "./projects.api";
 
-export type ProjectsStatus = "idle" | "pending" | "succeeded" | "failed";
+export type ProjectsStatus = AsyncStatus;
 
 export type ProjectsFilters = Pick<
   ProjectListParams,
@@ -18,26 +19,21 @@ export const DEFAULT_PROJECTS_PAGE_SIZE = 20;
 
 const createDefaultProjectsFilters = (): ProjectsFilters => ({});
 
-export type ProjectsState = {
-  projects: Project[];
-  selectedProject: Project | null;
-  pagination: Pagination | null;
-  filters: ProjectsFilters;
-  page: number;
-  pageSize: number;
-  status: ProjectsStatus;
-  error: ApiError | null;
+export type ProjectsState = ResourceState<Project, ProjectsFilters, Pagination, ApiError> & {
+  selected: Project | null;
 };
 
 const initialState: ProjectsState = {
-  projects: [],
-  selectedProject: null,
-  pagination: null,
-  filters: createDefaultProjectsFilters(),
-  page: 1,
-  pageSize: DEFAULT_PROJECTS_PAGE_SIZE,
-  status: "idle",
-  error: null,
+  list: {
+    items: [],
+    pagination: null,
+    filters: createDefaultProjectsFilters(),
+    page: 1,
+    pageSize: DEFAULT_PROJECTS_PAGE_SIZE,
+    status: "idle",
+    error: null,
+  },
+  selected: null,
 };
 
 const projectsSlice = createSlice({
@@ -45,82 +41,84 @@ const projectsSlice = createSlice({
   initialState,
   reducers: {
     setSelectedProject(state, action: PayloadAction<Project | null>) {
-      state.selectedProject = action.payload;
+      state.selected = action.payload;
     },
     clearSelectedProject(state) {
-      state.selectedProject = null;
+      state.selected = null;
     },
     clearProjectsState(state) {
-      state.projects = [];
-      state.selectedProject = null;
-      state.pagination = null;
-      state.filters = createDefaultProjectsFilters();
-      state.page = 1;
-      state.pageSize = DEFAULT_PROJECTS_PAGE_SIZE;
-      state.status = "idle";
-      state.error = null;
+      state.list = {
+        items: [],
+        pagination: null,
+        filters: createDefaultProjectsFilters(),
+        page: 1,
+        pageSize: DEFAULT_PROJECTS_PAGE_SIZE,
+        status: "idle",
+        error: null,
+      };
+      state.selected = null;
     },
     setProjectsFilters(state, action: PayloadAction<ProjectsFilters>) {
-      state.filters = action.payload;
-      state.page = 1;
+      state.list.filters = action.payload;
+      state.list.page = 1;
     },
     clearProjectsFilters(state) {
-      state.filters = createDefaultProjectsFilters();
-      state.page = 1;
+      state.list.filters = createDefaultProjectsFilters();
+      state.list.page = 1;
     },
     setProjectsPage(state, action: PayloadAction<number>) {
-      state.page = Math.max(1, action.payload);
+      state.list.page = Math.max(1, action.payload);
     },
     setProjectsPageSize(state, action: PayloadAction<number>) {
-      state.pageSize = Math.max(1, action.payload);
-      state.page = 1;
+      state.list.pageSize = Math.max(1, action.payload);
+      state.list.page = 1;
     },
     clearProjectsError(state) {
-      state.error = null;
-      if (state.status === "failed") {
-        state.status = "idle";
+      state.list.error = null;
+      if (state.list.status === "failed") {
+        state.list.status = "idle";
       }
     },
   },
   extraReducers: (builder) => {
     // ---------- getProjects ----------
     builder.addCase(getProjects.pending, (state, action) => {
-      state.status = "pending";
-      state.error = null;
-      state.filters = {
+      state.list.status = "pending";
+      state.list.error = null;
+      state.list.filters = {
         ...(action.meta.arg.search ? { search: action.meta.arg.search } : {}),
         ...(action.meta.arg.status ? { status: action.meta.arg.status } : {}),
         ...(action.meta.arg.evaluationStatus ? { evaluationStatus: action.meta.arg.evaluationStatus } : {}),
       };
-      state.page = action.meta.arg.page ?? 1;
-      state.pageSize = action.meta.arg.pageSize ?? DEFAULT_PROJECTS_PAGE_SIZE;
+      state.list.page = action.meta.arg.page ?? 1;
+      state.list.pageSize = action.meta.arg.pageSize ?? DEFAULT_PROJECTS_PAGE_SIZE;
     });
     builder.addCase(getProjects.fulfilled, (state, action) => {
-      state.status = "succeeded";
-      state.error = null;
-      state.projects = action.payload.items;
-      state.pagination = action.payload.pagination;
+      state.list.status = "succeeded";
+      state.list.error = null;
+      state.list.items = action.payload.items;
+      state.list.pagination = action.payload.pagination;
     });
     builder.addCase(getProjects.rejected, (state, action) => {
-      state.status = "failed";
-      state.error = action.payload ?? {
+      state.list.status = "failed";
+      state.list.error = action.payload ?? {
         message: "Não foi possível carregar os projetos. Tente novamente.",
       };
     });
 
     // ---------- getProject ----------
     builder.addCase(getProject.pending, (state) => {
-      state.status = "pending";
-      state.error = null;
+      state.list.status = "pending";
+      state.list.error = null;
     });
     builder.addCase(getProject.fulfilled, (state, action) => {
-      state.status = "succeeded";
-      state.error = null;
-      state.selectedProject = action.payload;
+      state.list.status = "succeeded";
+      state.list.error = null;
+      state.selected = action.payload;
     });
     builder.addCase(getProject.rejected, (state, action) => {
-      state.status = "failed";
-      state.error = action.payload ?? {
+      state.list.status = "failed";
+      state.list.error = action.payload ?? {
         message: "Não foi possível carregar o projeto. Tente novamente.",
       };
     });

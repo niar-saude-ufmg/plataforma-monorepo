@@ -6,13 +6,18 @@ export type UsersRootState = {
 
 const selectUsersState = (state: UsersRootState) => state.users;
 
-export const selectUsers = (state: UsersRootState) => selectUsersState(state).users;
-export const selectSelectedUser = (state: UsersRootState) => selectUsersState(state).selectedUser;
-export const selectUsersPagination = (state: UsersRootState) => selectUsersState(state).pagination;
-export const selectUsersFilters = (state: UsersRootState) => selectUsersState(state).filters;
-export const selectUsersPage = (state: UsersRootState) => selectUsersState(state).page;
-export const selectUsersPageSize = (state: UsersRootState) => selectUsersState(state).pageSize;
-export const selectUsersStatus = (state: UsersRootState) => selectUsersState(state).status;
-export const selectUsersError = (state: UsersRootState) => selectUsersState(state).error;
-export const selectUsersLoading = (state: UsersRootState) => selectUsersState(state).status === 'pending';
-export const selectUsersHasItems = (state: UsersRootState) => selectUsersState(state).users.length > 0;
+export const selectUsersList = (state: UsersRootState) => selectUsersState(state).list.items;
+export const selectUsersSelected = (state: UsersRootState) => selectUsersState(state).selected;
+export const selectUsersListPagination = (state: UsersRootState) => selectUsersState(state).list.pagination;
+export const selectUsersListFilters = (state: UsersRootState) => selectUsersState(state).list.filters;
+export const selectUsersListPage = (state: UsersRootState) => selectUsersState(state).list.page;
+export const selectUsersListPageSize = (state: UsersRootState) => selectUsersState(state).list.pageSize;
+export const selectUsersListStatus = (state: UsersRootState) => selectUsersState(state).list.status;
+export const selectUsersListError = (state: UsersRootState) => selectUsersState(state).list.error;
+export const selectUsersListLoading = (state: UsersRootState) => selectUsersState(state).list.status === 'pending';
+export const selectUsersListHasItems = (state: UsersRootState) => selectUsersState(state).list.items.length > 0;
+export const selectUsersMutation = (state: UsersRootState) => selectUsersState(state).mutation;
+export const selectUsersMutationError = (state: UsersRootState) => selectUsersState(state).mutation.error;
+export const selectUsersMutationLoading = (state: UsersRootState) => selectUsersState(state).mutation.status === 'pending';
+export const selectUsersMutationStatus = (state: UsersRootState) => selectUsersState(state).mutation.status;
+export const selectUsersMutationOperation = (state: UsersRootState) => selectUsersState(state).mutation.operation;

@@ -5,7 +5,6 @@ import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpecialtiesList, Specialty } from '../../types/specialty.types';
-import { adminApi } from '../../store/api/admin.api';
 import authReducer from '../../store/auth/auth.slice';
 import projectsReducer from '../../store/projects/projects.slice';
 import {
@@ -54,9 +53,7 @@ const makeStore = () => configureStore({
     specialties: specialtiesReducer,
     users: usersReducer,
     projects: projectsReducer,
-    [adminApi.reducerPath]: adminApi.reducer,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
 });
 
 const renderPage = (store = makeStore()) => {
@@ -182,12 +179,12 @@ describe('Specialties', () => {
       query: 'Epidemiologia',
       isActive: false,
     }));
-    expect(store.getState().specialties.page).toBe(1);
+    expect(store.getState().specialties.list.page).toBe(1);
 
     expect(await screen.findByRole('radio', { name: 'Inativas' })).toBeChecked();
     await user.click(screen.getByRole('radio', { name: 'Todas' }));
 
-    await waitFor(() => expect(store.getState().specialties.filters).toEqual({ query: 'Epidemiologia' }));
+    await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({ query: 'Epidemiologia' }));
     expect(serviceMocks.listSpecialties).toHaveBeenLastCalledWith({
       page: 1,
       pageSize: 20,
@@ -238,7 +235,7 @@ describe('Specialties', () => {
 
     await user.click(screen.getByRole('button', { name: 'Limpar filtros' }));
 
-    await waitFor(() => expect(store.getState().specialties.filters).toEqual({}));
+    await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({}));
     expect(await screen.findByRole('heading', { name: 'Nenhuma especialidade cadastrada' })).toBeInTheDocument();
     expect(serviceMocks.listSpecialties).toHaveBeenLastCalledWith({
       page: 1,

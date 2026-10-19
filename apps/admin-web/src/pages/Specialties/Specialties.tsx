@@ -11,13 +11,13 @@ import { useApiError } from '../../hooks/use-api-error/use-api-error';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchSpecialties } from '../../store/specialties/specialties.api';
 import {
-  selectSpecialties,
-  selectSpecialtiesError,
-  selectSpecialtiesFilters,
-  selectSpecialtiesLoading,
-  selectSpecialtiesPage,
-  selectSpecialtiesPageSize,
-  selectSpecialtiesPagination,
+  selectSpecialtiesList,
+  selectSpecialtiesListError,
+  selectSpecialtiesListFilters,
+  selectSpecialtiesListLoading,
+  selectSpecialtiesListPage,
+  selectSpecialtiesListPageSize,
+  selectSpecialtiesListPagination,
 } from '../../store/specialties/specialties.selectors';
 import {
   clearSpecialtiesError,
@@ -91,13 +91,13 @@ const autocompleteValue = (value: unknown): string | undefined => {
 
 export function Specialties() {
   const dispatch = useAppDispatch();
-  const specialties = useAppSelector(selectSpecialties);
-  const pagination = useAppSelector(selectSpecialtiesPagination);
-  const filters = useAppSelector(selectSpecialtiesFilters);
-  const page = useAppSelector(selectSpecialtiesPage);
-  const pageSize = useAppSelector(selectSpecialtiesPageSize);
-  const loading = useAppSelector(selectSpecialtiesLoading);
-  const error = useAppSelector(selectSpecialtiesError);
+  const specialties = useAppSelector(selectSpecialtiesList);
+  const pagination = useAppSelector(selectSpecialtiesListPagination);
+  const filters = useAppSelector(selectSpecialtiesListFilters);
+  const page = useAppSelector(selectSpecialtiesListPage);
+  const pageSize = useAppSelector(selectSpecialtiesListPageSize);
+  const loading = useAppSelector(selectSpecialtiesListLoading);
+  const error = useAppSelector(selectSpecialtiesListError);
 
   const loadSpecialties = () => dispatch(fetchSpecialties({
     page,

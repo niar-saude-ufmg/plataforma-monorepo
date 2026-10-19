@@ -1,33 +1,38 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { UserApiError, UserListFilters, UserListItem, UserPagination } from '../../types/user.types';
+import type { AsyncStatus, MutationState, ResourceState } from '../../types/resource.types';
 import { createUser, getUsers } from './users.api';
 
-export type UsersStatus = 'idle' | 'pending' | 'succeeded' | 'failed';
+export type UsersStatus = AsyncStatus;
+export type UserMutationOperation = 'create' | 'update' | 'approve' | 'reject';
 
 export const DEFAULT_USERS_PAGE_SIZE = 20;
 
 const createDefaultUsersFilters = (): UserListFilters => ({});
 
-export type UsersState = {
-  users: UserListItem[];
-  selectedUser: UserListItem | null;
-  pagination: UserPagination | null;
-  filters: UserListFilters;
-  page: number;
-  pageSize: number;
-  status: UsersStatus;
-  error: UserApiError | null;
+export type UsersState = ResourceState<
+  UserListItem,
+  UserListFilters,
+  UserPagination,
+  UserApiError,
+  UserMutationOperation
+> & {
+  selected: UserListItem | null;
+  mutation: MutationState<UserApiError, UserMutationOperation>;
 };
 
 const initialState: UsersState = {
-  users: [],
-  selectedUser: null,
-  pagination: null,
-  filters: createDefaultUsersFilters(),
-  page: 1,
-  pageSize: DEFAULT_USERS_PAGE_SIZE,
-  status: 'idle',
-  error: null,
+  list: {
+    items: [],
+    pagination: null,
+    filters: createDefaultUsersFilters(),
+    page: 1,
+    pageSize: DEFAULT_USERS_PAGE_SIZE,
+    status: 'idle',
+    error: null,
+  },
+  selected: null,
+  mutation: { operation: null, status: 'idle', error: null },
 };
 
 const usersSlice = createSlice({
@@ -35,78 +40,86 @@ const usersSlice = createSlice({
   initialState,
   reducers: {
     setSelectedUser(state, action: PayloadAction<UserListItem | null>) {
-      state.selectedUser = action.payload;
+      state.selected = action.payload;
     },
     clearSelectedUser(state) {
-      state.selectedUser = null;
+      state.selected = null;
     },
     setUsersFilters(state, action: PayloadAction<UserListFilters>) {
-      state.filters = action.payload;
-      state.page = 1;
+      state.list.filters = action.payload;
+      state.list.page = 1;
     },
     clearUsersFilters(state) {
-      state.filters = createDefaultUsersFilters();
-      state.page = 1;
+      state.list.filters = createDefaultUsersFilters();
+      state.list.page = 1;
     },
     setUsersPage(state, action: PayloadAction<number>) {
-      state.page = Math.max(1, action.payload);
+      state.list.page = Math.max(1, action.payload);
     },
     setUsersPageSize(state, action: PayloadAction<number>) {
-      state.pageSize = Math.max(1, action.payload);
-      state.page = 1;
+      state.list.pageSize = Math.max(1, action.payload);
+      state.list.page = 1;
     },
     clearUsersState(state) {
-      state.users = [];
-      state.selectedUser = null;
-      state.pagination = null;
-      state.filters = createDefaultUsersFilters();
-      state.page = 1;
-      state.pageSize = DEFAULT_USERS_PAGE_SIZE;
-      state.status = 'idle';
-      state.error = null;
+      state.list = {
+        items: [],
+        pagination: null,
+        filters: createDefaultUsersFilters(),
+        page: 1,
+        pageSize: DEFAULT_USERS_PAGE_SIZE,
+        status: 'idle',
+        error: null,
+      };
+      state.selected = null;
+      state.mutation = { operation: null, status: 'idle', error: null };
     },
     clearUsersError(state) {
-      state.error = null;
-      if (state.status === 'failed') {
-        state.status = 'idle';
+      state.list.error = null;
+      state.mutation.error = null;
+      if (state.list.status === 'failed') {
+        state.list.status = 'idle';
+      }
+      if (state.mutation.status === 'failed') {
+        state.mutation.status = 'idle';
       }
     },
   },
   extraReducers: (builder) => {
     builder.addCase(getUsers.pending, (state, action) => {
-      state.status = 'pending';
-      state.error = null;
-      state.filters = {
+      state.list.status = 'pending';
+      state.list.error = null;
+      state.list.filters = {
         ...(action.meta.arg.role ? { role: action.meta.arg.role } : {}),
         ...(action.meta.arg.accountStatus ? { accountStatus: action.meta.arg.accountStatus } : {}),
       };
-      state.page = action.meta.arg.page ?? 1;
-      state.pageSize = action.meta.arg.pageSize ?? DEFAULT_USERS_PAGE_SIZE;
+      state.list.page = action.meta.arg.page ?? 1;
+      state.list.pageSize = action.meta.arg.pageSize ?? DEFAULT_USERS_PAGE_SIZE;
     });
     builder.addCase(getUsers.fulfilled, (state, action) => {
-      state.status = 'succeeded';
-      state.error = null;
-      state.users = action.payload.items;
-      state.pagination = action.payload.pagination;
+      state.list.status = 'succeeded';
+      state.list.error = null;
+      state.list.items = action.payload.items;
+      state.list.pagination = action.payload.pagination;
     });
     builder.addCase(getUsers.rejected, (state, action) => {
-      state.status = 'failed';
-      state.error = action.payload ?? {
+      state.list.status = 'failed';
+      state.list.error = action.payload ?? {
         message: 'Não foi possível carregar os usuários. Tente novamente.',
       };
     });
     builder.addCase(createUser.pending, (state) => {
-      state.status = 'pending';
-      state.error = null;
+      state.mutation = { operation: 'create', status: 'pending', error: null };
     });
     builder.addCase(createUser.fulfilled, (state) => {
-      state.status = 'succeeded';
-      state.error = null;
+      state.mutation = { operation: 'create', status: 'succeeded', error: null };
     });
     builder.addCase(createUser.rejected, (state, action) => {
-      state.status = 'failed';
-      state.error = action.payload ?? {
+      state.mutation = {
+        operation: 'create',
+        status: 'failed',
+        error: action.payload ?? {
         message: 'Não foi possível cadastrar o pesquisador. Tente novamente.',
+        },
       };
     });
   },

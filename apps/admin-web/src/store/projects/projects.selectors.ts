@@ -1,14 +1,18 @@
 import type { ProjectsState } from "./projects.slice";
 
-type RootSlice = { projects: ProjectsState };
+export type ProjectsRootState = {
+  projects: ProjectsState;
+};
 
-export const selectProjects = (state: RootSlice) => state.projects.projects;
-export const selectSelectedProject = (state: RootSlice) => state.projects.selectedProject;
-export const selectProjectsPagination = (state: RootSlice) => state.projects.pagination;
-export const selectProjectsFilters = (state: RootSlice) => state.projects.filters;
-export const selectProjectsPage = (state: RootSlice) => state.projects.page;
-export const selectProjectsPageSize = (state: RootSlice) => state.projects.pageSize;
-export const selectProjectsStatus = (state: RootSlice) => state.projects.status;
-export const selectProjectsError = (state: RootSlice) => state.projects.error;
-export const selectProjectsLoading = (state: RootSlice) => state.projects.status === "pending";
-export const selectProjectsHasItems = (state: RootSlice) => state.projects.projects.length > 0;
+const selectProjectsState = (state: ProjectsRootState) => state.projects;
+
+export const selectProjectsList = (state: ProjectsRootState) => selectProjectsState(state).list.items;
+export const selectProjectsSelected = (state: ProjectsRootState) => selectProjectsState(state).selected;
+export const selectProjectsListPagination = (state: ProjectsRootState) => selectProjectsState(state).list.pagination;
+export const selectProjectsListFilters = (state: ProjectsRootState) => selectProjectsState(state).list.filters;
+export const selectProjectsListPage = (state: ProjectsRootState) => selectProjectsState(state).list.page;
+export const selectProjectsListPageSize = (state: ProjectsRootState) => selectProjectsState(state).list.pageSize;
+export const selectProjectsListStatus = (state: ProjectsRootState) => selectProjectsState(state).list.status;
+export const selectProjectsListError = (state: ProjectsRootState) => selectProjectsState(state).list.error;
+export const selectProjectsListLoading = (state: ProjectsRootState) => selectProjectsState(state).list.status === "pending";
+export const selectProjectsListHasItems = (state: ProjectsRootState) => selectProjectsState(state).list.items.length > 0;

@@ -27,7 +27,7 @@ const toApiError = (error: unknown): SpecialtyApiError => {
 };
 
 const refreshSpecialties = async (dispatch: AppDispatch, getState: () => RootState) => {
-  const { filters, page, pageSize } = getState().specialties;
+  const { filters, page, pageSize } = getState().specialties.list;
   await dispatch(fetchSpecialties({ ...filters, page, pageSize }));
 };
 
