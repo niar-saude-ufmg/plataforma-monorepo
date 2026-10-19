@@ -144,6 +144,7 @@ export function Specialties() {
   };
 
   const hasActiveFilters = Boolean(filters.query) || filters.isActive !== undefined;
+  const showListing = !error || rows.length > 0;
   const emptyState = hasActiveFilters
     ? {
         title: 'Nenhuma especialidade encontrada',
@@ -161,42 +162,44 @@ export function Specialties() {
 
   return (
     <>
-      <Listing
-        title="Especialidades"
-        description="Consulte as especialidades cadastradas na plataforma."
-        aria-label="Lista de especialidades"
-        emptyStateAriaLabel="Lista de especialidades vazia"
-        filter={(
-          <Filter
-            aria-label="Filtros de especialidades"
-            search={[
-              { key: 'query', label: 'Buscar especialidade', options: searchOptions },
-              { key: 'isActive', label: 'Status', options: STATUS_OPTIONS },
-            ]}
-            values={{
-              query: filters.query ?? null,
-              isActive: statusOptionFor(filters.isActive),
-            }}
-            onChange={handleFilterChange}
-          />
-        )}
-        columns={columns}
-        rows={rows}
-        loading={loading || Boolean(error && rows.length === 0)}
-        pagination={{
-          count: pagination?.totalItems ?? 0,
-          page: (pagination?.page ?? 1) - 1,
-          rowsPerPage: pagination?.pageSize ?? pageSize,
-          rowsPerPageOptions: [5, 10, 20, 50],
-          onPageChange: (_event: unknown, nextPage: number) => {
-            dispatch(setSpecialtiesPage(nextPage + 1));
-          },
-          onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => {
-            dispatch(setSpecialtiesPageSize(Number(event.target.value)));
-          },
-        }}
-        emptyState={emptyState}
-      />
+      {showListing ? (
+        <Listing
+          title="Especialidades"
+          description="Consulte as especialidades cadastradas na plataforma."
+          aria-label="Lista de especialidades"
+          emptyStateAriaLabel="Lista de especialidades vazia"
+          filter={(
+            <Filter
+              aria-label="Filtros de especialidades"
+              search={[
+                { key: 'query', label: 'Buscar especialidade', options: searchOptions, freeSolo: true },
+                { key: 'isActive', label: 'Status', options: STATUS_OPTIONS },
+              ]}
+              values={{
+                query: filters.query ?? null,
+                isActive: statusOptionFor(filters.isActive),
+              }}
+              onChange={handleFilterChange}
+            />
+          )}
+          columns={columns}
+          rows={rows}
+          loading={loading}
+          pagination={{
+            count: pagination?.totalItems ?? 0,
+            page: (pagination?.page ?? 1) - 1,
+            rowsPerPage: pagination?.pageSize ?? pageSize,
+            rowsPerPageOptions: [10, 20, 50, 100],
+            onPageChange: (_event: unknown, nextPage: number) => {
+              dispatch(setSpecialtiesPage(nextPage + 1));
+            },
+            onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => {
+              dispatch(setSpecialtiesPageSize(Number(event.target.value)));
+            },
+          }}
+          emptyState={emptyState}
+        />
+      ) : null}
       {error ? (
         <Button type="button" variant="text" size="small" onClick={() => { void loadSpecialties(); }}>
           Tentar novamente

@@ -194,9 +194,27 @@ describe('Specialties', () => {
     });
   });
 
+  it('permite pesquisar um texto que não está entre as opções da página atual', async () => {
+    serviceMocks.listSpecialties.mockResolvedValue(listResponse());
+    const user = userEvent.setup();
+
+    renderPage();
+    await screen.findByText('Epidemiologia');
+
+    const query = screen.getByRole('combobox', { name: 'Buscar especialidade' });
+    await user.type(query, 'Cardiologia');
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(serviceMocks.listSpecialties).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 20,
+      query: 'Cardiologia',
+      isActive: undefined,
+    }));
+  });
+
   it('diferencia os estados vazios e limpa os filtros ativos', async () => {
     serviceMocks.listSpecialties.mockImplementation(async (params) => {
-      const filtered = Boolean(params?.query) || params?.isActive !== undefined;
       return listResponse([], {
         page: params?.page ?? 1,
         pageSize: params?.pageSize ?? 20,
@@ -270,6 +288,7 @@ describe('Specialties', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao carregar especialidades.');
     expect(screen.queryByText('Nenhuma especialidade cadastrada')).not.toBeInTheDocument();
+    expect(screen.queryByRole('table', { name: 'Lista de especialidades' })).not.toBeInTheDocument();
     expect(serviceMocks.listSpecialties).toHaveBeenNthCalledWith(1, {
       page: 2,
       pageSize: 20,

@@ -23,6 +23,12 @@ const rows = [
   { name: "Projeto A", status: "Em análise", updated: "Hoje" },
   { name: "Projeto B", status: "Aprovado", updated: "Ontem" },
 ];
+const emptyState = {
+  title: "Nenhum projeto cadastrado",
+  description: "Cadastre o primeiro projeto para começar.",
+  action: <Button variant="contained">Cadastrar projeto</Button>,
+  "aria-level": 3,
+};
 const filter = (
   <Filter
     search={[{ key: "project", label: "Projeto", options: ["Projeto A", "Projeto B"] }]}
@@ -109,7 +115,7 @@ const meta = {
     tableBorder: {
       control: "boolean",
       description: "Define se a Table terá contorno próprio dentro do Card.",
-      table: { category: "PROPS", defaultValue: { summary: "false" } },
+      table: { category: "PROPS", defaultValue: { summary: "true" } },
     },
     emptyStateAriaLabel: { control: "text", description: "Nome acessível do estado sem registros.", table: { category: "ACCESSIBILITY", defaultValue: { summary: "Lista de registros vazia" } } },
     emptyState: {
@@ -130,12 +136,13 @@ export const Playground: Story = {
     description: "Acompanhe os projetos cadastrados na plataforma.",
     columns,
     rows,
+    emptyState,
   },
   parameters: {
     docs: {
       canvas: { sourceState: "shown" },
       description: { story: "Configure o estado e os dados da listagem." },
-      source: { code: '<Listing columns={columns} rows={rows} />' },
+      source: { code: '<Listing columns={columns} rows={rows} emptyState={emptyState} />' },
     },
   },
 };
@@ -147,6 +154,7 @@ export const Action: Story = {
     columns,
     rows,
     action: <Button variant="contained">Cadastrar projeto</Button>,
+    emptyState,
   },
   parameters: {
     controls: { disable: true },
@@ -160,6 +168,7 @@ export const Action: Story = {
   action={<Button variant="contained">Cadastrar projeto</Button>}
   columns={columns}
   rows={rows}
+  emptyState={emptyState}
 />`,
       },
     },
@@ -172,6 +181,7 @@ export const Filtered: Story = {
     columns,
     rows,
     filter,
+    emptyState,
   },
   parameters: {
     controls: { disable: true },
@@ -183,6 +193,7 @@ export const Filtered: Story = {
   filter={<Filter search={[{ key: "project", label: "Projeto", options: ["Projeto A", "Projeto B"] }]} />}
   columns={columns}
   rows={rows}
+  emptyState={emptyState}
 />`,
       },
     },
@@ -206,6 +217,7 @@ function FilteredListing() {
       title="Projetos"
       columns={columns}
       rows={filteredRows}
+      emptyState={emptyState}
       filter={
         <Filter
           search={[
@@ -243,13 +255,14 @@ export const Loading: Story = {
     rows: [],
     action: <Button variant="contained">Cadastrar projeto</Button>,
     filter,
+    emptyState,
   },
   parameters: {
     controls: { disable: true },
     docs: {
       canvas: { sourceState: "shown" },
       description: { story: "Estado exibido enquanto os dados são carregados." },
-      source: { code: '<Listing loading columns={columns} />' },
+      source: { code: '<Listing loading columns={columns} emptyState={emptyState} />' },
     },
   },
 };
@@ -261,8 +274,7 @@ export const Empty: Story = {
     rows: [],
     action: <Button variant="contained">Cadastrar projeto</Button>,
     emptyState: {
-      title: "Nenhum projeto cadastrado",
-      description: "Cadastre o primeiro projeto para começar.",
+      ...emptyState,
       action: <Button variant="outlined">Cadastrar projeto</Button>,
     },
   },
@@ -271,7 +283,7 @@ export const Empty: Story = {
     docs: {
       canvas: { sourceState: "shown" },
       description: { story: "Estado exibido quando a busca não retorna registros." },
-      source: { code: '<Listing columns={columns} rows={[]} />' },
+      source: { code: '<Listing columns={columns} rows={[]} emptyState={emptyState} />' },
     },
   },
 };

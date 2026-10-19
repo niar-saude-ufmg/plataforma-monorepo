@@ -70,12 +70,9 @@ export function Listing<T extends Record<string, unknown>>({
       {rows.length === 0 && !loading ? (
         <Box role="status" aria-label={emptyStateAriaLabel}>
           <Card variant="outlined" sx={listingCardStyles}>
-            <EmptyState
-              title="Nenhum registro encontrado"
-              description="Não há dados para exibir no momento."
-              aria-level={3}
-              {...emptyState}
-            />
+            {emptyState?.title ? (
+              <EmptyState {...emptyState} title={emptyState.title} />
+            ) : null}
           </Card>
         </Box>
       ) : (

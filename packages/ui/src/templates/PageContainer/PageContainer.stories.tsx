@@ -93,6 +93,7 @@ export const Playground: Story = {
               description="Acompanhe os projetos cadastrados e seus respectivos status."
               columns={[{ key: "name", label: "Projeto" }, { key: "status", label: "Status" }]}
               rows={[{ name: "Projeto NIAR", status: "Em análise" }, { name: "Estudo SUS", status: "Aprovado" }]}
+              emptyState={{ title: "Nenhum projeto cadastrado", description: "Cadastre o primeiro projeto para começar.", "aria-level": 3 }}
               filter={<Filter search={[{ key: "project", label: "Projeto", options: ["Projeto NIAR", "Estudo SUS"] }]} />}
               tableBorder
             />
