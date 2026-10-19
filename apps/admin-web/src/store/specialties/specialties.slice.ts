@@ -1,107 +1,119 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit';
-import type { FetchSpecialtiesParams, SpecialtiesFilters, SpecialtiesPagination, Specialty, SpecialtyApiError } from '../../types/specialty.types';
+import type { SpecialtyListFilters, SpecialtyListItem, SpecialtyListPagination, SpecialtyApiError } from '../../types/specialty.types';
+import type { AsyncStatus, MutationState, ResourceState } from '../../types/resource.types';
 import { createSpecialty, fetchSpecialties, updateSpecialty, updateSpecialtyStatus } from './specialties.api';
 
-export type SpecialtiesStatus = 'idle' | 'pending' | 'succeeded' | 'failed';
+export type SpecialtiesStatus = AsyncStatus;
+export type SpecialtyMutationOperation = 'create' | 'update' | 'status';
 
 export const DEFAULT_SPECIALTIES_PAGE_SIZE = 20;
 
-const createDefaultSpecialtiesFilters = (): SpecialtiesFilters => ({});
+const createDefaultSpecialtiesFilters = (): SpecialtyListFilters => ({});
 
-export type SpecialtiesState = {
-  specialties: Specialty[];
-  selectedSpecialty: Specialty | null;
-  pagination: SpecialtiesPagination | null;
-  filters: SpecialtiesFilters;
-  page: number;
-  pageSize: number;
-  status: SpecialtiesStatus;
-  error: SpecialtyApiError | null;
+export type SpecialtiesState = ResourceState<
+  SpecialtyListItem,
+  SpecialtyListFilters,
+  SpecialtyListPagination,
+  SpecialtyApiError,
+  SpecialtyMutationOperation
+> & {
+  selected: SpecialtyListItem | null;
+  mutation: MutationState<SpecialtyApiError, SpecialtyMutationOperation>;
 };
 
 export const initialSpecialtiesState: SpecialtiesState = {
-  specialties: [],
-  selectedSpecialty: null,
-  pagination: null,
-  filters: createDefaultSpecialtiesFilters(),
-  page: 1,
-  pageSize: DEFAULT_SPECIALTIES_PAGE_SIZE,
-  status: 'idle',
-  error: null,
+  list: {
+    items: [],
+    pagination: null,
+    filters: createDefaultSpecialtiesFilters(),
+    page: 1,
+    pageSize: DEFAULT_SPECIALTIES_PAGE_SIZE,
+    status: 'idle',
+    error: null,
+  },
+  selected: null,
+  mutation: { operation: null, status: 'idle', error: null },
 };
 
 const specialtiesSlice = createSlice({
   name: 'specialties',
   initialState: initialSpecialtiesState,
   reducers: {
-    setSelectedSpecialty: (state, action: PayloadAction<Specialty>) => {
-      state.selectedSpecialty = action.payload;
+    setSelectedSpecialty: (state, action: PayloadAction<SpecialtyListItem>) => {
+      state.selected = action.payload;
     },
     clearSelectedSpecialty: (state) => {
-      state.selectedSpecialty = null;
+      state.selected = null;
     },
     clearSpecialtiesState: () => initialSpecialtiesState,
-    setSpecialtiesFilters: (state, action: PayloadAction<SpecialtiesFilters>) => {
-      state.filters = action.payload;
-      state.page = 1;
+    setSpecialtiesFilters: (state, action: PayloadAction<SpecialtyListFilters>) => {
+      state.list.filters = action.payload;
+      state.list.page = 1;
     },
     clearSpecialtiesFilters: (state) => {
-      state.filters = createDefaultSpecialtiesFilters();
-      state.page = 1;
+      state.list.filters = createDefaultSpecialtiesFilters();
+      state.list.page = 1;
     },
     setSpecialtiesPage: (state, action: PayloadAction<number>) => {
-      state.page = Math.max(1, action.payload);
+      state.list.page = Math.max(1, action.payload);
     },
     setSpecialtiesPageSize: (state, action: PayloadAction<number>) => {
-      state.pageSize = Math.max(1, action.payload);
-      state.page = 1;
+      state.list.pageSize = Math.max(1, action.payload);
+      state.list.page = 1;
     },
     clearSpecialtiesError: (state) => {
-      state.error = null;
-      if (state.status === 'failed') state.status = 'idle';
+      state.list.error = null;
+      state.mutation.error = null;
+      if (state.list.status === 'failed') state.list.status = 'idle';
+      if (state.mutation.status === 'failed') state.mutation.status = 'idle';
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchSpecialties.pending, (state, action) => {
-        state.status = 'pending';
-        state.error = null;
-        state.filters = {
+        state.list.status = 'pending';
+        state.list.error = null;
+        state.list.filters = {
           ...(action.meta.arg?.query ? { query: action.meta.arg.query } : {}),
           ...(action.meta.arg?.isActive !== undefined ? { isActive: action.meta.arg.isActive } : {}),
         };
-        state.page = action.meta.arg?.page ?? 1;
-        state.pageSize = action.meta.arg?.pageSize ?? DEFAULT_SPECIALTIES_PAGE_SIZE;
+        state.list.page = action.meta.arg?.page ?? 1;
+        state.list.pageSize = action.meta.arg?.pageSize ?? DEFAULT_SPECIALTIES_PAGE_SIZE;
       })
       .addCase(fetchSpecialties.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.specialties = action.payload.items;
-        state.pagination = action.payload.pagination;
+        state.list.status = 'succeeded';
+        state.list.error = null;
+        state.list.items = action.payload.items;
+        state.list.pagination = action.payload.pagination;
       })
       .addCase(fetchSpecialties.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload ?? { message: 'Não foi possível carregar as especialidades.' };
+        state.list.status = 'failed';
+        state.list.error = action.payload ?? { message: 'Não foi possível carregar as especialidades.' };
       })
       .addMatcher(
         isAnyOf(createSpecialty.pending, updateSpecialty.pending, updateSpecialtyStatus.pending),
-        (state) => {
-          state.status = 'pending';
-          state.error = null;
+        (state, action) => {
+          const operation = action.type.includes('updateSpecialtyStatus') ? 'status' : action.type.includes('updateSpecialty') ? 'update' : 'create';
+          state.mutation = { operation, status: 'pending', error: null };
         },
       )
       .addMatcher(
         isAnyOf(createSpecialty.fulfilled, updateSpecialty.fulfilled, updateSpecialtyStatus.fulfilled),
         (state, action) => {
-          state.status = 'succeeded';
-          state.error = null;
-          state.selectedSpecialty = action.payload;
+          const operation = action.type.includes('updateSpecialtyStatus') ? 'status' : action.type.includes('updateSpecialty') ? 'update' : 'create';
+          state.mutation = { operation, status: 'succeeded', error: null };
+          state.selected = action.payload;
         },
       )
       .addMatcher(
         isAnyOf(createSpecialty.rejected, updateSpecialty.rejected, updateSpecialtyStatus.rejected),
         (state, action) => {
-          state.status = 'failed';
-          state.error = action.payload ?? { message: 'Não foi possível concluir a operação.' };
+          const operation = action.type.includes('updateSpecialtyStatus') ? 'status' : action.type.includes('updateSpecialty') ? 'update' : 'create';
+          state.mutation = {
+            operation,
+            status: 'failed',
+            error: action.payload ?? { message: 'Não foi possível concluir a operação.' },
+          };
         },
       );
   },

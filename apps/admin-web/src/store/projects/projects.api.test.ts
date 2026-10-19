@@ -84,10 +84,10 @@ describe("projects thunks", () => {
       await store.dispatch(getProjects({ page: 1 }));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("succeeded");
-      expect(state.error).toBeNull();
-      expect(state.projects).toEqual(listResponse.items);
-      expect(state.pagination).toEqual(listResponse.pagination);
+      expect(state.list.status).toBe("succeeded");
+      expect(state.list.error).toBeNull();
+      expect(state.list.items).toEqual(listResponse.items);
+      expect(state.list.pagination).toEqual(listResponse.pagination);
     });
 
     it("marca status como pending antes de resolver", async () => {
@@ -101,8 +101,8 @@ describe("projects thunks", () => {
       const dispatchPromise = store.dispatch(getProjects({}));
 
       // Ainda não resolveu — o estado deve estar pending
-      expect(store.getState().projects.status).toBe("pending");
-      expect(store.getState().projects.error).toBeNull();
+      expect(store.getState().projects.list.status).toBe("pending");
+      expect(store.getState().projects.list.error).toBeNull();
 
       // Resolve para o teste terminar limpo
       resolveRequest!(buildListResponse());
@@ -120,9 +120,9 @@ describe("projects thunks", () => {
       await store.dispatch(getProjects({}));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("failed");
-      expect(state.error).toEqual(apiError);
-      expect(state.projects).toEqual([]);
+      expect(state.list.status).toBe("failed");
+      expect(state.list.error).toEqual(apiError);
+      expect(state.list.items).toEqual([]);
     });
 
     it("usa o fallback quando o service lança erro desconhecido (não ApiError)", async () => {
@@ -135,12 +135,12 @@ describe("projects thunks", () => {
       await store.dispatch(getProjects({}));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("failed");
+      expect(state.list.status).toBe("failed");
       expect(normalizeProjectApiError).toHaveBeenCalledWith(
         "UNKNOWN_ERROR",
         undefined,
       );
-      expect(state.error?.message).toContain("Não foi possível");
+      expect(state.list.error?.message).toContain("Não foi possível");
     });
   });
 
@@ -163,9 +163,9 @@ describe("projects thunks", () => {
       await store.dispatch(getProject(99));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("succeeded");
-      expect(state.error).toBeNull();
-      expect(state.selectedProject).toEqual(project);
+      expect(state.list.status).toBe("succeeded");
+      expect(state.list.error).toBeNull();
+      expect(state.selected).toEqual(project);
     });
 
     it("guarda o erro e não seta selectedProject quando falha", async () => {
@@ -176,29 +176,29 @@ describe("projects thunks", () => {
       await store.dispatch(getProject(999));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("failed");
-      expect(state.error).toEqual(apiError);
-      expect(state.selectedProject).toBeNull();
+      expect(state.list.status).toBe("failed");
+      expect(state.list.error).toEqual(apiError);
+      expect(state.selected).toBeNull();
     });
   });
 
   describe("consistência do slice único", () => {
-    it("os dois thunks escrevem no mesmo status e error", async () => {
+    it("mantém a consulta de lista e a consulta de detalhe no mesmo estado de leitura", async () => {
       getProjectsRequest.mockResolvedValueOnce(buildListResponse());
       const store = makeTestStore();
 
       await store.dispatch(getProjects({}));
-      expect(store.getState().projects.status).toBe("succeeded");
+      expect(store.getState().projects.list.status).toBe("succeeded");
 
       getProjectRequest.mockResolvedValueOnce(buildProject());
       await store.dispatch(getProject(42));
-      expect(store.getState().projects.status).toBe("succeeded");
+      expect(store.getState().projects.list.status).toBe("succeeded");
 
       // Erro do getProject sobrescreve o status anterior
       getProjectRequest.mockRejectedValueOnce(buildApiError({ status: 404 }));
       await store.dispatch(getProject(999));
-      expect(store.getState().projects.status).toBe("failed");
-      expect(store.getState().projects.error).not.toBeNull();
+      expect(store.getState().projects.list.status).toBe("failed");
+      expect(store.getState().projects.list.error).not.toBeNull();
     });
   });
 });

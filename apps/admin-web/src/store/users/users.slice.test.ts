@@ -4,7 +4,7 @@ import reducer, {
   clearUsersState,
   setSelectedUser,
 } from './users.slice';
-import { selectUsersError } from './users.selectors';
+import { selectUsersListError } from './users.selectors';
 import type { UserListItem } from '../../types/user.types';
 
 const user: UserListItem = {
@@ -26,64 +26,79 @@ describe('usersSlice', () => {
     const state = reducer(undefined, setSelectedUser(user));
 
     expect(state).toEqual({
-      users: [],
-      selectedUser: user,
-      pagination: null,
-      filters: {},
-      page: 1,
-      pageSize: 20,
-      status: 'idle',
-      error: null,
+      list: {
+        items: [],
+        pagination: null,
+        filters: {},
+        page: 1,
+        pageSize: 20,
+        status: 'idle',
+        error: null,
+      },
+      selected: user,
+      mutation: { operation: null, status: 'idle', error: null },
     });
   });
 
   it('limpa o estado local de usuários', () => {
     expect(reducer({
-      users: [user],
-      selectedUser: user,
-      pagination: { page: 1, pageSize: 20, totalItems: 1, totalPages: 1 },
-      filters: { role: 'researcher' },
-      page: 2,
-      pageSize: 10,
-      status: 'failed',
-      error: { message: 'Falha' },
+      list: {
+        items: [user],
+        pagination: { page: 1, pageSize: 20, totalItems: 1, totalPages: 1 },
+        filters: { role: 'researcher' },
+        page: 2,
+        pageSize: 20,
+        status: 'failed',
+        error: { message: 'Falha' },
+      },
+      selected: user,
+      mutation: { operation: null, status: 'idle', error: null },
     }, clearUsersState())).toEqual({
-      users: [],
-      selectedUser: null,
-      pagination: null,
-      filters: {},
-      page: 1,
-      pageSize: 20,
-      status: 'idle',
-      error: null,
+      list: {
+        items: [],
+        pagination: null,
+        filters: {},
+        page: 1,
+        pageSize: 20,
+        status: 'idle',
+        error: null,
+      },
+      selected: null,
+      mutation: { operation: null, status: 'idle', error: null },
     });
   });
 
   it('expõe null no seletor quando não há erro', () => {
     const state = reducer(undefined, { type: 'unknown' });
 
-    expect(selectUsersError({ users: state })).toBeNull();
+    expect(selectUsersListError({ users: state })).toBeNull();
   });
 
   it('limpa apenas o erro da API depois que o snackbar fecha', () => {
     expect(reducer({
-      users: [user],
-      selectedUser: user,
-      pagination: null,
-      filters: {},
-      page: 1,
-      pageSize: 20,
-      status: 'failed',
-      error: { message: 'Falha' },
+      list: {
+        items: [user],
+        pagination: null,
+        filters: {},
+        page: 1,
+        pageSize: 10,
+        status: 'failed',
+        error: { message: 'Falha' },
+      },
+      selected: user,
+      mutation: { operation: null, status: 'idle', error: null },
     }, clearUsersError())).toEqual({
-      users: [user],
-      selectedUser: user,
-      pagination: null,
-      filters: {},
-      page: 1,
-      pageSize: 20,
-      status: 'idle',
-      error: null,
+      list: {
+        items: [user],
+        pagination: null,
+        filters: {},
+        page: 1,
+        pageSize: 10,
+        status: 'idle',
+        error: null,
+      },
+      selected: user,
+      mutation: { operation: null, status: 'idle', error: null },
     });
   });
 });

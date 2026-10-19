@@ -72,8 +72,7 @@ describe('users api', () => {
       },
     });
     expect(store.getState().users).toMatchObject({
-      status: 'succeeded',
-      error: null,
+      mutation: { operation: 'create', status: 'succeeded', error: null },
     });
     expect(request.method).toBe('POST');
     expect(url).toContain('/api/admin/users');
@@ -91,11 +90,14 @@ describe('users api', () => {
     await store.dispatch(createUser(input));
 
     expect(store.getState().users).toEqual(expect.objectContaining({
-      status: 'failed',
-      error: {
-        status: 409,
-        message: 'Este e-mail já está cadastrado.',
-        fieldErrors: { email: 'Este e-mail já está cadastrado.' },
+      mutation: {
+        operation: 'create',
+        status: 'failed',
+        error: {
+          status: 409,
+          message: 'Este e-mail já está cadastrado.',
+          fieldErrors: { email: 'Este e-mail já está cadastrado.' },
+        },
       },
     }));
   });
@@ -127,16 +129,18 @@ describe('users api', () => {
     await store.dispatch(getUsers({ role: 'admin', accountStatus: 'active', page: 2, pageSize: 10 }));
 
     expect(store.getState().users).toMatchObject({
-      status: 'succeeded',
-      filters: { role: 'admin', accountStatus: 'active' },
-      page: 2,
-      pageSize: 10,
-      pagination: { page: 2, pageSize: 10, totalItems: 11, totalPages: 2 },
-      users: [{
-        id: 8,
-        fullName: 'Bruno Lima',
-        accountStatus: 'active',
-      }],
+      list: {
+        status: 'succeeded',
+        filters: { role: 'admin', accountStatus: 'active' },
+        page: 2,
+        pageSize: 10,
+        pagination: { page: 2, pageSize: 10, totalItems: 11, totalPages: 2 },
+        items: [{
+          id: 8,
+          fullName: 'Bruno Lima',
+          accountStatus: 'active',
+        }],
+      },
     });
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/api/admin/users?role=admin&account_status=active&page=2&page_size=10'),

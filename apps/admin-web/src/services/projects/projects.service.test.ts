@@ -4,7 +4,7 @@ import {
   getProjectRequest,
   getProjectsRequest,
   normalizeProjectApiError,
-  toPagination,
+  toProjectListPagination,
   toProject,
 } from "./projects.service";
 
@@ -151,10 +151,10 @@ describe("projects service", () => {
     });
   });
 
-  describe("toPagination", () => {
+  describe("toProjectListPagination", () => {
     it("converte page_size, total_items e total_pages para camelCase", () => {
       expect(
-        toPagination({
+        toProjectListPagination({
           page: 2,
           page_size: 10,
           total_items: 42,

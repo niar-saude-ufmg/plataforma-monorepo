@@ -11,26 +11,28 @@ export type Specialty = {
   updatedAt: string;
 };
 
-export type SpecialtiesPagination = {
+export type SpecialtyListItem = Specialty;
+
+export type SpecialtyListPagination = {
   page: number;
   pageSize: number;
   totalItems: number;
   totalPages: number;
 };
 
-export type SpecialtiesList = {
-  items: Specialty[];
-  pagination: SpecialtiesPagination;
+export type SpecialtyListResponse = {
+  items: SpecialtyListItem[];
+  pagination: SpecialtyListPagination;
 };
 
-export type FetchSpecialtiesParams = {
+export type SpecialtyListParams = {
   query?: string;
   isActive?: boolean;
   page?: number;
   pageSize?: number;
 };
 
-export type SpecialtiesFilters = Pick<FetchSpecialtiesParams, 'query' | 'isActive'>;
+export type SpecialtyListFilters = Pick<SpecialtyListParams, 'query' | 'isActive'>;
 
 export type CreateSpecialtyInput = {
   code: string;

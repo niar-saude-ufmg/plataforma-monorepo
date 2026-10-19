@@ -5,7 +5,7 @@ export type RoleRoute = {
   path: string;
 };
 
-export type RoleSection = "home" | "projetos";
+export type RoleSection = "home" | "projetos" | "usuarios" | "especialidades";
 
 export type RoleRouteDefinition = {
   label: string;
@@ -27,6 +27,8 @@ const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
   admin: [
     ...commonRoleRouteDefinitions,
     { label: "Projetos", section: "projetos" },
+    { label: "Usuários", section: "usuarios" },
+    { label: "Especialidades", section: "especialidades" },
   ],
   researcher: [
     ...commonRoleRouteDefinitions,
