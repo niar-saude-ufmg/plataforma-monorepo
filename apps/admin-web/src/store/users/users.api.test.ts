@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CreateUserInput } from '../../types/user.types';
-import { createUser, getUsers } from './users.api';
+import { createUser, downloadUserCoepDocument, getUsers } from './users.api';
 import usersReducer from './users.slice';
 
 const fetchMock = vi.hoisted(() => {
@@ -43,6 +43,7 @@ function createTestStore() {
 describe('users api', () => {
   afterEach(() => {
     fetchMock.mockReset();
+    vi.restoreAllMocks();
   });
 
   it('envia o cadastro como multipart e normaliza a resposta', async () => {
@@ -146,5 +147,27 @@ describe('users api', () => {
       expect.stringContaining('/api/admin/users?search=Bruno&role=admin&account_status=active&page=2&page_size=10'),
       expect.anything(),
     );
+  });
+
+  it('baixa o parecer do COEP e registra o nome no estado', async () => {
+    fetchMock.mockResolvedValue(
+      new Response('%PDF-fake', {
+        status: 200,
+        headers: { 'Content-Disposition': 'attachment; filename="parecer.pdf"' },
+      }),
+    );
+    const createObjectURL = vi.fn().mockReturnValue('blob:parecer');
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const store = createTestStore();
+
+    await store.dispatch(downloadUserCoepDocument(7));
+
+    expect(store.getState().users.download).toEqual({
+      status: 'succeeded',
+      error: null,
+      filename: 'parecer.pdf',
+    });
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
   });
 });

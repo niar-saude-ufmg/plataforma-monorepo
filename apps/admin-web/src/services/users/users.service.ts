@@ -9,6 +9,10 @@ import type {
   UserListResponse,
 } from '../../types/user.types';
 import { getAdminApiBaseUrl } from '../auth/auth.service';
+import {
+  getFilenameFromContentDisposition,
+  type DownloadedFile,
+} from '../../utils/download-file';
 
 type ApiValidationIssue = {
   message: string;
@@ -302,6 +306,59 @@ export async function createUserRequest(input: CreateUserInput): Promise<User> {
   }
 
   return toUser(body as CreateUserApiResponse);
+}
+
+export async function downloadUserCoepDocumentRequest(userId: number): Promise<DownloadedFile> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${getAdminApiBaseUrl()}/users/${userId}/coep-document`, {
+      headers: authHeaders(),
+    });
+  } catch {
+    throw normalizeUserDocumentApiError('FETCH_ERROR');
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => undefined);
+    throw normalizeUserDocumentApiError(response.status, body);
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: getFilenameFromContentDisposition(
+      response.headers.get('Content-Disposition'),
+      `parecer-coep-${userId}.pdf`,
+    ),
+  };
+}
+
+export function normalizeUserDocumentApiError(
+  status: number | string,
+  _body?: unknown,
+): ApiError {
+  const numericStatus = typeof status === 'number' ? status : undefined;
+
+  if (numericStatus === 401) {
+    return { status: 401, message: 'Sessão expirada. Faça login novamente.' };
+  }
+
+  if (numericStatus === 403) {
+    return { status: 403, message: 'Você não tem acesso a este documento.' };
+  }
+
+  if (numericStatus === 404) {
+    return { status: 404, message: 'Documento do COEP não encontrado.' };
+  }
+
+  if (numericStatus === 500) {
+    return { status: 500, message: 'Erro no servidor. Tente novamente.' };
+  }
+
+  return {
+    status: numericStatus,
+    message: 'Não foi possível baixar o documento do COEP. Tente novamente.',
+  };
 }
 
 export function normalizeUserListApiError(

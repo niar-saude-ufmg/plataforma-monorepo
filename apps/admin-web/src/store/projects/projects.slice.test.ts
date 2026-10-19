@@ -76,6 +76,7 @@ function buildSliceState(overrides: Partial<ProjectsState> = {}): ProjectsState 
       error: null,
     },
     selected: null,
+    download: { status: "idle", error: null, filename: null },
     ...overrides,
   };
 }
@@ -120,6 +121,7 @@ describe("projects slice", () => {
       // os outros campos não foram tocados
       expect(state.list.status).toBe("idle");
       expect(state.list.error).toBeNull();
+      expect(state.download).toEqual({ status: "idle", error: null, filename: null });
     });
   });
 

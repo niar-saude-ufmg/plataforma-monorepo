@@ -5,8 +5,8 @@ import type {
   ProjectListPagination,
 } from "../../types/project.types";
 import type { ApiError } from "../../types/api.types";
-import type { AsyncStatus, ResourceState } from "../../types/resource.types";
-import { getProjects, getProject } from "./projects.api";
+import type { AsyncStatus, FileState, ResourceState } from "../../types/resource.types";
+import { downloadProjectDocument, getProjects, getProject } from "./projects.api";
 
 export type ProjectsStatus = AsyncStatus;
 
@@ -16,6 +16,7 @@ const createDefaultProjectsFilters = (): ProjectListFilters => ({});
 
 export type ProjectsState = ResourceState<ProjectListItem, ProjectListFilters, ProjectListPagination, ApiError> & {
   selected: ProjectListItem | null;
+  download: FileState<ApiError>;
 };
 
 const initialState: ProjectsState = {
@@ -29,6 +30,7 @@ const initialState: ProjectsState = {
     error: null,
   },
   selected: null,
+  download: { status: "idle", error: null, filename: null },
 };
 
 const projectsSlice = createSlice({
@@ -52,6 +54,7 @@ const projectsSlice = createSlice({
         error: null,
       };
       state.selected = null;
+      state.download = { status: "idle", error: null, filename: null };
     },
     setProjectsFilters(state, action: PayloadAction<ProjectListFilters>) {
       state.list.filters = action.payload;
@@ -72,6 +75,10 @@ const projectsSlice = createSlice({
       state.list.error = null;
       if (state.list.status === "failed") {
         state.list.status = "idle";
+      }
+      state.download.error = null;
+      if (state.download.status === "failed") {
+        state.download.status = "idle";
       }
     },
   },
@@ -115,6 +122,22 @@ const projectsSlice = createSlice({
       state.list.status = "failed";
       state.list.error = action.payload ?? {
         message: "Não foi possível carregar o projeto. Tente novamente.",
+      };
+    });
+
+    builder.addCase(downloadProjectDocument.pending, (state) => {
+      state.download = { status: "pending", error: null, filename: null };
+    });
+    builder.addCase(downloadProjectDocument.fulfilled, (state, action) => {
+      state.download = { status: "succeeded", error: null, filename: action.payload.filename };
+    });
+    builder.addCase(downloadProjectDocument.rejected, (state, action) => {
+      state.download = {
+        status: "failed",
+        error: action.payload ?? {
+          message: "Não foi possível baixar o documento do projeto. Tente novamente.",
+        },
+        filename: null,
       };
     });
   },

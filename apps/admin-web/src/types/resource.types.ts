@@ -16,6 +16,12 @@ export type MutationState<ErrorType, Operation extends string = string> = {
   error: ErrorType | null;
 };
 
+export type FileState<ErrorType> = {
+  status: AsyncStatus;
+  error: ErrorType | null;
+  filename: string | null;
+};
+
 export type ResourceState<Item, Filters, PaginationType, ErrorType, Operation extends string = string> = {
   list: ListState<Item, Filters, PaginationType, ErrorType>;
   selected?: Item | null;

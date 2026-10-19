@@ -3,6 +3,8 @@ import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import {
   getProjectRequest,
   getProjectsRequest,
+  downloadProjectDocumentRequest,
+  normalizeProjectDocumentApiError,
   normalizeProjectApiError,
   toProjectListPagination,
   toProject,
@@ -363,6 +365,40 @@ describe("projects service", () => {
 
       await expect(getProjectRequest(99999)).rejects.toMatchObject({
         status: 404,
+      });
+    });
+  });
+
+  describe("downloadProjectDocumentRequest", () => {
+    it("baixa o documento usando os ids do projeto e do documento", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response("docx-fake", {
+          status: 200,
+          headers: { "Content-Disposition": "attachment; filename=projeto.docx" },
+        }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await downloadProjectDocumentRequest(42, 101);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:3333/api/admin/projects/42/documents/101/download",
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: "Bearer fake-token" }),
+        }),
+      );
+      expect(result.filename).toBe("projeto.docx");
+      expect(await result.blob.text()).toBe("docx-fake");
+    });
+
+    it("normaliza os erros do download do projeto", () => {
+      expect(normalizeProjectDocumentApiError(403)).toEqual({
+        status: 403,
+        message: "Você não tem acesso a este documento.",
+      });
+      expect(normalizeProjectDocumentApiError(404)).toEqual({
+        status: 404,
+        message: "Documento do projeto não encontrado.",
       });
     });
   });

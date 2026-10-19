@@ -21,3 +21,8 @@ export const selectUsersMutationError = (state: UsersRootState) => selectUsersSt
 export const selectUsersMutationLoading = (state: UsersRootState) => selectUsersState(state).mutation.status === 'pending';
 export const selectUsersMutationStatus = (state: UsersRootState) => selectUsersState(state).mutation.status;
 export const selectUsersMutationOperation = (state: UsersRootState) => selectUsersState(state).mutation.operation;
+export const selectUsersDownload = (state: UsersRootState) => selectUsersState(state).download;
+export const selectUsersDownloadStatus = (state: UsersRootState) => selectUsersState(state).download.status;
+export const selectUsersDownloadLoading = (state: UsersRootState) => selectUsersState(state).download.status === 'pending';
+export const selectUsersDownloadError = (state: UsersRootState) => selectUsersState(state).download.error;
+export const selectUsersDownloadFilename = (state: UsersRootState) => selectUsersState(state).download.filename;

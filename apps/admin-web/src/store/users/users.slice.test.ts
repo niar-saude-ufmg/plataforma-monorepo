@@ -37,6 +37,7 @@ describe('usersSlice', () => {
       },
       selected: user,
       mutation: { operation: null, status: 'idle', error: null },
+      download: { status: 'idle', error: null, filename: null },
     });
   });
 
@@ -53,6 +54,7 @@ describe('usersSlice', () => {
       },
       selected: user,
       mutation: { operation: null, status: 'idle', error: null },
+      download: { status: 'idle', error: null, filename: null },
     }, clearUsersState())).toEqual({
       list: {
         items: [],
@@ -65,6 +67,7 @@ describe('usersSlice', () => {
       },
       selected: null,
       mutation: { operation: null, status: 'idle', error: null },
+      download: { status: 'idle', error: null, filename: null },
     });
   });
 
@@ -87,6 +90,7 @@ describe('usersSlice', () => {
       },
       selected: user,
       mutation: { operation: null, status: 'idle', error: null },
+      download: { status: 'idle', error: null, filename: null },
     }, clearUsersError())).toEqual({
       list: {
         items: [user],
@@ -99,6 +103,7 @@ describe('usersSlice', () => {
       },
       selected: user,
       mutation: { operation: null, status: 'idle', error: null },
+      download: { status: 'idle', error: null, filename: null },
     });
   });
 });

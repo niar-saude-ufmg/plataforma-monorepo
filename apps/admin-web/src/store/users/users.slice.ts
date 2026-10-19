@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { UserApiError, UserListFilters, UserListItem, UserListPagination } from '../../types/user.types';
-import type { AsyncStatus, MutationState, ResourceState } from '../../types/resource.types';
-import { createUser, getUsers } from './users.api';
+import type { AsyncStatus, FileState, MutationState, ResourceState } from '../../types/resource.types';
+import { createUser, downloadUserCoepDocument, getUsers } from './users.api';
 
 export type UsersStatus = AsyncStatus;
 export type UserMutationOperation = 'create' | 'update' | 'approve' | 'reject';
@@ -19,6 +19,7 @@ export type UsersState = ResourceState<
 > & {
   selected: UserListItem | null;
   mutation: MutationState<UserApiError, UserMutationOperation>;
+  download: FileState<UserApiError>;
 };
 
 const initialState: UsersState = {
@@ -33,6 +34,7 @@ const initialState: UsersState = {
   },
   selected: null,
   mutation: { operation: null, status: 'idle', error: null },
+  download: { status: 'idle', error: null, filename: null },
 };
 
 const usersSlice = createSlice({
@@ -72,15 +74,20 @@ const usersSlice = createSlice({
       };
       state.selected = null;
       state.mutation = { operation: null, status: 'idle', error: null };
+      state.download = { status: 'idle', error: null, filename: null };
     },
     clearUsersError(state) {
       state.list.error = null;
       state.mutation.error = null;
+      state.download.error = null;
       if (state.list.status === 'failed') {
         state.list.status = 'idle';
       }
       if (state.mutation.status === 'failed') {
         state.mutation.status = 'idle';
+      }
+      if (state.download.status === 'failed') {
+        state.download.status = 'idle';
       }
     },
   },
@@ -121,6 +128,21 @@ const usersSlice = createSlice({
         error: action.payload ?? {
         message: 'Não foi possível cadastrar o pesquisador. Tente novamente.',
         },
+      };
+    });
+    builder.addCase(downloadUserCoepDocument.pending, (state) => {
+      state.download = { status: 'pending', error: null, filename: null };
+    });
+    builder.addCase(downloadUserCoepDocument.fulfilled, (state, action) => {
+      state.download = { status: 'succeeded', error: null, filename: action.payload.filename };
+    });
+    builder.addCase(downloadUserCoepDocument.rejected, (state, action) => {
+      state.download = {
+        status: 'failed',
+        error: action.payload ?? {
+          message: 'Não foi possível baixar o documento do COEP. Tente novamente.',
+        },
+        filename: null,
       };
     });
   },

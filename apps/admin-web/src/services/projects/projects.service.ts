@@ -13,6 +13,10 @@ import type {
 } from "../../types/project.types";
 import { getAdminApiBaseUrl } from "../auth/auth.service";
 import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
+import {
+  getFilenameFromContentDisposition,
+  type DownloadedFile,
+} from "../../utils/download-file";
 
 
 export function toResearcher(raw: any): ResearcherSummary {
@@ -155,6 +159,60 @@ export async function getProjectRequest(projectId: number): Promise<Project> {
 
   const body = await response.json();
   return toProject(body);
+}
+
+export async function downloadProjectDocumentRequest(
+  projectId: number,
+  documentId: number,
+): Promise<DownloadedFile> {
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${getAdminApiBaseUrl()}/projects/${projectId}/documents/${documentId}/download`,
+      { headers: authHeaders() },
+    );
+  } catch {
+    throw normalizeProjectDocumentApiError("FETCH_ERROR");
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => undefined);
+    throw normalizeProjectDocumentApiError(response.status, body);
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: getFilenameFromContentDisposition(
+      response.headers.get("Content-Disposition"),
+      `documento-projeto-${projectId}-${documentId}`,
+    ),
+  };
+}
+
+export function normalizeProjectDocumentApiError(
+  status: number | string,
+  _body?: unknown,
+): ApiError {
+  const numericStatus = typeof status === "number" ? status : undefined;
+
+  if (numericStatus === 401) {
+    return { status: 401, message: "Sessão expirada. Faça login novamente." };
+  }
+  if (numericStatus === 403) {
+    return { status: 403, message: "Você não tem acesso a este documento." };
+  }
+  if (numericStatus === 404) {
+    return { status: 404, message: "Documento do projeto não encontrado." };
+  }
+  if (numericStatus === 500) {
+    return { status: 500, message: "Erro no servidor. Tente novamente." };
+  }
+
+  return {
+    status: numericStatus,
+    message: "Não foi possível baixar o documento do projeto. Tente novamente.",
+  };
 }
 
 export function normalizeProjectApiError(

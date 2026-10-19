@@ -2,20 +2,30 @@ import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import type {ApiError } from '../../types/api.types';
 import type { Project, ProjectListResponse } from '../../types/project.types';
-import { getProject, getProjects } from './projects.api';
+import { downloadProjectDocument, getProject, getProjects } from './projects.api';
 import projectsReducer from "./projects.slice";
 
-const { getProjectsRequest, getProjectRequest, normalizeProjectApiError } =
+const {
+  getProjectsRequest,
+  getProjectRequest,
+  downloadProjectDocumentRequest,
+  normalizeProjectApiError,
+  normalizeProjectDocumentApiError,
+} =
   vi.hoisted(() => ({
     getProjectsRequest: vi.fn(),
     getProjectRequest: vi.fn(),
+    downloadProjectDocumentRequest: vi.fn(),
     normalizeProjectApiError: vi.fn(),
+    normalizeProjectDocumentApiError: vi.fn(),
   }));
 
 vi.mock("../../services/projects/projects.service", () => ({
   getProjectsRequest,
   getProjectRequest,
+  downloadProjectDocumentRequest,
   normalizeProjectApiError,
+  normalizeProjectDocumentApiError,
 }));
 
 const buildProject = (overrides: Partial<Project> = {}): Project => ({
@@ -49,12 +59,21 @@ function makeTestStore() {
 }
 
 describe("projects thunks", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeEach(() => {
     getProjectsRequest.mockReset();
     getProjectRequest.mockReset();
+    downloadProjectDocumentRequest.mockReset();
     normalizeProjectApiError.mockReset();
+    normalizeProjectDocumentApiError.mockReset();
 
     normalizeProjectApiError.mockReturnValue(
+      buildApiError({ message: "Erro inesperado", status: undefined }),
+    );
+    normalizeProjectDocumentApiError.mockReturnValue(
       buildApiError({ message: "Erro inesperado", status: undefined }),
     );
   });
@@ -199,6 +218,42 @@ describe("projects thunks", () => {
       await store.dispatch(getProject(999));
       expect(store.getState().projects.list.status).toBe("failed");
       expect(store.getState().projects.list.error).not.toBeNull();
+    });
+  });
+
+  describe("downloadProjectDocument", () => {
+    it("chama o service com projectId e documentId e retorna o arquivo", async () => {
+      const file = { blob: new Blob(["docx-fake"]), filename: "projeto.docx" };
+      downloadProjectDocumentRequest.mockResolvedValueOnce(file);
+      vi.stubGlobal("URL", {
+        createObjectURL: vi.fn().mockReturnValue("blob:projeto"),
+        revokeObjectURL: vi.fn(),
+      });
+      vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+      const store = makeTestStore();
+
+      await store.dispatch(downloadProjectDocument({ projectId: 42, documentId: 101 }));
+
+      expect(downloadProjectDocumentRequest).toHaveBeenCalledWith(42, 101);
+      expect(store.getState().projects.download).toEqual({
+        status: "succeeded",
+        error: null,
+        filename: "projeto.docx",
+      });
+    });
+
+    it("guarda o erro do download no estado", async () => {
+      const apiError = buildApiError({ status: 403, message: "Sem acesso" });
+      downloadProjectDocumentRequest.mockRejectedValueOnce(apiError);
+      const store = makeTestStore();
+
+      await store.dispatch(downloadProjectDocument({ projectId: 42, documentId: 101 }));
+
+      expect(store.getState().projects.download).toEqual({
+        status: "failed",
+        error: apiError,
+        filename: null,
+      });
     });
   });
 });
