@@ -9,6 +9,7 @@ import {
 import { RoleGuard } from "../guards/RoleGuard";
 import { AdminLayout } from "../layouts/AdminLayout/AdminLayout";
 import { RoleHome } from "../pages/RoleHome/RoleHome";
+import { Users } from "../pages/Users/Users";
 import { useAppSelector } from "../store/hooks";
 import { selectAuthUser } from "../store/auth/auth.slice";
 import {
@@ -25,9 +26,14 @@ function RoleRouteContent({ user }: { user: NonNullable<ReturnType<typeof select
 
   if (!route) return <Navigate replace to={getRoleHomePath(user.role)} />;
 
+  const content =
+    route.section === "usuarios"
+      ? <Users />
+      : <RoleHome section={route.section} userName={user.name} />;
+
   return (
     <RoleGuard allowedRoles={[user.role]}>
-      <RoleHome section={route.section} userName={user.name} />
+        {content}
     </RoleGuard>
   );
 }

@@ -4,7 +4,7 @@ import { createUser, getUsers } from './users.api';
 
 export type UsersStatus = 'idle' | 'pending' | 'succeeded' | 'failed';
 
-export const DEFAULT_USERS_PAGE_SIZE = 20;
+export const DEFAULT_USERS_PAGE_SIZE = 10;
 
 const createDefaultUsersFilters = (): UserListFilters => ({});
 
