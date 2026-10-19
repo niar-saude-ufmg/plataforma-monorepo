@@ -150,6 +150,7 @@ export async function getUsersRequest(
   params: UserListParams = {},
 ): Promise<UserListResponse> {
   const query = new URLSearchParams();
+  if (params.search) query.set('search', params.search);
   if (params.role) query.set('role', params.role);
   if (params.accountStatus) query.set('account_status', params.accountStatus);
   if (params.page !== undefined) query.set('page', String(params.page));

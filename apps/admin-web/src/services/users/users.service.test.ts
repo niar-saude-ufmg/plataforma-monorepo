@@ -76,6 +76,7 @@ describe("user service", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getUsersRequest({
+      search: "Ana Beatriz",
       role: "researcher",
       accountStatus: "pending",
       page: 2,
@@ -86,7 +87,7 @@ describe("user service", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:3333/api/admin/users?role=researcher&account_status=pending&page=2&page_size=10",
+      "http://localhost:3333/api/admin/users?search=Ana+Beatriz&role=researcher&account_status=pending&page=2&page_size=10",
       { headers: { Authorization: "Bearer fake-token" } },
     );
   });
