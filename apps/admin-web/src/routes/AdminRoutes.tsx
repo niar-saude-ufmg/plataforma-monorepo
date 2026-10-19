@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { RoleGuard } from "../guards/RoleGuard";
 import { AdminLayout } from "../layouts/AdminLayout/AdminLayout";
+import { Projects } from "../pages/Projects/Projects";
 import { RoleHome } from "../pages/RoleHome/RoleHome";
 import { Specialties } from "../pages/Specialties/Specialties";
 import { Users } from "../pages/Users/Users";
@@ -19,7 +20,11 @@ import {
   getRoleRoutePath,
 } from "./role-routes";
 
-function RoleRouteContent({ user }: { user: NonNullable<ReturnType<typeof selectAuthUser>> }) {
+function RoleRouteContent({
+  user,
+}: {
+  user: NonNullable<ReturnType<typeof selectAuthUser>>;
+}) {
   const location = useLocation();
   const route = getRoleRouteDefinitions(user.role).find(
     ({ section }) => location.pathname === getRoleRoutePath(user.role, section),
@@ -27,16 +32,17 @@ function RoleRouteContent({ user }: { user: NonNullable<ReturnType<typeof select
 
   if (!route) return <Navigate replace to={getRoleHomePath(user.role)} />;
 
-  const content =
+  const page =
+    route.section === "projetos" ? <Projects /> :
     route.section === "usuarios" ? <Users /> :
     route.section === "especialidades" ? <Specialties /> :
     <RoleHome section={route.section} userName={user.name} />;
+  const allowedRoles =
+    route.section === "projetos"
+      ? (["admin", "researcher"] as const)
+      : ([user.role] as const);
 
-  return (
-    <RoleGuard allowedRoles={[user.role]}>
-      {content}
-    </RoleGuard>
-  );
+  return <RoleGuard allowedRoles={allowedRoles}>{page}</RoleGuard>;
 }
 
 function RoleRoutes() {
