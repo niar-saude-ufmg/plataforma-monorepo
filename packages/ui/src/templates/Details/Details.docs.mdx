@@ -5,7 +5,7 @@ import * as Stories from "./Details.stories";
 
 # Details
 
-Template que combina `Dialog` com `ListText` ou `Timeline`. Use `variant="list"` (padrão) com itens `label`/`value`, ou `variant="timeline"` com itens `title`, `description` e `date`.
+Template que combina `Dialog` com `ListText` ou `Timeline`. Use `variant="list"` (padrão) com itens `label`/`value`, ou `sections` para organizar os itens em subgrupos com cabeçalhos. Use `variant="timeline"` com itens `title`, `description`, `date` e `color`.
 
 <Description of={Stories.Playground} />
 <Canvas of={Stories.Playground} />
@@ -20,6 +20,13 @@ Use `variant="timeline"` com `items` contendo `title`, `description` e `date` pa
 
 <Description of={Stories.TextVariant} />
 <Canvas of={Stories.TextVariant} />
+
+### Texto agrupado
+
+<Description of={Stories.GroupedListVariant} />
+<Canvas of={Stories.GroupedListVariant} />
+
+Na variação de texto, use `sections` quando os dados pertencerem a contextos diferentes, como dados da conta e dados do COEP. Cada seção recebe `items` e pode receber um `title`. Quando o `title` não for informado, a seção é renderizada como a lista simples usada originalmente pelo template.
 
 ### Histórico de status
 
