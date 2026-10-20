@@ -22,6 +22,7 @@ export type DetailsTimelineItem = {
 type DetailsBaseProps = {
   open: boolean;
   title?: ReactNode;
+  description?: ReactNode;
   onClose?: () => void;
   closeLabel?: string;
   listAriaLabel?: string;
@@ -52,6 +53,7 @@ export type DetailsProps = DetailsBaseProps &
 export function Details({
   open,
   title,
+  description,
   items,
   sections,
   variant = "list",
@@ -68,49 +70,56 @@ export function Details({
       closeLabel={closeLabel}
       minWidth={detailsMinWidth}
     >
-      {variant === "timeline" ? (
-        <Timeline items={items as readonly DetailsTimelineItem[]} aria-label={timelineAriaLabel} />
-      ) : sections ? (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: niar.spacing.xl }}>
-          {sections.map((section, index) => (
-            section.title ? (
-              <Box
-                key={index}
-                sx={{ display: "flex", flexDirection: "column", gap: niar.spacing.md }}
-              >
-                <Typography
-                  component="h2"
-                  variant="subtitle1"
-                  sx={{ fontWeight: niar.fontWeight.semibold }}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: niar.spacing.lg }}>
+        {description && (
+          <Typography component="p" variant="body2" color="text.secondary" sx={{ m: 0 }}>
+            {description}
+          </Typography>
+        )}
+        {variant === "timeline" ? (
+          <Timeline items={items as readonly DetailsTimelineItem[]} aria-label={timelineAriaLabel} />
+        ) : sections ? (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: niar.spacing.xl }}>
+            {sections.map((section, index) => (
+              section.title ? (
+                <Box
+                  key={index}
+                  sx={{ display: "flex", flexDirection: "column", gap: niar.spacing.md }}
                 >
-                  {section.title}
-                </Typography>
+                  <Typography
+                    component="h2"
+                    variant="subtitle1"
+                    sx={{ fontWeight: niar.fontWeight.semibold }}
+                  >
+                    {section.title}
+                  </Typography>
+                  <ListText
+                    items={section.items}
+                    dividers
+                    layout="stacked"
+                    aria-label={listAriaLabel}
+                  />
+                </Box>
+              ) : (
                 <ListText
+                  key={index}
                   items={section.items}
                   dividers
                   layout="stacked"
                   aria-label={listAriaLabel}
                 />
-              </Box>
-            ) : (
-              <ListText
-                key={index}
-                items={section.items}
-                dividers
-                layout="stacked"
-                aria-label={listAriaLabel}
-              />
-            )
-          ))}
-        </Box>
-      ) : (
-        <ListText
-          items={items as readonly DetailsListItem[]}
-          dividers
-          layout="stacked"
-          aria-label={listAriaLabel}
-        />
-      )}
+              )
+            ))}
+          </Box>
+        ) : (
+          <ListText
+            items={items as readonly DetailsListItem[]}
+            dividers
+            layout="stacked"
+            aria-label={listAriaLabel}
+          />
+        )}
+      </Box>
     </Dialog>
   );
 }

@@ -49,6 +49,11 @@ const meta = {
       description: "Título exibido no cabeçalho do dialog.",
       table: { category: "PROPS" },
     },
+    description: {
+      control: "text",
+      description: "Descrição exibida no corpo do template, antes do conteúdo principal.",
+      table: { category: "PROPS" },
+    },
     items: {
       control: "object",
       description:
@@ -191,7 +196,8 @@ export const GroupedListVariant: Story = {
 export const TimelineVariant: Story = {
   args: {
     open: false,
-    title: "Histórico do projeto",
+    title: "Histórico de avaliações",
+    description: "Estudo de saúde pública",
     variant: "timeline",
     items: timelineItems,
   },
@@ -205,7 +211,8 @@ export const TimelineVariant: Story = {
       source: {
         code: `<Details
   open
-  title="Histórico do projeto"
+  title="Histórico de avaliações"
+  description="Estudo de saúde pública"
   variant="timeline"
   items={[
     { title: "Projeto criado", date: "10/09/2026", color: "primary" },

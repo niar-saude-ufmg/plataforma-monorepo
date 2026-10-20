@@ -37,6 +37,21 @@ describe("Details", () => {
     expect(screen.getByText("Projeto criado")).toBeTruthy();
   });
 
+  it("renders the template description before the content", () => {
+    render(
+      <Details
+        open
+        title="Histórico do projeto"
+        description="Estudo de saúde pública"
+        variant="timeline"
+        items={[]}
+      />,
+    );
+
+    expect(screen.getByText("Histórico do projeto")).toBeTruthy();
+    expect(screen.getByText("Estudo de saúde pública")).toBeTruthy();
+  });
+
   it("renders grouped list sections", () => {
     render(
       <Details
