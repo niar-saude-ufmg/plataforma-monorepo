@@ -412,7 +412,7 @@ describe("Projects — estados e tabela", () => {
                 {
                   ...PROJECT_RESPONSE.items[0].status[0],
                   code: "approved_to_schedule",
-                  label: "Aprovado para agendamento",
+                  label: "Aprovado para agendar",
                 },
               ],
             },

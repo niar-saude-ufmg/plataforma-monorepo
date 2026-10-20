@@ -70,7 +70,7 @@ const PROJECT_STATUS_CHIP: Partial<
   rejected_to_safe_room: "error",
   resubmitted_for_review: "info",
   resubmitted_to_committee: "info",
-  under_review: "warning",
+  under_review: "info",
   scheduled_for_safe_room: "info",
   approved_for_safe_room: "success",
   under_safe_room: "info",
