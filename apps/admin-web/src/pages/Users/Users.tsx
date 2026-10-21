@@ -38,6 +38,7 @@ const toTableRows = (rows: UserListItem[]) =>
 const roleOptions: readonly AutocompleteOption[] = [
   { value: "researcher", label: "Pesquisador" },
   { value: "admin", label: "Administrador" },
+  { value: "auditor", label: "Auditor" },
   { value: "committee", label: "Comitê" },
 ];
 

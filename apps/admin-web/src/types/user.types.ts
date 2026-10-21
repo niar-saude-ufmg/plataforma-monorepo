@@ -1,5 +1,5 @@
 import type { ChangeEvent, ReactNode } from 'react';
-import type { UserAccountStatus } from '@niar/contracts';
+import type { UserAccountStatus, UserRole as ContractUserRole } from '@niar/contracts';
 import type { ApiError } from "./api.types";
 
 /**
@@ -9,8 +9,8 @@ import type { ApiError } from "./api.types";
  * a tradução acontece no service (services/users/users.service.ts), nunca dentro das telas.
  */
 
-/** Único perfil criado nesta entrega. Outros perfis voltam na tarefa da gestão de usuários. */
-export type UserRole = 'researcher' | 'admin' | 'committee';
+/** Papéis suportados pela aplicação administrativa. */
+export type UserRole = ContractUserRole;
 
 export interface AuthProfile {
   phone: string | null;

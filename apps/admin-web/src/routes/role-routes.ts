@@ -43,9 +43,11 @@ const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
   ],
   auditor: [
     ...commonRoleRouteDefinitions,
+    { label: "Usuários", section: "usuarios" },
   ],
   committee: [
     ...commonRoleRouteDefinitions,
+    { label: "Usuários", section: "usuarios" },
   ],
 };
 

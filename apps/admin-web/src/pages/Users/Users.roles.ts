@@ -37,6 +37,30 @@ export const USER_LIST_CONFIG: Partial<
     actions: ["details"],
     filterLabels: {
       search: "Buscar usuário",
+      accountStatus: "Status",
+    },
+  },
+  committee: {
+    title: "Usuários do Comitê",
+    description: "Consulte os usuários e o status de acesso à plataforma.",
+    emptyStateDescription: "Ainda não existem usuários para exibir.",
+    columnIds: ["fullName", "email", "accountStatus", "actions"],
+    filters: ["search", "accountStatus"],
+    actions: ["details"],
+    filterLabels: {
+      search: "Buscar usuário",
+      accountStatus: "Status",
+    },
+  },
+  auditor: {
+    title: "Usuários Auditores",
+    description: "Consulte os usuários e o status de acesso à plataforma.",
+    emptyStateDescription: "Ainda não existem usuários para exibir.",
+    columnIds: ["fullName", "email", "accountStatus", "actions"],
+    filters: ["search", "accountStatus"],
+    actions: ["details"],
+    filterLabels: {
+      search: "Buscar usuário",
       role: "Perfil",
       accountStatus: "Status",
     },

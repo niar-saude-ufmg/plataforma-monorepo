@@ -7,6 +7,7 @@ import type {
   UserListItem,
   UserListParams,
   UserListResponse,
+  UserRole,
 } from '../../types/user.types';
 import { getAdminApiBaseUrl } from '../auth/auth.service';
 import {
@@ -23,7 +24,7 @@ type CreateUserApiResponse = {
   id: number;
   full_name: string;
   email: string;
-  role: 'researcher' | 'admin' | 'committee';
+  role: UserRole;
   created_at: string;
 };
 
@@ -31,7 +32,7 @@ type UserListApiResponse = {
   id: number;
   full_name: string;
   email: string;
-  role: 'researcher' | 'admin' | 'committee';
+  role: UserRole;
   account_status: UserListItem['accountStatus'];
   created_at: string;
   profile: {
