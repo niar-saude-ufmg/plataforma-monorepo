@@ -26,6 +26,16 @@ const meta = {
       description: "Exibe o botão de fechar no cabeçalho.",
       table: { category: "PROPS", defaultValue: { summary: "true" } },
     },
+    closeOnBackdropClick: {
+      control: "boolean",
+      description: "Permite fechar o dialog ao clicar no overlay.",
+      table: { category: "PROPS", defaultValue: { summary: "true" } },
+    },
+    disableEscapeKeyDown: {
+      control: "boolean",
+      description: "Impede fechar o dialog usando a tecla Escape.",
+      table: { category: "PROPS", defaultValue: { summary: "false" } },
+    },
     minWidth: {
       control: "text",
       description: "Largura mínima do painel do dialog.",
