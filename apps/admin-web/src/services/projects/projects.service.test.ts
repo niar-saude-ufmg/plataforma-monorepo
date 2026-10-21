@@ -43,13 +43,20 @@ const rawProjectFromApi = {
     {
       id: 88,
       version_number: 1,
-      result: "to_review",
-      responsible_member: {
+      status: "to_review",
+      assigned_to: {
         user_id: 31,
         full_name: "Avaliador 31",
-        email: "committee31@niar.local",
-        specialty: { id: 4, name: "Epidemiologia" },
+        email: "auditor31@niar.local",
+        role: "auditor",
       },
+      assigned_by: {
+        user_id: 20,
+        full_name: "Administrador",
+        email: "admin20@niar.local",
+        role: "admin",
+      },
+      justification: null,
       evaluated_at: null,
       updated_at: "2026-09-22T10:00:00.000Z",
     },
@@ -129,13 +136,20 @@ describe("projects service", () => {
           {
             id: 88,
             versionNumber: 1,
-            result: "to_review",
-            responsibleMember: {
+            status: "to_review",
+            assignedTo: {
               userId: 31,
               fullName: "Avaliador 31",
-              email: "committee31@niar.local",
-              specialty: { id: 4, name: "Epidemiologia" },
+              email: "auditor31@niar.local",
+              role: "auditor",
             },
+            assignedBy: {
+              userId: 20,
+              fullName: "Administrador",
+              email: "admin20@niar.local",
+              role: "admin",
+            },
+            justification: null,
             evaluatedAt: null,
             updatedAt: "2026-09-22T10:00:00.000Z",
           },

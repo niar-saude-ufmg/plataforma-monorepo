@@ -163,17 +163,14 @@ model ProjectStatusHistory {
   actorUserId           Int?                 @map("actor_user_id")
   createdAt             DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   projectVersionId      Int                  @map("project_version_id")
-  committeeEvaluationId Int?                 @map("committee_evaluation_id")
   evaluationId          Int?                 @map("evaluation_id")
   projectVersion        ProjectVersion       @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_shared_project_status_history_project_version")
-  committeeEvaluation   CommitteeEvaluation? @relation(fields: [committeeEvaluationId], references: [id], onUpdate: NoAction, map: "fk_shared_status_history_committee_evaluation")
   evaluation            Evaluation?          @relation(fields: [evaluationId], references: [id], onUpdate: NoAction, map: "fk_shared_status_history_evaluation")
   actorUser             User?                @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
 
   @@index([actorUserId], map: "idx_shared_project_status_history_actor_user_id")
   @@index([projectVersionId], map: "idx_shared_project_status_history_project_version_id")
   @@index([evaluationId], map: "idx_shared_status_history_evaluation_id")
-  @@index([committeeEvaluationId], map: "idx_shared_status_history_committee_evaluation_id")
   @@map("project_status_history")
   @@schema("shared")
 }
@@ -294,7 +291,6 @@ model ProjectVersion {
   submittedAt              DateTime?              @map("submitted_at") @db.Timestamptz(6)
   createdAt                DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
   questionnaireId          Int?                   @map("questionnaire_id")
-  committeeEvaluation      CommitteeEvaluation?
   evaluations              Evaluation[]
   documents                ProjectDocument[]
   questionnaire            Questionnaire?         @relation(fields: [questionnaireId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_questionnaire")
@@ -364,7 +360,6 @@ model CommitteeMemberProfile {
   specialtyId Int                   @map("specialty_id")
   createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
-  evaluations CommitteeEvaluation[] @relation("ResponsibleMember")
   specialty   Specialty             @relation(fields: [specialtyId], references: [id], onUpdate: NoAction)
   user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -388,23 +383,6 @@ model UserCoepData {
 
   @@unique([userId, caae], map: "uq_admin_user_coep_data_user_caae")
   @@map("user_coep_data")
-  @@schema("admin")
-}
-
-model CommitteeEvaluation {
-  id                      Int                         @id @default(autoincrement())
-  projectVersionId        Int                         @unique @map("project_version_id")
-  responsibleMemberUserId Int                         @map("responsible_member_user_id")
-  result                  committee_evaluation_result
-  justification           String?
-  evaluatedAt             DateTime?                   @map("evaluated_at") @db.Timestamptz(6)
-  createdAt               DateTime                    @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt               DateTime                    @default(now()) @map("updated_at") @db.Timestamptz(6)
-  projectVersion          ProjectVersion              @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  responsibleMember       CommitteeMemberProfile      @relation("ResponsibleMember", fields: [responsibleMemberUserId], references: [userId], onUpdate: NoAction)
-  statusHistory           ProjectStatusHistory[]
-
-  @@map("committee_evaluations")
   @@schema("admin")
 }
 
@@ -456,15 +434,6 @@ enum user_account_status {
   disabled
 
   @@schema("shared")
-}
-
-enum committee_evaluation_result {
-  approved
-  needs_changes
-  rejected
-  to_review
-
-  @@schema("admin")
 }
 
 enum evaluation_status {

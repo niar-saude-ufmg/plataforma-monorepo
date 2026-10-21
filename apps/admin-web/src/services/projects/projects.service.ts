@@ -9,7 +9,6 @@ import type {
   ProjectListResponse,
   ProjectStatusEntry,
   ResearcherSummary,
-  ResponsibleMember,
 } from "../../types/project.types";
 import { getAdminApiBaseUrl } from "../auth/auth.service";
 import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
@@ -47,15 +46,14 @@ export function toDocument(raw: any): ProjectDocument {
   };
 }
 
-export function toResponsibleMember(raw: any): ResponsibleMember {
+export function toEvaluationUser(raw: any) {
+  if (!raw) return null;
+
   return {
     userId: raw.user_id,
     fullName: raw.full_name,
     email: raw.email,
-    specialty: {
-      id: raw.specialty.id,
-      name: raw.specialty.name,
-    },
+    role: raw.role,
   };
 }
 
@@ -63,8 +61,10 @@ export function toEvaluation(raw: any): ProjectEvaluation {
   return {
     id: raw.id,
     versionNumber: raw.version_number,
-    result: raw.result,
-    responsibleMember: toResponsibleMember(raw.responsible_member),
+    status: raw.status,
+    assignedTo: toEvaluationUser(raw.assigned_to),
+    assignedBy: toEvaluationUser(raw.assigned_by),
+    justification: raw.justification,
     evaluatedAt: raw.evaluated_at,
     updatedAt: raw.updated_at,
   };

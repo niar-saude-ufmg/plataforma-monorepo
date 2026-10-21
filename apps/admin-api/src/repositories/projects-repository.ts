@@ -20,29 +20,13 @@ const projectInclude = {
     include: {
       statusHistory: { orderBy: { createdAt: "asc" as const } },
       documents: { orderBy: { createdAt: "asc" as const } },
-      committeeEvaluation: {
-        include: {
-          responsibleMember: {
-            select: {
-              userId: true,
-              user: {
-                select: {
-                  fullName: true,
-                  email: true
-                }
-              },
-              specialty: {
-                select: {
-                  id: true,
-                  name: true
-                }
-              }
-            }
-          }
-        }
-      },
       evaluations: {
-        orderBy: [{ createdAt: "desc" as const }, { id: "desc" as const }]
+        orderBy: [{ updatedAt: "desc" as const }, { id: "desc" as const }],
+        include: {
+          assignedTo: { select: { id: true, fullName: true, email: true, role: true } },
+          assignedBy: { select: { id: true, fullName: true, email: true, role: true } },
+          evaluatedBy: { select: { id: true, fullName: true, email: true, role: true } }
+        }
       }
     }
   }

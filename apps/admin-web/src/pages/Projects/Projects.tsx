@@ -248,7 +248,7 @@ export function Projects() {
       key: "evaluations",
       label: "Avaliador",
       render: (_value, project) =>
-        project.evaluations?.at(-1)?.responsibleMember.fullName ?? "A definir",
+        project.evaluations?.at(-1)?.assignedTo?.fullName ?? "A definir",
     },
     actions: {
       variant: "actions",

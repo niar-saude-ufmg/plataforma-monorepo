@@ -393,28 +393,34 @@ const options = {
         },
         ProjectEvaluationResponse: {
           type: 'object',
-          required: ['id', 'version_number', 'result', 'responsible_member', 'evaluated_at', 'updated_at'],
+          required: ['id', 'version_number', 'status', 'assigned_to', 'assigned_by', 'justification', 'evaluated_at', 'updated_at'],
           properties: {
             id: { type: 'integer', example: 8 },
             version_number: { type: 'integer', example: 2 },
-            result: { type: 'string', enum: ['to_review', 'approved', 'needs_changes', 'rejected'] },
-            responsible_member: {
+            status: { type: 'string', enum: ['to_review', 'sent_to_committee', 'approved_by_committee', 'rejected_by_committee', 'needs_changes_by_committee', 'approved', 'needs_changes', 'rejected'] },
+            assigned_to: {
               type: 'object',
-              required: ['user_id', 'full_name', 'email', 'specialty'],
+              nullable: true,
+              required: ['user_id', 'full_name', 'email', 'role'],
               properties: {
                 user_id: { type: 'integer', example: 4 },
-                full_name: { type: 'string', example: 'Membro do comitê' },
+                full_name: { type: 'string', example: 'Avaliador' },
                 email: { type: 'string', format: 'email' },
-                specialty: {
-                  type: 'object',
-                  required: ['id', 'name'],
-                  properties: {
-                    id: { type: 'integer', example: 2 },
-                    name: { type: 'string', example: 'Epidemiologia' },
-                  },
-                },
+                role: { type: 'string', enum: ['admin', 'auditor', 'committee'] },
               },
             },
+            assigned_by: {
+              type: 'object',
+              nullable: true,
+              required: ['user_id', 'full_name', 'email', 'role'],
+              properties: {
+                user_id: { type: 'integer', example: 2 },
+                full_name: { type: 'string', example: 'Administrador' },
+                email: { type: 'string', format: 'email' },
+                role: { type: 'string', enum: ['admin', 'auditor', 'committee'] },
+              },
+            },
+            justification: { type: 'string', nullable: true },
             evaluated_at: { type: 'string', format: 'date-time', nullable: true },
             updated_at: { type: 'string', format: 'date-time' },
           },

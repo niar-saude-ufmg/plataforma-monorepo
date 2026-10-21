@@ -114,16 +114,20 @@ export type ProjectResearcherResponse = {
 export type ProjectEvaluationResponse = {
   id: number;
   version_number: number;
-  result: "to_review" | "approved" | "needs_changes" | "rejected";
-  responsible_member: {
+  status: ProjectEvaluationStatusCode;
+  assigned_to: {
     user_id: number;
     full_name: string;
     email: string;
-    specialty: {
-      id: number;
-      name: string;
-    };
-  };
+    role: string;
+  } | null;
+  assigned_by: {
+    user_id: number;
+    full_name: string;
+    email: string;
+    role: string;
+  } | null;
+  justification: string | null;
   evaluated_at: string | null;
   updated_at: string;
 };

@@ -42,25 +42,6 @@ BEGIN
     SELECT 1
     FROM pg_type t
     JOIN pg_namespace n ON n.oid = t.typnamespace
-    WHERE t.typname = 'committee_evaluation_result' AND n.nspname = 'admin'
-  ) THEN
-    CREATE TYPE admin.committee_evaluation_result AS ENUM (
-      'to_review',
-      'approved',
-      'needs_changes',
-      'rejected'
-    );
-  END IF;
-END $$;
-
-ALTER TYPE admin.committee_evaluation_result ADD VALUE IF NOT EXISTS 'to_review';
-
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_type t
-    JOIN pg_namespace n ON n.oid = t.typnamespace
     WHERE t.typname = 'wizard_type' AND n.nspname = 'assistant'
   ) THEN
     CREATE TYPE assistant.wizard_type AS ENUM ('project_doc', 'data_clean');
@@ -674,62 +655,6 @@ BEGIN
   END IF;
 END $$;
 
-CREATE TABLE IF NOT EXISTS admin.committee_evaluations (
-  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  project_version_id INTEGER NOT NULL UNIQUE
-    REFERENCES admin.project_versions(id) ON DELETE CASCADE,
-  responsible_member_user_id INTEGER NOT NULL
-    REFERENCES admin.committee_member_profiles(user_id) ON DELETE RESTRICT,
-  result admin.committee_evaluation_result NOT NULL,
-  justification TEXT,
-  evaluated_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-ALTER TABLE admin.committee_evaluations
-  ALTER COLUMN result SET NOT NULL;
-
-ALTER TABLE admin.committee_evaluations
-  ALTER COLUMN justification DROP NOT NULL;
-
-INSERT INTO admin.evaluations (
-  project_version_id,
-  evaluation_context,
-  assigned_to_user_id,
-  evaluated_by_user_id,
-  status,
-  justification,
-  evaluated_at,
-  created_at,
-  updated_at
-)
-SELECT
-  ce.project_version_id,
-  'pre_safe_room'::admin.evaluation_context,
-  ce.responsible_member_user_id,
-  ce.responsible_member_user_id,
-  CASE ce.result
-    WHEN 'to_review' THEN 'to_review'::admin.evaluation_status
-    WHEN 'approved' THEN 'approved_by_committee'::admin.evaluation_status
-    WHEN 'needs_changes' THEN 'needs_changes_by_committee'::admin.evaluation_status
-    WHEN 'rejected' THEN 'rejected_by_committee'::admin.evaluation_status
-  END,
-  ce.justification,
-  ce.evaluated_at,
-  ce.created_at,
-  ce.updated_at
-FROM admin.committee_evaluations ce
-WHERE NOT EXISTS (
-  SELECT 1
-  FROM admin.evaluations e
-  WHERE e.project_version_id = ce.project_version_id
-    AND e.evaluation_context = 'pre_safe_room'::admin.evaluation_context
-);
-
-ALTER TABLE shared.project_status_history
-  ADD COLUMN IF NOT EXISTS committee_evaluation_id INTEGER;
-
 ALTER TABLE shared.project_status_history
   ADD COLUMN IF NOT EXISTS evaluation_id INTEGER;
 
@@ -750,27 +675,20 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_shared_status_history_evaluation_id
   ON shared.project_status_history (evaluation_id);
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'fk_shared_status_history_committee_evaluation'
-  ) THEN
-    ALTER TABLE shared.project_status_history
-      ADD CONSTRAINT fk_shared_status_history_committee_evaluation
-      FOREIGN KEY (committee_evaluation_id)
-      REFERENCES admin.committee_evaluations(id)
-      ON DELETE SET NULL;
-  END IF;
-END $$;
-
-CREATE INDEX IF NOT EXISTS idx_shared_status_history_committee_evaluation_id
-  ON shared.project_status_history (committee_evaluation_id);
 ALTER TABLE admin.project_documents
   DROP COLUMN IF EXISTS project_id;
 ALTER TABLE admin.project_documents
   DROP COLUMN IF EXISTS is_current;
 ALTER TABLE shared.project_status_history
   DROP COLUMN IF EXISTS project_id;
+
+-- Migration: remove a estrutura legada de avaliações do comitê.
+-- A relação canônica será criada acima; não há backfill de dados de teste.
+ALTER TABLE shared.project_status_history
+  DROP CONSTRAINT IF EXISTS fk_shared_status_history_committee_evaluation;
+ALTER TABLE shared.project_status_history
+  DROP COLUMN IF EXISTS committee_evaluation_id;
+DROP TABLE IF EXISTS admin.committee_evaluations;
+DROP TYPE IF EXISTS admin.committee_evaluation_result;
 
 COMMIT;

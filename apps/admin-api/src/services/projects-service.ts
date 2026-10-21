@@ -87,22 +87,30 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
     response.evaluation_status = evaluationStatusFor(project);
     response.evaluation_context = evaluationContextFor(project);
     response.evaluations = project.versions.flatMap((version) => {
-      const evaluation = version.committeeEvaluation;
+      const evaluation = version.evaluations[0];
       if (!evaluation) return [];
 
       return [{
         id: evaluation.id,
         version_number: version.versionNumber,
-        result: evaluation.result,
-        responsible_member: {
-          user_id: evaluation.responsibleMember.userId,
-          full_name: evaluation.responsibleMember.user.fullName,
-          email: evaluation.responsibleMember.user.email,
-          specialty: {
-            id: evaluation.responsibleMember.specialty.id,
-            name: evaluation.responsibleMember.specialty.name
-          }
-        },
+        status: evaluation.status,
+        assigned_to: evaluation.assignedTo
+          ? {
+              user_id: evaluation.assignedTo.id,
+              full_name: evaluation.assignedTo.fullName,
+              email: evaluation.assignedTo.email,
+              role: evaluation.assignedTo.role
+            }
+          : null,
+        assigned_by: evaluation.assignedBy
+          ? {
+              user_id: evaluation.assignedBy.id,
+              full_name: evaluation.assignedBy.fullName,
+              email: evaluation.assignedBy.email,
+              role: evaluation.assignedBy.role
+            }
+          : null,
+        justification: evaluation.justification,
         evaluated_at: evaluation.evaluatedAt?.toISOString() ?? null,
         updated_at: evaluation.updatedAt.toISOString()
       }];
