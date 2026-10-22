@@ -37,6 +37,7 @@ export const USER_LIST_CONFIG: Partial<
     actions: ["details"],
     filterLabels: {
       search: "Buscar usuário",
+      role: "Perfil",
       accountStatus: "Status",
     },
   },
@@ -61,7 +62,6 @@ export const USER_LIST_CONFIG: Partial<
     actions: ["details"],
     filterLabels: {
       search: "Buscar usuário",
-      role: "Perfil",
       accountStatus: "Status",
     },
   },
