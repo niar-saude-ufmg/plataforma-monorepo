@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { niar } from "../../tokens/index";
 import { Button } from "./Button";
+import { Icon } from "../Icon/Icon";
 
 const variants = ["contained", "outlined", "text"] as const;
 const sizes = ["small", "medium", "large"] as const;
@@ -38,6 +39,16 @@ const meta = {
       control: "text",
       description: "Conteúdo textual que nomeia a ação do botão.",
       table: { category: "PROPS", defaultValue: { summary: "Button" } },
+    },
+    startIcon: {
+      control: false,
+      description: "Ícone exibido antes do conteúdo textual do botão.",
+      table: { category: "PROPS", defaultValue: { summary: "undefined" } },
+    },
+    endIcon: {
+      control: false,
+      description: "Ícone exibido depois do conteúdo textual do botão.",
+      table: { category: "PROPS", defaultValue: { summary: "undefined" } },
     },
     disabled: {
       control: "boolean",
@@ -217,6 +228,73 @@ export const Sizes: Story = {
         </Button>
       ))}
     </div>
+  ),
+};
+
+export const WithIcons: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story:
+          "Use startIcon e endIcon para complementar o texto da ação. Os ícones não substituem o rótulo textual quando ele for necessário para compreensão.",
+      },
+      source: {
+        code: `<Button startIcon={<Icon name="add" />}>Adicionar</Button>
+<Button endIcon={<Icon name="download" />}>Baixar</Button>`,
+      },
+    },
+  },
+  render: () => (
+    <div style={rowStyle}>
+      <Button
+        color="primary"
+        variant="contained"
+        startIcon={<Icon name="add" />}
+      >
+        Adicionar
+      </Button>
+      <Button
+        color="secondary"
+        variant="outlined"
+        endIcon={<Icon name="download" />}
+      >
+        Baixar
+      </Button>
+    </div>
+  ),
+};
+
+export const IconOnly: Story = {
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story:
+          "Use um Button somente com ícone quando a ação precisar manter o container retangular. Sempre informe aria-label para acessibilidade.",
+      },
+      source: {
+        code: `<Button
+  variant="outlined"
+  size="large"
+  aria-label="Adicionar questão"
+>
+  <Icon name="add" />
+</Button>`,
+      },
+    },
+  },
+  render: () => (
+    <Button
+      color="secondary"
+      variant="outlined"
+      size="large"
+      aria-label="Adicionar questão"
+    >
+      <Icon name="add" />
+    </Button>
   ),
 };
 
