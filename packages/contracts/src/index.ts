@@ -1,3 +1,5 @@
+export * from "./questionnaires.js";
+
 export type UserRole = "researcher" | "admin" | "auditor" | "committee";
 
 export type UserAccountStatus = "pending" | "active" | "rejected" | "disabled";

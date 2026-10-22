@@ -311,7 +311,7 @@ model ProjectVersion {
 model Questionnaire {
   id               Int              @id @default(autoincrement())
   questionnaireKey String           @map("questionnaire_key") @db.VarChar(100)
-  version          String           @db.VarChar(50)
+  version          Int
   title            String           @db.VarChar(255)
   definitionJson   Json             @default("{}") @map("definition_json")
   isActive         Boolean          @default(false) @map("is_active")

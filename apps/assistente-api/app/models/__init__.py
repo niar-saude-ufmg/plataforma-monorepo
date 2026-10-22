@@ -496,7 +496,7 @@ class Questionnaire(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     questionnaire_key: Mapped[str] = mapped_column(String(100))
-    version: Mapped[str] = mapped_column(String(50))
+    version: Mapped[int] = mapped_column(Integer)
     title: Mapped[str] = mapped_column(String(255))
     definition_json: Mapped[dict] = mapped_column(JSONB, default=dict)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)

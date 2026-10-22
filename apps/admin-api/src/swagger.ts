@@ -1,4 +1,18 @@
 import swaggerJsdoc from 'swagger-jsdoc';
+import { QUESTIONNAIRE_TEXT_TYPES, QUESTIONNAIRE_CHOICE_TYPES } from '@niar/contracts';
+
+const questionnaireQuestionProperties = {
+  id: { type: 'string', pattern: '^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$' },
+  label: { type: 'string', minLength: 1, maxLength: 1000 },
+  required: { type: 'boolean' },
+  description: { type: 'string', maxLength: 2000 },
+};
+
+const questionnaireInputProperties = {
+  key: { type: 'string', minLength: 1, maxLength: 100, pattern: '^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$' },
+  title: { type: 'string', minLength: 1, maxLength: 255 },
+  sections: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/QuestionnaireSection' } },
+};
 
 const options = {
   definition: {
@@ -482,6 +496,115 @@ const options = {
           required: ['is_active'],
           properties: {
             is_active: { type: 'boolean' },
+          },
+        },
+        QuestionnaireOption: {
+          type: 'object',
+          required: ['id', 'value'],
+          additionalProperties: false,
+          properties: {
+            id: { type: 'string', pattern: '^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$', example: 'base_niar' },
+            value: { type: 'string', minLength: 1, maxLength: 255, example: 'Base do NIAR' },
+          },
+        },
+        QuestionnaireQuestion: {
+          description: 'O id identifica a resposta; não existe answer_key. Radio representa escolha única, checkbox múltipla escolha e select uma lista suspensa.',
+          oneOf: [
+            {
+              type: 'object',
+              required: ['id', 'type', 'label', 'required'],
+              additionalProperties: false,
+              properties: {
+                ...questionnaireQuestionProperties,
+                type: { type: 'string', enum: [...QUESTIONNAIRE_TEXT_TYPES] },
+              },
+            },
+            {
+              type: 'object',
+              required: ['id', 'type', 'label', 'required', 'options'],
+              additionalProperties: false,
+              properties: {
+                ...questionnaireQuestionProperties,
+                type: { type: 'string', enum: [...QUESTIONNAIRE_CHOICE_TYPES] },
+                options: { type: 'array', minItems: 2, items: { $ref: '#/components/schemas/QuestionnaireOption' } },
+              },
+            },
+          ],
+        },
+        QuestionnaireSection: {
+          type: 'object',
+          required: ['id', 'title', 'questions'],
+          additionalProperties: false,
+          properties: {
+            id: { type: 'string', pattern: '^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$', example: 'contexto' },
+            title: { type: 'string', minLength: 1, maxLength: 255 },
+            description: { type: 'string', maxLength: 2000 },
+            questions: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/QuestionnaireQuestion' } },
+          },
+        },
+        CreateQuestionnaireInput: {
+          type: 'object',
+          description: 'A API atribui automaticamente a próxima versão da mesma chave. Não envie version. Para copiar uma versão, mantenha título e chave e envie as seções copiadas.',
+          required: ['key', 'title', 'sections'],
+          additionalProperties: false,
+          properties: questionnaireInputProperties,
+          example: {
+            key: 'formulario_fiar',
+            title: 'Formulário de entrada FIAR',
+            sections: [{
+              id: 'contexto',
+              title: 'Contexto da pesquisa',
+              description: 'Informe os objetivos da pesquisa.',
+              questions: [{ id: 'objetivo', type: 'textarea', label: 'Qual é o objetivo da pesquisa?', required: true }],
+            }],
+          },
+        },
+        UpdateQuestionnaireInput: {
+          type: 'object',
+          description: 'Substitui as seções de uma versão nunca publicada. Não aceita chave, título, versão ou estado de publicação.',
+          required: ['sections'],
+          additionalProperties: false,
+          properties: { sections: questionnaireInputProperties.sections },
+        },
+        QuestionnaireDefinition: {
+          type: 'object',
+          required: ['key', 'version', 'title', 'sections'],
+          additionalProperties: false,
+          properties: {
+            ...questionnaireInputProperties,
+            version: { type: 'integer', minimum: 1, maximum: 2147483647, readOnly: true, example: 1, description: 'Sequencial por chave. Exibir como 1.0, 2.0 etc.; não é SemVer.' },
+          },
+        },
+        QuestionnaireResponse: {
+          type: 'object',
+          required: ['id', 'key', 'version', 'title', 'definition_json', 'is_active', 'published_at', 'created_at', 'updated_at'],
+          properties: {
+            id: { type: 'integer', example: 1 },
+            key: { type: 'string', example: 'formulario_fiar' },
+            version: { type: 'integer', minimum: 1, example: 1, description: 'Versão gerada automaticamente; exibir com sufixo .0.' },
+            title: { type: 'string', example: 'Formulário de entrada FIAR' },
+            definition_json: { $ref: '#/components/schemas/QuestionnaireDefinition' },
+            is_active: { type: 'boolean', example: false },
+            published_at: { type: 'string', format: 'date-time', nullable: true, description: 'Nulo: salvo e editável. Preenchido: conteúdo imutável, mesmo quando inativo.' },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' },
+          },
+        },
+        QuestionnairesListResponse: {
+          type: 'object',
+          required: ['items', 'pagination'],
+          properties: {
+            items: { type: 'array', items: { $ref: '#/components/schemas/QuestionnaireResponse' } },
+            pagination: {
+              type: 'object',
+              required: ['page', 'page_size', 'total_items', 'total_pages'],
+              properties: {
+                page: { type: 'integer', example: 1 },
+                page_size: { type: 'integer', example: 20 },
+                total_items: { type: 'integer', example: 2 },
+                total_pages: { type: 'integer', example: 1 },
+              },
+            },
           },
         },
         ErrorResponse: {

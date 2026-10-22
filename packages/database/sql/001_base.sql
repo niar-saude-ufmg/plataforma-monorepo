@@ -315,7 +315,7 @@ CREATE TABLE IF NOT EXISTS admin.projects (
 CREATE TABLE IF NOT EXISTS admin.questionnaires (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   questionnaire_key VARCHAR(100) NOT NULL,
-  version VARCHAR(50) NOT NULL,
+  version INTEGER NOT NULL CHECK (version > 0),
   title VARCHAR(255) NOT NULL,
   definition_json JSONB NOT NULL DEFAULT '{}'::jsonb,
   is_active BOOLEAN NOT NULL DEFAULT FALSE,
@@ -328,6 +328,9 @@ CREATE TABLE IF NOT EXISTS admin.questionnaires (
 
 CREATE INDEX IF NOT EXISTS idx_admin_questionnaires_active
   ON admin.questionnaires (is_active);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_questionnaires_active_key
+  ON admin.questionnaires (questionnaire_key) WHERE is_active;
 
 CREATE TABLE IF NOT EXISTS admin.project_versions (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
