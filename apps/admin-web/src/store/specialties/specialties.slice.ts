@@ -1,20 +1,36 @@
-import type { ResourceState } from '../../types/resource.types';
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit';
-import type { SpecialtyListFilters, SpecialtyListPagination, Specialty, SpecialtyApiError, SpecialtyListItem, SpecialtyMutationOperation } from '../../types/specialty.types';
+import type { AsyncStatus, MutationState, ResourceState } from '../../types/resource.types';
+import type {
+  SpecialtyApiError,
+  SpecialtyListFilters,
+  SpecialtyListItem,
+  SpecialtyListPagination,
+  SpecialtyMutationOperation,
+} from '../../types/specialty.types';
 import { createSpecialty, fetchSpecialties, updateSpecialty, updateSpecialtyStatus } from './specialties.api';
+
+export type SpecialtiesStatus = AsyncStatus;
 
 export const DEFAULT_SPECIALTIES_PAGE_SIZE = 20;
 
+const createDefaultSpecialtiesFilters = (): SpecialtyListFilters => ({});
+
 export type SpecialtiesState = ResourceState<
-  SpecialtyListItem, SpecialtyListFilters, SpecialtyListPagination,
-  SpecialtyApiError, SpecialtyMutationOperation
-> & { selected: Specialty | null };
+  SpecialtyListItem,
+  SpecialtyListFilters,
+  SpecialtyListPagination,
+  SpecialtyApiError,
+  SpecialtyMutationOperation
+> & {
+  selected: SpecialtyListItem | null;
+  mutation: MutationState<SpecialtyApiError, SpecialtyMutationOperation>;
+};
 
 export const initialSpecialtiesState: SpecialtiesState = {
   list: {
     items: [],
     pagination: null,
-    filters: {},
+    filters: createDefaultSpecialtiesFilters(),
     page: 1,
     pageSize: DEFAULT_SPECIALTIES_PAGE_SIZE,
     status: 'idle',
@@ -28,7 +44,7 @@ const specialtiesSlice = createSlice({
   name: 'specialties',
   initialState: initialSpecialtiesState,
   reducers: {
-    setSelectedSpecialty: (state, action: PayloadAction<Specialty>) => {
+    setSelectedSpecialty: (state, action: PayloadAction<SpecialtyListItem>) => {
       state.selected = action.payload;
     },
     clearSelectedSpecialty: (state) => {
@@ -43,7 +59,7 @@ const specialtiesSlice = createSlice({
       state.list.page = 1;
     },
     clearSpecialtiesFilters: (state) => {
-      state.list.filters = {};
+      state.list.filters = createDefaultSpecialtiesFilters();
       state.list.page = 1;
     },
     setSpecialtiesPage: (state, action: PayloadAction<number>) => {
@@ -72,6 +88,7 @@ const specialtiesSlice = createSlice({
       })
       .addCase(fetchSpecialties.fulfilled, (state, action) => {
         state.list.status = 'succeeded';
+        state.list.error = null;
         state.list.items = action.payload.items;
         state.list.pagination = action.payload.pagination;
       })
@@ -82,24 +99,33 @@ const specialtiesSlice = createSlice({
       .addMatcher(
         isAnyOf(createSpecialty.pending, updateSpecialty.pending, updateSpecialtyStatus.pending),
         (state, action) => {
-          state.mutation.operation = createSpecialty.pending.match(action) ? 'create' : updateSpecialty.pending.match(action) ? 'update' : 'status';
-          state.mutation.status = 'pending';
-          state.mutation.error = null;
+          const operation = createSpecialty.pending.match(action)
+            ? 'create'
+            : updateSpecialty.pending.match(action) ? 'update' : 'status';
+          state.mutation = { operation, status: 'pending', error: null };
         },
       )
       .addMatcher(
         isAnyOf(createSpecialty.fulfilled, updateSpecialty.fulfilled, updateSpecialtyStatus.fulfilled),
         (state, action) => {
-          state.mutation.status = 'succeeded';
-          state.mutation.error = null;
+          const operation = createSpecialty.fulfilled.match(action)
+            ? 'create'
+            : updateSpecialty.fulfilled.match(action) ? 'update' : 'status';
+          state.mutation = { operation, status: 'succeeded', error: null };
           state.selected = action.payload;
         },
       )
       .addMatcher(
         isAnyOf(createSpecialty.rejected, updateSpecialty.rejected, updateSpecialtyStatus.rejected),
         (state, action) => {
-          state.mutation.status = 'failed';
-          state.mutation.error = action.payload ?? { message: 'Não foi possível concluir a operação.' };
+          const operation = createSpecialty.rejected.match(action)
+            ? 'create'
+            : updateSpecialty.rejected.match(action) ? 'update' : 'status';
+          state.mutation = {
+            operation,
+            status: 'failed',
+            error: action.payload ?? { message: 'Não foi possível concluir a operação.' },
+          };
         },
       );
   },
@@ -118,4 +144,4 @@ export const {
 } = specialtiesSlice.actions;
 
 export const specialtiesReducer = specialtiesSlice.reducer;
-export default specialtiesSlice.reducer;
+export default specialtiesReducer;

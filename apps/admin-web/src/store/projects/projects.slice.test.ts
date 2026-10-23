@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiError } from "../../types/api.types";
-import type { Pagination, Project } from "../../types/project.types";
+import type { ProjectListPagination, Project } from "../../types/project.types";
 import { getProject, getProjects } from "./projects.api";
 import projectsReducer, {
   clearProjectsError,
@@ -15,12 +15,12 @@ import projectsReducer, {
   type ProjectsState,
 } from "./projects.slice";
 import {
-  selectProjectsError,
-  selectProjectsHasItems,
-  selectProjectsLoading,
-  selectProjectsPagination,
-  selectProjects,
-  selectSelectedProject,
+  selectProjectsListError,
+  selectProjectsListHasItems,
+  selectProjectsListLoading,
+  selectProjectsListPagination,
+  selectProjectsList,
+  selectProjectsSelected,
 } from "./projects.selectors";
 
 const { getProjectsRequest, getProjectRequest, normalizeProjectApiError } =
@@ -46,7 +46,7 @@ const buildProject = (overrides: Partial<Project> = {}): Project => ({
   ...overrides,
 });
 
-const buildPagination = (overrides: Partial<Pagination> = {}): Pagination => ({
+const buildPagination = (overrides: Partial<ProjectListPagination> = {}): ProjectListPagination => ({
   page: 1,
   pageSize: 20,
   totalItems: 1,
@@ -66,14 +66,17 @@ function makeTestStore() {
 
 function buildSliceState(overrides: Partial<ProjectsState> = {}): ProjectsState {
   return {
-    projects: [],
-    selectedProject: null,
-    pagination: null,
-    filters: {},
-    page: 1,
-    pageSize: 20,
-    status: "idle",
-    error: null,
+    list: {
+      items: [],
+      pagination: null,
+      filters: {},
+      page: 1,
+      pageSize: 20,
+      status: "idle",
+      error: null,
+    },
+    selected: null,
+    download: { status: "idle", error: null, filename: null },
     ...overrides,
   };
 }
@@ -93,7 +96,7 @@ describe("projects slice", () => {
 
       store.dispatch(setSelectedProject(project));
 
-      expect(store.getState().projects.selectedProject).toEqual(project);
+      expect(store.getState().projects.selected).toEqual(project);
     });
 
     it("aceita null para limpar", () => {
@@ -102,7 +105,7 @@ describe("projects slice", () => {
 
       store.dispatch(setSelectedProject(null));
 
-      expect(store.getState().projects.selectedProject).toBeNull();
+      expect(store.getState().projects.selected).toBeNull();
     });
   });
 
@@ -114,10 +117,11 @@ describe("projects slice", () => {
       store.dispatch(clearSelectedProject());
 
       const state = store.getState().projects;
-      expect(state.selectedProject).toBeNull();
+      expect(state.selected).toBeNull();
       // os outros campos não foram tocados
-      expect(state.status).toBe("idle");
-      expect(state.error).toBeNull();
+      expect(state.list.status).toBe("idle");
+      expect(state.list.error).toBeNull();
+      expect(state.download).toEqual({ status: "idle", error: null, filename: null });
     });
   });
 
@@ -132,20 +136,20 @@ describe("projects slice", () => {
       await store.dispatch(getProjects({}));
 
       // Confirma que populou
-      expect(store.getState().projects.projects).toHaveLength(1);
+      expect(store.getState().projects.list.items).toHaveLength(1);
 
       // Limpa
       store.dispatch(clearProjectsState());
 
       const state = store.getState().projects;
-      expect(state.projects).toEqual([]);
-      expect(state.selectedProject).toBeNull();
-      expect(state.pagination).toBeNull();
-      expect(state.filters).toEqual({});
-      expect(state.page).toBe(1);
-      expect(state.pageSize).toBe(20);
-      expect(state.status).toBe("idle");
-      expect(state.error).toBeNull();
+      expect(state.list.items).toEqual([]);
+      expect(state.selected).toBeNull();
+      expect(state.list.pagination).toBeNull();
+      expect(state.list.filters).toEqual({});
+      expect(state.list.page).toBe(1);
+      expect(state.list.pageSize).toBe(20);
+      expect(state.list.status).toBe("idle");
+      expect(state.list.error).toBeNull();
     });
   });
 
@@ -155,12 +159,12 @@ describe("projects slice", () => {
       const store = makeTestStore();
       await store.dispatch(getProjects({}));
 
-      expect(store.getState().projects.status).toBe("failed");
-      expect(store.getState().projects.error).not.toBeNull();
+      expect(store.getState().projects.list.status).toBe("failed");
+      expect(store.getState().projects.list.error).not.toBeNull();
 
       store.dispatch(clearProjectsError());
 
-      expect(store.getState().projects.error).toBeNull();
+      expect(store.getState().projects.list.error).toBeNull();
     });
 
     it("volta para idle se o status era failed", async () => {
@@ -170,14 +174,14 @@ describe("projects slice", () => {
 
       store.dispatch(clearProjectsError());
 
-      expect(store.getState().projects.status).toBe("idle");
+      expect(store.getState().projects.list.status).toBe("idle");
     });
 
     it("não altera o status se não era failed", () => {
       const store = makeTestStore();
       // status está "idle" por padrão
       store.dispatch(clearProjectsError());
-      expect(store.getState().projects.status).toBe("idle");
+      expect(store.getState().projects.list.status).toBe("idle");
     });
   });
 
@@ -193,11 +197,11 @@ describe("projects slice", () => {
         }),
       );
 
-      expect(store.getState().projects.filters).toEqual({
+      expect(store.getState().projects.list.filters).toEqual({
         search: "oncologia",
         status: "under_review",
       });
-      expect(store.getState().projects.page).toBe(1);
+      expect(store.getState().projects.list.page).toBe(1);
     });
 
     it("limpa filtros e altera o tamanho da página", () => {
@@ -207,9 +211,9 @@ describe("projects slice", () => {
       store.dispatch(setProjectsPageSize(50));
       store.dispatch(clearProjectsFilters());
 
-      expect(store.getState().projects.filters).toEqual({});
-      expect(store.getState().projects.page).toBe(1);
-      expect(store.getState().projects.pageSize).toBe(50);
+      expect(store.getState().projects.list.filters).toEqual({});
+      expect(store.getState().projects.list.page).toBe(1);
+      expect(store.getState().projects.list.pageSize).toBe(50);
     });
   });
 
@@ -222,8 +226,8 @@ describe("projects slice", () => {
       const store = makeTestStore();
       store.dispatch(getProjects({}));
 
-      expect(store.getState().projects.status).toBe("pending");
-      expect(store.getState().projects.error).toBeNull();
+      expect(store.getState().projects.list.status).toBe("pending");
+      expect(store.getState().projects.list.error).toBeNull();
 
       resolveRequest!({ items: [], pagination: buildPagination() });
     });
@@ -237,10 +241,10 @@ describe("projects slice", () => {
       await store.dispatch(getProjects({}));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("succeeded");
-      expect(state.projects).toEqual(items);
-      expect(state.pagination).toEqual(pagination);
-      expect(state.error).toBeNull();
+      expect(state.list.status).toBe("succeeded");
+      expect(state.list.items).toEqual(items);
+      expect(state.list.pagination).toEqual(pagination);
+      expect(state.list.error).toBeNull();
     });
 
     it("rejected: grava error e status = failed", async () => {
@@ -251,8 +255,8 @@ describe("projects slice", () => {
       await store.dispatch(getProjects({}));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("failed");
-      expect(state.error).toEqual(apiError);
+      expect(state.list.status).toBe("failed");
+      expect(state.list.error).toEqual(apiError);
     });
   });
 
@@ -265,8 +269,8 @@ describe("projects slice", () => {
       await store.dispatch(getProject(99));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("succeeded");
-      expect(state.selectedProject).toEqual(project);
+      expect(state.list.status).toBe("succeeded");
+      expect(state.selected).toEqual(project);
     });
 
     it("rejected: grava error sem setar selectedProject", async () => {
@@ -277,55 +281,55 @@ describe("projects slice", () => {
       await store.dispatch(getProject(999));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("failed");
-      expect(state.error).toEqual(apiError);
-      expect(state.selectedProject).toBeNull();
+      expect(state.list.status).toBe("failed");
+      expect(state.list.error).toEqual(apiError);
+      expect(state.selected).toBeNull();
     });
   });
 
   describe("selectors", () => {
-    it("selectProjects retorna a lista", () => {
+    it("selectProjectsList retorna a lista", () => {
       const items = [buildProject()];
-      const state = { projects: buildSliceState({ projects: items }) };
-      expect(selectProjects(state)).toEqual(items);
+      const state = { projects: buildSliceState({ list: { ...buildSliceState().list, items } }) };
+      expect(selectProjectsList(state)).toEqual(items);
     });
 
     it("selectSelectedProject retorna o projeto selecionado", () => {
       const project = buildProject();
-      const state = { projects: buildSliceState({ selectedProject: project }) };
-      expect(selectSelectedProject(state)).toEqual(project);
+      const state = { projects: buildSliceState({ selected: project }) };
+      expect(selectProjectsSelected(state)).toEqual(project);
     });
 
-    it("selectProjectsPagination retorna a paginação", () => {
+    it("selectProjectsListPagination retorna a paginação", () => {
       const pagination = buildPagination();
-      const state = { projects: buildSliceState({ pagination }) };
-      expect(selectProjectsPagination(state)).toEqual(pagination);
+      const state = { projects: buildSliceState({ list: { ...buildSliceState().list, pagination } }) };
+      expect(selectProjectsListPagination(state)).toEqual(pagination);
     });
 
-    it("selectProjectsError retorna o erro", () => {
+    it("selectProjectsListError retorna o erro", () => {
       const error = buildApiError();
-      const state = { projects: buildSliceState({ status: "failed", error }) };
-      expect(selectProjectsError(state)).toEqual(error);
+      const state = { projects: buildSliceState({ list: { ...buildSliceState().list, status: "failed", error } }) };
+      expect(selectProjectsListError(state)).toEqual(error);
     });
 
-    it("selectProjectsLoading é true somente em pending", () => {
-      expect(selectProjectsLoading({ projects: buildSliceState({ status: "idle" }) })).toBe(false);
-      expect(selectProjectsLoading({ projects: buildSliceState({ status: "pending" }) })).toBe(true);
-      expect(selectProjectsLoading({ projects: buildSliceState({ status: "succeeded" }) })).toBe(false);
-      expect(selectProjectsLoading({ projects: buildSliceState({ status: "failed" }) })).toBe(false);
+    it("selectProjectsListLoading é true somente em pending", () => {
+      expect(selectProjectsListLoading({ projects: buildSliceState({ list: { ...buildSliceState().list, status: "idle" } }) })).toBe(false);
+      expect(selectProjectsListLoading({ projects: buildSliceState({ list: { ...buildSliceState().list, status: "pending" } }) })).toBe(true);
+      expect(selectProjectsListLoading({ projects: buildSliceState({ list: { ...buildSliceState().list, status: "succeeded" } }) })).toBe(false);
+      expect(selectProjectsListLoading({ projects: buildSliceState({ list: { ...buildSliceState().list, status: "failed" } }) })).toBe(false);
     });
 
-    it("selectProjectsHasItems reflete se a lista está vazia", () => {
+    it("selectProjectsListHasItems reflete se a lista está vazia", () => {
       const empty = { projects: buildSliceState() };
       const filled = {
         projects: {
           ...empty.projects,
-          projects: [buildProject()],
+          list: { ...empty.projects.list, items: [buildProject()] },
         },
       };
 
-      expect(selectProjectsHasItems(empty)).toBe(false);
-      expect(selectProjectsHasItems(filled)).toBe(true);
+      expect(selectProjectsListHasItems(empty)).toBe(false);
+      expect(selectProjectsListHasItems(filled)).toBe(true);
     });
   });
 });

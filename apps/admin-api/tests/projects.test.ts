@@ -79,7 +79,6 @@ const projectRecord = (): ProjectRecord =>
         status: "needs_changes",
         submittedAt: new Date("2026-09-20T10:00:00.000Z"),
         createdAt: new Date("2026-09-20T10:00:00.000Z"),
-        committeeEvaluation: null,
         evaluations: [],
         statusHistory: [
           {
@@ -88,7 +87,6 @@ const projectRecord = (): ProjectRecord =>
             status: "submitted_to_committee",
             notes: null,
             actorUserId: 10,
-            committeeEvaluationId: null,
             evaluationId: null,
             createdAt: new Date("2026-09-20T10:00:00.000Z")
           },
@@ -98,7 +96,6 @@ const projectRecord = (): ProjectRecord =>
             status: "needs_changes",
             notes: "Complementar metodologia",
             actorUserId: 20,
-            committeeEvaluationId: null,
             evaluationId: null,
             createdAt: new Date("2026-09-21T14:00:00.000Z")
           }
@@ -272,23 +269,8 @@ describe("GET /api/admin/projects", () => {
 
   it("retorna a avaliação para todos os perfis dentro do próprio escopo", async () => {
     const record = projectRecord();
-    record.versions[0].committeeEvaluation = {
-      id: 88,
-      projectVersionId: 51,
-      responsibleMemberUserId: 31,
-      result: "to_review",
-      justification: null,
-      evaluatedAt: null,
-      createdAt: new Date("2026-09-22T10:00:00.000Z"),
-      updatedAt: new Date("2026-09-22T10:00:00.000Z"),
-      responsibleMember: {
-        userId: 31,
-        user: { fullName: "Avaliador 31", email: "committee31@niar.local" },
-        specialty: { id: 4, name: "Epidemiologia" }
-      }
-    };
     record.versions[0].evaluations = [{
-      id: 89,
+      id: 88,
       projectVersionId: 51,
       context: "pre_safe_room",
       assignedToUserId: 31,
@@ -298,7 +280,10 @@ describe("GET /api/admin/projects", () => {
       justification: null,
       evaluatedAt: null,
       createdAt: new Date("2026-09-22T10:00:00.000Z"),
-      updatedAt: new Date("2026-09-22T10:00:00.000Z")
+      updatedAt: new Date("2026-09-22T10:00:00.000Z"),
+      assignedTo: { id: 31, fullName: "Avaliador 31", email: "auditor31@niar.local", role: "auditor" },
+      assignedBy: { id: 20, fullName: "Administrador", email: "admin20@niar.local", role: "admin" },
+      evaluatedBy: null
     }];
 
     findUserById.mockResolvedValueOnce(authUser(20, "admin"));
@@ -311,13 +296,20 @@ describe("GET /api/admin/projects", () => {
     expect(adminResponse.body.items[0].evaluations).toEqual([{
       id: 88,
       version_number: 1,
-      result: "to_review",
-      responsible_member: {
+      status: "to_review",
+      assigned_to: {
         user_id: 31,
         full_name: "Avaliador 31",
-        email: "committee31@niar.local",
-        specialty: { id: 4, name: "Epidemiologia" }
+        email: "auditor31@niar.local",
+        role: "auditor"
       },
+      assigned_by: {
+        user_id: 20,
+        full_name: "Administrador",
+        email: "admin20@niar.local",
+        role: "admin"
+      },
+      justification: null,
       evaluated_at: null,
       updated_at: "2026-09-22T10:00:00.000Z"
     }]);

@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpecialtyListResponse, Specialty, SpecialtyApiError } from '../../types/specialty.types';
 import authReducer from '../auth/auth.slice';
-import { adminApi } from '../api/admin.api';
 import projectsReducer from '../projects/projects.slice';
 import usersReducer from '../users/users.slice';
 
@@ -58,9 +57,7 @@ const makeStore = () => configureStore({
     specialties: specialtiesReducer,
     users: usersReducer,
     projects: projectsReducer,
-    [adminApi.reducerPath]: adminApi.reducer,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
 });
 
 describe('specialties thunks, reducer and selectors', () => {
@@ -185,6 +182,7 @@ describe('specialties thunks, reducer and selectors', () => {
     expect(selectSpecialtiesListStatus(store.getState())).toBe('succeeded');
     expect(selectSpecialtiesMutationLoading(store.getState())).toBe(true);
     expect(store.getState().specialties.mutation.operation).toBe('update');
+    expect(store.getState().specialties.mutation.status).toBe('pending');
 
     resolveMutation(buildSpecialty({ name: 'Novo nome' }));
     await request;

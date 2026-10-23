@@ -6,11 +6,11 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './swagger.js';
 import { AppError } from "./errors/app-error.js";
 import { adminRouter } from "./routes/admin.js";
-import { auditorEvaluationsRouter } from "./routes/auditor-evaluations.js";
 import { authRouter } from "./routes/auth.js";
-import { committeeEvaluationsRouter } from "./routes/committee-evaluations.js";
+import { evaluationsRouter } from "./routes/evaluations.js";
 import { healthRouter } from "./routes/health.js";
 import { projectsRouter } from "./routes/projects.js";
+import { questionnairesRouter } from "./routes/questionnaires.js";
 import { specialtiesRouter } from "./routes/specialties.js";
 import { usersRouter } from "./routes/users.js";
 
@@ -26,11 +26,11 @@ app.get('/api/admin/docs.json', (req, res) => {
 
 app.use("/health", healthRouter);
 app.use("/api/admin", adminRouter);
-app.use("/api/admin/project-versions", auditorEvaluationsRouter);
+app.use("/api/admin/project-versions", evaluationsRouter);
 app.use("/api/admin/users", usersRouter);
 app.use("/api/admin/auth", authRouter);
 app.use("/api/admin/specialties", specialtiesRouter);
-app.use("/api/admin/project-versions", committeeEvaluationsRouter);
+app.use("/api/admin/questionnaires", questionnairesRouter);
 app.use("/api/admin/projects", projectsRouter);
 
 // Handler central de erro: decide o status HTTP a partir do tipo do erro,

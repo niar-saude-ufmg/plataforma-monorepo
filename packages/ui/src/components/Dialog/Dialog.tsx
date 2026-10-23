@@ -12,6 +12,8 @@ export type DialogProps = {
   children?: ReactNode;
   onClose?: () => void;
   showCloseButton?: boolean;
+  closeOnBackdropClick?: boolean;
+  disableEscapeKeyDown?: boolean;
   actions?: ReactNode;
   minWidth?: number | string;
   closeLabel?: string;
@@ -23,6 +25,8 @@ export function Dialog({
   children,
   onClose,
   showCloseButton = true,
+  closeOnBackdropClick = true,
+  disableEscapeKeyDown = false,
   actions,
   minWidth = 360,
   closeLabel = "Fechar",
@@ -31,7 +35,11 @@ export function Dialog({
   return (
     <MuiDialog
       open={open}
-      onClose={onClose}
+      onClose={(_event, reason) => {
+        if (reason === "backdropClick" && !closeOnBackdropClick) return;
+        if (reason === "escapeKeyDown" && disableEscapeKeyDown) return;
+        onClose?.();
+      }}
       aria-label={ariaLabel}
       slotProps={{ paper: { sx: { minWidth } } }}
     >

@@ -55,23 +55,22 @@ export interface ProjectDocument {
   createdAt: string;
 }
 
-/** Membro do comitê responsável pela avaliação. */
-export interface ResponsibleMember {
+/** Usuário relacionado à atribuição da avaliação. */
+export interface EvaluationUser {
   userId: number;
   fullName: string;
   email: string;
-  specialty: {
-    id: number;
-    name: string;
-  };
+  role: string;
 }
 
-/** Avaliação da comissão sobre uma versão. */
+/** Avaliação unificada de uma versão. */
 export interface ProjectEvaluation {
   id: number;
   versionNumber: number;
-  result: EvaluationStatus;
-  responsibleMember: ResponsibleMember;
+  status: EvaluationStatus;
+  assignedTo: EvaluationUser | null;
+  assignedBy: EvaluationUser | null;
+  justification: string | null;
   evaluatedAt: string | null;
   updatedAt: string;
 }
@@ -95,13 +94,20 @@ export interface Project {
   evaluations?: ProjectEvaluation[];
 }
 
+export type ProjectListItem = Project;
+
 /** Paginação padrão da listagem. */
-export interface Pagination {
+export interface ProjectListPagination {
   page: number;
   pageSize: number;
   totalItems: number;
   totalPages: number;
 }
+
+export type ProjectListFilters = Pick<
+  ProjectListParams,
+  "search" | "status" | "evaluationStatus"
+>;
 
 export interface ProjectListParams {
   page?: number;
@@ -122,6 +128,6 @@ export interface ProjectListParams {
 }
 
 export interface ProjectListResponse {
-  items: Project[];
-  pagination: Pagination;
+  items: ProjectListItem[];
+  pagination: ProjectListPagination;
 }

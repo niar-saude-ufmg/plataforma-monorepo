@@ -7,7 +7,7 @@ import { textFieldProps } from '../../hooks/forms/utils/props';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createUser } from '../../store/users/users.api';
 import { clearUsersError } from '../../store/users/users.slice';
-import { selectUsersError, selectUsersLoading } from '../../store/users/users.selectors';
+import { selectUsersMutationError, selectUsersMutationLoading } from '../../store/users/users.selectors';
 import type {
   UserApiError,
   CoepUserFormFields,
@@ -34,7 +34,7 @@ function RegistrationForm({
   onCreated?: (user: User) => void;
 }) {
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectUsersLoading);
+  const isLoading = useAppSelector(selectUsersMutationLoading);
   const {
     handleSubmit,
     reset,
@@ -150,7 +150,7 @@ function RegistrationForm({
 export function PublicUser() {
   const [isApprovalDialogOpen, setApprovalDialogOpen] = useState(false);
   const dispatch = useAppDispatch();
-  const apiError = useAppSelector(selectUsersError);
+  const apiError = useAppSelector(selectUsersMutationError);
   const apiErrorSnackbar = useApiError(
     apiError,
     () => dispatch(clearUsersError()),

@@ -12,4 +12,5 @@ export const filterFieldsStyles = {
 
 export const filterCheckedStyles = {
   alignSelf: "center",
+  gridColumn: "1 / -1",
 };

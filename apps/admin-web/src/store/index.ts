@@ -1,6 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './auth/auth.slice';
-import { adminApi } from './api/admin.api';
 import specialtiesReducer from './specialties/specialties.slice';
 import usersReducer from './users/users.slice';
 import projectsReducer from "./projects/projects.slice";
@@ -12,10 +11,7 @@ export const store = configureStore({
     specialties: specialtiesReducer,
     users: usersReducer,
     projects: projectsReducer,
-    [adminApi.reducerPath]: adminApi.reducer,
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(adminApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

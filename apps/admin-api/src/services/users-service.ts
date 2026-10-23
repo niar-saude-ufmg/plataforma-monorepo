@@ -163,6 +163,7 @@ export const usersService = {
     const result = await usersRepository.findAll({
       role: scopedRoleFor(query.role, currentUser),
       accountStatus: query.account_status,
+        ...(query.search ? { search: query.search } : {}),
       page: query.page,
       pageSize: query.page_size
     });
@@ -439,7 +440,10 @@ export const usersService = {
   },
 
   getCoepDocument: async (userId: number, currentUser: AuthenticatedUser) => {
-    const canDownloadAnyResearcherDocument = currentUser.role === "admin" || currentUser.role === "committee";
+    const canDownloadAnyResearcherDocument =
+      currentUser.role === "admin" ||
+      currentUser.role === "committee" ||
+      currentUser.role === "auditor";
     const isOwnDocument = currentUser.role === "researcher" && currentUser.id === userId;
 
     if (!canDownloadAnyResearcherDocument && !isOwnDocument) {

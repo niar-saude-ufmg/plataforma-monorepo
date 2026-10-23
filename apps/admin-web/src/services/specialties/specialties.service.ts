@@ -21,7 +21,7 @@ type SpecialtyApiResponse = {
   updated_at: string;
 };
 
-type SpecialtiesListApiResponse = {
+type SpecialtyListApiResponse = {
   items: SpecialtyApiResponse[];
   pagination: {
     page: number;
@@ -60,7 +60,7 @@ const toSpecialty = (response: SpecialtyApiResponse): Specialty => ({
   updatedAt: response.updated_at,
 });
 
-const readJsonBody = async (response: Response): Promise<ApiErrorBody | SpecialtyApiResponse | SpecialtiesListApiResponse | null> => {
+const readJsonBody = async (response: Response): Promise<ApiErrorBody | SpecialtyApiResponse | SpecialtyListApiResponse | null> => {
   if (!response.headers.get('content-type')?.includes('application/json')) {
     return null;
   }
@@ -145,7 +145,7 @@ export const listSpecialties = async (params: SpecialtyListParams = {}): Promise
   if (params.pageSize !== undefined) searchParams.set('page_size', String(params.pageSize));
 
   const queryString = searchParams.toString();
-  const response = await request<SpecialtiesListApiResponse>(`/specialties${queryString ? `?${queryString}` : ''}`);
+  const response = await request<SpecialtyListApiResponse>(`/specialties${queryString ? `?${queryString}` : ''}`);
 
   return {
     items: response.items.map(toSpecialty),

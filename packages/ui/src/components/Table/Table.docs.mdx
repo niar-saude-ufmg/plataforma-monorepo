@@ -40,13 +40,17 @@ Estrutura de uma coluna:
 <Source
   dark
   language="tsx"
-  code={`type TableColumn<T> = {
+code={`type TableColumn<T> = {
     key: keyof T & string;
     label: React.ReactNode;
     align?: "left" | "center" | "right" | "justify" | "inherit";
     sortable?: boolean;
     onClick?: () => void;
-    render?: (value: T[keyof T], row: T) => React.ReactNode;
+    render?: (value: T[keyof T] | undefined, row: T) => React.ReactNode;
+} | {
+    variant: "actions";
+    label: React.ReactNode;
+    render?: (value: undefined, row: T) => React.ReactNode;
 };`}
 />
 
@@ -111,6 +115,8 @@ export function ProjectTable() {
     return <Table columns={columns} rows={rows} />;
 }`}
 />
+
+Para colunas que contêm ações da linha, use `variant="actions"`. O design system mantém essa coluna com a largura necessária para os controles e evita a quebra dos botões; as demais colunas ocupam o espaço restante da tabela.
 
 ### Acessibilidade
 

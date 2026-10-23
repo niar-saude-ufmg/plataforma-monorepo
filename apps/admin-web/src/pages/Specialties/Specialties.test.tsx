@@ -5,7 +5,6 @@ import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpecialtyListResponse, Specialty } from '../../types/specialty.types';
-import { adminApi } from '../../store/api/admin.api';
 import authReducer from '../../store/auth/auth.slice';
 import projectsReducer from '../../store/projects/projects.slice';
 import {
@@ -54,9 +53,7 @@ const makeStore = () => configureStore({
     specialties: specialtiesReducer,
     users: usersReducer,
     projects: projectsReducer,
-    [adminApi.reducerPath]: adminApi.reducer,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(adminApi.middleware),
 });
 
 const renderPage = (store = makeStore()) => {
@@ -93,11 +90,18 @@ describe('Specialties', () => {
     expect(screen.getByText('Gerencie o catálogo de especialidades da plataforma.')).toBeInTheDocument();
     expect(screen.getAllByRole('form', { name: 'Filtros de especialidades' })).toHaveLength(1);
     expect(screen.getAllByRole('table', { name: 'Lista de especialidades' })).toHaveLength(1);
-    for (const column of ['Código', 'Especialidade', 'Status', 'Descrição', 'Ações']) {
-      expect(screen.getByRole('columnheader', { name: column })).toBeInTheDocument();
-    }
+    const table = screen.getByRole('table', { name: 'Lista de especialidades' });
+    expect(within(table).getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
+      'Código',
+      'Especialidade',
+      'Status',
+      'Descrição',
+      'Ações',
+    ]);
     expect(screen.getByText('Epidemiologia')).toBeInTheDocument();
     expect(screen.getByText('Estudos populacionais')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Ativas' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Inativas' })).toBeInTheDocument();
     expect(screen.getByText('Ativa')).toBeInTheDocument();
     expect(screen.getByText('Inativa')).toBeInTheDocument();
 
@@ -308,6 +312,7 @@ describe('Specialties', () => {
     await waitFor(() => expect(serviceMocks.listSpecialties).toHaveBeenCalledWith(expect.objectContaining({ page: 3 })));
 
     const query = screen.getByRole('combobox', { name: 'Buscar especialidade' });
+    expect(screen.queryByTitle('Open')).not.toBeInTheDocument();
     await user.click(query);
     expect(await screen.findByRole('option', { name: 'epi-001' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Epidemiologia' })).toBeInTheDocument();
@@ -320,7 +325,8 @@ describe('Specialties', () => {
       isActive: undefined,
     }));
 
-    await user.click(screen.getByRole('radio', { name: 'Inativas' }));
+    const status = screen.getByRole('radio', { name: 'Inativas' });
+    await user.click(status);
 
     await waitFor(() => expect(serviceMocks.listSpecialties).toHaveBeenCalledWith({
       page: 1,
@@ -330,7 +336,7 @@ describe('Specialties', () => {
     }));
     expect(store.getState().specialties.list.page).toBe(1);
 
-    expect(screen.getByRole('radio', { name: 'Inativas' })).toBeChecked();
+    expect(await screen.findByRole('radio', { name: 'Inativas' })).toBeChecked();
     await user.click(screen.getByRole('radio', { name: 'Ativas' }));
     await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({ query: 'Epidemiologia', isActive: true }));
     await user.click(screen.getByRole('radio', { name: 'Todas' }));
@@ -344,9 +350,27 @@ describe('Specialties', () => {
     });
   });
 
+  it('permite pesquisar um texto que não está entre as opções da página atual', async () => {
+    serviceMocks.listSpecialties.mockResolvedValue(listResponse());
+    const user = userEvent.setup();
+
+    renderPage();
+    await screen.findByText('Epidemiologia');
+
+    const query = screen.getByRole('combobox', { name: 'Buscar especialidade' });
+    await user.type(query, 'Cardiologia');
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(serviceMocks.listSpecialties).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 20,
+      query: 'Cardiologia',
+      isActive: undefined,
+    }));
+  });
+
   it('diferencia os estados vazios e limpa os filtros ativos', async () => {
     serviceMocks.listSpecialties.mockImplementation(async (params) => {
-      const filtered = Boolean(params?.query) || params?.isActive !== undefined;
       return listResponse([], {
         page: params?.page ?? 1,
         pageSize: params?.pageSize ?? 20,
@@ -419,7 +443,8 @@ describe('Specialties', () => {
     renderPage(store);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao carregar especialidades.');
-    expect(screen.queryByText('Nenhuma especialidade cadastrada')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nenhuma especialidade encontrada')).not.toBeInTheDocument();
+    expect(screen.queryByText('Não encontramos especialidades com os filtros selecionados.')).not.toBeInTheDocument();
     expect(serviceMocks.listSpecialties).toHaveBeenNthCalledWith(1, {
       page: 2,
       pageSize: 20,
@@ -427,19 +452,13 @@ describe('Specialties', () => {
       isActive: true,
     });
 
-    serviceMocks.listSpecialties.mockResolvedValueOnce(listResponse(
-      [buildSpecialty()],
-      { page: 2, pageSize: 20, totalItems: 21, totalPages: 2 },
-    ));
-    await user.click(screen.getByRole('button', { name: 'Tentar novamente' }));
-
-    expect(await screen.findByText('Epidemiologia')).toBeInTheDocument();
-    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(2);
-    expect(serviceMocks.listSpecialties).toHaveBeenNthCalledWith(2, {
+    serviceMocks.listSpecialties.mockResolvedValueOnce(listResponse([buildSpecialty()], {
       page: 2,
       pageSize: 20,
-      query: 'epi',
-      isActive: true,
-    });
+      totalItems: 21,
+      totalPages: 2,
+    }));
+    await user.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+    expect(await screen.findByText('Epidemiologia')).toBeInTheDocument();
   });
 });

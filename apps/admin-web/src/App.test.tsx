@@ -97,6 +97,7 @@ describe("Admin App", () => {
   it.each([
     ["researcher", "Pesquisador", "/admin/pesquisador/home"],
     ["committee", "Comitê", "/admin/comite/home"],
+    ["auditor", "Auditor", "/admin/auditor/home"],
   ] as const)("não mostra Especialidades no menu de %s", async (role, name, path) => {
     render(
       <MemoryRouter initialEntries={[path]}>

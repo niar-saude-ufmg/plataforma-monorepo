@@ -76,6 +76,7 @@ export type CreateAuditorInput = z.infer<typeof createAuditorSchema>;
 export const userAccountStatusSchema = z.enum(["pending", "active", "rejected", "disabled"]);
 
 export const listUsersQuerySchema = z.object({
+  search: z.string().trim().min(1).max(255).optional(),
   role: z.enum(["researcher", "admin", "auditor", "committee"]).optional(),
   account_status: userAccountStatusSchema.optional(),
   page: z.coerce.number().int().positive().default(1),

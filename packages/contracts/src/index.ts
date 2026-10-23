@@ -1,3 +1,5 @@
+export * from "./questionnaires.js";
+
 export type UserRole = "researcher" | "admin" | "auditor" | "committee";
 
 export type UserAccountStatus = "pending" | "active" | "rejected" | "disabled";
@@ -38,19 +40,19 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   saved: "Salvo",
   submitted_for_review: "Enviado para avaliação",
   submitted_to_committee: "Enviado ao comitê",
-  approved_to_schedule: "Aprovado para agendamento",
-  rejected_to_safe_room: "Rejeitado para sala segura",
+  approved_to_schedule: "Aprovado para agendar",
+  rejected_to_safe_room: "Rejeitado p/ sala segura",
   resubmitted_for_review: "Reenviado para avaliação",
   resubmitted_to_committee: "Reenviado ao comitê",
   under_review: "Em avaliação",
   scheduled_for_safe_room: "Sala segura agendada",
-  approved_for_safe_room: "Aprovado para sala segura",
+  approved_for_safe_room: "Aprovado p/ sala segura",
   under_safe_room: "Em sala segura",
   report_submitted: "Relatório enviado",
   report_under_review: "Relatório em avaliação",
-  safe_room_reuse_requested: "Solicitada reutilização da sala segura",
+  safe_room_reuse_requested: "Reuso solicitado",
   rescheduled_for_safe_room: "Sala segura reagendada",
-  reapproved_for_safe_room: "Reaprovado para sala segura",
+  reapproved_for_safe_room: "Reaprovado p/ sala segura",
   report_resubmitted: "Relatório reenviado",
   needs_changes: "Precisa de alterações",
   approved: "Aprovado",

@@ -11,6 +11,7 @@ export type Specialty = {
   updatedAt: string;
 };
 
+export type SpecialtyListItem = Specialty;
 export type SpecialtyListPagination = {
   page: number;
   pageSize: number;
@@ -18,10 +19,7 @@ export type SpecialtyListPagination = {
   totalPages: number;
 };
 
-export type SpecialtyListItem = Specialty;
-
 export type SpecialtyMutationOperation = 'create' | 'update' | 'status';
-
 export type SpecialtyListResponse = {
   items: SpecialtyListItem[];
   pagination: SpecialtyListPagination;

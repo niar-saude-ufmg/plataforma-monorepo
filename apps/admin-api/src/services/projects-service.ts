@@ -3,36 +3,14 @@ import { access, realpath } from "node:fs/promises";
 import { basename, isAbsolute, relative, resolve, sep } from "node:path";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
+import { PROJECT_STATUS_LABELS } from "@niar/contracts";
 import { projectsRepository, type ProjectListFilter, type ProjectRecord } from "../repositories/projects-repository.js";
 import type {
   ListProjectsQuery,
   ProjectEvaluationStatusCode,
   ProjectListResponse,
-  ProjectResponse,
-  ProjectStatusCode
+  ProjectResponse
 } from "../schemas/project-schema.js";
-
-const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
-  submitted_for_review: "Enviado para avaliação",
-  submitted_to_committee: "Enviado ao comitê",
-  approved_to_schedule: "Aprovado para agendamento",
-  rejected_to_safe_room: "Rejeitado para sala segura",
-  resubmitted_for_review: "Reenviado para avaliação",
-  resubmitted_to_committee: "Reenviado ao comitê",
-  under_review: "Em avaliação",
-  scheduled_for_safe_room: "Sala segura agendada",
-  approved_for_safe_room: "Aprovado para sala segura",
-  under_safe_room: "Em sala segura",
-  report_submitted: "Relatório enviado",
-  report_under_review: "Relatório em avaliação",
-  safe_room_reuse_requested: "Solicitada reutilização da sala segura",
-  rescheduled_for_safe_room: "Sala segura reagendada",
-  reapproved_for_safe_room: "Reaprovado para sala segura",
-  report_resubmitted: "Relatório reenviado",
-  needs_changes: "Precisa de alterações",
-  approved: "Aprovado",
-  rejected: "Rejeitado"
-};
 
 const evaluationStatusFor = (project: ProjectRecord): ProjectEvaluationStatusCode => {
   const latestVersion = project.versions.at(-1);
@@ -109,22 +87,30 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
     response.evaluation_status = evaluationStatusFor(project);
     response.evaluation_context = evaluationContextFor(project);
     response.evaluations = project.versions.flatMap((version) => {
-      const evaluation = version.committeeEvaluation;
+      const evaluation = version.evaluations[0];
       if (!evaluation) return [];
 
       return [{
         id: evaluation.id,
         version_number: version.versionNumber,
-        result: evaluation.result,
-        responsible_member: {
-          user_id: evaluation.responsibleMember.userId,
-          full_name: evaluation.responsibleMember.user.fullName,
-          email: evaluation.responsibleMember.user.email,
-          specialty: {
-            id: evaluation.responsibleMember.specialty.id,
-            name: evaluation.responsibleMember.specialty.name
-          }
-        },
+        status: evaluation.status,
+        assigned_to: evaluation.assignedTo
+          ? {
+              user_id: evaluation.assignedTo.id,
+              full_name: evaluation.assignedTo.fullName,
+              email: evaluation.assignedTo.email,
+              role: evaluation.assignedTo.role
+            }
+          : null,
+        assigned_by: evaluation.assignedBy
+          ? {
+              user_id: evaluation.assignedBy.id,
+              full_name: evaluation.assignedBy.fullName,
+              email: evaluation.assignedBy.email,
+              role: evaluation.assignedBy.role
+            }
+          : null,
+        justification: evaluation.justification,
         evaluated_at: evaluation.evaluatedAt?.toISOString() ?? null,
         updated_at: evaluation.updatedAt.toISOString()
       }];

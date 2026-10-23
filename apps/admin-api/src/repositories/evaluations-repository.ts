@@ -15,6 +15,8 @@ const evaluationDetailsSelect = {
   createdAt: true,
   updatedAt: true,
   assignedTo: { select: { id: true, fullName: true, email: true, role: true } },
+  assignedBy: { select: { id: true, fullName: true, email: true, role: true } },
+  evaluatedBy: { select: { id: true, fullName: true, email: true, role: true } },
   projectVersion: {
     select: {
       id: true,
@@ -28,7 +30,7 @@ const evaluationDetailsSelect = {
   }
 } satisfies Prisma.EvaluationSelect;
 
-export type AuditorEvaluationDetails = Prisma.EvaluationGetPayload<{
+export type EvaluationDetails = Prisma.EvaluationGetPayload<{
   select: typeof evaluationDetailsSelect;
 }>;
 
@@ -36,6 +38,7 @@ type AssignmentData = {
   projectVersionId: number;
   assignedToUserId: number;
   actorUserId: number;
+  actorRole: UserRole;
   ipAddress: string;
 };
 
@@ -55,6 +58,16 @@ type UpdateData = {
   justification: string;
   ipAddress: string;
 };
+
+const POST_SAFE_ROOM_STATUSES = new Set([
+  "under_safe_room",
+  "report_submitted",
+  "report_under_review",
+  "safe_room_reuse_requested",
+  "rescheduled_for_safe_room",
+  "reapproved_for_safe_room",
+  "report_resubmitted"
+]);
 
 const loadEvaluation = (client: Prisma.TransactionClient, projectVersionId: number) =>
   client.evaluation.findFirstOrThrow({
@@ -98,45 +111,61 @@ const assertJustification = (status: UpdateData["status"], justification: string
   }
 };
 
-export const auditorEvaluationsRepository = {
-  findByProjectVersionId: async (projectVersionId: number): Promise<AuditorEvaluationDetails> => {
+export const evaluationsRepository = {
+  findByProjectVersionId: async (projectVersionId: number): Promise<EvaluationDetails> => {
     const evaluation = await prisma.evaluation.findFirst({
       where: { projectVersionId },
       orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
       select: evaluationDetailsSelect
     });
 
-    if (!evaluation) throw new AppError("Avaliação do auditor não encontrada", 404);
+    if (!evaluation) throw new AppError("Avaliação não encontrada", 404);
     return evaluation;
   },
 
-  createAssignment: async (data: AssignmentData): Promise<AuditorEvaluationDetails> =>
+  createAssignment: async (data: AssignmentData): Promise<EvaluationDetails> =>
     prisma.$transaction(async (transaction) => {
       const version = await transaction.projectVersion.findUnique({
         where: { id: data.projectVersionId },
-        select: { id: true, status: true }
+        select: {
+          id: true,
+          status: true,
+          evaluations: {
+            orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+            take: 1,
+            select: { id: true }
+          }
+        }
       });
 
       if (!version) throw new AppError("Versão do projeto não encontrada", 404);
-
-      const auditor = await transaction.user.findUnique({
-        where: { id: data.assignedToUserId },
-        select: { role: true, accountStatus: true }
-      });
-
-      if (auditor?.role !== "auditor" || auditor.accountStatus !== "active") {
-        throw new AppError("Usuário responsável precisa ser um auditor ativo", 400);
+      if (version.evaluations[0]) {
+        throw new AppError("Esta versão já possui uma avaliação atribuída", 409);
       }
 
-      const postSafeRoomStatuses = new Set([
-        "report_submitted",
-        "report_under_review",
-        "safe_room_reuse_requested",
-        "rescheduled_for_safe_room",
-        "reapproved_for_safe_room",
-        "report_resubmitted"
-      ]);
-      const context = postSafeRoomStatuses.has(version.status) ? "post_safe_room" : "pre_safe_room";
+      const context = POST_SAFE_ROOM_STATUSES.has(version.status) ? "post_safe_room" : "pre_safe_room";
+      const expectedRole = context === "post_safe_room" ? "committee" : "auditor";
+
+      if (data.actorRole !== "admin" && data.assignedToUserId !== data.actorUserId) {
+        throw new AppError("O usuário só pode assumir a própria avaliação", 403);
+      }
+
+      const assignedUser = await transaction.user.findUnique({
+        where: { id: data.assignedToUserId },
+        select: {
+          role: true,
+          accountStatus: true,
+          committeeProfile: { select: { userId: true } }
+        }
+      });
+
+      if (
+        assignedUser?.role !== expectedRole ||
+        assignedUser.accountStatus !== "active" ||
+        (expectedRole === "committee" && !assignedUser.committeeProfile)
+      ) {
+        throw new AppError(`Usuário responsável precisa ser um ${expectedRole} ativo`, 400);
+      }
 
       const evaluation = await transaction.evaluation.create({
         data: {
@@ -158,7 +187,7 @@ export const auditorEvaluationsRepository = {
         data: {
           projectVersionId: data.projectVersionId,
           status: "under_review",
-          notes: "Projeto atribuído para avaliação do auditor.",
+          notes: "Projeto atribuído para avaliação.",
           actorUserId: data.actorUserId,
           evaluationId: evaluation.id
         }
@@ -167,12 +196,13 @@ export const auditorEvaluationsRepository = {
       await transaction.auditLog.create({
         data: {
           userId: data.actorUserId,
-          action: "assign_auditor_evaluation",
+          action: "assign_evaluation",
           resourceType: "evaluation",
           resourceId: String(evaluation.id),
           details: JSON.stringify({
             project_version_id: data.projectVersionId,
             assigned_to_user_id: data.assignedToUserId,
+            context,
             status: "to_review"
           }),
           ipAddress: data.ipAddress
@@ -182,7 +212,7 @@ export const auditorEvaluationsRepository = {
       return loadEvaluation(transaction, data.projectVersionId);
     }),
 
-  update: async (data: UpdateData): Promise<AuditorEvaluationDetails> => {
+  update: async (data: UpdateData): Promise<EvaluationDetails> => {
     assertJustification(data.status, data.justification);
 
     return prisma.$transaction(async (transaction) => {
@@ -192,7 +222,7 @@ export const auditorEvaluationsRepository = {
         select: { id: true, status: true, assignedToUserId: true, assignedByUserId: true }
       });
 
-      if (!evaluation) throw new AppError("Avaliação do auditor não encontrada", 404);
+      if (!evaluation) throw new AppError("Avaliação não encontrada", 404);
 
       if (
         (data.actorRole === "auditor" || data.actorRole === "committee") &&
@@ -218,7 +248,7 @@ export const auditorEvaluationsRepository = {
 
       if (data.actorRole === "committee") {
         if (!isCommitteeStatus(data.status)) {
-          throw new AppError("Comitê só pode usar status terminados em _by_committee", 403);
+          throw new AppError("Comitê só pode usar os status da avaliação do comitê", 403);
         }
 
         if (evaluation.status !== "sent_to_committee") {
@@ -228,7 +258,7 @@ export const auditorEvaluationsRepository = {
 
       if (data.actorRole === "auditor" && data.status === "sent_to_committee") {
         if (!data.committeeMemberUserId) {
-          throw new AppError("committee_member_user_id é obrigatório ao enviar ao comitê", 400);
+          throw new AppError("committee_member_user_id é obrigatório ao encaminhar ao comitê", 400);
         }
 
         const committeeMember = await transaction.user.findUnique({
@@ -292,7 +322,7 @@ export const auditorEvaluationsRepository = {
       await transaction.auditLog.create({
         data: {
           userId: data.actorUserId,
-          action: "update_auditor_evaluation",
+          action: "update_evaluation",
           resourceType: "evaluation",
           resourceId: String(evaluation.id),
           details: JSON.stringify({

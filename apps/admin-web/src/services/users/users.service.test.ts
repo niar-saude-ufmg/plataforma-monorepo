@@ -2,8 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import type { CreateUserInput } from "../../types/user.types";
 import {
+  downloadUserCoepDocumentRequest,
   getUsersRequest,
   normalizeUserApiError,
+  normalizeUserDocumentApiError,
   toUserListItem,
   toCreateUserFormData,
   toUser,
@@ -76,6 +78,7 @@ describe("user service", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getUsersRequest({
+      search: "Ana Beatriz",
       role: "researcher",
       accountStatus: "pending",
       page: 2,
@@ -86,7 +89,7 @@ describe("user service", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:3333/api/admin/users?role=researcher&account_status=pending&page=2&page_size=10",
+      "http://localhost:3333/api/admin/users?search=Ana+Beatriz&role=researcher&account_status=pending&page=2&page_size=10",
       { headers: { Authorization: "Bearer fake-token" } },
     );
   });
@@ -129,6 +132,38 @@ describe("user service", () => {
       email: "ana.souza@niar-saude.org",
       role: "researcher",
       createdAt: "2026-09-04T10:00:00.000Z",
+    });
+  });
+
+  it("baixa o parecer do COEP usando o id do usuário e o nome do header", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("%PDF-fake", {
+        status: 200,
+        headers: { "Content-Disposition": 'attachment; filename="parecer.pdf"' },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await downloadUserCoepDocumentRequest(7);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3333/api/admin/users/7/coep-document",
+      { headers: { Authorization: "Bearer fake-token" } },
+    );
+    expect(result.filename).toBe("parecer.pdf");
+    expect(await result.blob.text()).toBe("%PDF-fake");
+  });
+
+  it("normaliza os erros do download do COEP", () => {
+    expect(normalizeUserDocumentApiError(403)).toEqual({
+      status: 403,
+      message: "Você não tem acesso a este documento.",
+    });
+    expect(normalizeUserDocumentApiError(404)).toEqual({
+      status: 404,
+      message: "Documento do COEP não encontrado.",
     });
   });
 

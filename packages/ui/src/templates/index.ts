@@ -12,6 +12,7 @@ export type {
 } from "./PageHeader/PageHeader";
 export type {
   DetailsListItem,
+  DetailsSection,
   DetailsProps,
   DetailsTimelineItem,
 } from "./Details";

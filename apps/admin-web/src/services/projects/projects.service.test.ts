@@ -3,8 +3,10 @@ import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import {
   getProjectRequest,
   getProjectsRequest,
+  downloadProjectDocumentRequest,
+  normalizeProjectDocumentApiError,
   normalizeProjectApiError,
-  toPagination,
+  toProjectListPagination,
   toProject,
 } from "./projects.service";
 
@@ -41,13 +43,20 @@ const rawProjectFromApi = {
     {
       id: 88,
       version_number: 1,
-      result: "to_review",
-      responsible_member: {
+      status: "to_review",
+      assigned_to: {
         user_id: 31,
         full_name: "Avaliador 31",
-        email: "committee31@niar.local",
-        specialty: { id: 4, name: "Epidemiologia" },
+        email: "auditor31@niar.local",
+        role: "auditor",
       },
+      assigned_by: {
+        user_id: 20,
+        full_name: "Administrador",
+        email: "admin20@niar.local",
+        role: "admin",
+      },
+      justification: null,
       evaluated_at: null,
       updated_at: "2026-09-22T10:00:00.000Z",
     },
@@ -127,13 +136,20 @@ describe("projects service", () => {
           {
             id: 88,
             versionNumber: 1,
-            result: "to_review",
-            responsibleMember: {
+            status: "to_review",
+            assignedTo: {
               userId: 31,
               fullName: "Avaliador 31",
-              email: "committee31@niar.local",
-              specialty: { id: 4, name: "Epidemiologia" },
+              email: "auditor31@niar.local",
+              role: "auditor",
             },
+            assignedBy: {
+              userId: 20,
+              fullName: "Administrador",
+              email: "admin20@niar.local",
+              role: "admin",
+            },
+            justification: null,
             evaluatedAt: null,
             updatedAt: "2026-09-22T10:00:00.000Z",
           },
@@ -151,10 +167,10 @@ describe("projects service", () => {
     });
   });
 
-  describe("toPagination", () => {
+  describe("toProjectListPagination", () => {
     it("converte page_size, total_items e total_pages para camelCase", () => {
       expect(
-        toPagination({
+        toProjectListPagination({
           page: 2,
           page_size: 10,
           total_items: 42,
@@ -363,6 +379,40 @@ describe("projects service", () => {
 
       await expect(getProjectRequest(99999)).rejects.toMatchObject({
         status: 404,
+      });
+    });
+  });
+
+  describe("downloadProjectDocumentRequest", () => {
+    it("baixa o documento usando os ids do projeto e do documento", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response("docx-fake", {
+          status: 200,
+          headers: { "Content-Disposition": "attachment; filename=projeto.docx" },
+        }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await downloadProjectDocumentRequest(42, 101);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:3333/api/admin/projects/42/documents/101/download",
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: "Bearer fake-token" }),
+        }),
+      );
+      expect(result.filename).toBe("projeto.docx");
+      expect(await result.blob.text()).toBe("docx-fake");
+    });
+
+    it("normaliza os erros do download do projeto", () => {
+      expect(normalizeProjectDocumentApiError(403)).toEqual({
+        status: 403,
+        message: "Você não tem acesso a este documento.",
+      });
+      expect(normalizeProjectDocumentApiError(404)).toEqual({
+        status: 404,
+        message: "Documento do projeto não encontrado.",
       });
     });
   });

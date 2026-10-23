@@ -1,51 +1,49 @@
 import {
   Button,
-  Filter,
   Dialog,
+  Filter,
   Listing,
-  RadioGroup,
   Snackbar,
   StatusChip,
-  type RadioGroupOption,
   type TableColumn,
 } from '@niar/ui';
 import { useEffect, useState, type ChangeEvent } from 'react';
+import { SpecialtyForm, type SpecialtyFormValues } from '../../components/SpecialtyForm';
 import { useApiError } from '../../hooks/use-api-error/use-api-error';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createSpecialty, fetchSpecialties, updateSpecialty, updateSpecialtyStatus } from '../../store/specialties/specialties.api';
 import {
   selectSpecialtiesList,
-  selectSpecialtiesSelected,
-  selectSpecialtiesMutationLoading,
-  selectSpecialtiesMutationError,
   selectSpecialtiesListError,
   selectSpecialtiesListFilters,
   selectSpecialtiesListLoading,
   selectSpecialtiesListPage,
   selectSpecialtiesListPageSize,
   selectSpecialtiesListPagination,
+  selectSpecialtiesMutationError,
+  selectSpecialtiesMutationLoading,
+  selectSpecialtiesSelected,
 } from '../../store/specialties/specialties.selectors';
 import {
-  clearSpecialtiesError,
-  clearSpecialtiesMutation,
   clearSelectedSpecialty,
-  setSelectedSpecialty,
+  clearSpecialtiesError,
   clearSpecialtiesFilters,
+  clearSpecialtiesMutation,
+  setSelectedSpecialty,
   setSpecialtiesFilters,
   setSpecialtiesPage,
   setSpecialtiesPageSize,
 } from '../../store/specialties/specialties.slice';
-import { SpecialtyForm, type SpecialtyFormValues } from '../../components/SpecialtyForm';
 import type { Specialty, SpecialtyListFilters } from '../../types/specialty.types';
 import './Specialties.scss';
 
-const STATUS_OPTIONS: readonly RadioGroupOption[] = [
+const STATUS_OPTIONS = [
   { label: 'Todas', value: 'all' },
   { label: 'Ativas', value: 'true' },
   { label: 'Inativas', value: 'false' },
-];
+] as const;
 
-type SpecialtyRow = Specialty & { actions: null };
+type SpecialtyRow = Specialty;
 
 const autocompleteValue = (value: unknown): string | undefined => {
   if (typeof value === 'string') return value.trim() || undefined;
@@ -64,7 +62,6 @@ export function Specialties() {
   const pageSize = useAppSelector(selectSpecialtiesListPageSize);
   const loading = useAppSelector(selectSpecialtiesListLoading);
   const error = useAppSelector(selectSpecialtiesListError);
-
   const selected = useAppSelector(selectSpecialtiesSelected);
   const mutationLoading = useAppSelector(selectSpecialtiesMutationLoading);
   const mutationError = useAppSelector(selectSpecialtiesMutationError);
@@ -117,44 +114,6 @@ export function Specialties() {
     'Não foi possível concluir a operação. Tente novamente.',
   );
 
-  const columns: readonly TableColumn<SpecialtyRow>[] = [
-    { key: 'code', label: 'Código' },
-    { key: 'name', label: 'Especialidade' },
-    {
-      key: 'isActive',
-      label: 'Status',
-      render: (_, row) => (
-        <StatusChip
-          label={row.isActive ? 'Ativa' : 'Inativa'}
-          status={row.isActive ? 'success' : 'default'}
-          size="small"
-        />
-      ),
-    },
-    { key: 'description', label: 'Descrição' },
-    {
-      key: 'actions',
-      label: 'Ações',
-      render: (_, row) => (
-        <div className="specialties-row-actions">
-          <Button type="button" variant="outlined" size="small" disabled={mutationLoading} onClick={() => openForm('edit', row)}>
-            Editar
-          </Button>
-          <Button
-            onClick={() => openStatusConfirmation(row)}
-            disabled={mutationLoading}
-            type="button"
-            variant="outlined"
-            color={row.isActive ? 'danger' : 'primary'}
-            size="small"
-          >
-            {row.isActive ? 'Desativar' : 'Ativar'}
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
   const loadSpecialties = () => dispatch(fetchSpecialties({
     page,
     pageSize,
@@ -172,7 +131,7 @@ export function Specialties() {
     'Não foi possível carregar as especialidades. Tente novamente.',
   );
 
-  const rows: SpecialtyRow[] = specialties.map((specialty) => ({ ...specialty, actions: null }));
+  const rows: SpecialtyRow[] = specialties;
 
   const searchOptions = Array.from(new Set(
     specialties.flatMap(({ code, name }) => [code, name]),
@@ -180,7 +139,7 @@ export function Specialties() {
 
   const handleFilterChange = (values: Readonly<Record<string, unknown>>) => {
     const query = autocompleteValue(values.query);
-    const status = autocompleteValue(values.isActive);
+    const status = typeof values.isActive === 'string' ? values.isActive : undefined;
     const nextFilters: SpecialtyListFilters = {
       ...(query ? { query } : {}),
       ...(status === 'true' ? { isActive: true } : status === 'false' ? { isActive: false } : {}),
@@ -190,7 +149,11 @@ export function Specialties() {
   };
 
   const hasActiveFilters = Boolean(filters.query) || filters.isActive !== undefined;
-  const createAction = <Button type="button" variant="contained" disabled={mutationLoading} onClick={() => openForm('create')}>Cadastrar especialidade</Button>;
+  const createAction = (
+    <Button type="button" variant="contained" disabled={mutationLoading} onClick={() => openForm('create')}>
+      Cadastrar especialidade
+    </Button>
+  );
   const emptyState = hasActiveFilters
     ? {
         title: 'Nenhuma especialidade encontrada',
@@ -206,6 +169,65 @@ export function Specialties() {
         description: 'Ainda não existem especialidades para exibir.',
         action: createAction,
       };
+
+  const columns: readonly TableColumn<SpecialtyRow>[] = [
+    { key: 'code', label: 'Código' },
+    { key: 'name', label: 'Especialidade' },
+    {
+      key: 'isActive',
+      label: 'Status',
+      render: (_, row) => (
+        <StatusChip
+          label={row.isActive ? 'Ativa' : 'Inativa'}
+          status={row.isActive ? 'success' : 'default'}
+          size="small"
+        />
+      ),
+    },
+    { key: 'description', label: 'Descrição' },
+    {
+      label: 'Ações',
+      variant: 'actions',
+      render: (_, row) => (
+        <div className="specialties-row-actions">
+          <Button type="button" variant="outlined" size="small" disabled={mutationLoading} onClick={() => openForm('edit', row)}>
+            Editar
+          </Button>
+          <Button
+            type="button"
+            variant="outlined"
+            color={row.isActive ? 'danger' : 'primary'}
+            size="small"
+            disabled={mutationLoading}
+            onClick={() => openStatusConfirmation(row)}
+          >
+            {row.isActive ? 'Desativar' : 'Ativar'}
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const paginationProps = {
+    labelRowsPerPage: 'Linhas por página',
+    labelDisplayedRows: ({ from, to, count }: { from: number; to: number; count: number }) => `${from}–${to} de ${count}`,
+    getItemAriaLabel: (type: 'first' | 'last' | 'next' | 'previous') => ({
+      first: 'Primeira página',
+      last: 'Última página',
+      next: 'Próxima página',
+      previous: 'Página anterior',
+    })[type],
+    count: pagination?.totalItems ?? 0,
+    page: (pagination?.page ?? 1) - 1,
+    rowsPerPage: pagination?.pageSize ?? pageSize,
+    rowsPerPageOptions: [10, 20, 50, 100],
+    onPageChange: (_event: unknown, nextPage: number) => {
+      dispatch(setSpecialtiesPage(nextPage + 1));
+    },
+    onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => {
+      dispatch(setSpecialtiesPageSize(Number(event.target.value)));
+    },
+  };
 
   if (mode) {
     return (
@@ -225,48 +247,27 @@ export function Specialties() {
         aria-label="Lista de especialidades"
         emptyStateAriaLabel="Lista de especialidades vazia"
         filter={(
-          <div className="specialties-filters">
-            <h2 className="specialties-filters__heading">Filtros</h2>
-            <Filter
-              aria-label="Filtros de especialidades"
-              search={[{ key: 'query', label: 'Buscar especialidade', options: searchOptions }]}
-              values={{ query: filters.query ?? null, isActive: String(filters.isActive ?? 'all') }}
-              onChange={handleFilterChange}
-            />
-            <RadioGroup
-              className="specialties-filters__status"
-              aria-label="Status"
-              label="Status"
-              options={STATUS_OPTIONS}
-              value={String(filters.isActive ?? 'all')}
-              onChange={(_event, value) => handleFilterChange({ query: filters.query, isActive: value })}
-              row
-            />
-          </div>
+          <Filter
+            aria-label="Filtros de especialidades"
+            search={[{ key: 'query', label: 'Buscar especialidade', options: searchOptions, freeSolo: true }]}
+            checkedOptions={[{
+              key: 'isActive',
+              label: 'Status',
+              type: 'radio',
+              row: true,
+              options: STATUS_OPTIONS,
+            }]}
+            values={{
+              query: filters.query ?? null,
+              isActive: filters.isActive === undefined ? 'all' : String(filters.isActive),
+            }}
+            onChange={handleFilterChange}
+          />
         )}
         columns={columns}
         rows={rows}
         loading={loading || Boolean(error && rows.length === 0)}
-        pagination={{
-          labelRowsPerPage: 'Linhas por página',
-          labelDisplayedRows: ({ from, to, count }) => `${from}–${to} de ${count}`,
-          getItemAriaLabel: (type) => ({
-            first: 'Primeira página',
-            last: 'Última página',
-            next: 'Próxima página',
-            previous: 'Página anterior',
-          })[type],
-          count: pagination?.totalItems ?? 0,
-          page: (pagination?.page ?? 1) - 1,
-          rowsPerPage: pagination?.pageSize ?? pageSize,
-          rowsPerPageOptions: [5, 10, 20, 50],
-          onPageChange: (_event: unknown, nextPage: number) => {
-            dispatch(setSpecialtiesPage(nextPage + 1));
-          },
-          onRowsPerPageChange: (event: ChangeEvent<HTMLInputElement>) => {
-            dispatch(setSpecialtiesPageSize(Number(event.target.value)));
-          },
-        }}
+        pagination={paginationProps}
         emptyState={emptyState}
       />
       {error ? (

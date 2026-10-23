@@ -16,6 +16,31 @@ describe("Table", () => {
     expect(screen.getByText("Nenhum registro encontrado")).toBeInTheDocument();
   });
 
+  it("mantém a coluna de ações em uma única linha", () => {
+    render(
+      <Table
+        columns={[
+          ...columns,
+          {
+            label: "Ações",
+            variant: "actions" as const,
+            render: () => (
+              <>
+                <button type="button">Abrir</button>
+                <button type="button">Editar</button>
+              </>
+            ),
+          },
+        ]}
+        rows={[{ name: "Projeto" }]}
+      />,
+    );
+
+    const actionsCell = screen.getByRole("cell", { name: "Abrir Editar" });
+    expect(window.getComputedStyle(actionsCell).whiteSpace).toBe("nowrap");
+    expect(window.getComputedStyle(actionsCell.firstElementChild as HTMLElement).gap).toBe("8px");
+  });
+
   it("renderiza a linha recebida e repassa a seleção ao componente pai", () => {
     const onSelectionChange = vi.fn();
 
