@@ -63,6 +63,12 @@ export const getRoleRouteDefinitions = (role: UserRole) =>
 export const getRoleRoutePath = (role: UserRole, section: RoleSection) =>
   `${getRoleBasePath(role)}/${section}`;
 
+export const getSpecialtyCreatePath = (role: UserRole) =>
+  `${getRoleRoutePath(role, "especialidades")}/novo`;
+
+export const getSpecialtyEditPath = (role: UserRole) =>
+  `${getRoleRoutePath(role, "especialidades")}/editar`;
+
 export const getRoleNavigation = (role: UserRole): readonly RoleRoute[] => {
   return getRoleRouteDefinitions(role).map(({ label, section }) => ({
     label,

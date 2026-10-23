@@ -1,8 +1,6 @@
 import type { SpecialtiesState } from './specialties.slice';
 
-export type SpecialtiesRootState = {
-  specialties: SpecialtiesState;
-};
+export type SpecialtiesRootState = { specialties: SpecialtiesState };
 
 const selectSpecialtiesState = (state: SpecialtiesRootState) => state.specialties;
 

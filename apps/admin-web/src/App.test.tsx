@@ -109,14 +109,14 @@ describe("Admin App", () => {
     expect(screen.queryByRole("tab", { name: "Especialidades" })).not.toBeInTheDocument();
   });
 
-  it("redireciona o pesquisador que tenta acessar a rota administrativa de especialidades", async () => {
+  it.each(["researcher", "committee"] as const)("bloqueia a rota administrativa de especialidades para %s", async (role) => {
     render(
       <MemoryRouter initialEntries={["/admin/administrador/especialidades"]}>
-        <App mode="admin" currentUser={{ id: 2, name: "Pesquisador", email: "pesquisador@niar.local", role: "researcher", accountStatus: "active" }} />
+        <App mode="admin" currentUser={{ id: 2, name: "Visitante", email: "visitante@niar.local", role, accountStatus: "active" }} />
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole("heading", { name: "Boas vindas, Pesquisador." })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Boas vindas, Visitante." })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Especialidades" })).not.toBeInTheDocument();
     expect(specialtyServiceMocks.listSpecialties).not.toHaveBeenCalled();
   });

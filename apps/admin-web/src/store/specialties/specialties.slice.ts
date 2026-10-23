@@ -1,10 +1,15 @@
 import { createSlice, isAnyOf, type PayloadAction } from '@reduxjs/toolkit';
-import type { SpecialtyListFilters, SpecialtyListItem, SpecialtyListPagination, SpecialtyApiError } from '../../types/specialty.types';
 import type { AsyncStatus, MutationState, ResourceState } from '../../types/resource.types';
+import type {
+  SpecialtyApiError,
+  SpecialtyListFilters,
+  SpecialtyListItem,
+  SpecialtyListPagination,
+  SpecialtyMutationOperation,
+} from '../../types/specialty.types';
 import { createSpecialty, fetchSpecialties, updateSpecialty, updateSpecialtyStatus } from './specialties.api';
 
 export type SpecialtiesStatus = AsyncStatus;
-export type SpecialtyMutationOperation = 'create' | 'update' | 'status';
 
 export const DEFAULT_SPECIALTIES_PAGE_SIZE = 20;
 
@@ -45,6 +50,9 @@ const specialtiesSlice = createSlice({
     clearSelectedSpecialty: (state) => {
       state.selected = null;
     },
+    clearSpecialtiesMutation: (state) => {
+      state.mutation = { operation: null, status: 'idle', error: null };
+    },
     clearSpecialtiesState: () => initialSpecialtiesState,
     setSpecialtiesFilters: (state, action: PayloadAction<SpecialtyListFilters>) => {
       state.list.filters = action.payload;
@@ -63,9 +71,7 @@ const specialtiesSlice = createSlice({
     },
     clearSpecialtiesError: (state) => {
       state.list.error = null;
-      state.mutation.error = null;
       if (state.list.status === 'failed') state.list.status = 'idle';
-      if (state.mutation.status === 'failed') state.mutation.status = 'idle';
     },
   },
   extraReducers: (builder) => {
@@ -93,14 +99,18 @@ const specialtiesSlice = createSlice({
       .addMatcher(
         isAnyOf(createSpecialty.pending, updateSpecialty.pending, updateSpecialtyStatus.pending),
         (state, action) => {
-          const operation = action.type.includes('updateSpecialtyStatus') ? 'status' : action.type.includes('updateSpecialty') ? 'update' : 'create';
+          const operation = createSpecialty.pending.match(action)
+            ? 'create'
+            : updateSpecialty.pending.match(action) ? 'update' : 'status';
           state.mutation = { operation, status: 'pending', error: null };
         },
       )
       .addMatcher(
         isAnyOf(createSpecialty.fulfilled, updateSpecialty.fulfilled, updateSpecialtyStatus.fulfilled),
         (state, action) => {
-          const operation = action.type.includes('updateSpecialtyStatus') ? 'status' : action.type.includes('updateSpecialty') ? 'update' : 'create';
+          const operation = createSpecialty.fulfilled.match(action)
+            ? 'create'
+            : updateSpecialty.fulfilled.match(action) ? 'update' : 'status';
           state.mutation = { operation, status: 'succeeded', error: null };
           state.selected = action.payload;
         },
@@ -108,7 +118,9 @@ const specialtiesSlice = createSlice({
       .addMatcher(
         isAnyOf(createSpecialty.rejected, updateSpecialty.rejected, updateSpecialtyStatus.rejected),
         (state, action) => {
-          const operation = action.type.includes('updateSpecialtyStatus') ? 'status' : action.type.includes('updateSpecialty') ? 'update' : 'create';
+          const operation = createSpecialty.rejected.match(action)
+            ? 'create'
+            : updateSpecialty.rejected.match(action) ? 'update' : 'status';
           state.mutation = {
             operation,
             status: 'failed',
@@ -123,6 +135,7 @@ export const {
   setSelectedSpecialty,
   clearSelectedSpecialty,
   clearSpecialtiesState,
+  clearSpecialtiesMutation,
   setSpecialtiesFilters,
   clearSpecialtiesFilters,
   setSpecialtiesPage,
@@ -131,4 +144,4 @@ export const {
 } = specialtiesSlice.actions;
 
 export const specialtiesReducer = specialtiesSlice.reducer;
-export default specialtiesSlice.reducer;
+export default specialtiesReducer;
