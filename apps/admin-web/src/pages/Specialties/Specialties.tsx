@@ -133,9 +133,10 @@ export function Specialties() {
 
   const rows: SpecialtyRow[] = specialties;
 
-  const searchOptions = Array.from(new Set(
-    specialties.flatMap(({ code, name }) => [code, name]),
-  ));
+  const searchOptions = specialties.map(({ code, name }) => ({
+    label: `${code} - ${name}`,
+    value: code,
+  }));
 
   const handleFilterChange = (values: Readonly<Record<string, unknown>>) => {
     const query = autocompleteValue(values.query);

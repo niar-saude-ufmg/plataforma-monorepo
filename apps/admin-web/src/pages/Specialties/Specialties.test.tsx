@@ -314,14 +314,14 @@ describe('Specialties', () => {
     const query = screen.getByRole('combobox', { name: 'Buscar especialidade' });
     expect(screen.queryByTitle('Open')).not.toBeInTheDocument();
     await user.click(query);
-    expect(await screen.findByRole('option', { name: 'epi-001' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Epidemiologia' })).toBeInTheDocument();
-    await user.click(await screen.findByRole('option', { name: 'Epidemiologia' }));
+    expect(await screen.findByRole('option', { name: 'epi-001 - Epidemiologia' })).toBeInTheDocument();
+    await user.click(await screen.findByRole('option', { name: 'epi-001 - Epidemiologia' }));
+    expect(query).toHaveValue('epi-001 - Epidemiologia');
 
     await waitFor(() => expect(serviceMocks.listSpecialties).toHaveBeenCalledWith({
       page: 1,
       pageSize: 20,
-      query: 'Epidemiologia',
+      query: 'epi-001',
       isActive: undefined,
     }));
 
@@ -331,21 +331,21 @@ describe('Specialties', () => {
     await waitFor(() => expect(serviceMocks.listSpecialties).toHaveBeenCalledWith({
       page: 1,
       pageSize: 20,
-      query: 'Epidemiologia',
+      query: 'epi-001',
       isActive: false,
     }));
     expect(store.getState().specialties.list.page).toBe(1);
 
     expect(await screen.findByRole('radio', { name: 'Inativas' })).toBeChecked();
     await user.click(screen.getByRole('radio', { name: 'Ativas' }));
-    await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({ query: 'Epidemiologia', isActive: true }));
+    await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({ query: 'epi-001', isActive: true }));
     await user.click(screen.getByRole('radio', { name: 'Todas' }));
 
-    await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({ query: 'Epidemiologia' }));
+    await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({ query: 'epi-001' }));
     expect(serviceMocks.listSpecialties).toHaveBeenLastCalledWith({
       page: 1,
       pageSize: 20,
-      query: 'Epidemiologia',
+      query: 'epi-001',
       isActive: undefined,
     });
   });
