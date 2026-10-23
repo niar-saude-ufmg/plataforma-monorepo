@@ -1,6 +1,10 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
   createUserRequest,
+  createResearcherRequest,
+  createAdministratorRequest,
+  createAuditorRequest,
+  createCommitteeMemberRequest,
   downloadUserCoepDocumentRequest,
   getUsersRequest,
   normalizeUserApiError,
@@ -12,6 +16,9 @@ import type { ApiError } from '../../types/api.types';
 import type {
   UserApiError,
   CreateUserInput,
+  CreateAdministratorInput,
+  CreateAuditorInput,
+  CreateCommitteeMemberInput,
   User,
   UserListParams,
   UserListResponse,
@@ -38,6 +45,8 @@ export const getUsers = createAsyncThunk<
   }
 });
 
+// ! Se possível melhorar o nome da função.
+/** Cadastro público de Pesquisador. Endpoint público, sem auth. */
 export const createUser = createAsyncThunk<
   User,
   CreateUserInput,
@@ -51,6 +60,94 @@ export const createUser = createAsyncThunk<
     }
 
     return rejectWithValue(normalizeUserApiError('UNKNOWN_ERROR', undefined));
+  }
+});
+
+/** Cadastro privado de Pesquisador. Endpoint autenticado. */
+export const createResearcher = createAsyncThunk<
+  User,
+  CreateUserInput,
+  { rejectValue: UserApiError }
+>('users/createResearcher', async (input, { rejectWithValue }) => {
+  try {
+    return await createResearcherRequest(input);
+  } catch (error) {
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+      return rejectWithValue(error as UserApiError);
+    }
+    return rejectWithValue(
+      normalizeUserApiError(
+        'UNKNOWN_ERROR',
+        undefined,
+        'Não foi possível cadastrar o pesquisador.',
+      ),
+    );
+  }
+});
+
+/** Cadastro privado de Administrador. */
+export const createAdministrator = createAsyncThunk<
+  User,
+  CreateAdministratorInput,
+  { rejectValue: UserApiError }
+>('users/createAdministrator', async (input, { rejectWithValue }) => {
+  try {
+    return await createAdministratorRequest(input);
+  } catch (error) {
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+      return rejectWithValue(error as UserApiError);
+    }
+    return rejectWithValue(
+      normalizeUserApiError(
+        'UNKNOWN_ERROR',
+        undefined,
+        'Não foi possível cadastrar o administrador.',
+      ),
+    );
+  }
+});
+
+/** Cadastro privado de Auditor. */
+export const createAuditor = createAsyncThunk<
+  User,
+  CreateAuditorInput,
+  { rejectValue: UserApiError }
+>('users/createAuditor', async (input, { rejectWithValue }) => {
+  try {
+    return await createAuditorRequest(input);
+  } catch (error) {
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+      return rejectWithValue(error as UserApiError);
+    }
+    return rejectWithValue(
+      normalizeUserApiError(
+        'UNKNOWN_ERROR',
+        undefined,
+        'Não foi possível cadastrar o auditor.',
+      ),
+    );
+  }
+});
+
+/** Cadastro privado de Membro do Comitê. */
+export const createCommitteeMember = createAsyncThunk<
+  User,
+  CreateCommitteeMemberInput,
+  { rejectValue: UserApiError }
+>('users/createCommitteeMember', async (input, { rejectWithValue }) => {
+  try {
+    return await createCommitteeMemberRequest(input);
+  } catch (error) {
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+      return rejectWithValue(error as UserApiError);
+    }
+    return rejectWithValue(
+      normalizeUserApiError(
+        'UNKNOWN_ERROR',
+        undefined,
+        'Não foi possível cadastrar o membro do comitê.',
+      ),
+    );
   }
 });
 

@@ -78,6 +78,28 @@ export interface CreateUserInput {
   };
 }
 
+/** Entrada do cadastro privado de Administrador — só campos básicos. */
+export interface CreateAdministratorInput {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+/** Entrada do cadastro privado de Auditor — só campos básicos. */
+export interface CreateAuditorInput {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+/** Entrada do cadastro privado de Membro do Comitê — básicos + especialidade. */
+export interface CreateCommitteeMemberInput {
+  fullName: string;
+  email: string;
+  password: string;
+  specialtyId: number;
+}
+
 /** Usuário como a tela precisa dele (resposta do POST, já normalizada pelo service). */
 export interface User {
   id: number;
@@ -173,6 +195,7 @@ export interface UserFormFieldErrors {
   opinionNumber?: string;
   approvalDate?: string;
   coepDocument?: string;
+  specialtyId?: string;
 }
 
 /* Erro de API específico do cadastro de usuário, com detalhes de validação por campo. */
@@ -215,4 +238,22 @@ export type CoepUserFormFields = {
   opinionNumber: UserTextField;
   approvalDate: UserTextField;
   coepDocument: UserFileField;
+};
+
+export type CommitteeSpecialtyOption = {
+  label: string;
+  value: string;
+};
+
+export type CommitteeProfileFormFields = {
+  specialtyId: {
+    name: string;
+    value: CommitteeSpecialtyOption | null;
+    options: CommitteeSpecialtyOption[];
+    onChange: (option: CommitteeSpecialtyOption | null) => void;
+    onBlur: () => void;
+    loading?: boolean;
+    error?: boolean;
+    helperText?: ReactNode;
+  };
 };
