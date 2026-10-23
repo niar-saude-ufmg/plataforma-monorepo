@@ -130,7 +130,7 @@ describe('Specialties', () => {
     const user = userEvent.setup();
     renderPage();
     await user.click(await screen.findByRole('button', { name: 'Cadastrar especialidade' }));
-    const form = within(screen.getByRole('form', { name: 'Formulário de especialidade' }));
+    const form = within(screen.getByLabelText('Formulário de especialidade'));
     expect(screen.getByRole('heading', { name: 'Cadastrar especialidade' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
@@ -144,7 +144,7 @@ describe('Specialties', () => {
     await user.type(form.getByLabelText(/Código/), 'epi-001');
     await user.type(form.getByLabelText(/Nome/), 'Epidemiologia');
     await user.click(form.getByRole('button', { name: 'Cadastrar' }));
-    await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByLabelText('Formulário de especialidade')).not.toBeInTheDocument());
     expect(serviceMocks.createSpecialty).toHaveBeenCalledWith({ code: 'epi-001', name: 'Epidemiologia', description: '', guidanceContext: '' });
     expect(await screen.findByText('Epidemiologia')).toBeInTheDocument();
     expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(3);
@@ -167,7 +167,7 @@ describe('Specialties', () => {
     await user.clear(screen.getByLabelText(/Código/));
     await user.type(screen.getByLabelText(/Código/), 'epi-001');
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
-    await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByLabelText('Formulário de especialidade')).not.toBeInTheDocument());
     expect(serviceMocks.createSpecialty).toHaveBeenCalledTimes(2);
     expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(3);
   });
@@ -182,7 +182,7 @@ describe('Specialties', () => {
     store.dispatch(setSpecialtiesPage(2));
     renderPage(store);
     await user.click(await screen.findByRole('button', { name: 'Editar' }));
-    const form = within(screen.getByRole('form', { name: 'Formulário de especialidade' }));
+    const form = within(screen.getByLabelText('Formulário de especialidade'));
     expect(screen.getByRole('heading', { name: 'Editar especialidade' })).toBeInTheDocument();
     expect(screen.getByText('Ativa')).toBeInTheDocument();
     expect(form.getByLabelText(/Código/)).toHaveValue('epi-001');
@@ -192,7 +192,7 @@ describe('Specialties', () => {
     await user.clear(form.getByLabelText(/Nome/));
     await user.type(form.getByLabelText(/Nome/), updated.name);
     await user.click(form.getByRole('button', { name: 'Salvar' }));
-    await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByLabelText('Formulário de especialidade')).not.toBeInTheDocument());
     expect(serviceMocks.updateSpecialty).toHaveBeenCalledWith(1, { name: updated.name, description: updated.description, guidanceContext: '' });
     expect(serviceMocks.listSpecialties).toHaveBeenLastCalledWith({ query: 'epi', isActive: true, page: 2, pageSize: 20 });
     expect(await screen.findByText(updated.name)).toBeInTheDocument();
@@ -270,7 +270,7 @@ describe('Specialties', () => {
     const user = userEvent.setup();
     renderPage();
     await user.click(await screen.findByRole('button', { name: 'Editar' }));
-    const form = within(screen.getByRole('form', { name: 'Formulário de especialidade' }));
+    const form = within(screen.getByLabelText('Formulário de especialidade'));
     await user.click(form.getByRole('button', { name: 'Salvar' }));
     expect(form.getByRole('button', { name: 'Salvando…' })).toBeDisabled();
     expect(form.getByRole('button', { name: 'Cancelar' })).toBeDisabled();
@@ -281,7 +281,7 @@ describe('Specialties', () => {
     expect(form.getByRole('button', { name: 'Salvar' })).toBeEnabled();
     expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(1);
     await user.click(form.getByRole('button', { name: 'Cancelar' }));
-    await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByLabelText('Formulário de especialidade')).not.toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Cadastrar especialidade' }));
     expect(screen.getByLabelText(/Código/)).toHaveValue('');
     expect(screen.queryByText('Nome já utilizado.')).not.toBeInTheDocument();
