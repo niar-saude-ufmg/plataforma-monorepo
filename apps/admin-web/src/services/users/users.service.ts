@@ -7,7 +7,6 @@ import type {
   CreateAuditorInput,
   CreateCommitteeMemberInput,
   User,
-  UserRole,
   UserListItem,
   UserListParams,
   UserListResponse,
