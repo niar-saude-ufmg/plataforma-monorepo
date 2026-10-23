@@ -301,7 +301,7 @@ describe('Specialties', () => {
     expect(await screen.findByText('Epidemiologia')).toBeInTheDocument();
   });
 
-  it('aplica busca e status pelo Filter, normaliza o Autocomplete e retorna para a página 1', async () => {
+  it('aplica busca livre e status pelo Filter e retorna para a página 1', async () => {
     serviceMocks.listSpecialties.mockImplementation(async (params) => listResponse(
       [buildSpecialty()],
       {
@@ -322,10 +322,9 @@ describe('Specialties', () => {
 
     const query = screen.getByRole('combobox', { name: 'Buscar especialidade' });
     expect(screen.queryByTitle('Open')).not.toBeInTheDocument();
-    await user.click(query);
-    expect(await screen.findByRole('option', { name: 'epi-001 - Epidemiologia' })).toBeInTheDocument();
-    await user.click(await screen.findByRole('option', { name: 'epi-001 - Epidemiologia' }));
-    expect(query).toHaveValue('epi-001 - Epidemiologia');
+    await user.type(query, 'epi-001');
+    await user.keyboard('{Enter}');
+    expect(query).toHaveValue('epi-001');
 
     await waitFor(() => expect(serviceMocks.listSpecialties).toHaveBeenCalledWith({
       page: 1,

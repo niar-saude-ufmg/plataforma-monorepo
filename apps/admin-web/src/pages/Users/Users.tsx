@@ -113,13 +113,11 @@ export function Users() {
 
   const selectedRole = roleOptions.find((opt) => opt.value === filters.role) ?? null;
   const selectedStatus = statusOptions.find((opt) => opt.value === filters.accountStatus) ?? null;
-  const searchOptions: AutocompleteOption[] = users.map((user) => ({
-    value: user.fullName,
-    label: user.fullName,
-  }));
-  const selectedSearch = filters.search
-    ? searchOptions.find((option) => option.value === filters.search) ?? filters.search
-    : null;
+  // A busca é livre e deve alcançar usuários que não estejam na página atual.
+  // Não usamos os itens paginados como opções do autocomplete, pois isso faria
+  // a lista de sugestões representar somente a página carregada.
+  const searchOptions: readonly AutocompleteOption[] = [];
+  const selectedSearch = filters.search ?? null;
 
   const columnDefinitions: Record<UserColumnId, TableColumn<UserListItem>> = {
     fullName: { key: "fullName", label: "Nome" },

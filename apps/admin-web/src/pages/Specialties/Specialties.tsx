@@ -4,6 +4,7 @@ import {
   Listing,
   Snackbar,
   StatusChip,
+  type AutocompleteOption,
   type TableColumn,
 } from '@niar/ui';
 import { useEffect, useState, type ChangeEvent } from 'react';
@@ -128,10 +129,10 @@ export function Specialties() {
 
   const rows: SpecialtyRow[] = specialties;
 
-  const searchOptions = specialties.map(({ code, name }) => ({
-    label: `${code} - ${name}`,
-    value: code,
-  }));
+  // A busca é livre e deve alcançar especialidades que não estejam na página atual.
+  // Não usamos os itens paginados como opções do autocomplete, pois isso faria
+  // as sugestões representarem somente a página carregada.
+  const searchOptions: readonly AutocompleteOption[] = [];
 
   const handleFilterChange = (values: Readonly<Record<string, unknown>>) => {
     const query = autocompleteValue(values.query);
