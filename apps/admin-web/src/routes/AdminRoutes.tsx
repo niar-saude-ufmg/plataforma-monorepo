@@ -14,7 +14,7 @@ import { RoleHome } from "../pages/RoleHome/RoleHome";
 import { Specialties } from "../pages/Specialties/Specialties";
 import { Specialty } from "../pages/Specialty/Specialty";
 import { Users } from "../pages/Users/Users";
-import { CreateUser } from "../pages/CreateUser/CreateUser";
+import { User } from "../pages/User/User";
 import { useAppSelector } from "../store/hooks";
 import { selectAuthSelected } from "../store/auth/auth.selectors";
 import {
@@ -53,7 +53,7 @@ function RoleRouteContent({
     route.section === "especialidades"
       ? specialtyFormPath ? <Specialty /> : <Specialties />
       :
-    route.section === "usuarios/novo" ? <CreateUser /> :
+    route.section === "usuarios/novo" ? <User /> :
     route.section === "perfil" ? profilePage :
     <RoleHome section={route.section} userName={user.name} />;
   const allowedRoles =

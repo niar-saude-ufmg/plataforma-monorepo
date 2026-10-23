@@ -12,6 +12,11 @@ import type { ApiError } from "./api.types";
 /** Papéis suportados pela aplicação administrativa. */
 export type UserRole = ContractUserRole;
 
+export type UserRoleOption = {
+  label: string;
+  value: UserRole;
+};
+
 export interface AuthProfile {
   phone: string | null;
   institution: string | null;
@@ -253,6 +258,18 @@ export type CommitteeProfileFormFields = {
     onChange: (option: CommitteeSpecialtyOption | null) => void;
     onBlur: () => void;
     loading?: boolean;
+    error?: boolean;
+    helperText?: ReactNode;
+  };
+};
+
+export type RoleFormFields = {
+  role: {
+    name: string;
+    value: UserRole | '';
+    options: readonly UserRoleOption[];
+    onChange: (role: UserRole | '') => void;
+    onBlur: () => void;
     error?: boolean;
     helperText?: ReactNode;
   };

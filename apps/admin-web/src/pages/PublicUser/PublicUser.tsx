@@ -1,12 +1,14 @@
 import { APP_ROUTES } from '@niar/config';
+import type { UserRole } from '@niar/contracts';
 import { Button, Form, Icon, Link, Snackbar } from '@niar/ui';
 import { useEffect, useState } from 'react';
 import { useApiError } from '../../hooks/use-api-error/use-api-error';
-import { usePublicUserForm, DEFAULT_PUBLIC_USER_VALUES } from '../../hooks/forms/use-public-user-form/use-public-user-form';
+import { useResearcherForm } from '../../hooks/forms/use-researcher-form/use-researcher-form';
+import { useSharedUserForm } from '../../hooks/forms/use-shared-user-form/use-shared-user-form';
 import { textFieldProps } from '../../hooks/forms/utils/props';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createUser } from '../../store/users/users.api';
-import { clearUsersError } from '../../store/users/users.slice';
+import { clearUsersMutationError } from '../../store/users/users.slice';
 import { selectUsersMutationError, selectUsersMutationLoading } from '../../store/users/users.selectors';
 import type {
   UserApiError,
@@ -19,12 +21,12 @@ import type {
 import { CoepUserForm } from '../../components/UserForm/CoepUserForm/CoepUserForm';
 import { ResearcherProfileForm } from '../../components/UserForm/ResearcherProfileForm/ResearcherProfileForm';
 import { SharedUserForm } from '../../components/UserForm/SharedUserForm/SharedUserForm';
-import { RegistrationApprovalDialog } from '../../components/RegistrationApprovalDialog/RegistrationApprovalDialog';
+import { RegistrationApprovalDialog } from '../../components/RegistrationApprovalDialog';
 import './PublicUser.scss';
-import {
-  type ResearcherRegistrationValues,
-} from './PublicUser.validators';
-import { formatBrazilianPhone } from './PublicUser.formatters';
+import { formatBrazilianPhone } from '../../utils/formatters/phone';
+import { researcherRegistrationSchema } from './PublicUser.validators';
+
+const PUBLIC_USER_ROLE: UserRole = 'researcher';
 
 function RegistrationForm({
   apiError,
@@ -35,15 +37,33 @@ function RegistrationForm({
 }) {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(selectUsersMutationLoading);
+  const form = useSharedUserForm({ schema: researcherRegistrationSchema, initialRole: PUBLIC_USER_ROLE });
   const {
     handleSubmit,
     reset,
-    clearErrors,
     applyApiFieldErrors,
     fieldError,
-    formState: { errors },
     fields,
-  } = usePublicUserForm();
+  } = form;
+  const { fields: researcherFormFields } = useResearcherForm(form.control);
+  const {
+    fullName,
+    email,
+    password,
+    passwordConfirmation,
+  } = fields;
+  const {
+    phone,
+    institution,
+    organizationalUnit,
+    contactAddress,
+    researchArea,
+    position,
+    caae,
+    opinionNumber,
+    approvalDate,
+    coepDocument,
+  } = researcherFormFields;
 
   useEffect(() => {
     if (apiError) {
@@ -51,7 +71,7 @@ function RegistrationForm({
     }
   }, [apiError, applyApiFieldErrors]);
 
-  async function submit(values: ResearcherRegistrationValues) {
+  const submit = handleSubmit(async (values) => {
     const input: CreateUserInput = {
       fullName: values.fullName,
       email: values.email,
@@ -70,55 +90,46 @@ function RegistrationForm({
         caae: values.caae,
         opinionNumber: values.opinionNumber,
         approvalDate: values.approvalDate,
-        document: values.coepDocument,
+        document: values.coepDocument as File,
       },
     };
 
     const result = await dispatch(createUser(input));
 
     if (createUser.fulfilled.match(result)) {
-      reset(DEFAULT_PUBLIC_USER_VALUES);
+      reset();
       onCreated?.(result.payload);
     }
-  }
+  });
 
   const sharedFields: SharedUserFormFields = {
-    fullName: textFieldProps(fields.fullName.field, fieldError('fullName')),
-    email: textFieldProps(fields.email.field, fieldError('email')),
-    password: textFieldProps(fields.password.field, fieldError('password')),
-    passwordConfirmation: textFieldProps(fields.passwordConfirmation.field, fieldError('passwordConfirmation')),
+    fullName: textFieldProps(fullName.field, fieldError('fullName')),
+    email: textFieldProps(email.field, fieldError('email')),
+    password: textFieldProps(password.field, fieldError('password')),
+    passwordConfirmation: textFieldProps(passwordConfirmation.field, fieldError('passwordConfirmation')),
   };
 
   const researcherFields: ResearcherProfileFormFields = {
-    phone: textFieldProps(fields.phone.field, fieldError('phone'), formatBrazilianPhone),
-    institution: textFieldProps(fields.institution.field, fieldError('institution')),
-    organizationalUnit: textFieldProps(fields.organizationalUnit.field, fieldError('organizationalUnit')),
-    contactAddress: textFieldProps(fields.contactAddress.field, fieldError('contactAddress')),
-    researchArea: textFieldProps(fields.researchArea.field, fieldError('researchArea')),
-    position: textFieldProps(fields.position.field, fieldError('position')),
+    phone: textFieldProps(phone.field, fieldError('phone'), formatBrazilianPhone),
+    institution: textFieldProps(institution.field, fieldError('institution')),
+    organizationalUnit: textFieldProps(organizationalUnit.field, fieldError('organizationalUnit')),
+    contactAddress: textFieldProps(contactAddress.field, fieldError('contactAddress')),
+    researchArea: textFieldProps(researchArea.field, fieldError('researchArea')),
+    position: textFieldProps(position.field, fieldError('position')),
   };
 
   const coepFields: CoepUserFormFields = {
-    caae: textFieldProps(fields.caae.field, fieldError('caae')),
-    opinionNumber: textFieldProps(fields.opinionNumber.field, fieldError('opinionNumber')),
-    approvalDate: textFieldProps(fields.approvalDate.field, fieldError('approvalDate')),
+    caae: textFieldProps(caae.field, fieldError('caae')),
+    opinionNumber: textFieldProps(opinionNumber.field, fieldError('opinionNumber')),
+    approvalDate: textFieldProps(approvalDate.field, fieldError('approvalDate')),
     coepDocument: {
-      onChange: (file) => fields.coepDocument.field.onChange(file),
+      onChange: (file) => coepDocument.field.onChange(file),
       error: fieldError('coepDocument'),
     },
   };
 
-  const formError = typeof errors.root?.message === 'string' ? errors.root.message : undefined;
-
   return (
     <div className="public-user-form">
-      <Snackbar
-        open={Boolean(formError)}
-        message={formError ?? ''}
-        severity="error"
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        onClose={() => clearErrors('root')}
-      />
       <SharedUserForm fields={sharedFields} />
       <ResearcherProfileForm fields={researcherFields} />
       <CoepUserForm fields={coepFields} />
@@ -131,7 +142,7 @@ function RegistrationForm({
           Cancelar
         </Button>
         <Button
-          onClick={() => { void handleSubmit(submit)(); }}
+          onClick={() => { void submit(); }}
           variant="contained"
           color="primary"
           disabled={isLoading}
@@ -153,7 +164,7 @@ export function PublicUser() {
   const apiError = useAppSelector(selectUsersMutationError);
   const apiErrorSnackbar = useApiError(
     apiError,
-    () => dispatch(clearUsersError()),
+    () => dispatch(clearUsersMutationError()),
     'Não foi possível cadastrar o pesquisador. Tente novamente.',
   );
 

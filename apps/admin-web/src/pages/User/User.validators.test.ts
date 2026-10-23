@@ -4,11 +4,8 @@ import {
   auditorSchema,
   committeeSchema,
   researcherSchema,
-  ADMIN_DEFAULTS,
-  RESEARCHER_DEFAULTS,
-  COMMITTEE_DEFAULTS,
-} from './CreateUser.validators';
-import { researcherRegistrationSchema } from '../PublicUser/PublicUser.validators';
+  userSchema,
+} from './User.validators';
 
 const validAdmin = {
   fullName: 'Ana Beatriz',
@@ -91,7 +88,6 @@ describe('administratorSchema', () => {
     expect(errors.passwordConfirmation).toContain('As senhas não conferem.');
   });
 });
-
 describe('auditorSchema', () => {
   it('aceita payload válido', () => {
     expect(auditorSchema.safeParse(validAdmin).success).toBe(true);
@@ -137,47 +133,21 @@ describe('committeeSchema', () => {
 });
 
 describe('researcherSchema', () => {
-  it('é o mesmo schema do cadastro público', () => {
-    expect(researcherSchema).toBe(researcherRegistrationSchema);
-  });
-
-  it('aceita payload de pesquisador válido (confirma que o alias funciona)', () => {
+  it('aceita payload de pesquisador válido', () => {
     expect(researcherSchema.safeParse(validResearcher).success).toBe(true);
   });
 });
 
-describe('defaults por role', () => {
-  it('ADMIN_DEFAULTS tem os 4 campos básicos vazios', () => {
-    expect(ADMIN_DEFAULTS).toEqual({
-      fullName: '',
-      email: '',
-      password: '',
-      passwordConfirmation: '',
+describe('userSchema', () => {
+  it('rejeita o cadastro sem uma role selecionada', () => {
+    const result = userSchema.safeParse({
+      ...validAdmin,
+      role: '',
     });
-  });
 
-  it('RESEARCHER_DEFAULTS cobre todos os campos do schema do pesquisador', () => {
-    const keys = Object.keys(RESEARCHER_DEFAULTS).sort();
-    expect(keys).toEqual([
-      'approvalDate',
-      'caae',
-      'coepDocument',
-      'contactAddress',
-      'email',
-      'fullName',
-      'institution',
-      'opinionNumber',
-      'organizationalUnit',
-      'password',
-      'passwordConfirmation',
-      'phone',
-      'position',
-      'researchArea',
-    ]);
-  });
-
-  it('COMMITTEE_DEFAULTS começa com specialtyId null', () => {
-    expect(COMMITTEE_DEFAULTS.specialtyId).toBeNull();
-    expect(COMMITTEE_DEFAULTS.fullName).toBe('');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.role).toContain('Selecione o tipo de usuário.');
+    }
   });
 });

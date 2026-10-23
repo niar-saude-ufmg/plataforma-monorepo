@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { CreateUser } from './CreateUser';
+import { User } from './User';
 import usersReducer, { clearUsersState } from '../../store/users/users.slice';
 import specialtiesReducer from '../../store/specialties/specialties.slice';
 
@@ -20,6 +20,7 @@ const fetchMock = vi.hoisted(() => {
 });
 
 vi.mock('@niar/ui', () => ({
+  Alert: ({ children }: any) => <div role="alert">{children}</div>,
   Form: ({ title, description, children }: any) => (
     <section>
       <h1>{title}</h1>
@@ -73,31 +74,15 @@ vi.mock('@niar/ui', () => ({
       />
     </label>
   ),
-  Autocomplete: ({ label, options = [], value, onChange }: any) => (
+  Select: ({ label, options = [], value, onChange, onBlur, error, helperText }: any) => (
     <label>
       {label}
-      <select
-        aria-label={label}
-        value={
-          value == null
-            ? ''
-            : typeof value === 'string'
-            ? value
-            : value.value ?? ''
-        }
-        onChange={(event) => {
-          const found =
-            options.find((o: any) => String(o.value) === event.target.value) ?? null;
-          onChange?.(null, found);
-        }}
-      >
-        <option value="">Selecione</option>
-        {options.map((o: any) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
+      <select aria-label={label} value={value ?? ''} onChange={onChange} onBlur={onBlur}>
+        {options.map((option: any) => (
+          <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>
+      {error && helperText ? <span role="alert">{helperText}</span> : null}
     </label>
   ),
 }));
@@ -108,19 +93,19 @@ function makeStore() {
   });
 }
 
-function renderCreateUser() {
+function renderUser() {
   const store = makeStore();
   store.dispatch(clearUsersState());
   const view = render(
     <Provider store={store}>
-      <CreateUser />
+      <User />
     </Provider>,
   );
   return { store, ...view };
 }
 
 async function selectRole(role: string) {
-  await userEvent.setup().selectOptions(screen.getByLabelText('Perfil'), role);
+  await userEvent.setup().selectOptions(screen.getByLabelText('Tipo de usuário'), role);
 }
 
 function lastFetchCall() {
@@ -177,14 +162,14 @@ beforeEach(() => {
 
 afterEach(() => cleanup());
 
-describe('CreateUser — seleção de role', () => {
-  it('começa com pesquisador selecionado e mostra os 3 blocos de campo', () => {
-    renderCreateUser();
+describe('User — seleção de role', () => {
+  it('começa sem role e mostra apenas os dados de acesso', () => {
+    renderUser();
 
-    expect(screen.getByLabelText('Perfil')).toHaveValue('researcher');
-    expect(screen.getByLabelText('CAAE')).toBeInTheDocument();
-    expect(screen.getByLabelText('Instituição')).toBeInTheDocument();
-    expect(screen.getByLabelText('Selecionar parecer em PDF')).toBeInTheDocument();
+    expect(screen.getByLabelText('Tipo de usuário')).toHaveValue('');
+    expect(screen.queryByLabelText('CAAE')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Instituição')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Selecionar parecer em PDF')).not.toBeInTheDocument();
   });
 
   it.each([
@@ -195,7 +180,7 @@ describe('CreateUser — seleção de role', () => {
   ] as const)(
     'role %s mostra os campos corretos',
     async (role, hasSpecialty, hasResearcherField, hasCommitteeField) => {
-      renderCreateUser();
+      renderUser();
       await selectRole(role);
 
       if (hasResearcherField) {
@@ -215,7 +200,8 @@ describe('CreateUser — seleção de role', () => {
   );
 
   it('trocar de pesquisador para admin some com os campos do pesquisador', async () => {
-    renderCreateUser();
+    renderUser();
+    await selectRole('researcher');
     expect(screen.getByLabelText('CAAE')).toBeInTheDocument();
 
     await selectRole('admin');
@@ -224,9 +210,22 @@ describe('CreateUser — seleção de role', () => {
     expect(screen.queryByLabelText('Instituição')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Nome completo')).toBeInTheDocument();
   });
+
+  it('não mantém o erro de role ao selecionar pesquisador', async () => {
+    renderUser();
+
+    const user = userEvent.setup();
+    await selectRole('admin');
+    await user.click(screen.getByLabelText('Tipo de usuário'));
+    await user.click(screen.getByLabelText('Nome completo'));
+    await selectRole('researcher');
+    await user.click(screen.getByLabelText('Nome completo'));
+
+    expect(screen.queryByText('Selecione o tipo de usuário.')).not.toBeInTheDocument();
+  });
 });
 
-describe('CreateUser — payloads por role', () => {
+describe('User — payloads por role', () => {
   async function fillShared() {
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Nome completo'), 'Novo Usuário');
@@ -236,9 +235,10 @@ describe('CreateUser — payloads por role', () => {
   }
 
   it('pesquisador envia multipart para /users/researchers com coep_document', async () => {
-    renderCreateUser();
+    renderUser();
     const user = userEvent.setup();
 
+    await selectRole('researcher');
     await user.type(screen.getByLabelText('Nome completo'), 'Ana Souza');
     await user.type(screen.getByLabelText('E-mail'), 'ana@niar-saude.org');
     await user.type(screen.getByLabelText('Senha'), 'senhaforte1');
@@ -269,7 +269,7 @@ describe('CreateUser — payloads por role', () => {
   });
 
   it('admin envia JSON para /users/administrators sem passwordConfirmation', async () => {
-    renderCreateUser();
+    renderUser();
     await selectRole('admin');
     await fillShared();
 
@@ -290,7 +290,7 @@ describe('CreateUser — payloads por role', () => {
   });
 
   it('auditor envia JSON para /users/auditors', async () => {
-    renderCreateUser();
+    renderUser();
     await selectRole('auditor');
     await fillShared();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Cadastrar' }));
@@ -301,7 +301,7 @@ describe('CreateUser — payloads por role', () => {
   });
 
   it('committee envia specialty_id numérico e não specialtyId nem objeto', async () => {
-    const { store } = renderCreateUser();
+    const { store } = renderUser();
     await selectRole('committee');
     await fillShared();
 
@@ -322,9 +322,9 @@ describe('CreateUser — payloads por role', () => {
   });
 });
 
-describe('CreateUser — especialidades', () => {
+describe('User — especialidades', () => {
   it('ao entrar em committee, dispara fetchSpecialties com isActive: true', async () => {
-    renderCreateUser();
+    renderUser();
     fetchMock.mockClear();
 
     await selectRole('committee');
@@ -341,9 +341,10 @@ describe('CreateUser — especialidades', () => {
   });
 });
 
-describe('CreateUser — validação', () => {
+describe('User — validação', () => {
   it('submit vazio mostra erros nos campos básicos', async () => {
-    renderCreateUser();
+    renderUser();
+    await selectRole('admin');
     await userEvent.setup().click(screen.getByRole('button', { name: 'Cadastrar' }));
 
     await waitFor(() => {
@@ -353,7 +354,7 @@ describe('CreateUser — validação', () => {
   });
 
   it('senhas diferentes bloqueiam o submit', async () => {
-    renderCreateUser();
+    renderUser();
     await selectRole('admin');
 
     const user = userEvent.setup();
@@ -371,11 +372,12 @@ describe('CreateUser — validação', () => {
   });
 });
 
-describe('CreateUser — COEP', () => {
+describe('User — COEP', () => {
   it('submit sem PDF mostra erro no FileUpload', async () => {
-    renderCreateUser();
+    renderUser();
     const user = userEvent.setup();
 
+    await selectRole('researcher');
     await user.type(screen.getByLabelText('Nome completo'), 'Ana');
     await user.type(screen.getByLabelText('E-mail'), 'ana@x.org');
     await user.type(screen.getByLabelText('Senha'), 'senhaforte1');
@@ -399,14 +401,14 @@ describe('CreateUser — COEP', () => {
   });
 });
 
-describe('CreateUser — loading e sucesso', () => {
+describe('User — loading e sucesso', () => {
   it('durante pending o botão fica disabled e mostra "Cadastrando…"', async () => {
     let resolveFetch: ((r: Response) => void) | undefined;
     fetchMock.mockImplementation(
       () => new Promise<Response>((r) => { resolveFetch = r; }),
     );
 
-    renderCreateUser();
+    renderUser();
     await selectRole('admin');
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Nome completo'), 'X');
@@ -424,7 +426,7 @@ describe('CreateUser — loading e sucesso', () => {
   });
 
   it('após sucesso navega para a listagem', async () => {
-    renderCreateUser();
+    renderUser();
     await selectRole('admin');
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Nome completo'), 'X');
@@ -440,13 +442,13 @@ describe('CreateUser — loading e sucesso', () => {
   });
 });
 
-describe('CreateUser — erros da API', () => {
+describe('User — erros da API', () => {
   it('409 de e-mail duplicado mostra snackbar e erro no campo', async () => {
     fetchMock.mockResolvedValue(
       jsonResponse({ error: 'User with this email already exists' }, 409),
     );
 
-    renderCreateUser();
+    renderUser();
     await selectRole('admin');
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Nome completo'), 'X');
@@ -475,7 +477,7 @@ describe('CreateUser — erros da API', () => {
       ),
     );
 
-    renderCreateUser();
+    renderUser();
     await selectRole('admin');
     const user = userEvent.setup();
     await user.type(screen.getByLabelText('Nome completo'), 'X');

@@ -1,6 +1,13 @@
 export * from "./questionnaires.js";
 
-export type UserRole = "researcher" | "admin" | "auditor" | "committee";
+export const USER_ROLE_VALUES = [
+  "researcher",
+  "admin",
+  "auditor",
+  "committee"
+] as const;
+
+export type UserRole = (typeof USER_ROLE_VALUES)[number];
 
 export type UserAccountStatus = "pending" | "active" | "rejected" | "disabled";
 
