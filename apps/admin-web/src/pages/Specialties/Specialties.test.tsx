@@ -4,7 +4,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SpecialtiesList, Specialty } from '../../types/specialty.types';
+import type { SpecialtyListResponse, Specialty } from '../../types/specialty.types';
 import { adminApi } from '../../store/api/admin.api';
 import authReducer from '../../store/auth/auth.slice';
 import projectsReducer from '../../store/projects/projects.slice';
@@ -40,13 +40,13 @@ const buildSpecialty = (overrides: Partial<Specialty> = {}): Specialty => ({
 
 const listResponse = (
   items: Specialty[] = [buildSpecialty()],
-  pagination: SpecialtiesList['pagination'] = {
+  pagination: SpecialtyListResponse['pagination'] = {
     page: 1,
     pageSize: 20,
     totalItems: items.length,
     totalPages: items.length ? 1 : 0,
   },
-): SpecialtiesList => ({ items, pagination });
+): SpecialtyListResponse => ({ items, pagination });
 
 const makeStore = () => configureStore({
   reducer: {
@@ -76,7 +76,7 @@ describe('Specialties', () => {
     serviceMocks.listSpecialties.mockResolvedValue(listResponse());
   });
 
-  it('carrega e apresenta a listagem com colunas, status e ações sem comportamento', async () => {
+  it('carrega e apresenta a listagem com colunas, status e ações', async () => {
     serviceMocks.listSpecialties.mockResolvedValue(listResponse([
       buildSpecialty(),
       buildSpecialty({
@@ -87,15 +87,13 @@ describe('Specialties', () => {
         isActive: false,
       }),
     ]));
-    const user = userEvent.setup();
-
-    const store = renderPage();
+    renderPage();
 
     expect(await screen.findByRole('heading', { name: 'Especialidades' })).toBeInTheDocument();
-    expect(screen.getByText('Consulte as especialidades cadastradas na plataforma.')).toBeInTheDocument();
+    expect(screen.getByText('Gerencie o catálogo de especialidades da plataforma.')).toBeInTheDocument();
     expect(screen.getAllByRole('form', { name: 'Filtros de especialidades' })).toHaveLength(1);
     expect(screen.getAllByRole('table', { name: 'Lista de especialidades' })).toHaveLength(1);
-    for (const column of ['Nome', 'Código', 'Descrição', 'Status', 'Ações']) {
+    for (const column of ['Código', 'Especialidade', 'Status', 'Descrição', 'Ações']) {
       expect(screen.getByRole('columnheader', { name: column })).toBeInTheDocument();
     }
     expect(screen.getByText('Epidemiologia')).toBeInTheDocument();
@@ -103,15 +101,6 @@ describe('Specialties', () => {
     expect(screen.getByText('Ativa')).toBeInTheDocument();
     expect(screen.getByText('Inativa')).toBeInTheDocument();
 
-    const stateBeforeActions = store.getState().specialties;
-    await user.click(screen.getAllByRole('button', { name: 'Editar' })[0]);
-    await user.click(screen.getByRole('button', { name: 'Desativar' }));
-    await user.click(screen.getByRole('button', { name: 'Ativar' }));
-
-    expect(serviceMocks.createSpecialty).not.toHaveBeenCalled();
-    expect(serviceMocks.updateSpecialty).not.toHaveBeenCalled();
-    expect(serviceMocks.updateSpecialtyStatus).not.toHaveBeenCalled();
-    expect(store.getState().specialties).toBe(stateBeforeActions);
     expect(serviceMocks.listSpecialties).toHaveBeenCalledWith({
       page: 1,
       pageSize: 20,
@@ -120,8 +109,173 @@ describe('Specialties', () => {
     });
   });
 
+  it('cadastra em formulário na página e retorna à tabela atualizada', async () => {
+    serviceMocks.listSpecialties.mockResolvedValueOnce(listResponse([])).mockResolvedValue(listResponse());
+    serviceMocks.createSpecialty.mockResolvedValue(buildSpecialty());
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: 'Cadastrar especialidade' }));
+    const form = within(screen.getByRole('form', { name: 'Formulário de especialidade' }));
+    expect(screen.getByRole('heading', { name: 'Cadastrar especialidade' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(form.getByLabelText(/Código/)).toHaveValue('');
+    expect(form.getByLabelText(/Nome/)).toHaveValue('');
+    expect(form.getByLabelText('Descrição')).toHaveValue('');
+    expect(form.getByLabelText('Contexto de orientação')).toHaveValue('');
+    await user.click(form.getByRole('button', { name: 'Cadastrar' }));
+    expect(await form.findByText('Informe o código.')).toBeInTheDocument();
+    expect(serviceMocks.createSpecialty).not.toHaveBeenCalled();
+    await user.type(form.getByLabelText(/Código/), 'epi-001');
+    await user.type(form.getByLabelText(/Nome/), 'Epidemiologia');
+    await user.click(form.getByRole('button', { name: 'Cadastrar' }));
+    await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
+    expect(serviceMocks.createSpecialty).toHaveBeenCalledWith({ code: 'epi-001', name: 'Epidemiologia', description: '', guidanceContext: '' });
+    expect(await screen.findByText('Epidemiologia')).toBeInTheDocument();
+    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(2);
+  });
+
+  it('mantém o cadastro após conflito de código e permite corrigir e reenviar', async () => {
+    serviceMocks.createSpecialty.mockRejectedValueOnce({
+      message: 'Código já cadastrado.', fieldErrors: { code: 'Código já cadastrado.' },
+    }).mockResolvedValue(buildSpecialty());
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: 'Cadastrar especialidade' }));
+    await user.type(screen.getByLabelText(/Código/), 'duplicado');
+    await user.type(screen.getByLabelText(/Nome/), 'Epidemiologia');
+    await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Código já cadastrado.');
+    expect(screen.getByLabelText(/Código/)).toHaveValue('duplicado');
+    expect(screen.getByLabelText(/Nome/)).toHaveValue('Epidemiologia');
+    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(1);
+    await user.clear(screen.getByLabelText(/Código/));
+    await user.type(screen.getByLabelText(/Código/), 'epi-001');
+    await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
+    await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
+    expect(serviceMocks.createSpecialty).toHaveBeenCalledTimes(2);
+    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(2);
+  });
+
+  it('edita os dados da linha sem nova consulta e preserva filtros e paginação ao salvar', async () => {
+    const updated = buildSpecialty({ name: 'Epidemiologia clínica' });
+    serviceMocks.listSpecialties.mockResolvedValueOnce(listResponse()).mockResolvedValue(listResponse([updated]));
+    serviceMocks.updateSpecialty.mockResolvedValue(updated);
+    const user = userEvent.setup();
+    const store = makeStore();
+    store.dispatch(setSpecialtiesFilters({ query: 'epi', isActive: true }));
+    store.dispatch(setSpecialtiesPage(2));
+    renderPage(store);
+    await user.click(await screen.findByRole('button', { name: 'Editar' }));
+    const form = within(screen.getByRole('form', { name: 'Formulário de especialidade' }));
+    expect(screen.getByRole('heading', { name: 'Editar especialidade' })).toBeInTheDocument();
+    expect(screen.getByText('Ativa')).toBeInTheDocument();
+    expect(form.getByLabelText(/Código/)).toHaveValue('epi-001');
+    expect(form.getByLabelText(/Código/)).toBeDisabled();
+    expect(form.getByLabelText('Descrição')).toHaveValue('Estudos populacionais');
+    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(1);
+    await user.clear(form.getByLabelText(/Nome/));
+    await user.type(form.getByLabelText(/Nome/), updated.name);
+    await user.click(form.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
+    expect(serviceMocks.updateSpecialty).toHaveBeenCalledWith(1, { name: updated.name, description: updated.description, guidanceContext: '' });
+    expect(serviceMocks.listSpecialties).toHaveBeenLastCalledWith({ query: 'epi', isActive: true, page: 2, pageSize: 20 });
+    expect(await screen.findByText(updated.name)).toBeInTheDocument();
+    expect(store.getState().specialties.selected).toBeNull();
+  });
+
+  it('descarta alterações ao cancelar e retorna à listagem sem salvar', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: 'Editar' }));
+    await user.clear(screen.getByLabelText(/Nome/));
+    await user.type(screen.getByLabelText(/Nome/), 'Alteração não salva');
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(screen.getByRole('table', { name: 'Lista de especialidades' })).toBeInTheDocument();
+    expect(serviceMocks.updateSpecialty).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Editar' }));
+    expect(screen.getByLabelText(/Nome/)).toHaveValue('Epidemiologia');
+    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([true, false])('confirma a alteração de status de %s e atualiza o chip', async (isActive) => {
+    serviceMocks.listSpecialties.mockResolvedValueOnce(listResponse([buildSpecialty({ isActive })]))
+      .mockResolvedValue(listResponse([buildSpecialty({ isActive: !isActive })]));
+    serviceMocks.updateSpecialtyStatus.mockResolvedValue(buildSpecialty({ isActive: !isActive }));
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: isActive ? 'Desativar' : 'Ativar' }));
+    expect(serviceMocks.updateSpecialtyStatus).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: isActive ? 'Desativar' : 'Ativar' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: isActive ? 'Desativar' : 'Ativar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(serviceMocks.updateSpecialtyStatus).toHaveBeenCalledWith(1, !isActive);
+    expect(await screen.findByText(isActive ? 'Inativa' : 'Ativa')).toBeInTheDocument();
+  });
+
+  it('bloqueia confirmação e cancelamento enquanto altera o status', async () => {
+    let resolveMutation!: (value: Specialty) => void;
+    serviceMocks.updateSpecialtyStatus.mockReturnValue(new Promise((resolve) => { resolveMutation = resolve; }));
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: 'Desativar' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
+    const dialog = within(screen.getByRole('dialog'));
+    expect(dialog.getByRole('button', { name: 'Salvando…' })).toBeDisabled();
+    expect(dialog.getByRole('button', { name: 'Cancelar' })).toBeDisabled();
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    act(() => resolveMutation(buildSpecialty({ isActive: false })));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(serviceMocks.updateSpecialtyStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('mantém a confirmação após erro e remove do filtro ativo após uma nova tentativa bem-sucedida', async () => {
+    serviceMocks.listSpecialties.mockResolvedValueOnce(listResponse()).mockResolvedValue(listResponse([]));
+    serviceMocks.updateSpecialtyStatus.mockRejectedValueOnce({ message: 'Falha ao desativar.' })
+      .mockResolvedValue(buildSpecialty({ isActive: false }));
+    const user = userEvent.setup();
+    const store = makeStore();
+    store.dispatch(setSpecialtiesFilters({ isActive: true }));
+    renderPage(store);
+    await user.click(await screen.findByRole('button', { name: 'Desativar' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao desativar.');
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' })).toBeEnabled();
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(await screen.findByText('Nenhuma especialidade encontrada')).toBeInTheDocument();
+    expect(screen.queryByText('Epidemiologia')).not.toBeInTheDocument();
+    expect(serviceMocks.listSpecialties).toHaveBeenLastCalledWith({ isActive: true, page: 1, pageSize: 20 });
+  });
+
+  it('bloqueia envio durante a mutação e mantém os dados e erros no formulário após falha', async () => {
+    let rejectMutation!: (reason: unknown) => void;
+    serviceMocks.updateSpecialty.mockReturnValue(new Promise((_resolve, reject) => { rejectMutation = reject; }));
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: 'Editar' }));
+    const form = within(screen.getByRole('form', { name: 'Formulário de especialidade' }));
+    await user.click(form.getByRole('button', { name: 'Salvar' }));
+    expect(form.getByRole('button', { name: 'Salvando…' })).toBeDisabled();
+    expect(form.getByRole('button', { name: 'Cancelar' })).toBeDisabled();
+    act(() => rejectMutation({ message: 'Nome duplicado', fieldErrors: { name: 'Nome já utilizado.' } }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Nome duplicado');
+    expect(await form.findByText('Nome já utilizado.')).toBeInTheDocument();
+    expect(form.getByLabelText(/Nome/)).toHaveValue('Epidemiologia');
+    expect(form.getByRole('button', { name: 'Salvar' })).toBeEnabled();
+    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(1);
+    await user.click(form.getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Cadastrar especialidade' }));
+    expect(screen.getByLabelText(/Código/)).toHaveValue('');
+    expect(screen.queryByText('Nome já utilizado.')).not.toBeInTheDocument();
+  });
+
   it('usa o Skeleton do Listing durante o carregamento', async () => {
-    let resolveRequest!: (value: SpecialtiesList) => void;
+    let resolveRequest!: (value: SpecialtyListResponse) => void;
     serviceMocks.listSpecialties.mockReturnValue(new Promise((resolve) => {
       resolveRequest = resolve;
     }));
@@ -166,10 +320,7 @@ describe('Specialties', () => {
       isActive: undefined,
     }));
 
-    const status = screen.getByRole('combobox', { name: 'Status' });
-    await user.click(status);
-    expect(screen.queryByRole('option', { name: /^Tod[oa]s$/i })).not.toBeInTheDocument();
-    await user.click(await screen.findByRole('option', { name: 'Inativa' }));
+    await user.click(screen.getByRole('radio', { name: 'Inativas' }));
 
     await waitFor(() => expect(serviceMocks.listSpecialties).toHaveBeenCalledWith({
       page: 1,
@@ -177,15 +328,14 @@ describe('Specialties', () => {
       query: 'Epidemiologia',
       isActive: false,
     }));
-    expect(store.getState().specialties.page).toBe(1);
+    expect(store.getState().specialties.list.page).toBe(1);
 
-    const currentStatus = await screen.findByRole('combobox', { name: 'Status' });
-    expect(currentStatus).toHaveValue('Inativa');
-    const statusAutocomplete = currentStatus.closest('.MuiAutocomplete-root');
-    expect(statusAutocomplete).not.toBeNull();
-    await user.click(within(statusAutocomplete as HTMLElement).getByTitle(/clear/i));
+    expect(screen.getByRole('radio', { name: 'Inativas' })).toBeChecked();
+    await user.click(screen.getByRole('radio', { name: 'Ativas' }));
+    await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({ query: 'Epidemiologia', isActive: true }));
+    await user.click(screen.getByRole('radio', { name: 'Todas' }));
 
-    await waitFor(() => expect(store.getState().specialties.filters).toEqual({ query: 'Epidemiologia' }));
+    await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({ query: 'Epidemiologia' }));
     expect(serviceMocks.listSpecialties).toHaveBeenLastCalledWith({
       page: 1,
       pageSize: 20,
@@ -218,7 +368,7 @@ describe('Specialties', () => {
 
     await user.click(screen.getByRole('button', { name: 'Limpar filtros' }));
 
-    await waitFor(() => expect(store.getState().specialties.filters).toEqual({}));
+    await waitFor(() => expect(store.getState().specialties.list.filters).toEqual({}));
     expect(await screen.findByRole('heading', { name: 'Nenhuma especialidade cadastrada' })).toBeInTheDocument();
     expect(serviceMocks.listSpecialties).toHaveBeenLastCalledWith({
       page: 1,
@@ -243,11 +393,11 @@ describe('Specialties', () => {
     renderPage();
     await screen.findByText('Epidemiologia');
 
-    await user.click(screen.getByRole('button', { name: /next page/i }));
+    await user.click(screen.getByRole('button', { name: /próxima página/i }));
     await waitFor(() => expect(serviceMocks.listSpecialties).toHaveBeenCalledWith(expect.objectContaining({ page: 2 })));
-    expect(await screen.findByText(/21.*40 of 45/)).toBeInTheDocument();
+    expect(await screen.findByText(/21.*40 de 45/)).toBeInTheDocument();
 
-    const rowsPerPage = screen.getByRole('combobox', { name: /rows per page/i });
+    const rowsPerPage = screen.getByRole('combobox', { name: /linhas por página/i });
     fireEvent.mouseDown(rowsPerPage);
     await user.click(await screen.findByRole('option', { name: '50' }));
 

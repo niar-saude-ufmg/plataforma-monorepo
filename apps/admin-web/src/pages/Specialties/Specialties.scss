@@ -1,0 +1,35 @@
+@use '@niar/ui/typography.scss' as typography;
+
+.specialties-page,
+.specialties-form-page {
+  padding-top: var(--niar-spacing-3xl);
+}
+
+.specialties-form-page {
+  width: min(100%, 720px);
+  margin-inline: auto;
+}
+
+.specialties-row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--niar-spacing-xs);
+  white-space: nowrap;
+}
+
+.specialties-filters {
+  display: grid;
+  gap: var(--niar-spacing-md);
+}
+
+.specialties-filters__heading {
+  @include typography.typography-subtitle;
+  margin: 0;
+  color: var(--niar-colors-text-subtitle);
+}
+
+.specialties-filters .specialties-filters__status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 640px);
+}

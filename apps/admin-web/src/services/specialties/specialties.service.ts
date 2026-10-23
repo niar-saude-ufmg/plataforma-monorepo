@@ -2,8 +2,8 @@ import { ACCESS_TOKEN_STORAGE_KEY } from '@niar/auth';
 import { getAdminApiBaseUrl } from '../auth/auth.service';
 import type {
   CreateSpecialtyInput,
-  FetchSpecialtiesParams,
-  SpecialtiesList,
+  SpecialtyListParams,
+  SpecialtyListResponse,
   Specialty,
   SpecialtyApiError,
   SpecialtyField,
@@ -136,7 +136,7 @@ const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
   return body as T;
 };
 
-export const listSpecialties = async (params: FetchSpecialtiesParams = {}): Promise<SpecialtiesList> => {
+export const listSpecialties = async (params: SpecialtyListParams = {}): Promise<SpecialtyListResponse> => {
   const searchParams = new URLSearchParams();
 
   if (params.query) searchParams.set('query', params.query);

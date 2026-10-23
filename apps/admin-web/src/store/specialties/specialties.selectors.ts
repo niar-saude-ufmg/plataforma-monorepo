@@ -1,18 +1,19 @@
 import type { SpecialtiesState } from './specialties.slice';
 
-export type SpecialtiesRootState = {
-  specialties: SpecialtiesState;
-};
+export type SpecialtiesRootState = { specialties: SpecialtiesState };
 
-const selectSpecialtiesState = (state: SpecialtiesRootState) => state.specialties;
-
-export const selectSpecialties = (state: SpecialtiesRootState) => selectSpecialtiesState(state).specialties;
-export const selectSelectedSpecialty = (state: SpecialtiesRootState) => selectSpecialtiesState(state).selectedSpecialty;
-export const selectSpecialtiesPagination = (state: SpecialtiesRootState) => selectSpecialtiesState(state).pagination;
-export const selectSpecialtiesFilters = (state: SpecialtiesRootState) => selectSpecialtiesState(state).filters;
-export const selectSpecialtiesPage = (state: SpecialtiesRootState) => selectSpecialtiesState(state).page;
-export const selectSpecialtiesPageSize = (state: SpecialtiesRootState) => selectSpecialtiesState(state).pageSize;
-export const selectSpecialtiesStatus = (state: SpecialtiesRootState) => selectSpecialtiesState(state).status;
-export const selectSpecialtiesLoading = (state: SpecialtiesRootState) => selectSpecialtiesState(state).status === 'pending';
-export const selectSpecialtiesError = (state: SpecialtiesRootState) => selectSpecialtiesState(state).error;
-export const selectSpecialtiesHasItems = (state: SpecialtiesRootState) => selectSpecialtiesState(state).specialties.length > 0;
+export const selectSpecialtiesList = (state: SpecialtiesRootState) => state.specialties.list.items;
+export const selectSpecialtiesListPagination = (state: SpecialtiesRootState) => state.specialties.list.pagination;
+export const selectSpecialtiesListFilters = (state: SpecialtiesRootState) => state.specialties.list.filters;
+export const selectSpecialtiesListPage = (state: SpecialtiesRootState) => state.specialties.list.page;
+export const selectSpecialtiesListPageSize = (state: SpecialtiesRootState) => state.specialties.list.pageSize;
+export const selectSpecialtiesListStatus = (state: SpecialtiesRootState) => state.specialties.list.status;
+export const selectSpecialtiesListLoading = (state: SpecialtiesRootState) => state.specialties.list.status === 'pending';
+export const selectSpecialtiesListError = (state: SpecialtiesRootState) => state.specialties.list.error;
+export const selectSpecialtiesListHasItems = (state: SpecialtiesRootState) => state.specialties.list.items.length > 0;
+export const selectSpecialtiesSelected = (state: SpecialtiesRootState) => state.specialties.selected;
+export const selectSpecialtiesMutation = (state: SpecialtiesRootState) => state.specialties.mutation;
+export const selectSpecialtiesMutationStatus = (state: SpecialtiesRootState) => state.specialties.mutation.status;
+export const selectSpecialtiesMutationLoading = (state: SpecialtiesRootState) => state.specialties.mutation.status === 'pending';
+export const selectSpecialtiesMutationError = (state: SpecialtiesRootState) => state.specialties.mutation.error;
+export const selectSpecialtiesMutationOperation = (state: SpecialtiesRootState) => state.specialties.mutation.operation;
