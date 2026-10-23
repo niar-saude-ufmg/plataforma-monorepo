@@ -1,0 +1,29 @@
+.create-user-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-lg);
+}
+
+.create-user-page__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-lg);
+}
+
+.create-user-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-lg);
+}
+
+.create-user-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--niar-spacing-md);
+}
+
+.create-user-form__error {
+  color: var(--niar-colors-text-error);
+  font-size: var(--niar-font-size-sm);
+  margin: 0;
+}

@@ -40,6 +40,7 @@ const roleOptions: readonly AutocompleteOption[] = [
   { value: "admin", label: "Administrador" },
   { value: "auditor", label: "Auditor" },
   { value: "committee", label: "Comitê" },
+  { value: "auditor", label: "Auditor" }
 ];
 
 const statusOptions: readonly AutocompleteOption[] = [
@@ -231,6 +232,15 @@ export function Users() {
       <Listing
         title={roleConfig.title}
         description={roleConfig.description}
+        action={
+          <Button
+            variant="contained"
+            color="primary"
+            href="/admin/administrador/usuarios/novo"
+          >
+            Cadastrar usuário
+          </Button>
+        }
         columns={toTableColumns(columns)}
         rows={toTableRows(users)}
         loading={loading}
