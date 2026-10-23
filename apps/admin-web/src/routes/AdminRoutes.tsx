@@ -12,6 +12,7 @@ import { Projects } from "../pages/Projects/Projects";
 import { Profile } from "../pages/Profile/Profile";
 import { RoleHome } from "../pages/RoleHome/RoleHome";
 import { Specialties } from "../pages/Specialties/Specialties";
+import { Specialty } from "../pages/Specialty/Specialty";
 import { Users } from "../pages/Users/Users";
 import { useAppSelector } from "../store/hooks";
 import { selectAuthSelected } from "../store/auth/auth.selectors";
@@ -19,6 +20,8 @@ import {
   getRoleHomePath,
   getRoleRouteDefinitions,
   getRoleRoutePath,
+  getSpecialtyCreatePath,
+  getSpecialtyEditPath,
 } from "./role-routes";
 
 function RoleRouteContent({
@@ -27,9 +30,13 @@ function RoleRouteContent({
   user: NonNullable<ReturnType<typeof selectAuthSelected>>;
 }) {
   const location = useLocation();
+  const specialtyFormPath = [getSpecialtyCreatePath(user.role), getSpecialtyEditPath(user.role)]
+    .includes(location.pathname);
   const route = getRoleRouteDefinitions(user.role).find(
     ({ section }) => location.pathname === getRoleRoutePath(user.role, section),
-  );
+  ) ?? (specialtyFormPath
+    ? getRoleRouteDefinitions(user.role).find(({ section }) => section === "especialidades")
+    : undefined);
 
   if (!route) return <Navigate replace to={getRoleHomePath(user.role)} />;
 
@@ -42,7 +49,9 @@ function RoleRouteContent({
   const page =
     route.section === "projetos" ? <Projects /> :
     route.section === "usuarios" ? <Users /> :
-    route.section === "especialidades" ? <Specialties /> :
+    route.section === "especialidades"
+      ? specialtyFormPath ? <Specialty /> : <Specialties />
+      :
     route.section === "perfil" ? profilePage :
     <RoleHome section={route.section} userName={user.name} />;
   const allowedRoles =

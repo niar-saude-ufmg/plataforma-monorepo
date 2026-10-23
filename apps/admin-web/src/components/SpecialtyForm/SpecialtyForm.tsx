@@ -34,7 +34,7 @@ type SpecialtyFormProps = {
 
 export function SpecialtyForm({ mode, initialValues, onSubmit, onCancel }: SpecialtyFormProps) {
   const loading = useAppSelector(selectSpecialtiesMutationLoading);
-  const error = useAppSelector(selectSpecialtiesMutationError);
+  const mutationError = useAppSelector(selectSpecialtiesMutationError);
   const { control, handleSubmit, reset, applyApiFieldErrors, formState: { isSubmitting } } = useForm({
     schema,
     defaultValues: emptyValues,
@@ -51,8 +51,8 @@ export function SpecialtyForm({ mode, initialValues, onSubmit, onCancel }: Speci
   }, [mode, initialValues, reset]);
 
   useEffect(() => {
-    if (error) applyApiFieldErrors(error);
-  }, [error, applyApiFieldErrors]);
+    if (mutationError) applyApiFieldErrors(mutationError);
+  }, [mutationError, applyApiFieldErrors]);
 
   return (
     <Form

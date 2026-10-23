@@ -3,6 +3,7 @@ import { NiarProvider } from '@niar/ui';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpecialtyListResponse, Specialty } from '../../types/specialty.types';
 import authReducer from '../../store/auth/auth.slice';
@@ -24,6 +25,7 @@ const serviceMocks = vi.hoisted(() => ({
 vi.mock('../../services/specialties/specialties.service', () => serviceMocks);
 
 import { Specialties } from './Specialties';
+import { Specialty as SpecialtyPage } from '../Specialty/Specialty';
 
 const buildSpecialty = (overrides: Partial<Specialty> = {}): Specialty => ({
   id: 1,
@@ -56,11 +58,20 @@ const makeStore = () => configureStore({
   },
 });
 
+function SpecialtyTestRoutes() {
+  const location = useLocation();
+  const isFormPage = location.pathname.endsWith('/novo') || location.pathname.endsWith('/editar');
+
+  return isFormPage ? <SpecialtyPage /> : <Specialties />;
+}
+
 const renderPage = (store = makeStore()) => {
   render(
     <NiarProvider>
       <Provider store={store}>
-        <Specialties />
+        <MemoryRouter initialEntries={['/admin/administrador/especialidades']}>
+          <SpecialtyTestRoutes />
+        </MemoryRouter>
       </Provider>
     </NiarProvider>,
   );
@@ -136,7 +147,7 @@ describe('Specialties', () => {
     await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
     expect(serviceMocks.createSpecialty).toHaveBeenCalledWith({ code: 'epi-001', name: 'Epidemiologia', description: '', guidanceContext: '' });
     expect(await screen.findByText('Epidemiologia')).toBeInTheDocument();
-    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(2);
+    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(3);
   });
 
   it('mantém o cadastro após conflito de código e permite corrigir e reenviar', async () => {
@@ -158,7 +169,7 @@ describe('Specialties', () => {
     await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
     await waitFor(() => expect(screen.queryByRole('form', { name: 'Formulário de especialidade' })).not.toBeInTheDocument());
     expect(serviceMocks.createSpecialty).toHaveBeenCalledTimes(2);
-    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(2);
+    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(3);
   });
 
   it('edita os dados da linha sem nova consulta e preserva filtros e paginação ao salvar', async () => {
@@ -199,7 +210,7 @@ describe('Specialties', () => {
     expect(serviceMocks.updateSpecialty).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Editar' }));
     expect(screen.getByLabelText(/Nome/)).toHaveValue('Epidemiologia');
-    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(1);
+    expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(2);
   });
 
   it.each([true, false])('confirma a alteração de status de %s e atualiza o chip', async (isActive) => {
@@ -226,13 +237,10 @@ describe('Specialties', () => {
     renderPage();
     await user.click(await screen.findByRole('button', { name: 'Desativar' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
-    const dialog = within(screen.getByRole('dialog'));
-    expect(dialog.getByRole('button', { name: 'Salvando…' })).toBeDisabled();
-    expect(dialog.getByRole('button', { name: 'Cancelar' })).toBeDisabled();
-    await user.keyboard('{Escape}');
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    act(() => resolveMutation(buildSpecialty({ isActive: false })));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Editar' })).toBeDisabled();
+    act(() => resolveMutation(buildSpecialty({ isActive: false })));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Editar' })).toBeEnabled());
     expect(serviceMocks.updateSpecialtyStatus).toHaveBeenCalledTimes(1);
   });
 
@@ -247,7 +255,8 @@ describe('Specialties', () => {
     await user.click(await screen.findByRole('button', { name: 'Desativar' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao desativar.');
-    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' })).toBeEnabled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Desativar' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByText('Nenhuma especialidade encontrada')).toBeInTheDocument();

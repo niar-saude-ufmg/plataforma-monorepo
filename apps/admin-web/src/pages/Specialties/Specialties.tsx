@@ -8,10 +8,10 @@ import {
   type TableColumn,
 } from '@niar/ui';
 import { useEffect, useState, type ChangeEvent } from 'react';
-import { SpecialtyForm, type SpecialtyFormValues } from '../../components/SpecialtyForm';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useApiError } from '../../hooks/use-api-error/use-api-error';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { createSpecialty, fetchSpecialties, updateSpecialty, updateSpecialtyStatus } from '../../store/specialties/specialties.api';
+import { fetchSpecialties, updateSpecialtyStatus } from '../../store/specialties/specialties.api';
 import {
   selectSpecialtiesList,
   selectSpecialtiesListError,
@@ -22,13 +22,12 @@ import {
   selectSpecialtiesListPagination,
   selectSpecialtiesMutationError,
   selectSpecialtiesMutationLoading,
-  selectSpecialtiesSelected,
 } from '../../store/specialties/specialties.selectors';
 import {
-  clearSelectedSpecialty,
   clearSpecialtiesError,
   clearSpecialtiesFilters,
   clearSpecialtiesMutation,
+  clearSelectedSpecialty,
   setSelectedSpecialty,
   setSpecialtiesFilters,
   setSpecialtiesPage,
@@ -55,31 +54,28 @@ const autocompleteValue = (value: unknown): string | undefined => {
 
 export function Specialties() {
   const dispatch = useAppDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
   const specialties = useAppSelector(selectSpecialtiesList);
   const pagination = useAppSelector(selectSpecialtiesListPagination);
   const filters = useAppSelector(selectSpecialtiesListFilters);
   const page = useAppSelector(selectSpecialtiesListPage);
   const pageSize = useAppSelector(selectSpecialtiesListPageSize);
   const loading = useAppSelector(selectSpecialtiesListLoading);
-  const error = useAppSelector(selectSpecialtiesListError);
-  const selected = useAppSelector(selectSpecialtiesSelected);
+  const listError = useAppSelector(selectSpecialtiesListError);
   const mutationLoading = useAppSelector(selectSpecialtiesMutationLoading);
   const mutationError = useAppSelector(selectSpecialtiesMutationError);
-  const [mode, setMode] = useState<'create' | 'edit' | null>(null);
   const [statusTarget, setStatusTarget] = useState<Specialty | null>(null);
-
-  const closeForm = () => {
-    if (mutationLoading) return;
-    setMode(null);
-    dispatch(clearSelectedSpecialty());
-    dispatch(clearSpecialtiesMutation());
-  };
 
   const openForm = (nextMode: 'create' | 'edit', specialty?: Specialty) => {
     dispatch(clearSpecialtiesMutation());
-    if (specialty) dispatch(setSelectedSpecialty(specialty));
-    else dispatch(clearSelectedSpecialty());
-    setMode(nextMode);
+    if (specialty) {
+      dispatch(setSelectedSpecialty(specialty));
+      navigate(nextMode === 'edit' ? `${location.pathname}/editar` : `${location.pathname}/novo`);
+      return;
+    }
+    dispatch(clearSelectedSpecialty());
+    navigate(nextMode === 'edit' ? `${location.pathname}/editar` : `${location.pathname}/novo`);
   };
 
   const openStatusConfirmation = (specialty: Specialty) => {
@@ -94,24 +90,29 @@ export function Specialties() {
     dispatch(clearSpecialtiesMutation());
   };
 
-  const submit = async ({ code, ...values }: SpecialtyFormValues) => {
-    if (mutationLoading) return;
-    const result = mode === 'edit' && selected
-      ? await dispatch(updateSpecialty({ id: selected.id, ...values }))
-      : await dispatch(createSpecialty({ code, ...values }));
-    if (createSpecialty.fulfilled.match(result) || updateSpecialty.fulfilled.match(result)) closeForm();
-  };
-
-  const confirmStatus = async () => {
+  const confirmStatus = () => {
     if (!statusTarget || mutationLoading) return;
-    const result = await dispatch(updateSpecialtyStatus({ id: statusTarget.id, isActive: !statusTarget.isActive }));
-    if (updateSpecialtyStatus.fulfilled.match(result)) closeStatusConfirmation();
+    const target = statusTarget;
+    setStatusTarget(null);
+    dispatch(clearSelectedSpecialty());
+    void dispatch(updateSpecialtyStatus({ id: target.id, isActive: !target.isActive })).then((result) => {
+      if (updateSpecialtyStatus.fulfilled.match(result)) dispatch(clearSelectedSpecialty());
+    });
   };
 
-  const mutationSnackbar = useApiError(
-    mutationError,
-    () => dispatch(clearSpecialtiesMutation()),
-    'Não foi possível concluir a operação. Tente novamente.',
+  const pageError = mutationError ?? listError;
+  const pageErrorSnackbar = useApiError(
+    pageError,
+    () => {
+      if (mutationError) {
+        dispatch(clearSpecialtiesMutation());
+        return;
+      }
+      dispatch(clearSpecialtiesError());
+    },
+    mutationError
+      ? 'Não foi possível concluir a operação. Tente novamente.'
+      : 'Não foi possível carregar as especialidades. Tente novamente.',
   );
 
   const loadSpecialties = () => dispatch(fetchSpecialties({
@@ -124,12 +125,6 @@ export function Specialties() {
   useEffect(() => {
     void loadSpecialties();
   }, [dispatch, filters.query, filters.isActive, page, pageSize]);
-
-  const apiErrorSnackbar = useApiError(
-    error,
-    () => dispatch(clearSpecialtiesError()),
-    'Não foi possível carregar as especialidades. Tente novamente.',
-  );
 
   const rows: SpecialtyRow[] = specialties;
 
@@ -230,15 +225,6 @@ export function Specialties() {
     },
   };
 
-  if (mode) {
-    return (
-      <div className="specialties-form-page">
-        <SpecialtyForm mode={mode} initialValues={selected ?? undefined} onSubmit={submit} onCancel={closeForm} />
-        <Snackbar {...mutationSnackbar} />
-      </div>
-    );
-  }
-
   return (
     <div className="specialties-page">
       <Listing
@@ -267,11 +253,11 @@ export function Specialties() {
         )}
         columns={columns}
         rows={rows}
-        loading={loading || Boolean(error && rows.length === 0)}
+        loading={loading || Boolean(listError && rows.length === 0)}
         pagination={paginationProps}
         emptyState={emptyState}
       />
-      {error ? (
+      {listError ? (
         <Button type="button" variant="text" size="small" onClick={() => { void loadSpecialties(); }}>
           Tentar novamente
         </Button>
@@ -281,22 +267,20 @@ export function Specialties() {
         title={statusTarget?.isActive ? 'Desativar especialidade' : 'Ativar especialidade'}
         aria-label="Confirmar alteração de status"
         onClose={closeStatusConfirmation}
-        showCloseButton={!mutationLoading}
         actions={(
           <>
-            <Button type="button" variant="text" disabled={mutationLoading} onClick={closeStatusConfirmation}>
+            <Button type="button" variant="text" onClick={closeStatusConfirmation}>
               Cancelar
             </Button>
-            <Button type="button" variant="contained" disabled={mutationLoading} onClick={() => { void confirmStatus(); }}>
-              {mutationLoading ? 'Salvando…' : statusTarget?.isActive ? 'Desativar' : 'Ativar'}
+            <Button type="button" variant="contained" onClick={confirmStatus}>
+              {statusTarget?.isActive ? 'Desativar' : 'Ativar'}
             </Button>
           </>
         )}
       >
-        <Snackbar {...mutationSnackbar} />
         Deseja {statusTarget?.isActive ? 'desativar' : 'ativar'} a especialidade “{statusTarget?.name}”?
       </Dialog>
-      <Snackbar {...apiErrorSnackbar} />
+      <Snackbar {...pageErrorSnackbar} />
     </div>
   );
 }
