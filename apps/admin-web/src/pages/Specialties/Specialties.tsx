@@ -1,6 +1,5 @@
 import {
   Button,
-  Dialog,
   Filter,
   Listing,
   Snackbar,
@@ -10,6 +9,7 @@ import {
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApiError } from '../../hooks/use-api-error/use-api-error';
+import { ConfirmationDialog } from '../../components/ConfirmationDialog';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchSpecialties, updateSpecialtyStatus } from '../../store/specialties/specialties.api';
 import {
@@ -262,24 +262,16 @@ export function Specialties() {
           Tentar novamente
         </Button>
       ) : null}
-      <Dialog
+      <ConfirmationDialog
         open={Boolean(statusTarget)}
         title={statusTarget?.isActive ? 'Desativar especialidade' : 'Ativar especialidade'}
         aria-label="Confirmar alteração de status"
         onClose={closeStatusConfirmation}
-        actions={(
-          <>
-            <Button type="button" variant="text" onClick={closeStatusConfirmation}>
-              Cancelar
-            </Button>
-            <Button type="button" variant="contained" onClick={confirmStatus}>
-              {statusTarget?.isActive ? 'Desativar' : 'Ativar'}
-            </Button>
-          </>
-        )}
+        onConfirm={confirmStatus}
+        confirmLabel={statusTarget?.isActive ? 'Desativar' : 'Ativar'}
       >
         Deseja {statusTarget?.isActive ? 'desativar' : 'ativar'} a especialidade “{statusTarget?.name}”?
-      </Dialog>
+      </ConfirmationDialog>
       <Snackbar {...pageErrorSnackbar} />
     </div>
   );
