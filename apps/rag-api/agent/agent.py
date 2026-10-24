@@ -1,6 +1,6 @@
 import os
 from langgraph.prebuilt import ToolNode
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langgraph.graph import StateGraph, START, END
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -10,6 +10,18 @@ from agent.utils.tools import TOOLS_CHAT
 
 
 LLM_MODEL = "gemini-3.7-flash"
+
+# Buscas que o agente pode fazer pela tool em cada pergunta, além da busca
+# inicial que a API já injeta no prompt. Atingido o limite, o modelo é obrigado
+# a responder com o que tem. Cada rodada custa uma busca e uma chamada ao Gemini
+# (~5-10 s), então o teto também limita a latência.
+MAX_BUSCAS_AGENTE = 2
+
+# Trava de segurança do LangGraph, caso o limite acima falhe. O padrão da 1.x é
+# 10007 passos (na 0.6 era 25), o que na prática deixaria o laço sem teto. Com
+# MAX_BUSCAS_AGENTE = 2 a execução normal usa 6 passos: welcome, chat e
+# 2 × (tools + chat).
+RECURSION_LIMIT = 10
 
 
 def create_agent_graph(checkpointer=None):
@@ -47,7 +59,10 @@ def create_agent_graph(checkpointer=None):
     def chat_node(state: StateSchema) -> dict:
         """Nó principal de chat com acesso às tools."""
         system_prompt = SystemMessage(content=CHAT_SYSTEM_PROMPT)
-        response = llm.bind_tools(tools=TOOLS_CHAT).invoke(
+        # "none" em vez de tirar as tools: o histórico ainda tem chamadas de
+        # função, e o modelo precisa continuar enxergando a declaração delas.
+        tool_choice = "none" if _buscas_desde_a_pergunta(state["messages"]) >= MAX_BUSCAS_AGENTE else None
+        response = llm.bind_tools(tools=TOOLS_CHAT, tool_choice=tool_choice).invoke(
             [system_prompt, *state["messages"]]
         )
         return {"messages": [response]}
@@ -83,7 +98,23 @@ def create_agent_graph(checkpointer=None):
 
     graph.add_edge("tools_chat", "chat_node")  # após tool, volta pro chat
 
-    return graph.compile(checkpointer=checkpointer)
+    return graph.compile(checkpointer=checkpointer).with_config(recursion_limit=RECURSION_LIMIT)
+
+
+def _buscas_desde_a_pergunta(messages) -> int:
+    """Conta as buscas feitas desde a última pergunta do usuário.
+
+    A API é stateless, mas no LangGraph Studio o checkpointer acumula o histórico
+    de vários turnos; contar só a partir da última HumanMessage dá a cada
+    pergunta o próprio limite.
+    """
+    buscas = 0
+    for msg in reversed(messages):
+        if isinstance(msg, HumanMessage):
+            break
+        if isinstance(msg, ToolMessage):
+            buscas += 1
+    return buscas
 
 
 graph = create_agent_graph()
