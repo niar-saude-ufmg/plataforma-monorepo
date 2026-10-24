@@ -3,14 +3,17 @@ fastapi==0.128.8
 uvicorn[standard]==0.39.0
 
 # Agente / LangGraph
-langchain==0.3.30
-langchain-core==0.3.86
-langgraph==0.6.11
+# Stack 1.x: exigida pelo langchain_google_genai>=3, o primeiro que preserva a
+# thought_signature das chamadas de função. Sem ela o Gemini 3 devolve 400
+# sempre que o agente usa a tool e volta ao modelo com o resultado.
+langchain==1.4.7
+langchain-core==1.7.0
+langgraph==1.2.17
 
 # LLM e embeddings
-langchain_groq==0.3.8
-langchain_google_genai==2.1.12
-google-genai==1.47.0
+langchain_groq==1.1.3
+langchain_google_genai==4.4.2
+google-genai==2.33.0
 
 # Banco vetorial
 qdrant_client==1.16.1
