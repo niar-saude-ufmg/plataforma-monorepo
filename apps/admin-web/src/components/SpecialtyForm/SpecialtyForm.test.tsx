@@ -4,8 +4,29 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { describe, expect, it, vi } from 'vitest';
+import { useSpecialtyForm, type SpecialtyFormValues } from '../../hooks/forms/use-specialty-form/use-specialty-form';
 import { specialtiesReducer } from '../../store/specialties/specialties.slice';
 import { SpecialtyForm } from './SpecialtyForm';
+
+function SpecialtyFormHarness({
+  onSubmit,
+  onCancel,
+}: {
+  onSubmit: (values: SpecialtyFormValues) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const form = useSpecialtyForm({ mode: 'create' });
+
+  return (
+    <SpecialtyForm
+      mode="create"
+      fields={form.fields}
+      busy={false}
+      onSubmit={() => { void form.handleSubmit((values) => onSubmit(values))(); }}
+      onCancel={onCancel}
+    />
+  );
+}
 
 describe('SpecialtyForm', () => {
   it('valida limites do contrato e envia os valores válidos normalizados', async () => {
@@ -14,7 +35,7 @@ describe('SpecialtyForm', () => {
     const store = configureStore({ reducer: { specialties: specialtiesReducer } });
     render(
       <NiarProvider><Provider store={store}>
-        <SpecialtyForm mode="create" onSubmit={submit} onCancel={cancel} />
+        <SpecialtyFormHarness onSubmit={submit} onCancel={cancel} />
       </Provider></NiarProvider>,
     );
     const user = userEvent.setup();

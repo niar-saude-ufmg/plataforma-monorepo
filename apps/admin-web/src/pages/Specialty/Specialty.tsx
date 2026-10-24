@@ -1,8 +1,9 @@
 import { Snackbar } from '@niar/ui';
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { SpecialtyForm, type SpecialtyFormValues } from '../../components/SpecialtyForm';
+import { SpecialtyForm } from '../../components/SpecialtyForm';
 import { useApiError } from '../../hooks/use-api-error/use-api-error';
+import { useSpecialtyForm, type SpecialtyFormValues } from '../../hooks/forms/use-specialty-form/use-specialty-form';
 import { selectAuthSelected } from '../../store/auth/auth.selectors';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createSpecialty, updateSpecialty } from '../../store/specialties/specialties.api';
@@ -28,20 +29,27 @@ export function Specialty() {
   const mutationError = useAppSelector(selectSpecialtiesMutationError);
   const mode = location.pathname.endsWith('/editar') ? 'edit' : 'create';
   const listPath = user ? getRoleRoutePath(user.role, 'especialidades') : '/admin/administrador/especialidades';
+  const form = useSpecialtyForm({ mode, initialValues: selected ?? undefined });
+  const { handleSubmit, applyApiFieldErrors, formState: { isSubmitting } } = form;
+  const busy = mutationLoading || isSubmitting;
 
   useEffect(() => {
     if (mode === 'edit' && !selected) navigate(listPath, { replace: true });
   }, [listPath, mode, navigate, selected]);
 
+  useEffect(() => {
+    if (mutationError) applyApiFieldErrors(mutationError);
+  }, [applyApiFieldErrors, mutationError]);
+
   const closeForm = () => {
-    if (mutationLoading) return;
+    if (busy) return;
     dispatch(clearSelectedSpecialty());
     dispatch(clearSpecialtiesMutation());
     navigate(listPath);
   };
 
-  const submit = async ({ code, ...values }: SpecialtyFormValues) => {
-    if (mutationLoading) return;
+  const save = async ({ code, ...values }: SpecialtyFormValues) => {
+    if (busy) return;
     const result = mode === 'edit' && selected
       ? await dispatch(updateSpecialty({ id: selected.id, ...values }))
       : await dispatch(createSpecialty({ code, ...values }));
@@ -50,6 +58,8 @@ export function Specialty() {
       closeForm();
     }
   };
+
+  const submit = handleSubmit(save);
 
   const mutationSnackbar = useApiError(
     mutationError,
@@ -64,7 +74,9 @@ export function Specialty() {
       <SpecialtyForm
         mode={mode}
         initialValues={selected ?? undefined}
-        onSubmit={submit}
+        fields={form.fields}
+        busy={busy}
+        onSubmit={() => { void submit(); }}
         onCancel={closeForm}
       />
       <Snackbar {...mutationSnackbar} />

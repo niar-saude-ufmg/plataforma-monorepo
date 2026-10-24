@@ -141,8 +141,8 @@ describe('PublicUser', () => {
 
     await userEvent.setup().click(screen.getByRole('button', { name: 'Cadastrar' }));
 
-    expect(screen.getByText('Informe o nome completo do pesquisador.')).toBeInTheDocument();
-    expect(screen.getByText('Informe um e-mail válido, como nome@instituicao.org.')).toBeInTheDocument();
+    expect(screen.getByText('Informe o nome completo.')).toBeInTheDocument();
+    expect(screen.getByText('Informe um e-mail válido.')).toBeInTheDocument();
     expect(screen.getByText('Anexe o parecer do COEP.')).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });

@@ -58,7 +58,7 @@ export function Filter({
   return (
     <Box component="form" aria-label={ariaLabel} sx={filterRootStyles}>
       <Box sx={filterFieldsStyles}>
-        {search.map((field) => <Autocomplete key={`search-${field.key}`} label={field.label} options={field.options} multiple={field.multiple} freeSolo={field.freeSolo} forcePopupIcon={field.freeSolo ? false : undefined} disabled={field.disabled} value={normalizeAutocompleteValue(currentValues[field.key], field.options)} onChange={(_, value) => handleChange(field.key, value)} />)}
+        {search.map((field) => <Autocomplete key={`search-${field.key}`} label={field.label} options={field.options} multiple={field.multiple} freeSolo={field.freeSolo} autoSelect={field.freeSolo} forcePopupIcon={field.freeSolo ? false : undefined} disabled={field.disabled} value={normalizeAutocompleteValue(currentValues[field.key], field.options)} onChange={(_, value) => handleChange(field.key, value)} />)}
         {selectableOptions.map((field) => <Select key={`select-${field.key}`} label={field.label} options={field.options} disabled={field.disabled} value={String(currentValues[field.key] ?? "")} onChange={(event: ChangeEvent<HTMLInputElement>) => handleChange(field.key, event.target.value)} />)}
         {checkedOptions.map((field) => field.type === "radio" ? (
           <Box sx={filterCheckedStyles} key={`radio-${field.key}`}>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatBrazilianPhone } from './PublicUser.formatters';
+import { formatBrazilianPhone } from './phone';
 
 describe('formatBrazilianPhone', () => {
   it('formata telefone celular com DDD', () => {

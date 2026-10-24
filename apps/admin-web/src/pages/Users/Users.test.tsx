@@ -93,23 +93,40 @@ vi.mock('@niar/ui', () => {
         return (
           <div key={s.key}>
             <label htmlFor={id}>{s.label}</label>
-            <select
-              id={id}
-              aria-label={s.label}
-              value={values?.[s.key]?.value ?? ''}
-              onChange={(event) => {
-                const option =
-                  s.options.find((o: any) => o.value === event.target.value) ?? null;
-                onChange({ ...values, [s.key]: option });
-              }}
-            >
-              <option value="">Todos</option>
-              {s.options.map((o: any) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+            {s.freeSolo ? (
+              <input
+                id={id}
+                aria-label={s.label}
+                defaultValue={values?.[s.key] ?? ''}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    onChange({ ...values, [s.key]: event.currentTarget.value || null });
+                  }
+                }}
+                onBlur={(event) =>
+                  onChange({ ...values, [s.key]: event.currentTarget.value || null })
+                }
+              />
+            ) : (
+              <select
+                id={id}
+                aria-label={s.label}
+                value={values?.[s.key]?.value ?? ''}
+                onChange={(event) => {
+                  const option =
+                    s.options.find((o: any) => o.value === event.target.value) ?? null;
+                  onChange({ ...values, [s.key]: option });
+                }}
+              >
+                <option value="">Todos</option>
+                {s.options.map((o: any) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         );
       })}
@@ -119,7 +136,19 @@ vi.mock('@niar/ui', () => {
   return {
     Listing,
     Filter,
-    Autocomplete: ({ label, options, value, onChange }: any) => (
+    Autocomplete: ({ label, options, value, onChange, freeSolo }: any) => freeSolo ? (
+      <input
+        aria-label={label}
+        defaultValue={typeof value === 'string' ? value : value?.value ?? ''}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            onChange(undefined, event.currentTarget.value || null);
+          }
+        }}
+        onBlur={(event) => onChange(undefined, event.currentTarget.value || null)}
+      />
+    ) : (
       <select
         aria-label={label}
         value={value?.value ?? ''}
@@ -306,7 +335,9 @@ describe('Users — filtros', () => {
     await waitFor(() => expect(screen.getByTestId('row-0')).toBeInTheDocument());
     const before = usersListCalls().length;
 
-    await user.selectOptions(screen.getByLabelText('Buscar usuário'), 'Alice Pesquisadora');
+    const searchInput = screen.getByLabelText('Buscar usuário');
+    await user.type(searchInput, 'Alice Pesquisadora');
+    await user.keyboard('{Enter}');
 
     await waitFor(() => expect(usersListCalls().length).toBeGreaterThan(before));
     const url = lastUsersUrl();

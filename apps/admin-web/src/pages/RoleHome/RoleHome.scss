@@ -5,7 +5,7 @@
   align-items: center;
   overflow: hidden;
   width: calc(100% + (2 * var(--niar-spacing-3xl)));
-  margin: 0 calc(-1 * var(--niar-spacing-3xl)) calc(-1 * var(--niar-spacing-3xl));
+  margin: calc(-1 * var(--niar-spacing-2xl)) calc(-1 * var(--niar-spacing-3xl)) calc(-1 * var(--niar-spacing-3xl));
   padding: clamp(var(--niar-spacing-3xl), 8vw, var(--niar-spacing-4xl));
   color: var(--niar-colors-neutral-white);
   background: linear-gradient(
@@ -86,6 +86,7 @@
   .role-home {
     min-height: calc(100vh - (var(--niar-spacing-4xl) + var(--niar-spacing-xs)));
     width: calc(100% + (2 * var(--niar-spacing-xl)));
+    margin-top: calc(-1 * var(--niar-spacing-xl));
     margin-inline: calc(-1 * var(--niar-spacing-xl));
     margin-bottom: calc(-1 * var(--niar-spacing-xl));
     padding: var(--niar-spacing-3xl) var(--niar-spacing-2xl);

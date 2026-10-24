@@ -1,0 +1,14 @@
+@use '@niar/ui/typography.scss' as typography;
+
+.committee-profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-md);
+}
+
+.committee-profile-form h3 {
+  @include typography.typography-subtitle;
+  margin: 0;
+  color: var(--niar-colors-text-subtitle);
+  font-weight: var(--niar-font-weight-semibold);
+}
