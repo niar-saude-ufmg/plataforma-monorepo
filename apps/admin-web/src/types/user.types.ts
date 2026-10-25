@@ -274,3 +274,25 @@ export type RoleFormFields = {
     helperText?: ReactNode;
   };
 };
+export interface AuthFormFieldErrors {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  currentPassword?: string;
+  password?: string;
+}
+
+export interface AuthApiError extends ApiError {
+  fieldErrors?: AuthFormFieldErrors;
+}
+
+export interface UpdateProfileInput {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  password: string;
+}
