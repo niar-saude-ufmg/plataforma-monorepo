@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { UserAccountStatus } from '@niar/contracts';
 import {
+  Button,
   ListText,
   Loading,
   PageIntro,
@@ -8,11 +9,26 @@ import {
   StatusChip,
   type StatusChipStatus,
 } from '@niar/ui';
-import { ProfileForm, ProfileReadonly } from '../../components/Profile';
+import { ChangePasswordForm, ProfileForm, ProfileReadonly } from '../../components/Profile';
+import type { ChangePasswordSubmitValues } from '../../components/Profile';
+import type { ProfileFormValues } from '../../components/Profile';
 import { RoleGuard } from '../../guards/RoleGuard';
 import { useApiError } from '../../hooks/use-api-error/use-api-error';
-import { selectAuthSelected } from '../../store/auth/auth.selectors';
-import { useAppSelector } from '../../store/hooks';
+import { changePassword, updateProfile } from '../../store/auth/auth.api';
+import {
+  selectAuthMutationError,
+  selectAuthMutationOperation,
+  selectAuthMutationStatus,
+  selectAuthSelected,
+} from '../../store/auth/auth.selectors';
+import { clearAuthMutation } from '../../store/auth/auth.slice';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { downloadUserCoepDocument } from '../../store/users/users.api';
+import { clearUsersError } from '../../store/users/users.slice';
+import {
+  selectUsersDownloadError,
+  selectUsersDownloadLoading,
+} from '../../store/users/users.selectors';
 import type { AuthUser } from '../../types/user.types';
 import type { ProfileRole } from '../../types/role-profile';
 import { PROFILE_ROLE_CONFIG } from './Profile.roles';
@@ -75,7 +91,17 @@ function PlatformAccess({ role, user }: { role: ProfileRole; user: AuthUser }) {
   );
 }
 
-function ResearcherDetails({ user }: { user: AuthUser }) {
+function ResearcherDetails({
+  user,
+  canDownloadCoep,
+  downloading,
+  onDownloadCoep,
+}: {
+  user: AuthUser;
+  canDownloadCoep: boolean;
+  downloading: boolean;
+  onDownloadCoep: () => void;
+}) {
   return (
     <>
       <ProfileReadonly title="Dados de contato e instituição">
@@ -100,21 +126,67 @@ function ResearcherDetails({ user }: { user: AuthUser }) {
             { label: 'CAAE', value: orNotProvided(user.coep?.caae) },
           ]}
         />
+        {canDownloadCoep && (
+          <div className="profile__coep-actions">
+            <Button variant="outlined" onClick={onDownloadCoep} disabled={downloading}>
+              Baixar
+            </Button>
+          </div>
+        )}
       </ProfileReadonly>
     </>
   );
 }
 
 export function Profile({ role, sessionError }: ProfileProps) {
+  const dispatch = useAppDispatch();
   const user = useAppSelector(selectAuthSelected);
+  const mutationStatus = useAppSelector(selectAuthMutationStatus);
+  const mutationOperation = useAppSelector(selectAuthMutationOperation);
+  const mutationError = useAppSelector(selectAuthMutationError);
+  const downloading = useAppSelector(selectUsersDownloadLoading);
+  const downloadError = useAppSelector(selectUsersDownloadError);
+
   const roleConfig = PROFILE_ROLE_CONFIG[role];
+  const [mode, setMode] = useState<'readonly' | 'edit'>('readonly');
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
   const [errorDismissed, setErrorDismissed] = useState(false);
 
+  const savingProfile = mutationStatus === 'pending' && mutationOperation === 'updateProfile';
+  const savingPassword = mutationStatus === 'pending' && mutationOperation === 'changePassword';
+
+  // Fecha o formulário correspondente assim que a operação conclui.
+  useEffect(() => {
+    if (mutationStatus !== 'succeeded') return;
+
+    if (mutationOperation === 'updateProfile') {
+      setMode('readonly');
+      setFeedback('Perfil atualizado.');
+    }
+
+    if (mutationOperation === 'changePassword') {
+      setPasswordOpen(false);
+      setFeedback('Senha atualizada.');
+    }
+
+    dispatch(clearAuthMutation());
+  }, [dispatch, mutationOperation, mutationStatus]);
+
+  const apiError = errorDismissed ? undefined : (sessionError ?? mutationError ?? downloadError);
   const snackbarProps = useApiError(
-    errorDismissed ? undefined : sessionError,
-    () => setErrorDismissed(true),
-    'Não foi possível carregar os dados do perfil.',
+    apiError,
+    () => {
+      setErrorDismissed(true);
+      dispatch(clearAuthMutation());
+      dispatch(clearUsersError());
+    },
+    'Não foi possível concluir a operação. Tente novamente.',
   );
+
+  useEffect(() => {
+    setErrorDismissed(false);
+  }, [mutationError, downloadError]);
 
   if (!user) {
     return (
@@ -125,18 +197,86 @@ export function Profile({ role, sessionError }: ProfileProps) {
     );
   }
 
+  const handleSubmitProfile = (values: ProfileFormValues) => {
+    dispatch(updateProfile(values));
+  };
+
+  const handleSubmitPassword = (values: ChangePasswordSubmitValues) => {
+    dispatch(changePassword(values));
+  };
+
+  const canEdit = roleConfig.actions.includes('editProfile');
+  const canChangePassword = roleConfig.actions.includes('changePassword');
+  const canDownloadCoep =
+    roleConfig.actions.includes('downloadCoep') && Boolean(user.coep?.documentFilename);
+
+  const headerActions = mode === 'readonly' && !passwordOpen ? (
+    <>
+      {canChangePassword && (
+        <Button variant="outlined" onClick={() => setPasswordOpen(true)}>
+          Trocar senha
+        </Button>
+      )}
+      {canEdit && (
+        <Button variant="outlined" onClick={() => setMode('edit')}>
+          Editar perfil
+        </Button>
+      )}
+    </>
+  ) : null;
+
   return (
     <RoleGuard allowedRoles={[role]}>
       <div className="profile">
-        <PageIntro title="Perfil" description={roleConfig.description} />
+        <PageIntro
+          title={mode === 'edit' ? 'Editar perfil' : 'Perfil'}
+          description={
+            mode === 'edit'
+              ? 'Atualize os dados editáveis do seu perfil.'
+              : roleConfig.description
+          }
+        />
 
-        <ProfileForm role={role} user={user} mode="readonly" />
+        {roleConfig.sections.includes('account') && (
+          <ProfileForm
+            role={role}
+            user={user}
+            mode={mode}
+            editableFields={roleConfig.editableFields}
+            actions={headerActions}
+            submitting={savingProfile}
+            onSubmit={handleSubmitProfile}
+            onCancel={() => setMode('readonly')}
+          />
+        )}
+
+        {passwordOpen && (
+          <ChangePasswordForm
+            submitting={savingPassword}
+            onSubmit={handleSubmitPassword}
+            onCancel={() => setPasswordOpen(false)}
+          />
+        )}
 
         {roleConfig.sections.includes('access') && <PlatformAccess role={role} user={user} />}
-        {roleConfig.sections.includes('researcherDetails') && <ResearcherDetails user={user} />}
+        {roleConfig.sections.includes('researcherDetails') && (
+          <ResearcherDetails
+            user={user}
+            canDownloadCoep={canDownloadCoep}
+            downloading={downloading}
+            onDownloadCoep={() => dispatch(downloadUserCoepDocument(user.id))}
+          />
+        )}
       </div>
 
       <Snackbar {...snackbarProps} />
+      <Snackbar
+        open={Boolean(feedback)}
+        message={feedback ?? ''}
+        severity="success"
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        onClose={() => setFeedback(null)}
+      />
     </RoleGuard>
   );
 }

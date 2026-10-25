@@ -2,7 +2,7 @@ import type { UserRole } from '@niar/contracts';
 
 export type ProfileRole = Extract<UserRole, 'admin' | 'researcher'>;
 
-export type ProfileSectionId = 'access' | 'researcherDetails';
+export type ProfileSectionId = 'account' | 'access' | 'researcherDetails';
 
 export type ProfileFieldId = 'fullName' | 'email' | 'phone';
 

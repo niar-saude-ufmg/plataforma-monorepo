@@ -1,11 +1,13 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../App';
 import { Profile } from './Profile';
 import { store } from '../../store';
-import { setSelectedAuthUser } from '../../store/auth/auth.slice';
+import { clearAuthMutation, setSelectedAuthUser } from '../../store/auth/auth.slice';
+import { clearUsersError } from '../../store/users/users.slice';
 import type { AuthUser } from '../../types/user.types';
 import type { ProfileRole } from '../../types/role-profile';
 
@@ -274,10 +276,174 @@ describe('página de Perfil', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('não oferece edição, submit nem troca de senha nesta entrega', () => {
+  it('não mostra os formulários de edição antes de a ação ser usada', () => {
     renderPage(researcher);
 
-    expect(screen.queryByRole('button', { name: /editar|salvar|cancelar/i })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/senha/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Salvar' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Senha atual')).not.toBeInTheDocument();
+  });
+});
+
+const fetchMock = vi.hoisted(() => {
+  const mock = vi.fn();
+  globalThis.fetch = mock as typeof fetch;
+  return mock;
+});
+
+const sessionResponse = {
+  id: 1,
+  email: 'gestora@niar.local',
+  full_name: 'Gestora Atualizada',
+  role: 'admin' as const,
+  account_status: 'active' as const,
+};
+
+describe('Perfil — edição, senha e download', () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    cleanup();
+    store.dispatch(clearAuthMutation());
+    store.dispatch(clearUsersError());
+    store.dispatch(setSelectedAuthUser(null));
+  });
+
+  it('mostra as ações permitidas pelo papel', () => {
+    renderPage(admin);
+
+    expect(screen.getByRole('button', { name: 'Editar perfil' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trocar senha' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Baixar' })).not.toBeInTheDocument();
+  });
+
+  it('oferece o download do COEP só para o Pesquisador com documento', () => {
+    renderPage(researcher);
+
+    expect(screen.getByRole('button', { name: 'Baixar' })).toBeInTheDocument();
+  });
+
+  it('esconde o download quando não há documento do COEP', () => {
+    renderPage({ ...researcher, coep: undefined });
+
+    expect(screen.queryByRole('button', { name: 'Baixar' })).not.toBeInTheDocument();
+  });
+
+  it('entra em modo de edição e troca o título da página', async () => {
+    renderPage(admin);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+
+    expect(screen.getByRole('heading', { name: 'Editar perfil', level: 1 })).toBeInTheDocument();
+    expect(screen.getByLabelText('Nome completo')).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Salvar' })).toBeInTheDocument();
+  });
+
+  it('cancelar volta para readonly sem tocar no authSlice', async () => {
+    renderPage(admin);
+    const antes = store.getState().auth.selected;
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    const nome = screen.getByLabelText('Nome completo');
+    await userEvent.clear(nome);
+    await userEvent.type(nome, 'Rascunho');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    await waitFor(() => expect(screen.getByLabelText('Nome completo')).toBeDisabled());
+    expect(store.getState().auth.selected).toEqual(antes);
+  });
+
+  it('salvar dispara o PATCH e atualiza a sessão', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => sessionResponse });
+    renderPage(admin);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    const nome = screen.getByLabelText('Nome completo');
+    await userEvent.clear(nome);
+    await userEvent.type(nome, 'Gestora Atualizada');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain('/auth/me');
+    expect(init.method).toBe('PATCH');
+    await waitFor(() => expect(store.getState().auth.selected?.name).toBe('Gestora Atualizada'));
+  });
+
+  it('abre o formulário de troca de senha e envia sem a confirmação', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => sessionResponse });
+    renderPage(admin);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
+    await userEvent.type(screen.getByLabelText('Senha atual'), 'senha-atual');
+    await userEvent.type(screen.getByLabelText('Nova senha'), 'nova-senha-123');
+    await userEvent.type(screen.getByLabelText('Repetir senha'), 'nova-senha-123');
+    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(Object.keys(body).sort()).toEqual(['current_password', 'password']);
+  });
+
+  it('mostra o erro da API no Snackbar', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: 'E-mail já utilizado por outro usuário' }),
+    });
+    renderPage(admin);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('Este e-mail já está em uso por outro usuário.'),
+    );
+  });
+
+  it('dispara o download autenticado do COEP pelo thunk', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: { get: () => 'attachment; filename="parecer-coep.pdf"' },
+      blob: async () => new Blob(['pdf']),
+    });
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:url');
+    globalThis.URL.revokeObjectURL = vi.fn();
+
+    renderPage(researcher);
+    await userEvent.click(screen.getByRole('button', { name: 'Baixar' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/users/2/coep-document');
+    await waitFor(() => expect(store.getState().users.download.status).toBe('succeeded'));
+  });
+
+  it('mostra o erro do download no Snackbar', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: 'Acesso negado' }),
+    });
+
+    renderPage(researcher);
+    await userEvent.click(screen.getByRole('button', { name: 'Baixar' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('Você não tem acesso a este documento.'),
+    );
+  });
+
+  it('mantém a senha mascarada e não expõe token nem documento no HTML', async () => {
+    renderPage(admin);
+    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
+    await userEvent.type(screen.getByLabelText('Senha atual'), 'senha-secreta');
+
+    // O campo é controlado: o valor fica no input mascarado, nunca como texto da página.
+    expect(screen.getByLabelText('Senha atual')).toHaveAttribute('type', 'password');
+    expect(document.body.textContent).not.toContain('senha-secreta');
+    expect(document.body.innerHTML).not.toContain('Bearer');
+    expect(document.body.innerHTML).not.toContain('coep-document');
   });
 });

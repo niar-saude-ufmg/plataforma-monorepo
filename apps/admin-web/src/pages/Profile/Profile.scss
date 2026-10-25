@@ -7,6 +7,11 @@
   max-width: 712px;
   width: 100%;
 
+  &__coep-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
   &__status-field {
     display: grid;
     gap: var(--niar-spacing-2xs);
