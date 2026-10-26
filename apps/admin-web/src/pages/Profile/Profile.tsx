@@ -148,7 +148,7 @@ function ResearcherDetails({
         </div>
         {canDownloadCoep && (
           <div className="profile__coep-actions">
-            <Button variant="outlined" onClick={onDownloadCoep} disabled={downloading}>
+            <Button color="secondary" variant="outlined" onClick={onDownloadCoep} disabled={downloading}>
               Baixar
             </Button>
           </div>
