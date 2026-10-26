@@ -2,8 +2,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import type { CreateUserInput } from "../../types/user.types";
 import {
+  createAdministratorRequest,
+  createAuditorRequest,
+  createCommitteeMemberRequest,
+  createResearcherRequest,
+  createUserRequest,
+  downloadUserCoepDocumentRequest,
   getUsersRequest,
   normalizeUserApiError,
+  normalizeUserDocumentApiError,
   toUserListItem,
   toCreateUserFormData,
   toUser,
@@ -76,6 +83,7 @@ describe("user service", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getUsersRequest({
+      search: "Ana Beatriz",
       role: "researcher",
       accountStatus: "pending",
       page: 2,
@@ -86,7 +94,7 @@ describe("user service", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:3333/api/admin/users?role=researcher&account_status=pending&page=2&page_size=10",
+      "http://localhost:3333/api/admin/users?search=Ana+Beatriz&role=researcher&account_status=pending&page=2&page_size=10",
       { headers: { Authorization: "Bearer fake-token" } },
     );
   });
@@ -132,6 +140,38 @@ describe("user service", () => {
     });
   });
 
+  it("baixa o parecer do COEP usando o id do usuário e o nome do header", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response("%PDF-fake", {
+        status: 200,
+        headers: { "Content-Disposition": 'attachment; filename="parecer.pdf"' },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await downloadUserCoepDocumentRequest(7);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3333/api/admin/users/7/coep-document",
+      { headers: { Authorization: "Bearer fake-token" } },
+    );
+    expect(result.filename).toBe("parecer.pdf");
+    expect(await result.blob.text()).toBe("%PDF-fake");
+  });
+
+  it("normaliza os erros do download do COEP", () => {
+    expect(normalizeUserDocumentApiError(403)).toEqual({
+      status: 403,
+      message: "Você não tem acesso a este documento.",
+    });
+    expect(normalizeUserDocumentApiError(404)).toEqual({
+      status: 404,
+      message: "Documento do COEP não encontrado.",
+    });
+  });
+
   it("normaliza conflito de e-mail duplicado", () => {
     expect(
       normalizeUserApiError(409, {
@@ -162,6 +202,186 @@ describe("user service", () => {
         email: "Informe um e-mail válido, como nome@instituicao.org.",
         approvalDate: "Informe uma data válida.",
       },
+    });
+  });
+});
+
+describe("user service — cadastros privados", () => {
+  it("envia pesquisador privado como multipart com auth para /users/researchers", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: 8,
+        full_name: "Ana Beatriz Souza",
+        email: "ana.souza@niar-saude.org",
+        role: "researcher",
+        created_at: "2026-09-04T10:00:00.000Z",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await createResearcherRequest(input);
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toBe("http://localhost:3333/api/admin/users/researchers");
+    expect(request.method).toBe("POST");
+    expect(request.headers).toEqual({ Authorization: "Bearer fake-token" });
+    expect(request.body).toBeInstanceOf(FormData);
+    expect(result.role).toBe("researcher");
+  });
+
+  it("envia administrador como JSON com auth para /users/administrators", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: 9,
+        full_name: "Bruno Admin",
+        email: "bruno@niar-saude.org",
+        role: "admin",
+        created_at: "2026-09-04T10:00:00.000Z",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createAdministratorRequest({
+      fullName: "  Bruno Admin  ",
+      email: "bruno@niar-saude.org",
+      password: "senhaforte1",
+    });
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toBe("http://localhost:3333/api/admin/users/administrators");
+    expect(request.method).toBe("POST");
+    expect(request.headers).toEqual({
+      Authorization: "Bearer fake-token",
+      "Content-Type": "application/json",
+    });
+    expect(JSON.parse(String(request.body))).toEqual({
+      full_name: "Bruno Admin",       // .trim() aplicado
+      email: "bruno@niar-saude.org",
+      password: "senhaforte1",
+    });
+  });
+
+  it("envia auditor como JSON com auth para /users/auditors", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: 10,
+        full_name: "Carla Auditora",
+        email: "carla@niar-saude.org",
+        role: "auditor",
+        created_at: "2026-09-04T10:00:00.000Z",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createAuditorRequest({
+      fullName: "Carla Auditora",
+      email: "carla@niar-saude.org",
+      password: "senhaforte1",
+    });
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toBe("http://localhost:3333/api/admin/users/auditors");
+    expect(JSON.parse(String(request.body))).toEqual({
+      full_name: "Carla Auditora",
+      email: "carla@niar-saude.org",
+      password: "senhaforte1",
+    });
+  });
+
+  it("envia comitê como JSON com specialty_id numérico em snake_case", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: 11,
+        full_name: "Diego Membro",
+        email: "diego@niar-saude.org",
+        role: "committee",
+        created_at: "2026-09-04T10:00:00.000Z",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createCommitteeMemberRequest({
+      fullName: "Diego Membro",
+      email: "diego@niar-saude.org",
+      password: "senhaforte1",
+      specialtyId: 42,
+    });
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toBe("http://localhost:3333/api/admin/users/committee-members");
+    const body = JSON.parse(String(request.body));
+    expect(body).toEqual({
+      full_name: "Diego Membro",
+      email: "diego@niar-saude.org",
+      password: "senhaforte1",
+      specialty_id: 42,           // snake + number
+    });
+    expect(body).not.toHaveProperty("specialtyId");
+    expect(body).not.toHaveProperty("specialty");
+  });
+
+  it("o cadastro público NÃO envia Authorization (permanece público)", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: 12,
+        full_name: "Ana Beatriz Souza",
+        email: "ana.souza@niar-saude.org",
+        role: "researcher",
+        created_at: "2026-09-04T10:00:00.000Z",
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createUserRequest(input);
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toBe("http://localhost:3333/api/admin/users");
+    expect(request.headers).toBeUndefined();   // sem Authorization
+  });
+
+  it("mapeia specialty_id flat para specialtyId", () => {
+    expect(
+      normalizeUserApiError(400, {
+        errors: [{ path: ["specialty_id"], message: "Specialty is required" }],
+      }),
+    ).toEqual({
+      status: 400,
+      message: "Revise os campos informados.",
+      fieldErrors: { specialtyId: "Selecione uma especialidade." },
+    });
+  });
+
+  it("mapeia committee_profile.specialty_id aninhado para specialtyId", () => {
+    expect(
+      normalizeUserApiError(400, {
+        errors: [
+          { path: ["committee_profile", "specialty_id"], message: "Specialty is required" },
+        ],
+      }),
+    ).toEqual({
+      status: 400,
+      message: "Revise os campos informados.",
+      fieldErrors: { specialtyId: "Selecione uma especialidade." },
     });
   });
 });

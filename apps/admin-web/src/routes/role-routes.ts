@@ -5,16 +5,24 @@ export type RoleRoute = {
   path: string;
 };
 
-export type RoleSection = "home" | "projetos";
+export type RoleSection =
+  | "home"
+  | "projetos"
+  | "usuarios"
+  | "usuarios/novo"
+  | "especialidades"
+  | "perfil";
 
 export type RoleRouteDefinition = {
   label: string;
   section: RoleSection;
+  hidden?: boolean;
 };
 
 const rolePathSegments: Record<UserRole, string> = {
   admin: "administrador",
   researcher: "pesquisador",
+  auditor: "auditor",
   committee: "comite",
 };
 
@@ -25,15 +33,24 @@ const commonRoleRouteDefinitions: readonly RoleRouteDefinition[] = [
 const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
   admin: [
     ...commonRoleRouteDefinitions,
-    // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o administrador
+    { label: "Projetos", section: "projetos" },
+    { label: "Usuários", section: "usuarios" },
+    { label: "Novo usuário", section: "usuarios/novo", hidden: true },
+    { label: "Especialidades", section: "especialidades" },
+    { label: "Perfil", section: "perfil" },
   ],
   researcher: [
     ...commonRoleRouteDefinitions,
-    // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o pesquisador
+    { label: "Meus projetos", section: "projetos" },
+    { label: "Perfil", section: "perfil" },
+  ],
+  auditor: [
+    ...commonRoleRouteDefinitions,
+    { label: "Usuários", section: "usuarios" },
   ],
   committee: [
     ...commonRoleRouteDefinitions,
-    // { label: "Projetos", section: "projetos" }, ## Exemplo de como adicionar uma rota específica para o comitê
+    { label: "Usuários", section: "usuarios" },
   ],
 };
 
@@ -49,9 +66,17 @@ export const getRoleRouteDefinitions = (role: UserRole) =>
 export const getRoleRoutePath = (role: UserRole, section: RoleSection) =>
   `${getRoleBasePath(role)}/${section}`;
 
+export const getSpecialtyCreatePath = (role: UserRole) =>
+  `${getRoleRoutePath(role, "especialidades")}/novo`;
+
+export const getSpecialtyEditPath = (role: UserRole) =>
+  `${getRoleRoutePath(role, "especialidades")}/editar`;
+
 export const getRoleNavigation = (role: UserRole): readonly RoleRoute[] => {
-  return getRoleRouteDefinitions(role).map(({ label, section }) => ({
-    label,
-    path: getRoleRoutePath(role, section),
-  }));
+  return getRoleRouteDefinitions(role)
+    .filter((definition) => !definition.hidden)
+    .map(({ label, section }) => ({
+      label,
+      path: getRoleRoutePath(role, section),
+    }));
 };

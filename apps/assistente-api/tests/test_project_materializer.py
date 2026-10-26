@@ -159,7 +159,7 @@ class TestMaterializeProject:
         assert document.document_type == "project_docx"
         assert document.source_export_artifact is artifact
         assert document.project_version_id == version.id
-        assert history.status == ProjectStatus.submitted_to_committee
+        assert history.status == ProjectStatus.submitted_for_review
         assert history.actor_user_id == session.user_id
         assert history.notes == "Primeira submissão"
         assert history.project_version_id == version.id
@@ -168,7 +168,7 @@ class TestMaterializeProject:
         assert version.version_number == 1
         assert version.project_id == project.id
         assert version.source_wizard_session_id == session.id
-        assert version.status == ProjectStatus.submitted_to_committee
+        assert version.status == ProjectStatus.submitted_for_review
         assert version.submitted_at is not None
         assert version.characterization_snapshot["title"] == session.title
 
@@ -230,7 +230,7 @@ class TestMaterializeProject:
         history = next(item for item in objects if isinstance(item, ProjectStatusHistory))
         assert document.original_filename == artifact.filename
         assert document.project_version_id == version.id
-        assert history.status == ProjectStatus.resubmitted_to_committee
+        assert history.status == ProjectStatus.resubmitted_for_review
         assert history.notes == "Reenvio com ajustes solicitados"
         assert history.project_version_id == version.id
 
@@ -239,7 +239,7 @@ class TestMaterializeProject:
 
         assert version.version_number == 2
         assert version.project_id == existing_project.id
-        assert version.status == ProjectStatus.resubmitted_to_committee
+        assert version.status == ProjectStatus.resubmitted_for_review
         assert version.source_wizard_session_id == session.id
 
         assert db.flush.await_count == 1
@@ -278,7 +278,7 @@ class TestMaterializeProject:
         )
         assert result is existing_project
         assert existing_project.submitted_at is not None
-        assert history.status == ProjectStatus.submitted_to_committee
+        assert history.status == ProjectStatus.submitted_for_review
         assert history.notes == "Primeira submissão"
 
 

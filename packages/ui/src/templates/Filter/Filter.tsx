@@ -15,6 +15,7 @@ export type FilterSearchField = {
   label: ReactNode;
   options: readonly (AutocompleteOption | string)[];
   multiple?: boolean;
+  freeSolo?: boolean;
   disabled?: boolean;
 };
 export type FilterSelectableField = {
@@ -57,7 +58,7 @@ export function Filter({
   return (
     <Box component="form" aria-label={ariaLabel} sx={filterRootStyles}>
       <Box sx={filterFieldsStyles}>
-        {search.map((field) => <Autocomplete key={`search-${field.key}`} label={field.label} options={field.options} multiple={field.multiple} disabled={field.disabled} value={normalizeAutocompleteValue(currentValues[field.key])} onChange={(_, value) => handleChange(field.key, value)} />)}
+        {search.map((field) => <Autocomplete key={`search-${field.key}`} label={field.label} options={field.options} multiple={field.multiple} freeSolo={field.freeSolo} autoSelect={field.freeSolo} forcePopupIcon={field.freeSolo ? false : undefined} disabled={field.disabled} value={normalizeAutocompleteValue(currentValues[field.key], field.options)} onChange={(_, value) => handleChange(field.key, value)} />)}
         {selectableOptions.map((field) => <Select key={`select-${field.key}`} label={field.label} options={field.options} disabled={field.disabled} value={String(currentValues[field.key] ?? "")} onChange={(event: ChangeEvent<HTMLInputElement>) => handleChange(field.key, event.target.value)} />)}
         {checkedOptions.map((field) => field.type === "radio" ? (
           <Box sx={filterCheckedStyles} key={`radio-${field.key}`}>
@@ -75,7 +76,12 @@ export function Filter({
     </Box>
   );
 }
-function normalizeAutocompleteValue(value: unknown) {
+function normalizeAutocompleteValue(value: unknown, options: readonly (AutocompleteOption | string)[]) {
   if (Array.isArray(value)) return [...value] as (AutocompleteOption | string)[];
+  if (typeof value === 'string') {
+    return options.find((option) => (
+      typeof option === 'string' ? option : option.value
+    ) === value) ?? value;
+  }
   return value as AutocompleteOption | string | null | undefined;
 }

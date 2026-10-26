@@ -69,10 +69,15 @@ export const createAdministratorSchema = z.object({
 
 export type CreateAdministratorInput = z.infer<typeof createAdministratorSchema>;
 
+export const createAuditorSchema = createAdministratorSchema;
+
+export type CreateAuditorInput = z.infer<typeof createAuditorSchema>;
+
 export const userAccountStatusSchema = z.enum(["pending", "active", "rejected", "disabled"]);
 
 export const listUsersQuerySchema = z.object({
-  role: z.enum(["researcher", "admin", "committee"]).optional(),
+  search: z.string().trim().min(1).max(255).optional(),
+  role: z.enum(["researcher", "admin", "auditor", "committee"]).optional(),
   account_status: userAccountStatusSchema.optional(),
   page: z.coerce.number().int().positive().default(1),
   page_size: z.coerce.number().int().positive().max(100).default(20)

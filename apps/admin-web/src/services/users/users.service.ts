@@ -3,12 +3,20 @@ import type { ApiError } from '../../types/api.types';
 import type {
   UserApiError,
   CreateUserInput,
+  CreateAdministratorInput,
+  CreateAuditorInput,
+  CreateCommitteeMemberInput,
   User,
   UserListItem,
   UserListParams,
   UserListResponse,
+  UserRole,
 } from '../../types/user.types';
 import { getAdminApiBaseUrl } from '../auth/auth.service';
+import {
+  getFilenameFromContentDisposition,
+  type DownloadedFile,
+} from '../../utils/download-file';
 
 type ApiValidationIssue = {
   message: string;
@@ -19,7 +27,7 @@ type CreateUserApiResponse = {
   id: number;
   full_name: string;
   email: string;
-  role: 'researcher' | 'admin' | 'committee';
+  role: UserRole;
   created_at: string;
 };
 
@@ -27,7 +35,7 @@ type UserListApiResponse = {
   id: number;
   full_name: string;
   email: string;
-  role: 'researcher' | 'admin' | 'committee';
+  role: UserRole;
   account_status: UserListItem['accountStatus'];
   created_at: string;
   profile: {
@@ -137,7 +145,7 @@ export function toUserListItem(response: UserListApiResponse): UserListItem {
   };
 }
 
-export function toUserPagination(response: UserListApiPage) {
+export function toUserListPagination(response: UserListApiPage) {
   return {
     page: response.page,
     pageSize: response.page_size,
@@ -150,6 +158,7 @@ export async function getUsersRequest(
   params: UserListParams = {},
 ): Promise<UserListResponse> {
   const query = new URLSearchParams();
+  if (params.search) query.set('search', params.search);
   if (params.role) query.set('role', params.role);
   if (params.accountStatus) query.set('account_status', params.accountStatus);
   if (params.page !== undefined) query.set('page', String(params.page));
@@ -174,7 +183,7 @@ export async function getUsersRequest(
   const list = body as { items: UserListApiResponse[]; pagination: UserListApiPage };
   return {
     items: list.items.map(toUserListItem),
-    pagination: toUserPagination(list.pagination),
+    pagination: toUserListPagination(list.pagination),
   };
 }
 
@@ -203,6 +212,8 @@ function translateValidationMessage(field: string | undefined, message: string) 
     'Approval date must be in YYYY-MM-DD format': 'Informe uma data válida.',
     'Approval date is not a valid calendar date': 'Informe uma data válida.',
     'Document filename is required': 'Anexe o parecer do COEP.',
+    'Specialty is required': 'Selecione uma especialidade.',
+    'Specialty not found': 'Especialidade não encontrada.',
   };
 
   return messages[message] ?? message;
@@ -219,6 +230,10 @@ function toUiField(path?: string[]) {
     return field;
   }
 
+  if (field === 'specialty_id') {
+    return 'specialtyId' as const;
+  }
+
   const nestedFields: Record<string, keyof NonNullable<UserApiError['fieldErrors']>> = {
     'profile.phone': 'phone',
     'profile.institution': 'institution',
@@ -230,6 +245,7 @@ function toUiField(path?: string[]) {
     'coep.opinion_number': 'opinionNumber',
     'coep.approval_date': 'approvalDate',
     'coep.document_filename': 'coepDocument',
+    'committee_profile.specialty_id': 'specialtyId'
   };
 
   if (path && path.length >= 2) {
@@ -303,6 +319,161 @@ export async function createUserRequest(input: CreateUserInput): Promise<User> {
   return toUser(body as CreateUserApiResponse);
 }
 
+async function postUserJson(
+  path: string,
+  body: Record<string, unknown>,
+  fallbackMessage: string,
+): Promise<User> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${getAdminApiBaseUrl()}${path}`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw normalizeUserApiError('FETCH_ERROR', undefined, fallbackMessage);
+  }
+
+  const responseBody = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    throw normalizeUserApiError(response.status, responseBody, fallbackMessage);
+  }
+
+  return toUser(responseBody as CreateUserApiResponse);
+}
+
+export async function createResearcherRequest(input: CreateUserInput): Promise<User> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${getAdminApiBaseUrl()}/users/researchers`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: toCreateUserFormData(input),
+    });
+  } catch {
+    throw normalizeUserApiError(
+      'FETCH_ERROR',
+      undefined,
+      'Não foi possível cadastrar o pesquisador.',
+    );
+  }
+
+  const body = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    throw normalizeUserApiError(
+      response.status,
+      body,
+      'Não foi possível cadastrar o pesquisador.',
+    );
+  }
+
+  return toUser(body as CreateUserApiResponse);
+}
+
+export function createAdministratorRequest(
+  input: CreateAdministratorInput,
+): Promise<User> {
+  return postUserJson(
+    '/users/administrators',
+    {
+      full_name: input.fullName.trim(),
+      email: input.email.trim(),
+      password: input.password,
+    },
+    'Não foi possível cadastrar o administrador.',
+  );
+}
+
+export function createAuditorRequest(
+  input: CreateAuditorInput,
+): Promise<User> {
+  return postUserJson(
+    '/users/auditors',
+    {
+      full_name: input.fullName.trim(),
+      email: input.email.trim(),
+      password: input.password,
+    },
+    'Não foi possível cadastrar o auditor.',
+  );
+}
+
+export function createCommitteeMemberRequest(
+  input: CreateCommitteeMemberInput,
+): Promise<User> {
+  return postUserJson(
+    '/users/committee-members',
+    {
+      full_name: input.fullName.trim(),
+      email: input.email.trim(),
+      password: input.password,
+      specialty_id: input.specialtyId,
+    },
+    'Não foi possível cadastrar o membro do comitê.',
+  );
+}
+
+export async function downloadUserCoepDocumentRequest(userId: number): Promise<DownloadedFile> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${getAdminApiBaseUrl()}/users/${userId}/coep-document`, {
+      headers: authHeaders(),
+    });
+  } catch {
+    throw normalizeUserDocumentApiError('FETCH_ERROR');
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => undefined);
+    throw normalizeUserDocumentApiError(response.status, body);
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: getFilenameFromContentDisposition(
+      response.headers.get('Content-Disposition'),
+      `parecer-coep-${userId}.pdf`,
+    ),
+  };
+}
+
+export function normalizeUserDocumentApiError(
+  status: number | string,
+  _body?: unknown,
+): ApiError {
+  const numericStatus = typeof status === 'number' ? status : undefined;
+
+  if (numericStatus === 401) {
+    return { status: 401, message: 'Sessão expirada. Faça login novamente.' };
+  }
+
+  if (numericStatus === 403) {
+    return { status: 403, message: 'Você não tem acesso a este documento.' };
+  }
+
+  if (numericStatus === 404) {
+    return { status: 404, message: 'Documento do COEP não encontrado.' };
+  }
+
+  if (numericStatus === 500) {
+    return { status: 500, message: 'Erro no servidor. Tente novamente.' };
+  }
+
+  return {
+    status: numericStatus,
+    message: 'Não foi possível baixar o documento do COEP. Tente novamente.',
+  };
+}
+
 export function normalizeUserListApiError(
   status: number | string,
   _body: unknown,
@@ -334,6 +505,7 @@ export function normalizeUserListApiError(
 export function normalizeUserApiError(
   status: number | string,
   body: unknown,
+  fallbackMessage = 'Não foi possível cadastrar o pesquisador.',
 ): UserApiError {
   const numericStatus = typeof status === 'number' ? status : undefined;
 
@@ -362,7 +534,7 @@ export function normalizeUserApiError(
   return {
     status: numericStatus,
     message: typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string'
-      ? 'Não foi possível cadastrar o pesquisador.'
-      : 'Não foi possível cadastrar o pesquisador. Tente novamente.',
+      ? fallbackMessage
+      : `${fallbackMessage} Tente novamente.`,
   };
 }

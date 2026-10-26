@@ -13,6 +13,10 @@ import * as Stories from "./Dialog.stories";
 
 Painel modal para confirmar ações ou exibir informações que exigem atenção.
 
+Para dialogs de confirmação que devem ser fechados somente por uma ação explícita,
+use `closeOnBackdropClick={false}` e `disableEscapeKeyDown`, normalmente com
+`showCloseButton={false}` e um botão Cancelar nas `actions`.
+
 <Description of={Stories.Playground} />
 <Canvas of={Stories.Playground} />
 ### Props
@@ -30,8 +34,15 @@ export function Confirmation() {
       <Dialog
         open
         title="Confirmar envio"
-        onClose={() => undefined}
-        actions={<Button variant="contained">Confirmar</Button>}
+        showCloseButton={false}
+        closeOnBackdropClick={false}
+        disableEscapeKeyDown
+        actions={
+          <>
+            <Button>Cancelar</Button>
+            <Button variant="contained">Confirmar</Button>
+          </>
+        }
       >
         Deseja enviar este projeto?
       </Dialog>

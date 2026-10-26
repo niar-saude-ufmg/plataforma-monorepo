@@ -3,27 +3,23 @@ import { access, realpath } from "node:fs/promises";
 import { basename, isAbsolute, relative, resolve, sep } from "node:path";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
+import { PROJECT_STATUS_LABELS } from "@niar/contracts";
 import { projectsRepository, type ProjectListFilter, type ProjectRecord } from "../repositories/projects-repository.js";
 import type {
   ListProjectsQuery,
   ProjectEvaluationStatusCode,
   ProjectListResponse,
-  ProjectResponse,
-  ProjectStatusCode
+  ProjectResponse
 } from "../schemas/project-schema.js";
-
-const PROJECT_STATUS_LABELS: Record<ProjectStatusCode, string> = {
-  submitted_to_committee: "Enviado à comissão",
-  resubmitted_to_committee: "Reenviado à comissão",
-  under_review: "Em avaliação",
-  needs_changes: "Precisa de alterações",
-  approved: "Aprovado",
-  rejected: "Rejeitado"
-};
 
 const evaluationStatusFor = (project: ProjectRecord): ProjectEvaluationStatusCode => {
   const latestVersion = project.versions.at(-1);
-  return latestVersion?.committeeEvaluation?.result ?? "waiting";
+  return latestVersion?.evaluations?.[0]?.status ?? "waiting";
+};
+
+const evaluationContextFor = (project: ProjectRecord) => {
+  const latestVersion = project.versions.at(-1);
+  return latestVersion?.evaluations?.[0]?.context ?? null;
 };
 
 const DEFAULT_EXPORTS_DIR = resolve(process.cwd(), "apps/assistente-api/.local/exports");
@@ -89,23 +85,32 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
 
   if (currentUser.role !== "researcher") {
     response.evaluation_status = evaluationStatusFor(project);
+    response.evaluation_context = evaluationContextFor(project);
     response.evaluations = project.versions.flatMap((version) => {
-      const evaluation = version.committeeEvaluation;
+      const evaluation = version.evaluations[0];
       if (!evaluation) return [];
 
       return [{
         id: evaluation.id,
         version_number: version.versionNumber,
-        result: evaluation.result,
-        responsible_member: {
-          user_id: evaluation.responsibleMember.userId,
-          full_name: evaluation.responsibleMember.user.fullName,
-          email: evaluation.responsibleMember.user.email,
-          specialty: {
-            id: evaluation.responsibleMember.specialty.id,
-            name: evaluation.responsibleMember.specialty.name
-          }
-        },
+        status: evaluation.status,
+        assigned_to: evaluation.assignedTo
+          ? {
+              user_id: evaluation.assignedTo.id,
+              full_name: evaluation.assignedTo.fullName,
+              email: evaluation.assignedTo.email,
+              role: evaluation.assignedTo.role
+            }
+          : null,
+        assigned_by: evaluation.assignedBy
+          ? {
+              user_id: evaluation.assignedBy.id,
+              full_name: evaluation.assignedBy.fullName,
+              email: evaluation.assignedBy.email,
+              role: evaluation.assignedBy.role
+            }
+          : null,
+        justification: evaluation.justification,
         evaluated_at: evaluation.evaluatedAt?.toISOString() ?? null,
         updated_at: evaluation.updatedAt.toISOString()
       }];
@@ -114,9 +119,6 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
 
   return response;
 };
-
-const ownerScopeFor = (currentUser: AuthenticatedUser): number | undefined =>
-  currentUser.role === "researcher" ? currentUser.id : undefined;
 
 const assertResearcherFilterAllowed = (researcherId: number | undefined, currentUser: AuthenticatedUser) => {
   if (currentUser.role === "researcher" && researcherId !== undefined && researcherId !== currentUser.id) {
@@ -139,9 +141,12 @@ const toRepositoryFilter = (query: ListProjectsQuery, currentUser: Authenticated
   return {
     page: query.page,
     pageSize: query.page_size,
+    currentUserId: currentUser.id,
+    currentUserRole: currentUser.role,
     ownerUserId: currentUser.role === "researcher" ? currentUser.id : query.researcher_id,
     status: query.status,
     evaluationStatus: query.evaluation_status,
+    evaluationContext: query.evaluation_context,
     submittedFrom: query.submitted_from,
     submittedTo: query.submitted_to,
     updatedFrom: query.updated_from,
@@ -170,13 +175,20 @@ export const projectsService = {
   },
 
   getProject: async (projectId: number, currentUser: AuthenticatedUser): Promise<ProjectResponse> => {
-    const project = await projectsRepository.findById(projectId, ownerScopeFor(currentUser));
+    const project = await projectsRepository.findById(
+      projectId,
+      currentUser.role === "researcher" ? currentUser.id : undefined
+    );
     if (!project) throw new AppError("Projeto não encontrado", 404);
     return toProjectResponse(project, currentUser);
   },
 
   getDocumentDownload: async (projectId: number, documentId: number, currentUser: AuthenticatedUser) => {
-    const document = await projectsRepository.findDocument(projectId, documentId, ownerScopeFor(currentUser));
+    const document = await projectsRepository.findDocument(
+      projectId,
+      documentId,
+      currentUser.role === "researcher" ? currentUser.id : undefined
+    );
     if (!document) throw new AppError("Documento não encontrado", 404);
 
     if (currentUser.role !== "admin" && document.documentType !== "project_docx") {

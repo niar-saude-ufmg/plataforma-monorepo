@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SharedUserForm } from './SharedUserForm';
 
 vi.mock('@niar/ui', () => ({
+  Alert: ({ children }: any) => <div role="alert">{children}</div>,
   Input: (props: any) => {
     const {
       label,

@@ -97,6 +97,7 @@ export type {
   PageHeaderProps,
   DetailsProps,
   DetailsListItem,
+  DetailsSection,
   DetailsTimelineItem,
   ListingProps,
   FilterProps,

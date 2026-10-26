@@ -122,6 +122,8 @@
 	"assistant_meta_desc": "LEME: AI-powered search over NIAR-Saúde's collection of official documents",
 	"assistant_heading": "LEME",
 	"assistant_subtitle": "Ask about regulation, accountability and the ethical use of AI in health.",
+	"assistant_qr_caption": "Open on your phone",
+	"assistant_qr_alt": "QR code to open LEME on your phone",
 	"assistant_input_placeholder": "Type your question...",
 	"assistant_send": "Send",
 	"assistant_thinking": "Searching the document base...",

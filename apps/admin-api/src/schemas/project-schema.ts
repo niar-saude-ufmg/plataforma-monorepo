@@ -1,9 +1,22 @@
 import { z } from "zod";
 
 export const projectStatusSchema = z.enum([
+  "submitted_for_review",
   "submitted_to_committee",
+  "approved_to_schedule",
+  "rejected_to_safe_room",
+  "resubmitted_for_review",
   "resubmitted_to_committee",
   "under_review",
+  "scheduled_for_safe_room",
+  "approved_for_safe_room",
+  "under_safe_room",
+  "report_submitted",
+  "report_under_review",
+  "safe_room_reuse_requested",
+  "rescheduled_for_safe_room",
+  "reapproved_for_safe_room",
+  "report_resubmitted",
   "needs_changes",
   "approved",
   "rejected"
@@ -12,10 +25,16 @@ export const projectStatusSchema = z.enum([
 export const projectEvaluationStatusSchema = z.enum([
   "waiting",
   "to_review",
+  "sent_to_committee",
+  "approved_by_committee",
+  "rejected_by_committee",
+  "needs_changes_by_committee",
   "approved",
   "needs_changes",
   "rejected"
 ]);
+
+export const projectEvaluationContextSchema = z.enum(["pre_safe_room", "post_safe_room"]);
 
 const optionalDate = (boundary: "from" | "to") =>
   z.preprocess(
@@ -34,6 +53,7 @@ export const listProjectsQuerySchema = z
     page_size: z.coerce.number().int().positive().max(100).default(20),
     status: projectStatusSchema.optional(),
     evaluation_status: projectEvaluationStatusSchema.optional(),
+    evaluation_context: projectEvaluationContextSchema.optional(),
     submitted_from: optionalDate("from"),
     submitted_to: optionalDate("to"),
     updated_from: optionalDate("from"),
@@ -65,6 +85,7 @@ export const projectDocumentParamsSchema = projectParamsSchema.extend({
 
 export type ProjectStatusCode = z.infer<typeof projectStatusSchema>;
 export type ProjectEvaluationStatusCode = z.infer<typeof projectEvaluationStatusSchema>;
+export type ProjectEvaluationContextCode = z.infer<typeof projectEvaluationContextSchema>;
 export type ListProjectsQuery = z.infer<typeof listProjectsQuerySchema>;
 
 export type ProjectStatusResponse = {
@@ -93,16 +114,20 @@ export type ProjectResearcherResponse = {
 export type ProjectEvaluationResponse = {
   id: number;
   version_number: number;
-  result: "to_review" | "approved" | "needs_changes" | "rejected";
-  responsible_member: {
+  status: ProjectEvaluationStatusCode;
+  assigned_to: {
     user_id: number;
     full_name: string;
     email: string;
-    specialty: {
-      id: number;
-      name: string;
-    };
-  };
+    role: string;
+  } | null;
+  assigned_by: {
+    user_id: number;
+    full_name: string;
+    email: string;
+    role: string;
+  } | null;
+  justification: string | null;
   evaluated_at: string | null;
   updated_at: string;
 };
@@ -113,6 +138,7 @@ export type ProjectResponse = {
   updated_at: string;
   researcher: ProjectResearcherResponse;
   evaluation_status?: ProjectEvaluationStatusCode;
+  evaluation_context?: ProjectEvaluationContextCode | null;
   status: ProjectStatusResponse[];
   documents: ProjectDocumentResponse[];
   evaluations?: ProjectEvaluationResponse[];

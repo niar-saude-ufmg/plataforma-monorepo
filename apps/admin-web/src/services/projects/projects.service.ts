@@ -1,7 +1,7 @@
 import type { ApiError } from "../../types/api.types";
 import type {
   EvaluationStatus,
-  Pagination,
+  ProjectListPagination,
   Project,
   ProjectDocument,
   ProjectEvaluation,
@@ -9,10 +9,13 @@ import type {
   ProjectListResponse,
   ProjectStatusEntry,
   ResearcherSummary,
-  ResponsibleMember,
 } from "../../types/project.types";
 import { getAdminApiBaseUrl } from "../auth/auth.service";
 import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
+import {
+  getFilenameFromContentDisposition,
+  type DownloadedFile,
+} from "../../utils/download-file";
 
 
 export function toResearcher(raw: any): ResearcherSummary {
@@ -43,15 +46,14 @@ export function toDocument(raw: any): ProjectDocument {
   };
 }
 
-export function toResponsibleMember(raw: any): ResponsibleMember {
+export function toEvaluationUser(raw: any) {
+  if (!raw) return null;
+
   return {
     userId: raw.user_id,
     fullName: raw.full_name,
     email: raw.email,
-    specialty: {
-      id: raw.specialty.id,
-      name: raw.specialty.name,
-    },
+    role: raw.role,
   };
 }
 
@@ -59,8 +61,10 @@ export function toEvaluation(raw: any): ProjectEvaluation {
   return {
     id: raw.id,
     versionNumber: raw.version_number,
-    result: raw.result,
-    responsibleMember: toResponsibleMember(raw.responsible_member),
+    status: raw.status,
+    assignedTo: toEvaluationUser(raw.assigned_to),
+    assignedBy: toEvaluationUser(raw.assigned_by),
+    justification: raw.justification,
     evaluatedAt: raw.evaluated_at,
     updatedAt: raw.updated_at,
   };
@@ -76,9 +80,12 @@ export function toProject(raw: any): Project {
     documents: (raw.documents ?? []).map(toDocument),
   };
 
-  // Só admin/committee recebem esses campos
+  // Só admin/committee/auditor recebem esses campos
   if (raw.evaluation_status !== undefined) {
     project.evaluationStatus = raw.evaluation_status;
+  }
+  if (raw.evaluation_context !== undefined) {
+    project.evaluationContext = raw.evaluation_context;
   }
   if (raw.evaluations !== undefined) {
     project.evaluations = raw.evaluations.map(toEvaluation);
@@ -87,7 +94,7 @@ export function toProject(raw: any): Project {
   return project;
 }
 
-export function toPagination(raw: any): Pagination {
+export function toProjectListPagination(raw: any): ProjectListPagination {
   return {
     page: raw.page,
     pageSize: raw.page_size,
@@ -109,6 +116,7 @@ export async function getProjectsRequest(
   if (params.pageSize !== undefined) query.set("page_size", String(params.pageSize));
   if (params.status) query.set("status", params.status);
   if (params.evaluationStatus) query.set("evaluation_status", params.evaluationStatus);
+  if (params.evaluationContext) query.set("evaluation_context", params.evaluationContext);
   if (params.submittedFrom) query.set("submitted_from", params.submittedFrom);
   if (params.submittedTo) query.set("submitted_to", params.submittedTo);
   if (params.updatedFrom) query.set("updated_from", params.updatedFrom);
@@ -133,7 +141,7 @@ export async function getProjectsRequest(
   const body = await response.json();
   return {
     items: body.items.map(toProject),
-    pagination: toPagination(body.pagination),
+    pagination: toProjectListPagination(body.pagination),
   };
 }
 
@@ -151,6 +159,60 @@ export async function getProjectRequest(projectId: number): Promise<Project> {
 
   const body = await response.json();
   return toProject(body);
+}
+
+export async function downloadProjectDocumentRequest(
+  projectId: number,
+  documentId: number,
+): Promise<DownloadedFile> {
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${getAdminApiBaseUrl()}/projects/${projectId}/documents/${documentId}/download`,
+      { headers: authHeaders() },
+    );
+  } catch {
+    throw normalizeProjectDocumentApiError("FETCH_ERROR");
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => undefined);
+    throw normalizeProjectDocumentApiError(response.status, body);
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: getFilenameFromContentDisposition(
+      response.headers.get("Content-Disposition"),
+      `documento-projeto-${projectId}-${documentId}`,
+    ),
+  };
+}
+
+export function normalizeProjectDocumentApiError(
+  status: number | string,
+  _body?: unknown,
+): ApiError {
+  const numericStatus = typeof status === "number" ? status : undefined;
+
+  if (numericStatus === 401) {
+    return { status: 401, message: "Sessão expirada. Faça login novamente." };
+  }
+  if (numericStatus === 403) {
+    return { status: 403, message: "Você não tem acesso a este documento." };
+  }
+  if (numericStatus === 404) {
+    return { status: 404, message: "Documento do projeto não encontrado." };
+  }
+  if (numericStatus === 500) {
+    return { status: 500, message: "Erro no servidor. Tente novamente." };
+  }
+
+  return {
+    status: numericStatus,
+    message: "Não foi possível baixar o documento do projeto. Tente novamente.",
+  };
 }
 
 export function normalizeProjectApiError(

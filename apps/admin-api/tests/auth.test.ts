@@ -278,6 +278,25 @@ describe("GET /api/admin/auth/me", () => {
       "role"
     ]);
   });
+
+  it("retorna auditor como papel autenticado com os dados básicos", async () => {
+    const auditor = await buildStoredUser({ role: "auditor" });
+    findById.mockResolvedValueOnce(auditor);
+    findSessionById.mockResolvedValueOnce(auditor);
+
+    const response = await request(app)
+      .get("/api/admin/auth/me")
+      .set("Authorization", `Bearer ${tokenFor(1)}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      id: 1,
+      email: "pesquisador@niar.local",
+      full_name: "Pesquisador Um",
+      role: "auditor",
+      account_status: "active"
+    });
+  });
 });
 
 describe("PATCH /api/admin/auth/me", () => {

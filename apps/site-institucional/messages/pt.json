@@ -122,6 +122,8 @@
 	"assistant_meta_desc": "LEME: consulta por IA ao acervo de documentos oficiais do NIAR-Saúde",
 	"assistant_heading": "LEME",
 	"assistant_subtitle": "Tire dúvidas sobre regulamentação, responsabilidade e uso ético da IA na saúde.",
+	"assistant_qr_caption": "Acesse no celular",
+	"assistant_qr_alt": "QR code para abrir o LEME no celular",
 	"assistant_input_placeholder": "Digite sua pergunta...",
 	"assistant_send": "Enviar",
 	"assistant_thinking": "Consultando a base de documentos...",
