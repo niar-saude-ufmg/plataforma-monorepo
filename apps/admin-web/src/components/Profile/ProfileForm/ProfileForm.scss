@@ -10,18 +10,18 @@
     align-items: center;
     display: flex;
     flex-wrap: wrap;
-    gap: var(--niar-spacing-s);
+    gap: var(--niar-spacing-sm);
     justify-content: space-between;
   }
 
   &__actions {
     display: flex;
-    gap: var(--niar-spacing-s);
+    gap: var(--niar-spacing-sm);
   }
 
   &__footer {
     display: flex;
-    gap: var(--niar-spacing-s);
+    gap: var(--niar-spacing-sm);
     justify-content: flex-end;
   }
 

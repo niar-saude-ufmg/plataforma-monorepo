@@ -213,12 +213,12 @@ export function Profile({ role, sessionError }: ProfileProps) {
   const headerActions = mode === 'readonly' && !passwordOpen ? (
     <>
       {canChangePassword && (
-        <Button variant="outlined" onClick={() => setPasswordOpen(true)}>
+        <Button color="secondary" size="small" variant="outlined" onClick={() => setPasswordOpen(true)}>
           Trocar senha
         </Button>
       )}
       {canEdit && (
-        <Button variant="outlined" onClick={() => setMode('edit')}>
+        <Button color="secondary" size="small" variant="outlined" onClick={() => setMode('edit')}>
           Editar perfil
         </Button>
       )}

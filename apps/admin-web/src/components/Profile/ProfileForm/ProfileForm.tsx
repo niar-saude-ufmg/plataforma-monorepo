@@ -134,10 +134,17 @@ export function ProfileForm({
 
           {!isReadonly && (
             <div className="profile-form__footer">
-              <Button variant="outlined" type="button" onClick={handleCancel} disabled={submitting}>
+              <Button
+                color="secondary"
+                size="small"
+                variant="outlined"
+                type="button"
+                onClick={handleCancel}
+                disabled={submitting}
+              >
                 Cancelar
               </Button>
-              <Button variant="contained" type="submit" disabled={submitting}>
+              <Button size="small" variant="contained" type="submit" disabled={submitting}>
                 Salvar
               </Button>
             </div>
