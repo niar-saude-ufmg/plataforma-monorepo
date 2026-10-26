@@ -6,6 +6,25 @@
     gap: var(--niar-spacing-xl);
   }
 
+  &__header {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--niar-spacing-sm);
+    justify-content: space-between;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--niar-spacing-sm);
+  }
+
+  &__footer {
+    display: flex;
+    gap: var(--niar-spacing-sm);
+    justify-content: flex-end;
+  }
+
   &__title {
     @include typography.typography-title;
     color: var(--niar-colors-text-heading);
