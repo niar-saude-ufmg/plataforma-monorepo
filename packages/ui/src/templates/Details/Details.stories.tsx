@@ -15,6 +15,25 @@ const timelineItems = [
   { title: "Em análise", date: "12/09/2026", color: "success" as const },
 ];
 
+const sections = [
+  {
+    title: "Dados da conta",
+    items: [
+      { label: "Nome completo", value: "Ana Souza" },
+      { label: "E-mail", value: "ana.souza@niar.org.br" },
+      { label: "Perfil e status", value: "Pesquisador · Ativo" },
+    ],
+  },
+  {
+    title: "Dados do COEP",
+    items: [
+      { label: "CAAE", value: "12345678.9.0000.5149" },
+      { label: "Número do parecer", value: "Parecer 123/2026" },
+      { label: "Data de aprovação", value: "15/09/2026" },
+    ],
+  },
+];
+
 const meta = {
   title: "Templates/Details",
   component: Details,
@@ -30,10 +49,21 @@ const meta = {
       description: "Título exibido no cabeçalho do dialog.",
       table: { category: "PROPS" },
     },
+    description: {
+      control: "text",
+      description: "Descrição exibida no corpo do template, antes do conteúdo principal.",
+      table: { category: "PROPS" },
+    },
     items: {
       control: "object",
       description:
         "Dados do conteúdo. Em list use label/value; em timeline use title, description, date e color.",
+      table: { category: "PROPS" },
+    },
+    sections: {
+      control: "object",
+      description:
+        "Subgrupos da variação list. Cada seção recebe seus itens label/value e pode receber um título.",
       table: { category: "PROPS" },
     },
     variant: {
@@ -121,10 +151,53 @@ export const TextVariant: Story = {
   render: (args) => <DetailsTrigger {...args} />,
 };
 
+export const GroupedListVariant: Story = {
+  args: {
+    open: false,
+    title: "Detalhes de Ana Souza",
+    variant: "list",
+    sections,
+  },
+  parameters: {
+    controls: { disable: true },
+    docs: {
+      canvas: { sourceState: "shown" },
+      description: {
+        story:
+          "Variação de texto com subgrupos nomeados, útil quando os dados pertencem a contextos diferentes.",
+      },
+      source: {
+        code: `<Details
+  open
+  title="Detalhes de Ana Souza"
+  sections={[
+    {
+      title: "Dados da conta",
+      items: [
+        { label: "Nome completo", value: "Ana Souza" },
+        { label: "E-mail", value: "ana.souza@niar.org.br" },
+      ],
+    },
+    {
+      title: "Dados do COEP",
+      items: [
+        { label: "CAAE", value: "12345678.9.0000.5149" },
+        { label: "Número do parecer", value: "Parecer 123/2026" },
+      ],
+    },
+  ]}
+/>`,
+      },
+    },
+  },
+  render: (args) => <DetailsTrigger {...args} />,
+};
+
 export const TimelineVariant: Story = {
   args: {
     open: false,
-    title: "Histórico do projeto",
+    title: "Histórico de avaliações",
+    description: "Estudo de saúde pública",
     variant: "timeline",
     items: timelineItems,
   },
@@ -138,7 +211,8 @@ export const TimelineVariant: Story = {
       source: {
         code: `<Details
   open
-  title="Histórico do projeto"
+  title="Histórico de avaliações"
+  description="Estudo de saúde pública"
   variant="timeline"
   items={[
     { title: "Projeto criado", date: "10/09/2026", color: "primary" },

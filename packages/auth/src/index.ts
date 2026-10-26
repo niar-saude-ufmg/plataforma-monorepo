@@ -33,9 +33,6 @@ export type PlatformSessionUser = {
       id: number;
       code: string;
       name: string;
-      description: string;
-      guidanceContext: string;
-      isActive: boolean;
     };
   };
 };

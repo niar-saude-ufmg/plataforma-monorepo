@@ -1,0 +1,45 @@
+@use '@niar/ui/typography.scss' as typography;
+
+.profile-form {
+  &__content {
+    display: grid;
+    gap: var(--niar-spacing-xl);
+  }
+
+  &__header {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--niar-spacing-sm);
+    justify-content: space-between;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--niar-spacing-sm);
+  }
+
+  &__footer {
+    display: flex;
+    gap: var(--niar-spacing-sm);
+    justify-content: flex-end;
+  }
+
+  &__title {
+    @include typography.typography-title;
+    color: var(--niar-colors-text-heading);
+    margin: 0;
+  }
+
+  &__account-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--niar-spacing-xl);
+  }
+
+  @media (max-width: 640px) {
+    &__account-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

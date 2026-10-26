@@ -69,18 +69,17 @@ export function Listing<T extends Record<string, unknown>>({
       )}
       {rows.length === 0 && !loading ? (
         <Box role="status" aria-label={emptyStateAriaLabel}>
-          <EmptyState
-            title="Nenhum registro encontrado"
-            description="Não há dados para exibir no momento."
-            aria-level={3}
-            {...emptyState}
-          />
+          <Card variant="outlined" sx={listingCardStyles}>
+            {emptyState?.title ? (
+              <EmptyState {...emptyState} title={emptyState.title} />
+            ) : null}
+          </Card>
         </Box>
       ) : (
         <Card variant="outlined" sx={listingCardStyles}>
           <Box sx={{ display: "grid", gap: niar.spacing["2xl"] }}>
             {loading ? filter ? <Skeleton variant="rounded" lines={1} height={48} /> : null : filter}
-            {loading ? <Box aria-live="polite"><Skeleton variant="rounded" lines={5} height={48} /></Box> : <Table columns={columns} rows={rows} aria-label={ariaLabel} pagination={pagination} selectable={selectable} onSelectionChange={onSelectionChange} border={tableBorder ?? Boolean(filter)} />}
+            {loading ? <Box aria-live="polite"><Skeleton variant="rounded" lines={5} height={48} /></Box> : <Table columns={columns} rows={rows} aria-label={ariaLabel} pagination={pagination} selectable={selectable} onSelectionChange={onSelectionChange} border={tableBorder ?? true} />}
           </Box>
         </Card>
       )}

@@ -13,16 +13,23 @@ export const usersRouter = Router();
  * /admin/users:
  *   get:
  *     summary: Lista dados consolidados dos usuários
- *     description: Admin vê qualquer papel. Committee só vê researcher, mesmo sem filtro.
+ *     description: Admin vê qualquer papel. Committee e auditor só veem researcher, mesmo sem filtro.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: search
+ *         description: Busca parcial e sem distinção entre maiúsculas e minúsculas pelo nome completo.
+ *         schema:
+ *           type: string
+ *           minLength: 1
+ *           maxLength: 255
+ *       - in: query
  *         name: role
  *         schema:
  *           type: string
- *           enum: [researcher, admin, committee]
+ *           enum: [researcher, admin, auditor, committee]
  *       - in: query
  *         name: account_status
  *         description: Filtra usuários pelo status atual da conta.
@@ -54,14 +61,14 @@ export const usersRouter = Router();
  *       403:
  *         description: Papel sem acesso à listagem, ou fora do escopo permitido
  */
-usersRouter.get("/", authenticate, restrictTo("admin", "committee"), usersController.list);
+usersRouter.get("/", authenticate, restrictTo("admin", "committee", "auditor"), usersController.list);
 
 /**
  * @swagger
  * /admin/users/{user_id}:
  *   get:
  *     summary: Consulta os dados consolidados de um usuário
- *     description: Admin consulta qualquer papel. Committee consulta somente pesquisadores.
+ *     description: Admin consulta qualquer papel. Committee e auditor consultam somente pesquisadores.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -88,7 +95,7 @@ usersRouter.get("/", authenticate, restrictTo("admin", "committee"), usersContro
  *       404:
  *         description: Usuário inexistente ou fora do escopo do comitê
  */
-usersRouter.get("/:user_id", authenticate, restrictTo("admin", "committee"), usersController.detail);
+usersRouter.get("/:user_id", authenticate, restrictTo("admin", "committee", "auditor"), usersController.detail);
 
 /**
  * @swagger
@@ -140,7 +147,7 @@ usersRouter.get("/:user_id", authenticate, restrictTo("admin", "committee"), use
  *       401:
  *         description: Não autenticado
  *       403:
- *         description: Pesquisador não pode registrar revisões
+ *         description: Pesquisador não pode registrar revisões; apenas admin, comitê e auditor podem revisar cadastros
  *       404:
  *         description: Usuário não encontrado
  *       409:
@@ -149,7 +156,7 @@ usersRouter.get("/:user_id", authenticate, restrictTo("admin", "committee"), use
 usersRouter.post(
   "/:user_id/auth-evaluation",
   authenticate,
-  restrictTo("admin", "committee"),
+  restrictTo("admin", "committee", "auditor"),
   usersController.createAuthEvaluation
 );
 
@@ -179,7 +186,7 @@ usersRouter.post(
  *       401:
  *         description: Não autenticado
  *       403:
- *         description: Pesquisador só pode baixar o próprio documento; admin e comitê podem baixar documentos de pesquisadores
+ *         description: Pesquisador só pode baixar o próprio documento; admin, comitê e auditor podem baixar documentos de pesquisadores
  *       404:
  *         description: Usuário, parecer ou arquivo não encontrado
  */
@@ -323,3 +330,32 @@ usersRouter.post("/committee-members", authenticate, restrictTo("admin"), usersC
  *         description: E-mail já cadastrado
  */
 usersRouter.post("/administrators", authenticate, restrictTo("admin"), usersController.createAdministrator);
+
+/**
+ * @swagger
+ * /admin/users/auditors:
+ *   post:
+ *     summary: Cria um auditor
+ *     description: Cria um auditor com os mesmos campos básicos do administrador.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateAdministrator'
+ *     responses:
+ *       201:
+ *         description: Auditor criado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       400: { description: Dados inválidos }
+ *       401: { description: Não autenticado }
+ *       403: { description: Não é admin }
+ *       409: { description: E-mail já cadastrado }
+ */
+usersRouter.post("/auditors", authenticate, restrictTo("admin"), usersController.createAuditor);

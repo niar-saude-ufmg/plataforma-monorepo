@@ -113,6 +113,7 @@ export type SessionUserRecord = Prisma.UserGetPayload<{
 }>;
 
 export type UserListFilter = {
+  search?: string;
   role?: UserRole;
   accountStatus?: user_account_status;
   page: number;
@@ -124,7 +125,10 @@ export type UserListPage = {
   totalItems: number;
 };
 
-const buildUserWhere = (filter: Pick<UserListFilter, "role" | "accountStatus">): Prisma.UserWhereInput => ({
+const buildUserWhere = (
+  filter: Pick<UserListFilter, "search" | "role" | "accountStatus">
+): Prisma.UserWhereInput => ({
+  ...(filter.search ? { fullName: { contains: filter.search, mode: "insensitive" } } : {}),
   ...(filter.role ? { role: filter.role } : {}),
   ...(filter.accountStatus ? { accountStatus: filter.accountStatus } : {})
 });
@@ -161,6 +165,23 @@ type RegistrationAudit = {
   role: UserRole;
   email: string;
 };
+
+type AdministrativeUserData = {
+  fullName: string;
+  email: string;
+  hashedPassword: string;
+  role: UserRole;
+  accountStatus: user_account_status;
+};
+
+const createAdministrativeUser = (
+  data: AdministrativeUserData,
+  audit: RegistrationAudit,
+) => prisma.$transaction(async (tx) => {
+  const user = await tx.user.create({ data });
+  await createRegistrationAudit(tx, user, audit);
+  return user;
+});
 
 const createRegistrationAudit = (
   tx: Prisma.TransactionClient,
@@ -408,11 +429,12 @@ export const usersRepository = {
   createAdministrator: (
     data: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status },
     audit: RegistrationAudit,
-  ) => prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({ data });
-    await createRegistrationAudit(tx, user, audit);
-    return user;
-  }),
+  ) => createAdministrativeUser(data, audit),
+
+  createAuditor: (
+    data: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status },
+    audit: RegistrationAudit,
+  ) => createAdministrativeUser(data, audit),
 
   createCommitteeMember: (data: {
     user: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status };

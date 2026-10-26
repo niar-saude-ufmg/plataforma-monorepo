@@ -105,10 +105,7 @@ const toSessionUser = (user: AuthenticatedUser): SessionUser => ({
       specialty: {
         id: user.committee_profile.specialty.id,
         code: user.committee_profile.specialty.code,
-        name: user.committee_profile.specialty.name,
-        description: user.committee_profile.specialty.description,
-        guidanceContext: user.committee_profile.specialty.guidance_context,
-        isActive: user.committee_profile.specialty.is_active
+        name: user.committee_profile.specialty.name
       }
     }
   } : {})

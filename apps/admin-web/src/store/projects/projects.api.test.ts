@@ -2,20 +2,30 @@ import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import type {ApiError } from '../../types/api.types';
 import type { Project, ProjectListResponse } from '../../types/project.types';
-import { getProject, getProjects } from './projects.api';
+import { downloadProjectDocument, getProject, getProjects } from './projects.api';
 import projectsReducer from "./projects.slice";
 
-const { getProjectsRequest, getProjectRequest, normalizeProjectApiError } =
+const {
+  getProjectsRequest,
+  getProjectRequest,
+  downloadProjectDocumentRequest,
+  normalizeProjectApiError,
+  normalizeProjectDocumentApiError,
+} =
   vi.hoisted(() => ({
     getProjectsRequest: vi.fn(),
     getProjectRequest: vi.fn(),
+    downloadProjectDocumentRequest: vi.fn(),
     normalizeProjectApiError: vi.fn(),
+    normalizeProjectDocumentApiError: vi.fn(),
   }));
 
 vi.mock("../../services/projects/projects.service", () => ({
   getProjectsRequest,
   getProjectRequest,
+  downloadProjectDocumentRequest,
   normalizeProjectApiError,
+  normalizeProjectDocumentApiError,
 }));
 
 const buildProject = (overrides: Partial<Project> = {}): Project => ({
@@ -49,12 +59,21 @@ function makeTestStore() {
 }
 
 describe("projects thunks", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeEach(() => {
     getProjectsRequest.mockReset();
     getProjectRequest.mockReset();
+    downloadProjectDocumentRequest.mockReset();
     normalizeProjectApiError.mockReset();
+    normalizeProjectDocumentApiError.mockReset();
 
     normalizeProjectApiError.mockReturnValue(
+      buildApiError({ message: "Erro inesperado", status: undefined }),
+    );
+    normalizeProjectDocumentApiError.mockReturnValue(
       buildApiError({ message: "Erro inesperado", status: undefined }),
     );
   });
@@ -84,10 +103,10 @@ describe("projects thunks", () => {
       await store.dispatch(getProjects({ page: 1 }));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("succeeded");
-      expect(state.error).toBeNull();
-      expect(state.projects).toEqual(listResponse.items);
-      expect(state.pagination).toEqual(listResponse.pagination);
+      expect(state.list.status).toBe("succeeded");
+      expect(state.list.error).toBeNull();
+      expect(state.list.items).toEqual(listResponse.items);
+      expect(state.list.pagination).toEqual(listResponse.pagination);
     });
 
     it("marca status como pending antes de resolver", async () => {
@@ -101,8 +120,8 @@ describe("projects thunks", () => {
       const dispatchPromise = store.dispatch(getProjects({}));
 
       // Ainda não resolveu — o estado deve estar pending
-      expect(store.getState().projects.status).toBe("pending");
-      expect(store.getState().projects.error).toBeNull();
+      expect(store.getState().projects.list.status).toBe("pending");
+      expect(store.getState().projects.list.error).toBeNull();
 
       // Resolve para o teste terminar limpo
       resolveRequest!(buildListResponse());
@@ -120,9 +139,9 @@ describe("projects thunks", () => {
       await store.dispatch(getProjects({}));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("failed");
-      expect(state.error).toEqual(apiError);
-      expect(state.projects).toEqual([]);
+      expect(state.list.status).toBe("failed");
+      expect(state.list.error).toEqual(apiError);
+      expect(state.list.items).toEqual([]);
     });
 
     it("usa o fallback quando o service lança erro desconhecido (não ApiError)", async () => {
@@ -135,12 +154,12 @@ describe("projects thunks", () => {
       await store.dispatch(getProjects({}));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("failed");
+      expect(state.list.status).toBe("failed");
       expect(normalizeProjectApiError).toHaveBeenCalledWith(
         "UNKNOWN_ERROR",
         undefined,
       );
-      expect(state.error?.message).toContain("Não foi possível");
+      expect(state.list.error?.message).toContain("Não foi possível");
     });
   });
 
@@ -163,9 +182,9 @@ describe("projects thunks", () => {
       await store.dispatch(getProject(99));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("succeeded");
-      expect(state.error).toBeNull();
-      expect(state.selectedProject).toEqual(project);
+      expect(state.list.status).toBe("succeeded");
+      expect(state.list.error).toBeNull();
+      expect(state.selected).toEqual(project);
     });
 
     it("guarda o erro e não seta selectedProject quando falha", async () => {
@@ -176,29 +195,65 @@ describe("projects thunks", () => {
       await store.dispatch(getProject(999));
 
       const state = store.getState().projects;
-      expect(state.status).toBe("failed");
-      expect(state.error).toEqual(apiError);
-      expect(state.selectedProject).toBeNull();
+      expect(state.list.status).toBe("failed");
+      expect(state.list.error).toEqual(apiError);
+      expect(state.selected).toBeNull();
     });
   });
 
   describe("consistência do slice único", () => {
-    it("os dois thunks escrevem no mesmo status e error", async () => {
+    it("mantém a consulta de lista e a consulta de detalhe no mesmo estado de leitura", async () => {
       getProjectsRequest.mockResolvedValueOnce(buildListResponse());
       const store = makeTestStore();
 
       await store.dispatch(getProjects({}));
-      expect(store.getState().projects.status).toBe("succeeded");
+      expect(store.getState().projects.list.status).toBe("succeeded");
 
       getProjectRequest.mockResolvedValueOnce(buildProject());
       await store.dispatch(getProject(42));
-      expect(store.getState().projects.status).toBe("succeeded");
+      expect(store.getState().projects.list.status).toBe("succeeded");
 
       // Erro do getProject sobrescreve o status anterior
       getProjectRequest.mockRejectedValueOnce(buildApiError({ status: 404 }));
       await store.dispatch(getProject(999));
-      expect(store.getState().projects.status).toBe("failed");
-      expect(store.getState().projects.error).not.toBeNull();
+      expect(store.getState().projects.list.status).toBe("failed");
+      expect(store.getState().projects.list.error).not.toBeNull();
+    });
+  });
+
+  describe("downloadProjectDocument", () => {
+    it("chama o service com projectId e documentId e retorna o arquivo", async () => {
+      const file = { blob: new Blob(["docx-fake"]), filename: "projeto.docx" };
+      downloadProjectDocumentRequest.mockResolvedValueOnce(file);
+      vi.stubGlobal("URL", {
+        createObjectURL: vi.fn().mockReturnValue("blob:projeto"),
+        revokeObjectURL: vi.fn(),
+      });
+      vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+      const store = makeTestStore();
+
+      await store.dispatch(downloadProjectDocument({ projectId: 42, documentId: 101 }));
+
+      expect(downloadProjectDocumentRequest).toHaveBeenCalledWith(42, 101);
+      expect(store.getState().projects.download).toEqual({
+        status: "succeeded",
+        error: null,
+        filename: "projeto.docx",
+      });
+    });
+
+    it("guarda o erro do download no estado", async () => {
+      const apiError = buildApiError({ status: 403, message: "Sem acesso" });
+      downloadProjectDocumentRequest.mockRejectedValueOnce(apiError);
+      const store = makeTestStore();
+
+      await store.dispatch(downloadProjectDocument({ projectId: 42, documentId: 101 }));
+
+      expect(store.getState().projects.download).toEqual({
+        status: "failed",
+        error: apiError,
+        filename: null,
+      });
     });
   });
 });

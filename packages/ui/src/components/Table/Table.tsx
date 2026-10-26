@@ -22,14 +22,29 @@ import Collapse from "@mui/material/Collapse";
 import Box from "@mui/material/Box";
 import { niar } from "../../tokens/index";
 
-export type TableColumn<T> = {
-  key: keyof T & string;
+type TableColumnBase<T> = {
   label: ReactNode;
   align?: "left" | "center" | "right" | "justify" | "inherit";
   sortable?: boolean;
   sortDirection?: "asc" | "desc";
   onClick?: () => void;
-  render?: (value: T[keyof T], row: T) => ReactNode;
+  render?: (value: T[keyof T] | undefined, row: T) => ReactNode;
+};
+
+export type TableColumn<T> =
+  | (TableColumnBase<T> & { key: keyof T & string; variant?: never })
+  | (TableColumnBase<T> & { key?: never; variant: "actions" });
+
+const actionCellSx = {
+  whiteSpace: "nowrap",
+  width: "1%",
+};
+
+const actionContentSx = {
+  alignItems: "center",
+  display: "flex",
+  flexWrap: "nowrap",
+  gap: niar.spacing.xs,
 };
 
 export type TableProps<T extends Record<string, unknown>> = Omit<
@@ -97,8 +112,12 @@ export function Table<T extends Record<string, unknown>>({
                 />
               </TableCell>
             ) : null}
-            {columns.map((column) => (
-              <TableCell key={column.key} align={column.align}>
+            {columns.map((column, columnIndex) => (
+              <TableCell
+                key={column.key ?? `${column.variant}-${columnIndex}`}
+                align={column.align}
+                sx={column.variant === "actions" ? actionCellSx : undefined}
+              >
                 {column.sortable ? (
                   <TableSortLabel
                     active={column.sortable}
@@ -164,11 +183,21 @@ export function Table<T extends Record<string, unknown>>({
                       />
                     </TableCell>
                   ) : null}
-                  {columns.map((column) => (
-                    <TableCell key={column.key} align={column.align}>
-                      {column.render
-                        ? column.render(row[column.key], row)
-                        : String(row[column.key] ?? "")}
+                  {columns.map((column, columnIndex) => (
+                    <TableCell
+                      key={column.key ?? `${column.variant}-${columnIndex}`}
+                      align={column.align}
+                      sx={column.variant === "actions" ? actionCellSx : undefined}
+                    >
+                      {column.variant === "actions" ? (
+                        <Box sx={actionContentSx}>
+                          {column.render?.(undefined, row)}
+                        </Box>
+                      ) : column.render ? (
+                        column.render(row[column.key], row)
+                      ) : (
+                        String(row[column.key] ?? "")
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>

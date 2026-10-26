@@ -1,3 +1,5 @@
+import type { EvaluationContext } from "@niar/contracts";
+
 /**
  * Contratos de dados do módulo de projetos.
  *
@@ -9,9 +11,15 @@
 export type EvaluationStatus =
   | "waiting"
   | "to_review"
+  | "sent_to_committee"
+  | "approved_by_committee"
+  | "rejected_by_committee"
+  | "needs_changes_by_committee"
   | "approved"
   | "needs_changes"
   | "rejected";
+
+export type { EvaluationContext } from "@niar/contracts";
 
 /** Status do fluxo do projeto. Deve acompanhar o contrato da API. */
 export type ProjectStatus =
@@ -47,23 +55,22 @@ export interface ProjectDocument {
   createdAt: string;
 }
 
-/** Membro do comitê responsável pela avaliação. */
-export interface ResponsibleMember {
+/** Usuário relacionado à atribuição da avaliação. */
+export interface EvaluationUser {
   userId: number;
   fullName: string;
   email: string;
-  specialty: {
-    id: number;
-    name: string;
-  };
+  role: string;
 }
 
-/** Avaliação da comissão sobre uma versão. */
+/** Avaliação unificada de uma versão. */
 export interface ProjectEvaluation {
   id: number;
   versionNumber: number;
-  result: EvaluationStatus;
-  responsibleMember: ResponsibleMember;
+  status: EvaluationStatus;
+  assignedTo: EvaluationUser | null;
+  assignedBy: EvaluationUser | null;
+  justification: string | null;
   evaluatedAt: string | null;
   updatedAt: string;
 }
@@ -71,7 +78,8 @@ export interface ProjectEvaluation {
 /**
  * Projeto como a UI precisa dele.
  *
- * `evaluationStatus` e `evaluations` só vêm para admin e committee.
+ * `evaluationStatus`, `evaluationContext` e `evaluations` só vêm para admin,
+ * committee e auditor.
  * Para researcher, ficam `undefined`.
  */
 export interface Project {
@@ -82,22 +90,31 @@ export interface Project {
   status: ProjectStatusEntry[];
   documents: ProjectDocument[];
   evaluationStatus?: EvaluationStatus;
+  evaluationContext?: EvaluationContext | null;
   evaluations?: ProjectEvaluation[];
 }
 
+export type ProjectListItem = Project;
+
 /** Paginação padrão da listagem. */
-export interface Pagination {
+export interface ProjectListPagination {
   page: number;
   pageSize: number;
   totalItems: number;
   totalPages: number;
 }
 
+export type ProjectListFilters = Pick<
+  ProjectListParams,
+  "search" | "status" | "evaluationStatus"
+>;
+
 export interface ProjectListParams {
   page?: number;
   pageSize?: number;
   status?: ProjectStatus;
   evaluationStatus?: EvaluationStatus;
+  evaluationContext?: EvaluationContext;
   submittedFrom?: string;
   submittedTo?: string;
   updatedFrom?: string;
@@ -111,6 +128,6 @@ export interface ProjectListParams {
 }
 
 export interface ProjectListResponse {
-  items: Project[];
-  pagination: Pagination;
+  items: ProjectListItem[];
+  pagination: ProjectListPagination;
 }

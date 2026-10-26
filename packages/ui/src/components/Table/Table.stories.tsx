@@ -3,7 +3,6 @@ import { useState } from "react";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import MoreVert from "@mui/icons-material/MoreVert";
-import Chip from "@mui/material/Chip";
 import { StatusChip } from "../StatusChip/StatusChip";
 import { Table } from "./Table";
 
@@ -158,10 +157,9 @@ const chipColumns = [
     render: (value: unknown) => {
       const status = String(value);
       return (
-        <Chip
+        <StatusChip
+          status={status === "Aprovado" ? "success" : "warning"}
           label={status}
-          color={status === "Aprovado" ? "success" : "warning"}
-          size="small"
         />
       );
     },
@@ -272,8 +270,8 @@ export const Actions: Story = {
     columns: [
       ...plainColumns,
       {
-        key: "actions",
         label: "Ações",
+        variant: "actions",
         render: () => (
           <div style={{ display: "flex", gap: 8 }}>
             <IconButton size="small" aria-label="Mais ações">
@@ -292,17 +290,17 @@ export const Actions: Story = {
         ),
       },
     ],
-    rows: rows.map((row) => ({ ...row, actions: true })),
+    rows,
   },
   parameters: {
     controls: { disable: true },
     docs: {
       description: {
         story:
-          "Ações de linha podem usar botão com ícone, texto ou a versão small conforme a tarefa.",
+          "Ações de linha podem usar botão com ícone, texto ou a versão small conforme a tarefa. A variante actions mantém a coluna com largura intrínseca e evita que os controles quebrem linha.",
       },
       source: {
-        code: 'const columns = [{ key: \"name\", label: \"Projeto\" }, { key: \"actions\", label: \"Ações\", render: (_, row) => <Button size=\"small\" onClick={() => abrirProjeto(row)}>Abrir</Button> }];\nconst rows = [{ name: \"Projeto A\", actions: null }];\n\n<Table columns={columns} rows={rows} />',
+        code: 'const columns = [{ key: \"name\", label: \"Projeto\" }, { variant: \"actions\", label: \"Ações\", render: (_, row) => <Button size=\"small\" onClick={() => abrirProjeto(row)}>Abrir</Button> }];\nconst rows = [{ name: \"Projeto A\" }];\n\n<Table columns={columns} rows={rows} />',
       },
     },
   },

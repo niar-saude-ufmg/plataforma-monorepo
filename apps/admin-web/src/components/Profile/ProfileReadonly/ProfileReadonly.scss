@@ -1,0 +1,19 @@
+@use "@niar/ui/typography.scss" as typography;
+
+.profile-readonly {
+  &__content {
+    display: grid;
+    gap: var(--niar-spacing-xl);
+  }
+
+  &__title {
+    @include typography.typography-title;
+    color: var(--niar-colors-text-heading);
+    margin: 0;
+  }
+
+  &__body {
+    display: grid;
+    gap: var(--niar-spacing-xl);
+  }
+}

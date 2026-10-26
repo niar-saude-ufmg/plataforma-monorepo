@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import { asset, resolve } from '$app/paths';
 	import { pageTitle } from '$lib/seo';
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { m } from '$lib/paraglide/messages';
@@ -59,6 +59,13 @@
 	// Aviso compacto com accordion: fechado mostra só o essencial; "Saiba mais"
 	// expande os detalhes (origem, documentos, verificação) no próprio bloco.
 	let showNotice = $state(false);
+
+	// QR code de apresentação: ligado por `?qr` na URL. Lido no navegador porque a
+	// página é pré-renderizada (adapter estático) e não tem query string no build.
+	let showQr = $state(false);
+	$effect(() => {
+		showQr = new URLSearchParams(window.location.search).has('qr');
+	});
 
 	// O acervo tem dezenas de documentos, então o aviso mostra só um resumo e a
 	// lista completa vai para um diálogo, agrupada por tipo.
@@ -174,12 +181,31 @@
 			{m.back_home()}
 		</a>
 
-		<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">
-			{m.assistant_heading()}
-		</h1>
-		<p class="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-			{m.assistant_subtitle()}
-		</p>
+		<div class="flex items-start justify-between gap-8">
+			<div>
+				<h1 class="mt-6 text-4xl font-bold tracking-tight text-primary sm:text-5xl">
+					{m.assistant_heading()}
+				</h1>
+				<p class="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
+					{m.assistant_subtitle()}
+				</p>
+			</div>
+
+			<!-- QR code temporário para apresentações (simpósio): só aparece com `?qr` na
+			     URL e em telas grandes, já que no celular a pessoa já está na página. -->
+			{#if showQr}
+				<figure class="hidden shrink-0 flex-col items-center gap-2 lg:flex">
+					<img
+						src={asset('/leme-qr.png')}
+						alt={m.assistant_qr_alt()}
+						class="size-36 rounded-xl border border-border bg-white p-2 shadow-sm"
+					/>
+					<figcaption class="text-sm font-medium text-muted-foreground">
+						{m.assistant_qr_caption()}
+					</figcaption>
+				</figure>
+			{/if}
+		</div>
 
 		<!-- Cartão do chat: nasce do tamanho do conteúdo e cresce com a conversa até o
 		     máximo, sem nunca encolher (piso = altura do estado inicial). O que passar do

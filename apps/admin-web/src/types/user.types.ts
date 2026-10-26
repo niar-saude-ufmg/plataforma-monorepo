@@ -1,5 +1,5 @@
 import type { ChangeEvent, ReactNode } from 'react';
-import type { UserAccountStatus } from '@niar/contracts';
+import type { UserAccountStatus, UserRole as ContractUserRole } from '@niar/contracts';
 import type { ApiError } from "./api.types";
 
 /**
@@ -9,8 +9,13 @@ import type { ApiError } from "./api.types";
  * a tradução acontece no service (services/users/users.service.ts), nunca dentro das telas.
  */
 
-/** Único perfil criado nesta entrega. Outros perfis voltam na tarefa da gestão de usuários. */
-export type UserRole = 'researcher' | 'admin' | 'committee';
+/** Papéis suportados pela aplicação administrativa. */
+export type UserRole = ContractUserRole;
+
+export type UserRoleOption = {
+  label: string;
+  value: UserRole;
+};
 
 export interface AuthProfile {
   phone: string | null;
@@ -36,9 +41,6 @@ export interface AuthCommitteeProfile {
     id: number;
     code: string;
     name: string;
-    description: string;
-    guidanceContext: string;
-    isActive: boolean;
   };
 }
 
@@ -76,6 +78,28 @@ export interface CreateUserInput {
     approvalDate: string;
     document: File;
   };
+}
+
+/** Entrada do cadastro privado de Administrador — só campos básicos. */
+export interface CreateAdministratorInput {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+/** Entrada do cadastro privado de Auditor — só campos básicos. */
+export interface CreateAuditorInput {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+/** Entrada do cadastro privado de Membro do Comitê — básicos + especialidade. */
+export interface CreateCommitteeMemberInput {
+  fullName: string;
+  email: string;
+  password: string;
+  specialtyId: number;
 }
 
 /** Usuário como a tela precisa dele (resposta do POST, já normalizada pelo service). */
@@ -137,15 +161,16 @@ export interface UserListItem extends User {
 }
 
 export interface UserListParams {
+  search?: string;
   role?: UserRole;
   accountStatus?: UserAccountStatus;
   page?: number;
   pageSize?: number;
 }
 
-export type UserListFilters = Pick<UserListParams, 'role' | 'accountStatus'>;
+export type UserListFilters = Pick<UserListParams, 'search' | 'role' | 'accountStatus'>;
 
-export interface UserPagination {
+export interface UserListPagination {
   page: number;
   pageSize: number;
   totalItems: number;
@@ -154,7 +179,7 @@ export interface UserPagination {
 
 export interface UserListResponse {
   items: UserListItem[];
-  pagination: UserPagination;
+  pagination: UserListPagination;
 }
 
 export interface UserFormFieldErrors {
@@ -172,6 +197,7 @@ export interface UserFormFieldErrors {
   opinionNumber?: string;
   approvalDate?: string;
   coepDocument?: string;
+  specialtyId?: string;
 }
 
 /* Erro de API específico do cadastro de usuário, com detalhes de validação por campo. */
@@ -215,3 +241,55 @@ export type CoepUserFormFields = {
   approvalDate: UserTextField;
   coepDocument: UserFileField;
 };
+
+export type CommitteeSpecialtyOption = {
+  label: string;
+  value: string;
+};
+
+export type CommitteeProfileFormFields = {
+  specialtyId: {
+    name: string;
+    value: CommitteeSpecialtyOption | null;
+    options: CommitteeSpecialtyOption[];
+    onChange: (option: CommitteeSpecialtyOption | null) => void;
+    onBlur: () => void;
+    loading?: boolean;
+    error?: boolean;
+    helperText?: ReactNode;
+  };
+};
+
+export type RoleFormFields = {
+  role: {
+    name: string;
+    value: UserRole | '';
+    options: readonly UserRoleOption[];
+    onChange: (role: UserRole | '') => void;
+    onBlur: () => void;
+    error?: boolean;
+    helperText?: ReactNode;
+  };
+};
+export interface AuthFormFieldErrors {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  currentPassword?: string;
+  password?: string;
+}
+
+export interface AuthApiError extends ApiError {
+  fieldErrors?: AuthFormFieldErrors;
+}
+
+export interface UpdateProfileInput {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  password: string;
+}

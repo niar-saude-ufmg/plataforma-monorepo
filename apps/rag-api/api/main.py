@@ -156,12 +156,12 @@ Instruções:
         if isinstance(msg, ToolMessage) and msg.artifact
     )
 
-    # .text() (e não .content): o Gemini devolve o conteúdo como lista de blocos
+    # .text (e não .content): o Gemini devolve o conteúdo como lista de blocos
     # (texto + assinaturas de raciocínio), enquanto o Groq devolvia string pura.
-    # O .text() concatena só as partes de texto, que é o que o front espera.
-    # Com parênteses: no langchain-core 0.3.x (fixado no requirements.txt) é
-    # método; sem chamar, a API recebia o método e quebrava logo abaixo.
-    resposta = result["messages"][-1].text()
+    # O .text concatena só as partes de texto, que é o que o front espera.
+    # Sem parênteses: no langchain-core 1.x é propriedade; chamar como método
+    # ainda funciona, mas está depreciado.
+    resposta = result["messages"][-1].text
 
     # 5. Se o agente disse que não encontrou base nos documentos, não devolve fonte
     # nenhuma. Os chunks foram os mais próximos na busca vetorial, mas ser o mais

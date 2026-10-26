@@ -88,7 +88,9 @@ describe("POST /api/admin/users/:user_id/auth-evaluation", () => {
     ["admin" as const, 10, "active" as const],
     ["admin" as const, 10, "rejected" as const],
     ["committee" as const, 11, "active" as const],
-    ["committee" as const, 11, "rejected" as const]
+    ["committee" as const, 11, "rejected" as const],
+    ["auditor" as const, 12, "active" as const],
+    ["auditor" as const, 12, "rejected" as const]
   ])("permite que %s revise cadastro pendente", async (role, actorId, status) => {
     findById.mockResolvedValueOnce(authUser(actorId, role));
     findAuthEvaluationTarget.mockResolvedValueOnce(target());
@@ -204,10 +206,13 @@ describe("GET /api/admin/users/:user_id/coep-document", () => {
   const documentDirectory = path.join(exportsDirectory, "coep", "usuarios");
   const documentPath = path.join(documentDirectory, "documento.pdf");
 
-  it.each(["admin", "committee"] as const)("permite download para %s", async (role) => {
+  it.each([
+    ["admin" as const, 10],
+    ["committee" as const, 11],
+    ["auditor" as const, 12]
+  ])("permite download para revisor %s", async (role, actorId) => {
     mkdirSync(documentDirectory, { recursive: true });
     writeFileSync(documentPath, "%PDF-1.7\nfixture");
-    const actorId = role === "admin" ? 10 : 11;
     findById.mockResolvedValueOnce(authUser(actorId, role));
     findCoepDocument.mockResolvedValueOnce({
       role: "researcher",
@@ -224,17 +229,6 @@ describe("GET /api/admin/users/:user_id/coep-document", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers["content-disposition"]).toContain("parecer original.pdf");
-  });
-
-  it("bloqueia pesquisador autenticado", async () => {
-    findById.mockResolvedValueOnce(authUser(20, "researcher"));
-
-    const response = await request(app)
-      .get("/api/admin/users/40/coep-document")
-      .set("Authorization", `Bearer ${tokenFor(20)}`);
-
-    expect(response.status).toBe(403);
-    expect(findCoepDocument).not.toHaveBeenCalled();
   });
 
   it("permite ao pesquisador baixar o próprio documento", async () => {
@@ -256,6 +250,17 @@ describe("GET /api/admin/users/:user_id/coep-document", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers["content-disposition"]).toContain("meu-parecer.pdf");
+  });
+
+  it("bloqueia pesquisador ao baixar o documento de outro usuário", async () => {
+    findById.mockResolvedValueOnce(authUser(20, "researcher"));
+
+    const response = await request(app)
+      .get("/api/admin/users/40/coep-document")
+      .set("Authorization", `Bearer ${tokenFor(20)}`);
+
+    expect(response.status).toBe(403);
+    expect(findCoepDocument).not.toHaveBeenCalled();
   });
 
   it("retorna 404 quando o usuário não possui parecer", async () => {

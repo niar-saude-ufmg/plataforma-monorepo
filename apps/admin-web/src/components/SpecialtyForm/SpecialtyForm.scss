@@ -1,0 +1,48 @@
+@use '@niar/ui/typography.scss' as typography;
+
+.specialty-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-3xl);
+  width: 100%;
+}
+
+.specialty-form__heading {
+  @include typography.typography-subtitle;
+  margin: 0;
+  color: var(--niar-colors-text-subtitle);
+  font-weight: var(--niar-font-weight-semibold);
+}
+
+.specialty-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--niar-spacing-xl);
+  row-gap: var(--niar-spacing-3xl);
+}
+
+.specialty-form__long-field {
+  grid-column: 1;
+}
+
+.specialty-form__status {
+  @include typography.typography-body;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--niar-spacing-xs);
+  color: var(--niar-colors-text-body);
+}
+
+.specialty-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--niar-spacing-md);
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .specialty-form__grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,1 @@
+export { RegistrationApprovalDialog } from './RegistrationApprovalDialog';

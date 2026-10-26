@@ -75,14 +75,14 @@ async def materialize_project(
         if last_status is None:
             project.submitted_at = project.submitted_at or submitted_at
             notes = "Primeira submissão"
-            status = ProjectStatus.submitted_to_committee
+            status = ProjectStatus.submitted_for_review
         else:
             notes = (
                 "Reenvio com ajustes solicitados"
                 if last_status.status == ProjectStatus.needs_changes
                 else "Reenvio da submissão"
             )
-            status = ProjectStatus.resubmitted_to_committee
+            status = ProjectStatus.resubmitted_for_review
 
         max_result = await db_session.execute(
             select(func.coalesce(func.max(ProjectVersion.version_number), 0))
@@ -115,14 +115,14 @@ async def materialize_project(
             version_number=1,
             source_wizard_session_id=session.id,
             characterization_snapshot=snapshot,
-            status=ProjectStatus.submitted_to_committee,
+            status=ProjectStatus.submitted_for_review,
             submitted_at=submitted_at,
         )
         db_session.add(version)
         await db_session.flush()
 
         notes = "Primeira submissão"
-        status = ProjectStatus.submitted_to_committee
+        status = ProjectStatus.submitted_for_review
 
     db_session.add(
         ProjectDocument(

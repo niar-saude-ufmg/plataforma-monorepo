@@ -17,11 +17,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
 from app.core.database import Base
-
-
 class UserRole(str, enum.Enum):
     researcher = "researcher"
     admin = "admin"
+    auditor = "auditor"
     committee = "committee"
 
 
@@ -105,6 +104,15 @@ class User(Base):
     researcher_profile: Mapped[Optional["ResearcherProfile"]] = relationship(back_populates="user")
     committee_profile: Mapped[Optional["CommitteeMemberProfile"]] = relationship(back_populates="user")
     coep_data: Mapped[list["UserCoepData"]] = relationship(back_populates="user")
+    evaluations_assigned: Mapped[list["Evaluation"]] = relationship(
+        back_populates="assigned_to", foreign_keys="Evaluation.assigned_to_user_id"
+    )
+    evaluations_assigned_by: Mapped[list["Evaluation"]] = relationship(
+        back_populates="assigned_by", foreign_keys="Evaluation.assigned_by_user_id"
+    )
+    evaluations_performed: Mapped[list["Evaluation"]] = relationship(
+        back_populates="evaluated_by", foreign_keys="Evaluation.evaluated_by_user_id"
+    )
 
 class UserProfile(Base):
     __tablename__ = "user_profiles"
@@ -217,9 +225,6 @@ class CommitteeMemberProfile(Base):
 
     user: Mapped["User"] = relationship(back_populates="committee_profile")
     specialty: Mapped["Specialty"] = relationship(back_populates="committee_members")
-    evaluations: Mapped[list["CommitteeEvaluation"]] = relationship(
-        back_populates="responsible_member"
-    )
 
 
 class UserCoepData(Base):
@@ -301,7 +306,7 @@ class CatalogColumn(Base):
     valid_values: Mapped[str] = mapped_column(Text, default="")
     coding_notes: Mapped[str] = mapped_column(Text, default="")
     is_phi: Mapped[bool] = mapped_column(Boolean, default=False)
-    notes: Mapped[str] = mapped_column(Text, default="")
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     table: Mapped["CatalogTable"] = relationship(back_populates="columns")
 
@@ -430,6 +435,19 @@ class AuditLog(Base):
 
 
 class ProjectStatus(str, enum.Enum):
+    submitted_for_review = "submitted_for_review"
+    approved_to_schedule = "approved_to_schedule"
+    rejected_to_safe_room = "rejected_to_safe_room"
+    resubmitted_for_review = "resubmitted_for_review"
+    scheduled_for_safe_room = "scheduled_for_safe_room"
+    approved_for_safe_room = "approved_for_safe_room"
+    under_safe_room = "under_safe_room"
+    report_submitted = "report_submitted"
+    report_under_review = "report_under_review"
+    safe_room_reuse_requested = "safe_room_reuse_requested"
+    rescheduled_for_safe_room = "rescheduled_for_safe_room"
+    reapproved_for_safe_room = "reapproved_for_safe_room"
+    report_resubmitted = "report_resubmitted"
     submitted_to_committee = "submitted_to_committee"
     resubmitted_to_committee = "resubmitted_to_committee"
     under_review = "under_review"
@@ -466,6 +484,37 @@ class Project(Base):
     )
 
 
+class Questionnaire(Base):
+    __tablename__ = "questionnaires"
+    __table_args__ = (
+        UniqueConstraint(
+            "questionnaire_key",
+            "version",
+            name="uq_admin_questionnaires_key_version",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    questionnaire_key: Mapped[str] = mapped_column(String(100))
+    version: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(String(255))
+    definition_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    published_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    project_versions: Mapped[list["ProjectVersion"]] = relationship(
+        back_populates="questionnaire"
+    )
+
+
 class ProjectVersion(Base):
     __tablename__ = "project_versions"
     __table_args__ = (
@@ -476,6 +525,9 @@ class ProjectVersion(Base):
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
     source_wizard_session_id: Mapped[int] = mapped_column(
         ForeignKey("wizard_sessions.id", ondelete="RESTRICT")
+    )
+    questionnaire_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("questionnaires.id", ondelete="RESTRICT"), nullable=True
     )
     user_coep_data_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("user_coep_data.id", ondelete="RESTRICT"), nullable=True
@@ -496,10 +548,11 @@ class ProjectVersion(Base):
         back_populates="project_versions"
     )
     documents: Mapped[list["ProjectDocument"]] = relationship(back_populates="version")
-    status_history: Mapped[list["ProjectStatusHistory"]] = relationship(back_populates="version")
-    committee_evaluation: Mapped[Optional["CommitteeEvaluation"]] = relationship(
-        back_populates="project_version", uselist=False
+    questionnaire: Mapped[Optional["Questionnaire"]] = relationship(
+        back_populates="project_versions"
     )
+    status_history: Mapped[list["ProjectStatusHistory"]] = relationship(back_populates="version")
+    evaluations: Mapped[list["Evaluation"]] = relationship(back_populates="project_version")
 
 
 class ProjectDocument(Base):
@@ -533,12 +586,12 @@ class ProjectStatusHistory(Base):
         ForeignKey("project_versions.id", ondelete="CASCADE"), nullable=False
     )
     status: Mapped[ProjectStatus] = mapped_column(PROJECT_STATUS_ENUM, nullable=False)
-    notes: Mapped[str] = mapped_column(Text, default="")
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     actor_user_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    committee_evaluation_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("committee_evaluations.id", ondelete="SET NULL"), nullable=True
+    evaluation_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("evaluations.id", ondelete="SET NULL"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -546,39 +599,63 @@ class ProjectStatusHistory(Base):
 
     actor: Mapped[Optional["User"]] = relationship(back_populates="status_changes")
     version: Mapped["ProjectVersion"] = relationship(back_populates="status_history")
-    committee_evaluation: Mapped[Optional["CommitteeEvaluation"]] = relationship(
+    evaluation: Mapped[Optional["Evaluation"]] = relationship(
         back_populates="status_history"
     )
 
 
-class CommitteeEvaluationResult(str, enum.Enum):
+class EvaluationStatus(str, enum.Enum):
     to_review = "to_review"
-    approved = "approved"
+    sent_to_committee = "sent_to_committee"
+    approved_by_committee = "approved_by_committee"
+    rejected_by_committee = "rejected_by_committee"
+    needs_changes_by_committee = "needs_changes_by_committee"
     needs_changes = "needs_changes"
+    approved = "approved"
     rejected = "rejected"
 
 
-COMMITTEE_EVALUATION_RESULT_ENUM = Enum(
-    CommitteeEvaluationResult,
-    name="committee_evaluation_result",
+EVALUATION_STATUS_ENUM = Enum(
+    EvaluationStatus,
+    name="evaluation_status",
     schema="admin",
     create_type=False,
 )
 
 
-class CommitteeEvaluation(Base):
-    __tablename__ = "committee_evaluations"
+class EvaluationContext(str, enum.Enum):
+    pre_safe_room = "pre_safe_room"
+    post_safe_room = "post_safe_room"
+
+
+EVALUATION_CONTEXT_ENUM = Enum(
+    EvaluationContext,
+    name="evaluation_context",
+    schema="admin",
+    create_type=False,
+)
+
+
+class Evaluation(Base):
+    __tablename__ = "evaluations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     project_version_id: Mapped[int] = mapped_column(
-        ForeignKey("project_versions.id", ondelete="CASCADE"), unique=True
+        ForeignKey("project_versions.id", ondelete="CASCADE")
     )
-    responsible_member_user_id: Mapped[int] = mapped_column(
-        ForeignKey("committee_member_profiles.user_id", ondelete="RESTRICT")
+    context: Mapped[EvaluationContext] = mapped_column(
+        "evaluation_context", EVALUATION_CONTEXT_ENUM
     )
-    result: Mapped[CommitteeEvaluationResult] = mapped_column(
-        COMMITTEE_EVALUATION_RESULT_ENUM
+    assigned_to_user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
+    assigned_by_user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    evaluated_by_user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    status: Mapped[EvaluationStatus] = mapped_column(EVALUATION_STATUS_ENUM)
     justification: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     evaluated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -591,11 +668,17 @@ class CommitteeEvaluation(Base):
     )
 
     project_version: Mapped["ProjectVersion"] = relationship(
-        back_populates="committee_evaluation"
-    )
-    responsible_member: Mapped["CommitteeMemberProfile"] = relationship(
         back_populates="evaluations"
     )
+    assigned_to: Mapped[Optional["User"]] = relationship(
+        back_populates="evaluations_assigned", foreign_keys=[assigned_to_user_id]
+    )
+    assigned_by: Mapped[Optional["User"]] = relationship(
+        back_populates="evaluations_assigned_by", foreign_keys=[assigned_by_user_id]
+    )
+    evaluated_by: Mapped[Optional["User"]] = relationship(
+        back_populates="evaluations_performed", foreign_keys=[evaluated_by_user_id]
+    )
     status_history: Mapped[list["ProjectStatusHistory"]] = relationship(
-        back_populates="committee_evaluation"
+        back_populates="evaluation"
     )
