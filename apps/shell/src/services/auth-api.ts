@@ -47,9 +47,6 @@ export type AuthenticatedUser = {
       id: number;
       code: string;
       name: string;
-      description: string;
-      guidance_context: string;
-      is_active: boolean;
     };
   };
 };

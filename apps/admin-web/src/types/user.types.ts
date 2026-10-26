@@ -41,9 +41,6 @@ export interface AuthCommitteeProfile {
     id: number;
     code: string;
     name: string;
-    description: string;
-    guidanceContext: string;
-    isActive: boolean;
   };
 }
 

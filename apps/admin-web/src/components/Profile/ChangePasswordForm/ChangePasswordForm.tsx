@@ -1,82 +1,30 @@
-import { useController } from 'react-hook-form';
-import { z } from 'zod';
 import { Button, Form, Input } from '@niar/ui';
-import { useForm } from '../../../hooks/forms/use-form/use-form';
-import { textFieldProps } from '../../../hooks/forms/utils/props';
+import type {
+  ChangePasswordFormFields,
+  ChangePasswordFormValues,
+  ChangePasswordSubmitValues,
+} from '../../../hooks/forms/use-change-password-form/use-change-password-form';
 import './ChangePasswordForm.scss';
 
-export type ChangePasswordFormValues = {
-  currentPassword: string;
-  password: string;
-  passwordConfirmation: string;
-};
-
-/** Só currentPassword e password vão para a API. */
-export type ChangePasswordSubmitValues = {
-  currentPassword: string;
-  password: string;
-};
+export type { ChangePasswordFormValues, ChangePasswordSubmitValues };
 
 export type ChangePasswordFormProps = {
+  fields: ChangePasswordFormFields;
   submitting?: boolean;
-  onSubmit?: (values: ChangePasswordSubmitValues) => void;
-  onCancel?: () => void;
-};
-
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, { message: 'Informe a senha atual.' }),
-    password: z.string().min(8, { message: 'A nova senha precisa ter pelo menos 8 caracteres.' }),
-    passwordConfirmation: z.string().min(1, { message: 'Repita a nova senha.' }),
-  })
-  // Confirmação é validação só do formulário; nunca é enviada à API.
-  .refine((values) => values.password === values.passwordConfirmation, {
-    message: 'As senhas não conferem.',
-    path: ['passwordConfirmation'],
-  });
-
-const emptyValues: ChangePasswordFormValues = {
-  currentPassword: '',
-  password: '',
-  passwordConfirmation: '',
+  onSubmit: () => void;
+  onCancel: () => void;
 };
 
 export function ChangePasswordForm({
+  fields,
   submitting = false,
   onSubmit,
   onCancel,
 }: ChangePasswordFormProps) {
-  const { control, handleSubmit, reset, fieldError } = useForm<ChangePasswordFormValues>({
-    schema: changePasswordSchema,
-    defaultValues: emptyValues,
-  });
-
-  // textFieldProps entrega value ao Input; sem ele o label não sobe.
-  const fields = {
-    currentPassword: textFieldProps(
-      useController({ control, name: 'currentPassword' }).field,
-      fieldError('currentPassword'),
-    ),
-    password: textFieldProps(useController({ control, name: 'password' }).field, fieldError('password')),
-    passwordConfirmation: textFieldProps(
-      useController({ control, name: 'passwordConfirmation' }).field,
-      fieldError('passwordConfirmation'),
-    ),
-  };
-
-  const submit = handleSubmit((values) => {
-    onSubmit?.({ currentPassword: values.currentPassword, password: values.password });
-  });
-
-  const handleCancel = () => {
-    reset(emptyValues);
-    onCancel?.();
-  };
-
   return (
     <div className="change-password-form">
       <Form aria-level={2}>
-        <form className="change-password-form__content" onSubmit={submit} noValidate>
+        <div className="change-password-form__content">
           <h2 className="change-password-form__title">Trocar senha</h2>
 
           <div className="change-password-form__grid">
@@ -112,16 +60,16 @@ export function ChangePasswordForm({
               size="small"
               variant="outlined"
               type="button"
-              onClick={handleCancel}
+              onClick={onCancel}
               disabled={submitting}
             >
               Cancelar
             </Button>
-            <Button size="small" variant="contained" type="submit" disabled={submitting}>
+            <Button size="small" variant="contained" onClick={onSubmit} disabled={submitting}>
               Trocar senha
             </Button>
           </div>
-        </form>
+        </div>
       </Form>
     </div>
   );

@@ -56,9 +56,6 @@ type SessionUserApiResponse = {
       id: number;
       code: string;
       name: string;
-      description: string;
-      guidance_context: string;
-      is_active: boolean;
     };
   } | null;
 };
@@ -115,9 +112,6 @@ export function toAuthUser(response: SessionUserApiResponse): AuthUser {
               id: response.committee_profile.specialty.id,
               code: response.committee_profile.specialty.code,
               name: response.committee_profile.specialty.name,
-              description: response.committee_profile.specialty.description,
-              guidanceContext: response.committee_profile.specialty.guidance_context,
-              isActive: response.committee_profile.specialty.is_active,
             },
           },
         }

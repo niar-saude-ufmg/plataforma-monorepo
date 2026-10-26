@@ -10,10 +10,15 @@ import {
   type StatusChipStatus,
 } from '@niar/ui';
 import { ChangePasswordForm, ProfileForm, ProfileReadonly } from '../../components/Profile';
-import type { ChangePasswordSubmitValues } from '../../components/Profile';
-import type { ProfileFormValues } from '../../components/Profile';
-import { RoleGuard } from '../../guards/RoleGuard';
 import { useApiError } from '../../hooks/use-api-error/use-api-error';
+import {
+  useChangePasswordForm,
+  type ChangePasswordSubmitValues,
+} from '../../hooks/forms/use-change-password-form/use-change-password-form';
+import {
+  useProfileForm,
+  type ProfileFormValues,
+} from '../../hooks/forms/use-profile-form/use-profile-form';
 import { changePassword, updateProfile } from '../../store/auth/auth.api';
 import {
   selectAuthMutationError,
@@ -148,6 +153,11 @@ export function Profile({ role, sessionError }: ProfileProps) {
   const downloadError = useAppSelector(selectUsersDownloadError);
 
   const roleConfig = PROFILE_ROLE_CONFIG[role];
+  const profileForm = useProfileForm({
+    user,
+    editableFields: roleConfig.editableFields,
+  });
+  const passwordForm = useChangePasswordForm();
   const [mode, setMode] = useState<'readonly' | 'edit'>('readonly');
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -155,6 +165,23 @@ export function Profile({ role, sessionError }: ProfileProps) {
 
   const savingProfile = mutationStatus === 'pending' && mutationOperation === 'updateProfile';
   const savingPassword = mutationStatus === 'pending' && mutationOperation === 'changePassword';
+
+  useEffect(() => {
+    if (!mutationError) return;
+
+    if (mutationOperation === 'updateProfile') {
+      profileForm.applyApiFieldErrors(mutationError);
+    }
+
+    if (mutationOperation === 'changePassword') {
+      passwordForm.applyApiFieldErrors(mutationError);
+    }
+  }, [
+    mutationError,
+    mutationOperation,
+    passwordForm.applyApiFieldErrors,
+    profileForm.applyApiFieldErrors,
+  ]);
 
   // Fecha o formulário correspondente assim que a operação conclui.
   useEffect(() => {
@@ -166,6 +193,7 @@ export function Profile({ role, sessionError }: ProfileProps) {
     }
 
     if (mutationOperation === 'changePassword') {
+      passwordForm.reset();
       setPasswordOpen(false);
       setFeedback('Senha atualizada.');
     }
@@ -173,20 +201,45 @@ export function Profile({ role, sessionError }: ProfileProps) {
     dispatch(clearAuthMutation());
   }, [dispatch, mutationOperation, mutationStatus]);
 
+  const closeSnackbar = () => {
+    setErrorDismissed(true);
+    setFeedback(null);
+    dispatch(clearAuthMutation());
+    dispatch(clearUsersError());
+  };
+
   const apiError = errorDismissed ? undefined : (sessionError ?? mutationError ?? downloadError);
-  const snackbarProps = useApiError(
+  const apiErrorSnackbar = useApiError(
     apiError,
-    () => {
-      setErrorDismissed(true);
-      dispatch(clearAuthMutation());
-      dispatch(clearUsersError());
-    },
+    closeSnackbar,
     'Não foi possível concluir a operação. Tente novamente.',
   );
+  const snackbarProps = apiError
+    ? apiErrorSnackbar
+    : {
+        ...apiErrorSnackbar,
+        open: Boolean(feedback),
+        message: feedback ?? '',
+        severity: 'success' as const,
+      };
 
   useEffect(() => {
     setErrorDismissed(false);
-  }, [mutationError, downloadError]);
+  }, [sessionError, mutationError, downloadError]);
+
+  const submitProfile = profileForm.handleSubmit((values: ProfileFormValues) => {
+    if (!user) return;
+
+    dispatch(updateProfile({
+      fullName: values.fullName,
+      email: values.email,
+      ...(profileForm.showPhone ? { phone: values.phone } : {}),
+    }));
+  });
+
+  const submitPassword = passwordForm.handleSubmit((values: ChangePasswordSubmitValues) => {
+    dispatch(changePassword(values));
+  });
 
   if (!user) {
     return (
@@ -196,14 +249,6 @@ export function Profile({ role, sessionError }: ProfileProps) {
       </>
     );
   }
-
-  const handleSubmitProfile = (values: ProfileFormValues) => {
-    dispatch(updateProfile(values));
-  };
-
-  const handleSubmitPassword = (values: ChangePasswordSubmitValues) => {
-    dispatch(changePassword(values));
-  };
 
   const canEdit = roleConfig.actions.includes('editProfile');
   const canChangePassword = roleConfig.actions.includes('changePassword');
@@ -226,7 +271,7 @@ export function Profile({ role, sessionError }: ProfileProps) {
   ) : null;
 
   return (
-    <RoleGuard allowedRoles={[role]}>
+    <>
       <div className="profile">
         <PageIntro
           title={mode === 'edit' ? 'Editar perfil' : 'Perfil'}
@@ -239,22 +284,28 @@ export function Profile({ role, sessionError }: ProfileProps) {
 
         {roleConfig.sections.includes('account') && (
           <ProfileForm
-            role={role}
-            user={user}
             mode={mode}
-            editableFields={roleConfig.editableFields}
+            fields={profileForm.fields}
+            showPhone={profileForm.showPhone}
             actions={headerActions}
             submitting={savingProfile}
-            onSubmit={handleSubmitProfile}
-            onCancel={() => setMode('readonly')}
+            onSubmit={() => { void submitProfile(); }}
+            onCancel={() => {
+              profileForm.reset();
+              setMode('readonly');
+            }}
           />
         )}
 
         {passwordOpen && (
           <ChangePasswordForm
+            fields={passwordForm.fields}
             submitting={savingPassword}
-            onSubmit={handleSubmitPassword}
-            onCancel={() => setPasswordOpen(false)}
+            onSubmit={() => { void submitPassword(); }}
+            onCancel={() => {
+              passwordForm.reset();
+              setPasswordOpen(false);
+            }}
           />
         )}
 
@@ -268,15 +319,7 @@ export function Profile({ role, sessionError }: ProfileProps) {
           />
         )}
       </div>
-
       <Snackbar {...snackbarProps} />
-      <Snackbar
-        open={Boolean(feedback)}
-        message={feedback ?? ''}
-        severity="success"
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        onClose={() => setFeedback(null)}
-      />
-    </RoleGuard>
+    </>
   );
 }

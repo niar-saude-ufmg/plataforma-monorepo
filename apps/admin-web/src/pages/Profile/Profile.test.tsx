@@ -165,15 +165,15 @@ describe('página de Perfil', () => {
   it('usa o usuário do authSlice para preencher o formulário', () => {
     renderPage(admin);
 
-    expect(screen.getByLabelText('Nome completo')).toHaveValue('Gestora Um');
-    expect(screen.getByLabelText('E-mail')).toHaveValue('gestora@niar.local');
+    expect(screen.getByRole('textbox', { name: 'Nome completo' })).toHaveValue('Gestora Um');
+    expect(screen.getByRole('textbox', { name: 'E-mail' })).toHaveValue('gestora@niar.local');
   });
 
   it('renderiza o ProfileForm em modo readonly', () => {
     renderPage(admin);
 
-    expect(screen.getByLabelText('Nome completo')).toBeDisabled();
-    expect(screen.getByLabelText('E-mail')).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'Nome completo' })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'E-mail' })).toBeDisabled();
   });
 
   it('exibe perfil de acesso e status da conta para o Administrador', () => {
@@ -188,7 +188,7 @@ describe('página de Perfil', () => {
   it('não exibe telefone, dados institucionais nem COEP para o Administrador', () => {
     renderPage(admin);
 
-    expect(screen.queryByLabelText('Telefone')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Telefone' })).not.toBeInTheDocument();
     expect(
       screen.queryByRole('heading', { name: 'Dados de contato e instituição' }),
     ).not.toBeInTheDocument();
@@ -221,7 +221,7 @@ describe('página de Perfil', () => {
   it('exibe contato, instituição, dados acadêmicos e COEP para o Pesquisador', () => {
     renderPage(researcher);
 
-    expect(screen.getByLabelText('Telefone')).toHaveValue('(31) 99999-0000');
+    expect(screen.getByRole('textbox', { name: 'Telefone' })).toHaveValue('(31) 99999-0000');
 
     expect(
       screen.getByRole('heading', { name: 'Dados de contato e instituição', level: 2 }),
@@ -261,7 +261,7 @@ describe('página de Perfil', () => {
     renderPage(null);
 
     expect(screen.getByLabelText('Carregando perfil')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Nome completo')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Nome completo' })).not.toBeInTheDocument();
   });
 
   it('mostra o erro de carregamento no Snackbar oficial', () => {
@@ -280,7 +280,7 @@ describe('página de Perfil', () => {
     renderPage(researcher);
 
     expect(screen.queryByRole('button', { name: 'Salvar' })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Senha atual')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Senha atual' })).not.toBeInTheDocument();
   });
 });
 
@@ -336,7 +336,7 @@ describe('Perfil — edição, senha e download', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
 
     expect(screen.getByRole('heading', { name: 'Editar perfil', level: 1 })).toBeInTheDocument();
-    expect(screen.getByLabelText('Nome completo')).toBeEnabled();
+    expect(screen.getByRole('textbox', { name: 'Nome completo' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Salvar' })).toBeInTheDocument();
   });
 
@@ -345,12 +345,12 @@ describe('Perfil — edição, senha e download', () => {
     const antes = store.getState().auth.selected;
 
     await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
-    const nome = screen.getByLabelText('Nome completo');
+    const nome = screen.getByRole('textbox', { name: 'Nome completo' });
     await userEvent.clear(nome);
     await userEvent.type(nome, 'Rascunho');
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
-    await waitFor(() => expect(screen.getByLabelText('Nome completo')).toBeDisabled());
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Nome completo' })).toBeDisabled());
     expect(store.getState().auth.selected).toEqual(antes);
   });
 
@@ -359,7 +359,7 @@ describe('Perfil — edição, senha e download', () => {
     renderPage(admin);
 
     await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
-    const nome = screen.getByLabelText('Nome completo');
+    const nome = screen.getByRole('textbox', { name: 'Nome completo' });
     await userEvent.clear(nome);
     await userEvent.type(nome, 'Gestora Atualizada');
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));

@@ -1,19 +1,41 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { UserTextField } from '../../../types/user.types';
 import { ChangePasswordForm } from './ChangePasswordForm';
 
-async function preencher(atual: string, nova: string, repetir: string) {
-  await userEvent.type(screen.getByLabelText('Senha atual'), atual);
-  await userEvent.type(screen.getByLabelText('Nova senha'), nova);
-  await userEvent.type(screen.getByLabelText('Repetir senha'), repetir);
-}
+const fields = {
+  currentPassword: {
+    name: 'currentPassword',
+    value: '',
+    onChange: vi.fn(),
+    onBlur: vi.fn(),
+  } satisfies UserTextField,
+  password: {
+    name: 'password',
+    value: '',
+    onChange: vi.fn(),
+    onBlur: vi.fn(),
+  } satisfies UserTextField,
+  passwordConfirmation: {
+    name: 'passwordConfirmation',
+    value: '',
+    onChange: vi.fn(),
+    onBlur: vi.fn(),
+  } satisfies UserTextField,
+};
 
 describe('ChangePasswordForm', () => {
   afterEach(cleanup);
 
-  it('renderiza os três campos de senha', () => {
-    render(<ChangePasswordForm />);
+  it('renderiza os campos recebidos pelo hook', () => {
+    render(
+      <ChangePasswordForm
+        fields={fields}
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
 
     expect(screen.getByRole('heading', { name: 'Trocar senha', level: 2 })).toBeInTheDocument();
     expect(screen.getByLabelText('Senha atual')).toBeInTheDocument();
@@ -21,70 +43,34 @@ describe('ChangePasswordForm', () => {
     expect(screen.getByLabelText('Repetir senha')).toBeInTheDocument();
   });
 
-  it('envia apenas senha atual e nova senha', async () => {
+  it('chama os callbacks dos botões sem assumir regras de negócio', async () => {
     const onSubmit = vi.fn();
-    render(<ChangePasswordForm onSubmit={onSubmit} />);
-
-    await preencher('senha-atual', 'nova-senha-123', 'nova-senha-123');
-    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
-
-    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    expect(onSubmit.mock.calls[0][0]).toEqual({
-      currentPassword: 'senha-atual',
-      password: 'nova-senha-123',
-    });
-    expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('passwordConfirmation');
-  });
-
-  it('recusa quando a confirmação não confere', async () => {
-    const onSubmit = vi.fn();
-    render(<ChangePasswordForm onSubmit={onSubmit} />);
-
-    await preencher('senha-atual', 'nova-senha-123', 'outra-senha-123');
-    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
-
-    await waitFor(() => expect(screen.getByText('As senhas não conferem.')).toBeInTheDocument());
-    expect(onSubmit).not.toHaveBeenCalled();
-  });
-
-  it('exige senha nova com pelo menos 8 caracteres', async () => {
-    const onSubmit = vi.fn();
-    render(<ChangePasswordForm onSubmit={onSubmit} />);
-
-    await preencher('senha-atual', 'curta', 'curta');
-    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
-
-    await waitFor(() =>
-      expect(screen.getByText('A nova senha precisa ter pelo menos 8 caracteres.')).toBeInTheDocument(),
-    );
-    expect(onSubmit).not.toHaveBeenCalled();
-  });
-
-  it('exige a senha atual', async () => {
-    const onSubmit = vi.fn();
-    render(<ChangePasswordForm onSubmit={onSubmit} />);
-
-    await userEvent.type(screen.getByLabelText('Nova senha'), 'nova-senha-123');
-    await userEvent.type(screen.getByLabelText('Repetir senha'), 'nova-senha-123');
-    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
-
-    await waitFor(() => expect(screen.getByText('Informe a senha atual.')).toBeInTheDocument());
-    expect(onSubmit).not.toHaveBeenCalled();
-  });
-
-  it('limpa os campos e avisa a página ao cancelar', async () => {
     const onCancel = vi.fn();
-    render(<ChangePasswordForm onCancel={onCancel} />);
 
-    await userEvent.type(screen.getByLabelText('Senha atual'), 'algo');
+    render(
+      <ChangePasswordForm
+        fields={fields}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
+    expect(onSubmit).toHaveBeenCalledOnce();
     expect(onCancel).toHaveBeenCalledOnce();
-    await waitFor(() => expect(screen.getByLabelText('Senha atual')).toHaveValue(''));
   });
 
-  it('bloqueia campos e botões durante o envio', () => {
-    render(<ChangePasswordForm submitting />);
+  it('desabilita campos e ações durante o envio', () => {
+    render(
+      <ChangePasswordForm
+        fields={fields}
+        submitting
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
 
     expect(screen.getByLabelText('Senha atual')).toBeDisabled();
     expect(screen.getByLabelText('Nova senha')).toBeDisabled();
