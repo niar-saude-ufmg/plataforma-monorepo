@@ -12,6 +12,12 @@
     justify-content: flex-end;
   }
 
+  &__academic-grid {
+    display: grid;
+    gap: var(--niar-spacing-xl);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   &__status-field {
     display: grid;
     gap: var(--niar-spacing-2xs);
@@ -22,5 +28,11 @@
     @include typography.typography-caption;
     color: var(--niar-colors-text-body);
     margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    &__academic-grid {
+      grid-template-columns: 1fr;
+    }
   }
 }

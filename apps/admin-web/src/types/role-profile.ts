@@ -8,10 +8,15 @@ export type ProfileFieldId = 'fullName' | 'email' | 'phone';
 
 export type ProfileActionId = 'editProfile' | 'changePassword' | 'downloadCoep';
 
+export type ProfileFieldConfig = {
+  visible: boolean;
+  editable: boolean;
+};
+
 export type ProfileRoleConfig = {
   description: string;
   accessProfileLabel: string;
   sections: readonly ProfileSectionId[];
-  editableFields: readonly ProfileFieldId[];
+  fields: Readonly<Record<ProfileFieldId, ProfileFieldConfig>>;
   actions: readonly ProfileActionId[];
 };

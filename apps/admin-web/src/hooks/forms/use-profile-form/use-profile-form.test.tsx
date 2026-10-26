@@ -13,7 +13,14 @@ const user: AuthUser = {
 };
 
 function ProfileFormHarness({ onSubmit }: { onSubmit: (values: unknown) => void }) {
-  const form = useProfileForm({ user, editableFields: ['fullName', 'email'] });
+  const form = useProfileForm({
+    user,
+    fields: {
+      fullName: { visible: true, editable: true },
+      email: { visible: true, editable: true },
+      phone: { visible: false, editable: false },
+    },
+  });
 
   return (
     <>

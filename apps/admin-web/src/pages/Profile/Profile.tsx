@@ -36,7 +36,13 @@ import {
 } from '../../store/users/users.selectors';
 import type { AuthUser } from '../../types/user.types';
 import type { ProfileRole } from '../../types/role-profile';
-import { PROFILE_ROLE_CONFIG } from './Profile.roles';
+import {
+  getProfileRoleConfig,
+  hasProfileAction,
+  hasProfileSection,
+  isProfileFieldEditable,
+  isProfileFieldVisible,
+} from './Profile.roles';
 import './Profile.scss';
 
 const NOT_PROVIDED = 'Não informado';
@@ -75,12 +81,14 @@ export type ProfileProps = {
 };
 
 function PlatformAccess({ role, user }: { role: ProfileRole; user: AuthUser }) {
+  const roleConfig = getProfileRoleConfig(role);
+
   return (
     <ProfileReadonly title="Acesso à plataforma">
       <ListText
         aria-label="Acesso à plataforma"
         items={[
-          { label: 'Perfil de acesso', value: PROFILE_ROLE_CONFIG[role].accessProfileLabel },
+          { label: 'Perfil de acesso', value: roleConfig.accessProfileLabel },
         ]}
       />
       {/* Fora do ListText: o value dele vira <p> e o StatusChip é <div>. */}
@@ -121,16 +129,23 @@ function ResearcherDetails({
       </ProfileReadonly>
 
       <ProfileReadonly title="Dados acadêmicos e COEP">
-        <ListText
-          aria-label="Dados acadêmicos e COEP"
-          items={[
-            { label: 'Área de pesquisa', value: orNotProvided(user.researcherProfile?.researchArea) },
-            { label: 'Número do parecer', value: orNotProvided(user.coep?.opinionNumber) },
-            { label: 'Cargo / posição', value: orNotProvided(user.researcherProfile?.position) },
-            { label: 'Data de aprovação', value: formatApprovalDate(user.coep?.approvalDate) },
-            { label: 'CAAE', value: orNotProvided(user.coep?.caae) },
-          ]}
-        />
+        <div className="profile__academic-grid">
+          <ListText
+            aria-label="Dados acadêmicos e COEP — coluna 1"
+            items={[
+              { label: 'Área de pesquisa', value: orNotProvided(user.researcherProfile?.researchArea) },
+              { label: 'Cargo / posição', value: orNotProvided(user.researcherProfile?.position) },
+              { label: 'CAAE', value: orNotProvided(user.coep?.caae) },
+            ]}
+          />
+          <ListText
+            aria-label="Dados acadêmicos e COEP — coluna 2"
+            items={[
+              { label: 'Número do parecer', value: orNotProvided(user.coep?.opinionNumber) },
+              { label: 'Data de aprovação', value: formatApprovalDate(user.coep?.approvalDate) },
+            ]}
+          />
+        </div>
         {canDownloadCoep && (
           <div className="profile__coep-actions">
             <Button variant="outlined" onClick={onDownloadCoep} disabled={downloading}>
@@ -152,10 +167,10 @@ export function Profile({ role, sessionError }: ProfileProps) {
   const downloading = useAppSelector(selectUsersDownloadLoading);
   const downloadError = useAppSelector(selectUsersDownloadError);
 
-  const roleConfig = PROFILE_ROLE_CONFIG[role];
+  const roleConfig = getProfileRoleConfig(role);
   const profileForm = useProfileForm({
     user,
-    editableFields: roleConfig.editableFields,
+    fields: roleConfig.fields,
   });
   const passwordForm = useChangePasswordForm();
   const [mode, setMode] = useState<'readonly' | 'edit'>('readonly');
@@ -233,7 +248,7 @@ export function Profile({ role, sessionError }: ProfileProps) {
     dispatch(updateProfile({
       fullName: values.fullName,
       email: values.email,
-      ...(profileForm.showPhone ? { phone: values.phone } : {}),
+      ...(isProfileFieldEditable(role, 'phone') ? { phone: values.phone } : {}),
     }));
   });
 
@@ -250,10 +265,10 @@ export function Profile({ role, sessionError }: ProfileProps) {
     );
   }
 
-  const canEdit = roleConfig.actions.includes('editProfile');
-  const canChangePassword = roleConfig.actions.includes('changePassword');
+  const canEdit = hasProfileAction(role, 'editProfile');
+  const canChangePassword = hasProfileAction(role, 'changePassword');
   const canDownloadCoep =
-    roleConfig.actions.includes('downloadCoep') && Boolean(user.coep?.documentFilename);
+    hasProfileAction(role, 'downloadCoep') && Boolean(user.coep?.documentFilename);
 
   const headerActions = mode === 'readonly' && !passwordOpen ? (
     <>
@@ -282,11 +297,11 @@ export function Profile({ role, sessionError }: ProfileProps) {
           }
         />
 
-        {roleConfig.sections.includes('account') && (
+        {hasProfileSection(role, 'account') && (
           <ProfileForm
             mode={mode}
             fields={profileForm.fields}
-            showPhone={profileForm.showPhone}
+            showPhone={isProfileFieldVisible(role, 'phone')}
             actions={headerActions}
             submitting={savingProfile}
             onSubmit={() => { void submitProfile(); }}
@@ -309,8 +324,8 @@ export function Profile({ role, sessionError }: ProfileProps) {
           />
         )}
 
-        {roleConfig.sections.includes('access') && <PlatformAccess role={role} user={user} />}
-        {roleConfig.sections.includes('researcherDetails') && (
+        {hasProfileSection(role, 'access') && <PlatformAccess role={role} user={user} />}
+        {hasProfileSection(role, 'researcherDetails') && (
           <ResearcherDetails
             user={user}
             canDownloadCoep={canDownloadCoep}

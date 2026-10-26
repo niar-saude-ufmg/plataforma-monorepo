@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useController } from 'react-hook-form';
 import { z } from 'zod';
 import type { AuthUser, UserTextField } from '../../../types/user.types';
-import type { ProfileFieldId } from '../../../types/role-profile';
+import type { ProfileRoleConfig } from '../../../types/role-profile';
 import { useForm } from '../use-form/use-form';
 import { textFieldProps } from '../utils/props';
 import { profileFormSchema, type ProfileFormValues } from './use-profile-form.validators';
@@ -17,7 +17,7 @@ export type ProfileFormFields = {
 
 type UseProfileFormOptions = {
   user: AuthUser | null;
-  editableFields: readonly ProfileFieldId[];
+  fields: ProfileRoleConfig['fields'];
 };
 
 const EMPTY_VALUES: ProfileFormValues = {
@@ -35,13 +35,13 @@ const toFormValues = (user: AuthUser | null): ProfileFormValues =>
       }
     : EMPTY_VALUES;
 
-export function useProfileForm({ user, editableFields }: UseProfileFormOptions) {
+export function useProfileForm({ user, fields: fieldConfig }: UseProfileFormOptions) {
   const defaultValues = useMemo(() => toFormValues(user), [user]);
   const schema = useMemo(
-    () => editableFields.includes('phone')
+    () => fieldConfig.phone.editable
       ? profileFormSchema
       : profileFormSchema.extend({ phone: z.string().trim().optional() }),
-    [editableFields],
+    [fieldConfig.phone.editable],
   );
   const form = useForm<ProfileFormValues>({
     schema,
@@ -71,6 +71,5 @@ export function useProfileForm({ user, editableFields }: UseProfileFormOptions) 
   return {
     ...form,
     fields,
-    showPhone: editableFields.includes('phone'),
   };
 }
