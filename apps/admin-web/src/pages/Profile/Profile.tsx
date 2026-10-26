@@ -117,29 +117,37 @@ function ResearcherDetails({
 }) {
   return (
     <>
-      <ProfileReadonly title="Dados de contato e instituição">
-        <ListText
-          aria-label="Dados de contato e instituição"
-          items={[
-            { label: 'Instituição', value: orNotProvided(user.profile?.institution) },
-            { label: 'Unidade organizacional', value: orNotProvided(user.profile?.organizationalUnit) },
-            { label: 'Endereço de contato', value: orNotProvided(user.profile?.contactAddress) },
-          ]}
-        />
-      </ProfileReadonly>
-
-      <ProfileReadonly title="Dados acadêmicos e COEP">
+      <ProfileReadonly title="Dados acadêmicos e institucionais">
         <div className="profile__academic-grid">
           <ListText
-            aria-label="Dados acadêmicos e COEP — coluna 1"
+            aria-label="Dados acadêmicos e institucionais — coluna 1"
             items={[
               { label: 'Área de pesquisa', value: orNotProvided(user.researcherProfile?.researchArea) },
               { label: 'Cargo / posição', value: orNotProvided(user.researcherProfile?.position) },
-              { label: 'CAAE', value: orNotProvided(user.coep?.caae) },
+              { label: 'Instituição', value: orNotProvided(user.profile?.institution) },
             ]}
           />
           <ListText
-            aria-label="Dados acadêmicos e COEP — coluna 2"
+            aria-label="Dados acadêmicos e institucionais — coluna 2"
+            items={[
+              { label: 'Unidade organizacional', value: orNotProvided(user.profile?.organizationalUnit) },
+              { label: 'Endereço de contato', value: orNotProvided(user.profile?.contactAddress) },
+            ]}
+          />
+        </div>
+      </ProfileReadonly>
+
+      <ProfileReadonly title="Dados de avaliação no COEP">
+        <div className="profile__academic-grid">
+          <ListText
+            aria-label="Dados de avaliação no COEP — coluna 1"
+            items={[
+              { label: 'CAAE', value: orNotProvided(user.coep?.caae) },
+              { label: 'Nome do arquivo', value: orNotProvided(user.coep?.documentFilename) },
+            ]}
+          />
+          <ListText
+            aria-label="Dados de avaliação no COEP — coluna 2"
             items={[
               { label: 'Número do parecer', value: orNotProvided(user.coep?.opinionNumber) },
               { label: 'Data de aprovação', value: formatApprovalDate(user.coep?.approvalDate) },

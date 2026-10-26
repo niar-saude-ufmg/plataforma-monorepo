@@ -190,10 +190,10 @@ describe('página de Perfil', () => {
 
     expect(screen.queryByRole('textbox', { name: 'Telefone' })).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: 'Dados de contato e instituição' }),
+      screen.queryByRole('heading', { name: 'Dados acadêmicos e institucionais' }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: 'Dados acadêmicos e COEP' }),
+      screen.queryByRole('heading', { name: 'Dados de avaliação no COEP' }),
     ).not.toBeInTheDocument();
   });
 
@@ -224,19 +224,20 @@ describe('página de Perfil', () => {
     expect(screen.getByRole('textbox', { name: 'Telefone' })).toHaveValue('(31) 99999-0000');
 
     expect(
-      screen.getByRole('heading', { name: 'Dados de contato e instituição', level: 2 }),
+      screen.getByRole('heading', { name: 'Dados acadêmicos e institucionais', level: 2 }),
     ).toBeInTheDocument();
     expect(screen.getByText('UFMG')).toBeInTheDocument();
     expect(screen.getByText('Faculdade de Medicina')).toBeInTheDocument();
     expect(screen.getByText('Belo Horizonte - MG')).toBeInTheDocument();
 
     expect(
-      screen.getByRole('heading', { name: 'Dados acadêmicos e COEP', level: 2 }),
+      screen.getByRole('heading', { name: 'Dados de avaliação no COEP', level: 2 }),
     ).toBeInTheDocument();
     expect(screen.getByText('Saúde pública')).toBeInTheDocument();
     expect(screen.getByText('Professora adjunta')).toBeInTheDocument();
     expect(screen.getByText('1234.567')).toBeInTheDocument();
     expect(screen.getByText('12345678.9.0000.0000')).toBeInTheDocument();
+    expect(screen.getByText('parecer-coep.pdf')).toBeInTheDocument();
   });
 
   it('formata a data de aprovação do COEP como DD/MM/AAAA', () => {
