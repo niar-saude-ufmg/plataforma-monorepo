@@ -94,6 +94,27 @@ describe("Admin App", () => {
     });
   });
 
+  it("redireciona um modo inválido de especialidade para a listagem", async () => {
+    render(
+      <MemoryRouter initialEntries={["/admin/administrador/especialidades/invalido"]}>
+        <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Especialidades" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Cadastrar especialidade" })).not.toBeInTheDocument();
+  });
+
+  it("abre o cadastro de especialidade pela subrota", async () => {
+    render(
+      <MemoryRouter initialEntries={["/admin/administrador/especialidades/novo"]}>
+        <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Cadastrar especialidade" })).toBeInTheDocument();
+  });
+
   it.each([
     ["researcher", "Pesquisador", "/admin/pesquisador/home"],
     ["committee", "Comitê", "/admin/comite/home"],
@@ -119,5 +140,20 @@ describe("Admin App", () => {
     expect(await screen.findByRole("heading", { name: "Boas vindas, Visitante." })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Especialidades" })).not.toBeInTheDocument();
     expect(specialtyServiceMocks.listSpecialties).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["committee", "/admin/comite/perfil"],
+    ["auditor", "/admin/auditor/especialidades"],
+    ["researcher", "/admin/pesquisador/usuarios"],
+    ["committee", "/admin/comite/usuarios/novo"],
+  ] as const)("bloqueia acesso direto não disponível para %s", async (role, path) => {
+    render(
+      <MemoryRouter initialEntries={[path]}>
+        <App mode="admin" currentUser={{ id: 2, name: "Visitante", email: "visitante@niar.local", role, accountStatus: "active" }} />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Boas vindas, Visitante." })).toBeInTheDocument();
   });
 });

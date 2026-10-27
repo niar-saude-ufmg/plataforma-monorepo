@@ -1,19 +1,18 @@
 import "./RoleHome.scss";
+import { selectAuthSelected } from "../../store/auth/auth.selectors";
+import { useAppSelector } from "../../store/hooks";
 
-type RoleHomeProps = {
-  section: "home" | "projetos";
-  userName: string;
-};
+export function RoleHome() {
+  const user = useAppSelector(selectAuthSelected);
 
-export function RoleHome({ section, userName }: RoleHomeProps) {
-  if (section !== "home") return null;
+  if (!user) return null;
 
   return (
     <section className="role-home" aria-labelledby="role-home-title">
       <span className="role-home__mark" aria-hidden="true" />
       <div className="role-home__content">
         <h1 id="role-home-title" className="role-home__title">
-          Boas vindas, {userName}.
+          Boas vindas, {user.name}.
         </h1>
         <p className="role-home__description">
           Boas-vindas à plataforma de integração do NIAR-Saúde. Aqui você poderá

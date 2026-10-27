@@ -35,14 +35,8 @@ import {
   selectUsersDownloadLoading,
 } from '../../store/users/users.selectors';
 import type { AuthUser } from '../../types/user.types';
-import type { ProfileRole } from '../../types/role-profile';
-import {
-  getProfileRoleConfig,
-  hasProfileAction,
-  hasProfileSection,
-  isProfileFieldEditable,
-  isProfileFieldVisible,
-} from './Profile.roles';
+import type { ProfileRoleConfig } from '../../types/role-profile';
+import { PROFILE_ROLE_CONFIG } from './Profile.roles';
 import './Profile.scss';
 
 const NOT_PROVIDED = 'Não informado';
@@ -73,16 +67,7 @@ const formatApprovalDate = (value?: string | null) => {
   return day && month && year ? `${day}/${month}/${year}` : value;
 };
 
-export type ProfileProps = {
-  /** Papel esperado pela rota. Compõe a tela; quem autoriza é o RoleGuard. */
-  role: ProfileRole;
-  /** Reservado para o card que trouxer o carregamento da sessão por GET /auth/me. */
-  sessionError?: unknown;
-};
-
-function PlatformAccess({ role, user }: { role: ProfileRole; user: AuthUser }) {
-  const roleConfig = getProfileRoleConfig(role);
-
+function PlatformAccess({ roleConfig, user }: { roleConfig: ProfileRoleConfig; user: AuthUser }) {
   return (
     <ProfileReadonly title="Acesso à plataforma">
       <ListText
@@ -166,7 +151,7 @@ function ResearcherDetails({
   );
 }
 
-export function Profile({ role, sessionError }: ProfileProps) {
+export function Profile() {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectAuthSelected);
   const mutationStatus = useAppSelector(selectAuthMutationStatus);
@@ -175,10 +160,10 @@ export function Profile({ role, sessionError }: ProfileProps) {
   const downloading = useAppSelector(selectUsersDownloadLoading);
   const downloadError = useAppSelector(selectUsersDownloadError);
 
-  const roleConfig = getProfileRoleConfig(role);
+  const roleConfig = user ? PROFILE_ROLE_CONFIG[user.role] : undefined;
   const profileForm = useProfileForm({
     user,
-    fields: roleConfig.fields,
+    fields: roleConfig?.fields,
   });
   const passwordForm = useChangePasswordForm();
   const [mode, setMode] = useState<'readonly' | 'edit'>('readonly');
@@ -231,7 +216,7 @@ export function Profile({ role, sessionError }: ProfileProps) {
     dispatch(clearUsersError());
   };
 
-  const apiError = errorDismissed ? undefined : (sessionError ?? mutationError ?? downloadError);
+  const apiError = errorDismissed ? undefined : (mutationError ?? downloadError);
   const apiErrorSnackbar = useApiError(
     apiError,
     closeSnackbar,
@@ -248,7 +233,7 @@ export function Profile({ role, sessionError }: ProfileProps) {
 
   useEffect(() => {
     setErrorDismissed(false);
-  }, [sessionError, mutationError, downloadError]);
+  }, [mutationError, downloadError]);
 
   const submitProfile = profileForm.handleSubmit((values: ProfileFormValues) => {
     if (!user) return;
@@ -256,7 +241,7 @@ export function Profile({ role, sessionError }: ProfileProps) {
     dispatch(updateProfile({
       fullName: values.fullName,
       email: values.email,
-      ...(isProfileFieldEditable(role, 'phone') ? { phone: values.phone } : {}),
+      ...(roleConfig?.fields.phone.editable ? { phone: values.phone } : {}),
     }));
   });
 
@@ -273,10 +258,12 @@ export function Profile({ role, sessionError }: ProfileProps) {
     );
   }
 
-  const canEdit = hasProfileAction(role, 'editProfile');
-  const canChangePassword = hasProfileAction(role, 'changePassword');
+  if (!roleConfig) return null;
+
+  const canEdit = roleConfig.actions.includes('editProfile');
+  const canChangePassword = roleConfig.actions.includes('changePassword');
   const canDownloadCoep =
-    hasProfileAction(role, 'downloadCoep') && Boolean(user.coep?.documentFilename);
+    roleConfig.actions.includes('downloadCoep') && Boolean(user.coep?.documentFilename);
 
   const headerActions = mode === 'readonly' && !passwordOpen ? (
     <>
@@ -305,11 +292,11 @@ export function Profile({ role, sessionError }: ProfileProps) {
           }
         />
 
-        {hasProfileSection(role, 'account') && (
+        {roleConfig.sections.includes('account') && (
           <ProfileForm
             mode={mode}
             fields={profileForm.fields}
-            showPhone={isProfileFieldVisible(role, 'phone')}
+            showPhone={roleConfig.fields.phone.visible}
             actions={headerActions}
             submitting={savingProfile}
             onSubmit={() => { void submitProfile(); }}
@@ -332,8 +319,8 @@ export function Profile({ role, sessionError }: ProfileProps) {
           />
         )}
 
-        {hasProfileSection(role, 'access') && <PlatformAccess role={role} user={user} />}
-        {hasProfileSection(role, 'researcherDetails') && (
+        {roleConfig.sections.includes('access') && <PlatformAccess roleConfig={roleConfig} user={user} />}
+        {roleConfig.sections.includes('researcherDetails') && (
           <ResearcherDetails
             user={user}
             canDownloadCoep={canDownloadCoep}

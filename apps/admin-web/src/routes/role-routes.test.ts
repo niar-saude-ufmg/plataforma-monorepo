@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   getRoleNavigation,
   getRoleRouteDefinitions,
-  getSpecialtyCreatePath,
-  getSpecialtyEditPath,
 } from './role-routes';
 
 describe('rotas de especialidades', () => {
@@ -13,9 +11,11 @@ describe('rotas de especialidades', () => {
     });
   });
 
-  it('mantém novo e editar como modos da mesma página de especialidade', () => {
-    expect(getSpecialtyCreatePath('admin')).toBe('/admin/administrador/especialidades/novo');
-    expect(getSpecialtyEditPath('admin')).toBe('/admin/administrador/especialidades/editar');
+  it('mantém novo usuário como subrota da listagem', () => {
+    expect(getRoleNavigation('admin')).not.toContainEqual({
+      label: 'Novo usuário',
+      path: '/admin/administrador/usuarios/novo',
+    });
   });
 
   it.each(['researcher', 'committee', 'auditor'] as const)('não disponibiliza rota ou menu para %s', (role) => {

@@ -1,14 +1,7 @@
-import type {
-  ProfileActionId,
-  ProfileFieldId,
-  ProfileRole,
-  ProfileRoleConfig,
-  ProfileSectionId,
-} from '../../types/role-profile';
+import type { UserRole } from '@niar/contracts';
+import type { ProfileRoleConfig } from '../../types/role-profile';
 
-export type { ProfileRole } from '../../types/role-profile';
-
-export const PROFILE_ROLE_CONFIG: Record<ProfileRole, ProfileRoleConfig> = {
+export const PROFILE_ROLE_CONFIG: Partial<Record<UserRole, ProfileRoleConfig>> = {
   admin: {
     description: 'Gerencie seus dados pessoais e as permissões de acesso à plataforma.',
     accessProfileLabel: 'Administrador',
@@ -32,17 +25,3 @@ export const PROFILE_ROLE_CONFIG: Record<ProfileRole, ProfileRoleConfig> = {
     actions: ['editProfile', 'changePassword', 'downloadCoep'],
   },
 };
-
-export const getProfileRoleConfig = (role: ProfileRole) => PROFILE_ROLE_CONFIG[role];
-
-export const hasProfileAction = (role: ProfileRole, action: ProfileActionId) =>
-  getProfileRoleConfig(role).actions.includes(action);
-
-export const hasProfileSection = (role: ProfileRole, section: ProfileSectionId) =>
-  getProfileRoleConfig(role).sections.includes(section);
-
-export const isProfileFieldVisible = (role: ProfileRole, field: ProfileFieldId) =>
-  getProfileRoleConfig(role).fields[field].visible;
-
-export const isProfileFieldEditable = (role: ProfileRole, field: ProfileFieldId) =>
-  getProfileRoleConfig(role).fields[field].editable;
