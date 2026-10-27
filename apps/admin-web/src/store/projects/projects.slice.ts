@@ -91,6 +91,7 @@ const projectsSlice = createSlice({
         ...(action.meta.arg.search ? { search: action.meta.arg.search } : {}),
         ...(action.meta.arg.status ? { status: action.meta.arg.status } : {}),
         ...(action.meta.arg.evaluationStatus ? { evaluationStatus: action.meta.arg.evaluationStatus } : {}),
+        ...(action.meta.arg.evaluationContext ? { evaluationContext: action.meta.arg.evaluationContext } : {}),
       };
       state.list.page = action.meta.arg.page ?? 1;
       state.list.pageSize = action.meta.arg.pageSize ?? DEFAULT_PROJECTS_PAGE_SIZE;

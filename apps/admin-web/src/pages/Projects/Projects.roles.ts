@@ -6,11 +6,16 @@ export type ProjectColumnId =
   | "researcher"
   | "status"
   | "evaluationContext"
+  | "evaluationStatus"
   | "updatedAt"
   | "evaluations"
   | "actions";
 
-export type ProjectFilterKey = "search" | "status";
+export type ProjectFilterKey =
+  | "search"
+  | "status"
+  | "evaluationStatus"
+  | "evaluationContext";
 
 export type ProjectActionId = "details";
 
@@ -18,14 +23,8 @@ export type ProjectListRoleConfig = RoleListConfig<ProjectColumnId, ProjectFilte
   actions: readonly ProjectActionId[];
 };
 
-/**
- * Configuração das colunas e filtros disponíveis por papel na listagem de
- * projetos. Auditor e comitê serão adicionados no card específico desses
- * perfis.
- */
-export const PROJECT_LIST_CONFIG: Partial<
-  Record<UserRole, ProjectListRoleConfig>
-> = {
+/** Configuração declarativa da listagem compartilhada de projetos por papel. */
+export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
   admin: {
     title: "Projetos",
     description: "Gerencie os projetos, documentos e atribuições da comissão.",
@@ -52,5 +51,57 @@ export const PROJECT_LIST_CONFIG: Partial<
     filters: ["search", "status"],
     actions: ["details"],
     columnLabels: { status: "Status" },
+  },
+  auditor: {
+    title: "Projetos",
+    description: "Acompanhe os projetos pendentes e atribuídos para avaliação.",
+    emptyStateDescription: "Ainda não existem projetos disponíveis para avaliação.",
+    columnIds: [
+      "title",
+      "researcher",
+      "status",
+      "evaluationContext",
+      "evaluationStatus",
+      "updatedAt",
+      "actions",
+    ],
+    filters: ["search", "status", "evaluationStatus", "evaluationContext"],
+    actions: ["details"],
+    columnLabels: {
+      status: "Status do projeto",
+      evaluationContext: "Contexto da avaliação",
+      evaluationStatus: "Status da avaliação",
+    },
+    filterLabels: {
+      status: "Status do projeto",
+      evaluationStatus: "Status da avaliação",
+      evaluationContext: "Contexto da avaliação",
+    },
+  },
+  committee: {
+    title: "Projetos",
+    description: "Acompanhe os projetos encaminhados para avaliação do Comitê.",
+    emptyStateDescription: "Ainda não existem projetos disponíveis para avaliação.",
+    columnIds: [
+      "title",
+      "researcher",
+      "status",
+      "evaluationContext",
+      "evaluationStatus",
+      "updatedAt",
+      "actions",
+    ],
+    filters: ["search", "status", "evaluationStatus", "evaluationContext"],
+    actions: ["details"],
+    columnLabels: {
+      status: "Status do projeto",
+      evaluationContext: "Contexto da avaliação",
+      evaluationStatus: "Status da avaliação",
+    },
+    filterLabels: {
+      status: "Status do projeto",
+      evaluationStatus: "Status da avaliação",
+      evaluationContext: "Contexto da avaliação",
+    },
   },
 };

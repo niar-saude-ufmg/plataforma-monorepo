@@ -9,9 +9,9 @@ import {
   type TableColumn,
 } from "@niar/ui";
 import {
+  EVALUATION_STATUS_LABELS,
   EVALUATION_CONTEXT_LABELS,
   PROJECT_STATUS_LABELS,
-  type ProjectStatus as ContractProjectStatus,
 } from "@niar/contracts";
 import { Fragment, useEffect, type ChangeEvent, type ReactNode } from "react";
 import { useApiError } from "../../hooks/use-api-error/use-api-error";
@@ -35,6 +35,8 @@ import {
   setProjectsPageSize,
 } from "../../store/projects/projects.slice";
 import type {
+  EvaluationContext,
+  EvaluationStatus,
   Project,
   ProjectStatus,
   ProjectStatusEntry,
@@ -46,24 +48,7 @@ import {
   type ProjectFilterKey,
 } from "./Projects.roles";
 
-const PROJECT_STATUS_CODES: readonly ProjectStatus[] = [
-  "submitted_to_committee",
-  "resubmitted_to_committee",
-  "under_review",
-  "needs_changes",
-  "approved",
-  "rejected",
-];
-
-const PROJECT_STATUS_OPTIONS: readonly AutocompleteOption[] =
-  PROJECT_STATUS_CODES.map((value) => ({
-    value,
-    label: PROJECT_STATUS_LABELS[value],
-  }));
-
-const PROJECT_STATUS_CHIP: Partial<
-  Record<ContractProjectStatus, StatusChipStatus>
-> = {
+const PROJECT_STATUS_CHIP: Record<ProjectStatus, StatusChipStatus> = {
   submitted_for_review: "default",
   submitted_to_committee: "default",
   approved_to_schedule: "success",
@@ -85,6 +70,30 @@ const PROJECT_STATUS_CHIP: Partial<
   rejected: "error",
 };
 
+const EVALUATION_STATUS_CHIP: Record<EvaluationStatus, StatusChipStatus> = {
+  waiting: "default",
+  to_review: "warning",
+  sent_to_committee: "info",
+  approved_by_committee: "success",
+  rejected_by_committee: "error",
+  needs_changes_by_committee: "warning",
+  needs_changes: "warning",
+  approved: "success",
+  rejected: "error",
+};
+
+const PROJECT_STATUS_OPTIONS: readonly AutocompleteOption[] = (
+  Object.keys(PROJECT_STATUS_CHIP) as ProjectStatus[]
+).map((value) => ({ value, label: PROJECT_STATUS_LABELS[value] }));
+
+const EVALUATION_STATUS_OPTIONS: readonly AutocompleteOption[] = (
+  Object.keys(EVALUATION_STATUS_LABELS) as EvaluationStatus[]
+).map((value) => ({ value, label: EVALUATION_STATUS_LABELS[value] }));
+
+const EVALUATION_CONTEXT_OPTIONS: readonly AutocompleteOption[] = (
+  Object.keys(EVALUATION_CONTEXT_LABELS) as EvaluationContext[]
+).map((value) => ({ value, label: EVALUATION_CONTEXT_LABELS[value] }));
+
 const optionValue = (value: unknown): string | undefined => {
   if (typeof value === "string") return value.trim() || undefined;
   if (value && typeof value === "object" && "value" in value) {
@@ -104,16 +113,20 @@ const latestStatus = (project: Project): ProjectStatusEntry | undefined =>
   project.status.at(-1);
 
 const statusLabel = (entry: ProjectStatusEntry | undefined) =>
-  (entry && entry.code in PROJECT_STATUS_LABELS
-    ? PROJECT_STATUS_LABELS[entry.code as ContractProjectStatus]
-    : undefined) ??
+  (entry ? PROJECT_STATUS_LABELS[entry.code] : undefined) ??
   entry?.label ??
   "Status não informado";
 
 const statusColor = (entry: ProjectStatusEntry | undefined): StatusChipStatus => {
   if (!entry) return "default";
-  return PROJECT_STATUS_CHIP[entry.code as ContractProjectStatus] ?? "default";
+  return PROJECT_STATUS_CHIP[entry.code] ?? "default";
 };
+
+const evaluationStatus = (project: Project): EvaluationStatus | undefined =>
+  project.evaluationStatus ??
+  (project.evaluations && project.evaluations.length === 0
+    ? "waiting"
+    : undefined);
 
 const formatDate = (value: string) => {
   const date = new Date(value);
@@ -139,8 +152,7 @@ export function Projects() {
   const loading = useAppSelector(selectProjectsListLoading);
   const error = useAppSelector(selectProjectsListError);
   const roleConfig =
-    PROJECT_LIST_CONFIG[user?.role ?? "researcher"] ??
-    PROJECT_LIST_CONFIG.researcher!;
+    PROJECT_LIST_CONFIG[user?.role ?? "researcher"];
 
   useEffect(() => {
     dispatch(
@@ -149,15 +161,31 @@ export function Projects() {
         pageSize,
         search: filters.search || undefined,
         status: filters.status || undefined,
+        evaluationStatus: filters.evaluationStatus || undefined,
+        evaluationContext: filters.evaluationContext || undefined,
       }),
     );
-  }, [dispatch, filters.search, filters.status, page, pageSize]);
+  }, [
+    dispatch,
+    filters.evaluationContext,
+    filters.evaluationStatus,
+    filters.search,
+    filters.status,
+    page,
+    pageSize,
+  ]);
 
   const handleFiltersChange = (values: Readonly<Record<string, unknown>>) => {
     dispatch(
       setProjectsFilters({
         search: optionValue(values.search),
         status: optionValue(values.status) as ProjectStatus | undefined,
+        evaluationStatus: optionValue(values.evaluationStatus) as
+          | EvaluationStatus
+          | undefined,
+        evaluationContext: optionValue(values.evaluationContext) as
+          | EvaluationContext
+          | undefined,
       }),
     );
   };
@@ -178,11 +206,21 @@ export function Projects() {
   const filterValues: Record<ProjectFilterKey, AutocompleteOption | null> = {
     search: selectedSearch,
     status: selectedOption(PROJECT_STATUS_OPTIONS, filters.status),
+    evaluationStatus: selectedOption(
+      EVALUATION_STATUS_OPTIONS,
+      filters.evaluationStatus,
+    ),
+    evaluationContext: selectedOption(
+      EVALUATION_CONTEXT_OPTIONS,
+      filters.evaluationContext,
+    ),
   };
 
   const filterDefinitions: Record<ProjectFilterKey, AutocompleteOption[] | undefined> = {
     search: searchOptions,
     status: [...PROJECT_STATUS_OPTIONS],
+    evaluationStatus: [...EVALUATION_STATUS_OPTIONS],
+    evaluationContext: [...EVALUATION_CONTEXT_OPTIONS],
   };
 
   const filter = (
@@ -194,6 +232,8 @@ export function Projects() {
           ({
             search: "Buscar projeto",
             status: "Status",
+            evaluationStatus: "Status da avaliação",
+            evaluationContext: "Contexto da avaliação",
           } satisfies Record<ProjectFilterKey, string>)[key],
         options: filterDefinitions[key] ?? [],
         ...(key === "search" ? { freeSolo: true } : {}),
@@ -238,6 +278,21 @@ export function Projects() {
         project.evaluationContext
           ? EVALUATION_CONTEXT_LABELS[project.evaluationContext]
           : "—",
+    },
+    evaluationStatus: {
+      key: "evaluationStatus",
+      label: "Status da avaliação",
+      render: (_value, project) => {
+        const status = evaluationStatus(project);
+        return status ? (
+          <StatusChip
+            label={EVALUATION_STATUS_LABELS[status]}
+            status={EVALUATION_STATUS_CHIP[status]}
+          />
+        ) : (
+          "—"
+        );
+      },
     },
     updatedAt: {
       key: "updatedAt",

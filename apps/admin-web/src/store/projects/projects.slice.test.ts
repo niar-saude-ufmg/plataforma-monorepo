@@ -194,12 +194,16 @@ describe("projects slice", () => {
         setProjectsFilters({
           search: "oncologia",
           status: "under_review",
+          evaluationStatus: "to_review",
+          evaluationContext: "pre_safe_room",
         }),
       );
 
       expect(store.getState().projects.list.filters).toEqual({
         search: "oncologia",
         status: "under_review",
+        evaluationStatus: "to_review",
+        evaluationContext: "pre_safe_room",
       });
       expect(store.getState().projects.list.page).toBe(1);
     });
@@ -224,10 +228,19 @@ describe("projects slice", () => {
       getProjectsRequest.mockReturnValueOnce(pending);
 
       const store = makeTestStore();
-      store.dispatch(getProjects({}));
+      store.dispatch(
+        getProjects({
+          evaluationStatus: "to_review",
+          evaluationContext: "pre_safe_room",
+        }),
+      );
 
       expect(store.getState().projects.list.status).toBe("pending");
       expect(store.getState().projects.list.error).toBeNull();
+      expect(store.getState().projects.list.filters).toEqual({
+        evaluationStatus: "to_review",
+        evaluationContext: "pre_safe_room",
+      });
 
       resolveRequest!({ items: [], pagination: buildPagination() });
     });
