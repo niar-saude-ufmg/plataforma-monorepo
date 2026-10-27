@@ -230,7 +230,7 @@ export function Users() {
       <Listing
         title={roleConfig.title}
         description={roleConfig.description}
-        action={
+        action={roleConfig.canCreateUser ? (
           <Button
             variant="contained"
             color="primary"
@@ -238,7 +238,7 @@ export function Users() {
           >
             Cadastrar usuário
           </Button>
-        }
+        ) : undefined}
         columns={toTableColumns(columns)}
         rows={toTableRows(users)}
         loading={loading}

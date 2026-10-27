@@ -18,6 +18,7 @@ export type UserActionId =
 
 export type UserListRoleConfig = RoleListConfig<UserColumnId, UserFilterKey> & {
   actions: readonly UserActionId[];
+  canCreateUser: boolean;
 };
 
 /**
@@ -35,6 +36,7 @@ export const USER_LIST_CONFIG: Partial<
     columnIds: ["fullName", "email", "role", "accountStatus", "actions"],
     filters: ["search", "role", "accountStatus"],
     actions: ["details"],
+    canCreateUser: true,
     filterLabels: {
       search: "Buscar usuário",
       role: "Perfil",
@@ -48,6 +50,7 @@ export const USER_LIST_CONFIG: Partial<
     columnIds: ["fullName", "email", "accountStatus", "actions"],
     filters: ["search", "accountStatus"],
     actions: ["details"],
+    canCreateUser: false,
     filterLabels: {
       search: "Buscar usuário",
       accountStatus: "Status",
@@ -60,6 +63,7 @@ export const USER_LIST_CONFIG: Partial<
     columnIds: ["fullName", "email", "accountStatus", "actions"],
     filters: ["search", "accountStatus"],
     actions: ["details"],
+    canCreateUser: false,
     filterLabels: {
       search: "Buscar usuário",
       accountStatus: "Status",

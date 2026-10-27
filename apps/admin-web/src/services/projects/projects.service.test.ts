@@ -39,6 +39,7 @@ const rawProjectFromApi = {
     },
   ],
   evaluation_status: "waiting",
+  evaluation_context: "pre_safe_room",
   evaluations: [
     {
       id: 88,
@@ -132,6 +133,7 @@ describe("projects service", () => {
           },
         ],
         evaluationStatus: "waiting",
+        evaluationContext: "pre_safe_room",
         evaluations: [
           {
             id: 88,
@@ -158,11 +160,17 @@ describe("projects service", () => {
     });
 
     it("não inclui evaluationStatus/evaluations quando a API não os envia (researcher)", () => {
-      const { evaluation_status, evaluations, ...rawResearcher } = rawProjectFromApi;
+      const {
+        evaluation_status,
+        evaluation_context,
+        evaluations,
+        ...rawResearcher
+      } = rawProjectFromApi;
 
       const project = toProject(rawResearcher);
 
       expect(project).not.toHaveProperty("evaluationStatus");
+      expect(project).not.toHaveProperty("evaluationContext");
       expect(project).not.toHaveProperty("evaluations");
     });
   });
@@ -236,6 +244,7 @@ describe("projects service", () => {
         pageSize: 10,
         status: "under_review",
         evaluationStatus: "waiting",
+        evaluationContext: "pre_safe_room",
         submittedFrom: "2026-09-01",
         submittedTo: "2026-09-30",
         updatedFrom: "2026-09-01T00:00:00.000Z",
@@ -253,6 +262,7 @@ describe("projects service", () => {
       expect(url).toContain("page_size=10");
       expect(url).toContain("status=under_review");
       expect(url).toContain("evaluation_status=waiting");
+      expect(url).toContain("evaluation_context=pre_safe_room");
       expect(url).toContain("submitted_from=2026-09-01");
       expect(url).toContain("submitted_to=2026-09-30");
       expect(url).toContain("updated_from=2026-09-01T00%3A00%3A00.000Z");

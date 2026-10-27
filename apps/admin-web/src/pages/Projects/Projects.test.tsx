@@ -226,7 +226,7 @@ const authUser = (role: UserRole) => ({
   accountStatus: "active" as const,
 });
 
-const renderProjects = (role: "admin" | "researcher" = "admin") => {
+const renderProjects = (role: UserRole = "admin") => {
   store.dispatch(setSelectedAuthUser(authUser(role)));
   return render(
     <Provider store={store}>
@@ -284,10 +284,11 @@ describe("Projects — Redux, filtros e paginação", () => {
     });
   });
 
-  it("não exibe filtro de avaliação para nenhum dos dois perfis", async () => {
+  it("mantém os filtros de administrador e pesquisador sem avaliação", async () => {
     renderProjects("admin");
     await screen.findByTestId("project-row-42");
-    expect(screen.queryByLabelText("Avaliação")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Status da avaliação")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Contexto da avaliação")).not.toBeInTheDocument();
     expect(lastProjectUrl().searchParams.has("evaluation_status")).toBe(false);
 
     cleanup();
@@ -296,9 +297,58 @@ describe("Projects — Redux, filtros e paginação", () => {
     renderProjects("researcher");
     await screen.findByTestId("project-row-42");
 
-    expect(screen.queryByLabelText("Avaliação")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Status da avaliação")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Contexto da avaliação")).not.toBeInTheDocument();
     expect(lastProjectUrl().searchParams.has("evaluation_status")).toBe(false);
   });
+
+  it.each(["auditor", "committee"] as const)(
+    "envia filtros de projeto, avaliação e contexto para %s",
+    async (role) => {
+      const user = userEvent.setup();
+      renderProjects(role);
+      await screen.findByTestId("project-row-42");
+
+      expect(
+        screen.getByRole("option", { name: "Sala segura agendada" }),
+      ).toBeInTheDocument();
+
+      await user.selectOptions(
+        screen.getByLabelText("Status do projeto"),
+        "scheduled_for_safe_room",
+      );
+      await user.selectOptions(
+        screen.getByLabelText("Status da avaliação"),
+        "to_review",
+      );
+      await user.selectOptions(
+        screen.getByLabelText("Contexto da avaliação"),
+        "pre_safe_room",
+      );
+
+      await waitFor(() => {
+        expect(lastProjectUrl().searchParams.get("status")).toBe(
+          "scheduled_for_safe_room",
+        );
+        expect(lastProjectUrl().searchParams.get("evaluation_status")).toBe(
+          "to_review",
+        );
+        expect(lastProjectUrl().searchParams.get("evaluation_context")).toBe(
+          "pre_safe_room",
+        );
+      });
+
+      await user.selectOptions(screen.getByLabelText("Status do projeto"), "");
+      await user.selectOptions(screen.getByLabelText("Status da avaliação"), "");
+      await user.selectOptions(screen.getByLabelText("Contexto da avaliação"), "");
+
+      await waitFor(() => {
+        expect(lastProjectUrl().searchParams.has("status")).toBe(false);
+        expect(lastProjectUrl().searchParams.has("evaluation_status")).toBe(false);
+        expect(lastProjectUrl().searchParams.has("evaluation_context")).toBe(false);
+      });
+    },
+  );
 
   it("converte paginação base 0/base 1 e reseta página ao mudar a quantidade", async () => {
     const user = userEvent.setup();
@@ -338,6 +388,8 @@ describe("Projects — estados e tabela", () => {
   it.each([
     ["admin" as const, "Ainda não existem projetos para exibir."],
     ["researcher" as const, "Você ainda não possui projetos cadastrados."],
+    ["auditor" as const, "Ainda não existem projetos disponíveis para avaliação."],
+    ["committee" as const, "Ainda não existem projetos disponíveis para avaliação."],
   ])("configura EmptyState sem filtros para %s", async (role, description) => {
     fetchMock.mockResolvedValue(jsonResponse(EMPTY_RESPONSE));
     renderProjects(role);
@@ -442,6 +494,142 @@ describe("Projects — estados e tabela", () => {
     ).toEqual(["Detalhes"]);
   });
 
+  it.each(["auditor", "committee"] as const)(
+    "configura colunas e ação visual de %s",
+    async (role) => {
+      const user = userEvent.setup();
+      renderProjects(role);
+      const row = await screen.findByTestId("project-row-42");
+
+      expect(
+        screen.getAllByRole("columnheader").map((header) => header.textContent),
+      ).toEqual([
+        "Projeto",
+        "Pesquisador",
+        "Status do projeto",
+        "Contexto da avaliação",
+        "Status da avaliação",
+        "Atualizado",
+        "Ações",
+      ]);
+      expect(within(row).getByText("Maria Pesquisadora")).toBeInTheDocument();
+      expect(within(row).getByText("Pré-sala segura")).toBeInTheDocument();
+      expect(within(row).getByText("Aguardando avaliação")).toHaveAttribute(
+        "data-status",
+        "warning",
+      );
+
+      const callsBeforeClick = projectCalls().length;
+      expect(
+        within(row)
+          .getAllByRole("button")
+          .map((button) => button.textContent),
+      ).toEqual(["Detalhes"]);
+      await user.click(within(row).getByRole("button", { name: "Detalhes" }));
+      expect(projectCalls()).toHaveLength(callsBeforeClick);
+    },
+  );
+
+  it("exibe Aguardando atribuição quando o projeto ainda não possui avaliação", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        ...PROJECT_RESPONSE,
+        items: [
+          {
+            ...PROJECT_RESPONSE.items[0],
+            evaluation_status: "waiting",
+            evaluations: [],
+          },
+        ],
+      }),
+    );
+
+    renderProjects("auditor");
+    const row = await screen.findByTestId("project-row-42");
+
+    expect(within(row).getByText("Aguardando atribuição")).toHaveAttribute(
+      "data-status",
+      "default",
+    );
+  });
+
+  it("renderiza para Auditor os não atribuídos, atribuídos a si e enviados por si", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        ...PROJECT_RESPONSE,
+        items: [
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 42,
+            title: "Projeto aguardando atribuição",
+            evaluation_status: "waiting",
+            evaluation_context: null,
+            evaluations: [],
+          },
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 43,
+            title: "Projeto atribuído ao auditor",
+            evaluation_status: "to_review",
+            evaluation_context: "pre_safe_room",
+          },
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 44,
+            title: "Projeto enviado pelo auditor ao Comitê",
+            evaluation_status: "sent_to_committee",
+            evaluation_context: "pre_safe_room",
+          },
+        ],
+      }),
+    );
+
+    renderProjects("auditor");
+
+    expect(
+      await screen.findByText("Projeto aguardando atribuição"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Projeto atribuído ao auditor")).toBeInTheDocument();
+    expect(
+      screen.getByText("Projeto enviado pelo auditor ao Comitê"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Projeto pós-sala do Comitê")).not.toBeInTheDocument();
+  });
+
+  it("renderiza para Comitê somente o pré atribuído e os itens pós-sala autorizados", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        ...PROJECT_RESPONSE,
+        items: [
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 45,
+            title: "Projeto pré-sala atribuído ao Comitê",
+            evaluation_status: "to_review",
+            evaluation_context: "pre_safe_room",
+          },
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 46,
+            title: "Projeto pós-sala autorizado",
+            evaluation_status: "to_review",
+            evaluation_context: "post_safe_room",
+          },
+        ],
+      }),
+    );
+
+    renderProjects("committee");
+
+    expect(
+      await screen.findByText("Projeto pré-sala atribuído ao Comitê"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Projeto pós-sala autorizado")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Projeto aguardando atribuição do Auditor"),
+    ).not.toBeInTheDocument();
+  });
+
   it("usa somente um Listing, sem estruturas visuais paralelas", async () => {
     renderProjects();
     await screen.findByTestId("project-row-42");
@@ -450,28 +638,34 @@ describe("Projects — estados e tabela", () => {
 });
 
 describe("Projects — rotas e navegação por papel", () => {
-  it("adiciona Projetos apenas aos menus de administrador e pesquisador", () => {
+  it("adiciona Projetos aos menus dos quatro papéis", () => {
     expect(getRoleNavigation("admin").map(({ label }) => label)).toContain("Projetos");
     expect(getRoleNavigation("researcher").map(({ label }) => label)).toContain("Meus projetos");
-    expect(getRoleNavigation("committee").map(({ label }) => label)).not.toContain("Projetos");
-    expect(getRoleNavigation("auditor").map(({ label }) => label)).not.toContain("Projetos");
+    expect(getRoleNavigation("committee").map(({ label }) => label)).toContain("Projetos");
+    expect(getRoleNavigation("auditor").map(({ label }) => label)).toContain("Projetos");
   });
 
   it.each([
     ["admin" as const, "/admin/administrador/projetos"],
     ["researcher" as const, "/admin/pesquisador/projetos"],
+    ["auditor" as const, "/admin/auditor/projetos"],
+    ["committee" as const, "/admin/comite/projetos"],
   ])("permite a rota de projetos para %s", async (role, path) => {
     render(
       <MemoryRouter initialEntries={[path]}>
         <App currentUser={authUser(role)} />
       </MemoryRouter>,
     );
-    expect(await screen.findByRole("heading", { name: role === "admin" ? "Projetos" : "Meus projetos" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: role === "researcher" ? "Meus projetos" : "Projetos",
+      }),
+    ).toBeInTheDocument();
   });
 
-  it("não cria rota para comitê e o redireciona para sua home", async () => {
+  it("protege a rota de Auditor contra acesso do Comitê", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/comite/projetos"]}>
+      <MemoryRouter initialEntries={["/admin/auditor/projetos"]}>
         <App currentUser={authUser("committee")} />
       </MemoryRouter>,
     );
