@@ -62,7 +62,7 @@ function RoleRouteContent({
       : route.section === "perfil"
       ? (["admin", "researcher"] as const)
       : route.section === "usuarios" || route.section === "usuarios/novo"
-      ? (["admin", "researcher"] as const)
+      ? (["admin", "researcher", "auditor", "committee"] as const)
       : ([user.role] as const);
 
   return <RoleGuard allowedRoles={allowedRoles}>{page}</RoleGuard>;
