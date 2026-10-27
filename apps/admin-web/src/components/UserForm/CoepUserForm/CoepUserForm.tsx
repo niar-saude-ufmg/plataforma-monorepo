@@ -11,9 +11,9 @@ export function CoepUserForm({ fields }: CoepUserFormProps) {
     <section className="coep-user-form" aria-labelledby="coep-data-title">
       <h3 id="coep-data-title">Parecer do COEP</h3>
       <div className="coep-user-form__grid">
-        <Input {...fields.caae} label="CAAE" fullWidth />
-        <Input {...fields.opinionNumber} label="Número do parecer" fullWidth />
-        <DatePicker {...fields.approvalDate} label="Data de aprovação" fullWidth />
+        <Input {...fields.caae} label="CAAE" required fullWidth />
+        <Input {...fields.opinionNumber} label="Número do parecer" required fullWidth />
+        <DatePicker {...fields.approvalDate} label="Data de aprovação" required fullWidth />
       </div>
       <div className="coep-user-form__file-field">
         <FileUpload

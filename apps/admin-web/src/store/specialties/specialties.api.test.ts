@@ -21,10 +21,13 @@ import {
   clearSpecialtiesState,
   setSelectedSpecialty,
   specialtiesReducer,
+  initialSpecialtiesState,
 } from './specialties.slice';
 import {
   selectSpecialtiesSelected,
   selectSpecialtiesList,
+  selectSpecialtiesMutationError,
+  selectSpecialtiesMutationLoading,
   selectSpecialtiesListError,
   selectSpecialtiesListLoading,
   selectSpecialtiesListPagination,
@@ -95,7 +98,8 @@ describe('specialties thunks, reducer and selectors', () => {
     await store.dispatch(createSpecialty({ code: 'epi', name: 'Epidemiologia' }));
 
     expect(store.getState().specialties.mutation.status).toBe('failed');
-    expect(store.getState().specialties.mutation.error).toEqual(error);
+    expect(selectSpecialtiesMutationError(store.getState())).toEqual(error);
+    expect(selectSpecialtiesListError(store.getState())).toBeNull();
   });
 
   it('adiciona a criação à lista e à seleção', async () => {
@@ -126,17 +130,21 @@ describe('specialties thunks, reducer and selectors', () => {
     expect(selectSpecialtiesSelected(store.getState())).toEqual(updated);
   });
 
-  it('refaz a busca da página atual com os filtros armazenados após a mutação', async () => {
+  it.each(['create', 'update', 'status'] as const)('preserva filtros, página e pageSize após %s', async (operation) => {
     const filters = { query: 'epidemio', isActive: true, page: 2, pageSize: 10 };
     const updated = buildSpecialty({ name: 'Epidemiologia clínica' });
     serviceMocks.listSpecialties
       .mockResolvedValueOnce(listResponse([buildSpecialty()]))
       .mockResolvedValueOnce(listResponse([updated]));
+    serviceMocks.createSpecialty.mockResolvedValue(updated);
     serviceMocks.updateSpecialty.mockResolvedValue(updated);
+    serviceMocks.updateSpecialtyStatus.mockResolvedValue(updated);
     const store = makeStore();
 
     await store.dispatch(fetchSpecialties(filters));
-    await store.dispatch(updateSpecialty({ id: updated.id, name: updated.name }));
+    if (operation === 'create') await store.dispatch(createSpecialty({ code: updated.code, name: updated.name }));
+    else if (operation === 'update') await store.dispatch(updateSpecialty({ id: updated.id, name: updated.name }));
+    else await store.dispatch(updateSpecialtyStatus({ id: updated.id, isActive: false }));
 
     expect(serviceMocks.listSpecialties).toHaveBeenNthCalledWith(2, filters);
     expect(selectSpecialtiesList(store.getState())).toEqual([updated]);
@@ -159,7 +167,7 @@ describe('specialties thunks, reducer and selectors', () => {
     expect(selectSpecialtiesSelected(store.getState())).toEqual(updated);
   });
 
-  it('separa o status da listagem do status da mutação', async () => {
+  it('mantém o estado da consulta independente durante uma mutação', async () => {
     serviceMocks.listSpecialties.mockResolvedValue(listResponse());
     let resolveMutation!: (value: Specialty) => void;
     serviceMocks.updateSpecialty.mockReturnValue(new Promise((resolve) => {
@@ -172,6 +180,8 @@ describe('specialties thunks, reducer and selectors', () => {
 
     expect(selectSpecialtiesListLoading(store.getState())).toBe(false);
     expect(selectSpecialtiesListStatus(store.getState())).toBe('succeeded');
+    expect(selectSpecialtiesMutationLoading(store.getState())).toBe(true);
+    expect(store.getState().specialties.mutation.operation).toBe('update');
     expect(store.getState().specialties.mutation.status).toBe('pending');
 
     resolveMutation(buildSpecialty({ name: 'Novo nome' }));
@@ -179,6 +189,15 @@ describe('specialties thunks, reducer and selectors', () => {
 
     expect(selectSpecialtiesListLoading(store.getState())).toBe(false);
     expect(selectSpecialtiesListStatus(store.getState())).toBe('succeeded');
+  });
+
+  it('preserva o erro da consulta quando o refresh falha após salvar', async () => {
+    serviceMocks.createSpecialty.mockResolvedValue(buildSpecialty());
+    serviceMocks.listSpecialties.mockRejectedValue({ message: 'Falha na consulta.' });
+    const store = makeStore();
+    await store.dispatch(createSpecialty({ code: 'epi', name: 'Epidemiologia' }));
+    expect(selectSpecialtiesListError(store.getState())).toEqual({ message: 'Falha na consulta.' });
+    expect(selectSpecialtiesMutationError(store.getState())).toBeNull();
     expect(store.getState().specialties.mutation.status).toBe('succeeded');
   });
 
@@ -203,18 +222,6 @@ describe('specialties thunks, reducer and selectors', () => {
     expect(store.getState().specialties.list.status).toBe('idle');
 
     store.dispatch(clearSpecialtiesState());
-    expect(store.getState().specialties).toEqual({
-      list: {
-        items: [],
-        pagination: null,
-        filters: {},
-        page: 1,
-        pageSize: 20,
-        status: 'idle',
-        error: null,
-      },
-      selected: null,
-      mutation: { operation: null, status: 'idle', error: null },
-    });
+    expect(store.getState().specialties).toEqual(initialSpecialtiesState);
   });
 });

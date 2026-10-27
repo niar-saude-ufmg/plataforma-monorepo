@@ -1,11 +1,13 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../App';
 import { Profile } from './Profile';
 import { store } from '../../store';
-import { setSelectedAuthUser } from '../../store/auth/auth.slice';
+import { clearAuthMutation, setSelectedAuthUser } from '../../store/auth/auth.slice';
+import { clearUsersError } from '../../store/users/users.slice';
 import type { AuthUser } from '../../types/user.types';
 import type { ProfileRole } from '../../types/role-profile';
 
@@ -163,15 +165,15 @@ describe('página de Perfil', () => {
   it('usa o usuário do authSlice para preencher o formulário', () => {
     renderPage(admin);
 
-    expect(screen.getByLabelText('Nome completo')).toHaveValue('Gestora Um');
-    expect(screen.getByLabelText('E-mail')).toHaveValue('gestora@niar.local');
+    expect(screen.getByRole('textbox', { name: 'Nome completo' })).toHaveValue('Gestora Um');
+    expect(screen.getByRole('textbox', { name: 'E-mail' })).toHaveValue('gestora@niar.local');
   });
 
   it('renderiza o ProfileForm em modo readonly', () => {
     renderPage(admin);
 
-    expect(screen.getByLabelText('Nome completo')).toBeDisabled();
-    expect(screen.getByLabelText('E-mail')).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'Nome completo' })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'E-mail' })).toBeDisabled();
   });
 
   it('exibe perfil de acesso e status da conta para o Administrador', () => {
@@ -186,12 +188,12 @@ describe('página de Perfil', () => {
   it('não exibe telefone, dados institucionais nem COEP para o Administrador', () => {
     renderPage(admin);
 
-    expect(screen.queryByLabelText('Telefone')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Telefone' })).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: 'Dados de contato e instituição' }),
+      screen.queryByRole('heading', { name: 'Dados acadêmicos e institucionais' }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('heading', { name: 'Dados acadêmicos e COEP' }),
+      screen.queryByRole('heading', { name: 'Dados de avaliação no COEP' }),
     ).not.toBeInTheDocument();
   });
 
@@ -219,22 +221,23 @@ describe('página de Perfil', () => {
   it('exibe contato, instituição, dados acadêmicos e COEP para o Pesquisador', () => {
     renderPage(researcher);
 
-    expect(screen.getByLabelText('Telefone')).toHaveValue('(31) 99999-0000');
+    expect(screen.getByRole('textbox', { name: 'Telefone' })).toHaveValue('(31) 99999-0000');
 
     expect(
-      screen.getByRole('heading', { name: 'Dados de contato e instituição', level: 2 }),
+      screen.getByRole('heading', { name: 'Dados acadêmicos e institucionais', level: 2 }),
     ).toBeInTheDocument();
     expect(screen.getByText('UFMG')).toBeInTheDocument();
     expect(screen.getByText('Faculdade de Medicina')).toBeInTheDocument();
     expect(screen.getByText('Belo Horizonte - MG')).toBeInTheDocument();
 
     expect(
-      screen.getByRole('heading', { name: 'Dados acadêmicos e COEP', level: 2 }),
+      screen.getByRole('heading', { name: 'Dados de avaliação no COEP', level: 2 }),
     ).toBeInTheDocument();
     expect(screen.getByText('Saúde pública')).toBeInTheDocument();
     expect(screen.getByText('Professora adjunta')).toBeInTheDocument();
     expect(screen.getByText('1234.567')).toBeInTheDocument();
     expect(screen.getByText('12345678.9.0000.0000')).toBeInTheDocument();
+    expect(screen.getByText('parecer-coep.pdf')).toBeInTheDocument();
   });
 
   it('formata a data de aprovação do COEP como DD/MM/AAAA', () => {
@@ -259,7 +262,7 @@ describe('página de Perfil', () => {
     renderPage(null);
 
     expect(screen.getByLabelText('Carregando perfil')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Nome completo')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Nome completo' })).not.toBeInTheDocument();
   });
 
   it('mostra o erro de carregamento no Snackbar oficial', () => {
@@ -274,10 +277,174 @@ describe('página de Perfil', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('não oferece edição, submit nem troca de senha nesta entrega', () => {
+  it('não mostra os formulários de edição antes de a ação ser usada', () => {
     renderPage(researcher);
 
-    expect(screen.queryByRole('button', { name: /editar|salvar|cancelar/i })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/senha/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Salvar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Senha atual' })).not.toBeInTheDocument();
+  });
+});
+
+const fetchMock = vi.hoisted(() => {
+  const mock = vi.fn();
+  globalThis.fetch = mock as typeof fetch;
+  return mock;
+});
+
+const sessionResponse = {
+  id: 1,
+  email: 'gestora@niar.local',
+  full_name: 'Gestora Atualizada',
+  role: 'admin' as const,
+  account_status: 'active' as const,
+};
+
+describe('Perfil — edição, senha e download', () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    cleanup();
+    store.dispatch(clearAuthMutation());
+    store.dispatch(clearUsersError());
+    store.dispatch(setSelectedAuthUser(null));
+  });
+
+  it('mostra as ações permitidas pelo papel', () => {
+    renderPage(admin);
+
+    expect(screen.getByRole('button', { name: 'Editar perfil' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trocar senha' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Baixar' })).not.toBeInTheDocument();
+  });
+
+  it('oferece o download do COEP só para o Pesquisador com documento', () => {
+    renderPage(researcher);
+
+    expect(screen.getByRole('button', { name: 'Baixar' })).toBeInTheDocument();
+  });
+
+  it('esconde o download quando não há documento do COEP', () => {
+    renderPage({ ...researcher, coep: undefined });
+
+    expect(screen.queryByRole('button', { name: 'Baixar' })).not.toBeInTheDocument();
+  });
+
+  it('entra em modo de edição e troca o título da página', async () => {
+    renderPage(admin);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+
+    expect(screen.getByRole('heading', { name: 'Editar perfil', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Nome completo' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Salvar' })).toBeInTheDocument();
+  });
+
+  it('cancelar volta para readonly sem tocar no authSlice', async () => {
+    renderPage(admin);
+    const antes = store.getState().auth.selected;
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    const nome = screen.getByRole('textbox', { name: 'Nome completo' });
+    await userEvent.clear(nome);
+    await userEvent.type(nome, 'Rascunho');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Nome completo' })).toBeDisabled());
+    expect(store.getState().auth.selected).toEqual(antes);
+  });
+
+  it('salvar dispara o PATCH e atualiza a sessão', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => sessionResponse });
+    renderPage(admin);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    const nome = screen.getByRole('textbox', { name: 'Nome completo' });
+    await userEvent.clear(nome);
+    await userEvent.type(nome, 'Gestora Atualizada');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain('/auth/me');
+    expect(init.method).toBe('PATCH');
+    await waitFor(() => expect(store.getState().auth.selected?.name).toBe('Gestora Atualizada'));
+  });
+
+  it('abre o formulário de troca de senha e envia sem a confirmação', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: async () => sessionResponse });
+    renderPage(admin);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
+    await userEvent.type(screen.getByLabelText('Senha atual'), 'senha-atual');
+    await userEvent.type(screen.getByLabelText('Nova senha'), 'nova-senha-123');
+    await userEvent.type(screen.getByLabelText('Repetir senha'), 'nova-senha-123');
+    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(Object.keys(body).sort()).toEqual(['current_password', 'password']);
+  });
+
+  it('mostra o erro da API no Snackbar', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: 'E-mail já utilizado por outro usuário' }),
+    });
+    renderPage(admin);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('Este e-mail já está em uso por outro usuário.'),
+    );
+  });
+
+  it('dispara o download autenticado do COEP pelo thunk', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: { get: () => 'attachment; filename="parecer-coep.pdf"' },
+      blob: async () => new Blob(['pdf']),
+    });
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:url');
+    globalThis.URL.revokeObjectURL = vi.fn();
+
+    renderPage(researcher);
+    await userEvent.click(screen.getByRole('button', { name: 'Baixar' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(String(fetchMock.mock.calls[0][0])).toContain('/users/2/coep-document');
+    await waitFor(() => expect(store.getState().users.download.status).toBe('succeeded'));
+  });
+
+  it('mostra o erro do download no Snackbar', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: 'Acesso negado' }),
+    });
+
+    renderPage(researcher);
+    await userEvent.click(screen.getByRole('button', { name: 'Baixar' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('Você não tem acesso a este documento.'),
+    );
+  });
+
+  it('mantém a senha mascarada e não expõe token nem documento no HTML', async () => {
+    renderPage(admin);
+    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
+    await userEvent.type(screen.getByLabelText('Senha atual'), 'senha-secreta');
+
+    // O campo é controlado: o valor fica no input mascarado, nunca como texto da página.
+    expect(screen.getByLabelText('Senha atual')).toHaveAttribute('type', 'password');
+    expect(document.body.textContent).not.toContain('senha-secreta');
+    expect(document.body.innerHTML).not.toContain('Bearer');
+    expect(document.body.innerHTML).not.toContain('coep-document');
   });
 });

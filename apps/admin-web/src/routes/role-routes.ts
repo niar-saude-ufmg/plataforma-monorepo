@@ -9,12 +9,14 @@ export type RoleSection =
   | "home"
   | "projetos"
   | "usuarios"
+  | "usuarios/novo"
   | "especialidades"
   | "perfil";
 
 export type RoleRouteDefinition = {
   label: string;
   section: RoleSection;
+  hidden?: boolean;
 };
 
 const rolePathSegments: Record<UserRole, string> = {
@@ -33,6 +35,7 @@ const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
     ...commonRoleRouteDefinitions,
     { label: "Projetos", section: "projetos" },
     { label: "Usuários", section: "usuarios" },
+    { label: "Novo usuário", section: "usuarios/novo", hidden: true },
     { label: "Especialidades", section: "especialidades" },
     { label: "Perfil", section: "perfil" },
   ],
@@ -65,9 +68,17 @@ export const getRoleRouteDefinitions = (role: UserRole) =>
 export const getRoleRoutePath = (role: UserRole, section: RoleSection) =>
   `${getRoleBasePath(role)}/${section}`;
 
+export const getSpecialtyCreatePath = (role: UserRole) =>
+  `${getRoleRoutePath(role, "especialidades")}/novo`;
+
+export const getSpecialtyEditPath = (role: UserRole) =>
+  `${getRoleRoutePath(role, "especialidades")}/editar`;
+
 export const getRoleNavigation = (role: UserRole): readonly RoleRoute[] => {
-  return getRoleRouteDefinitions(role).map(({ label, section }) => ({
-    label,
-    path: getRoleRoutePath(role, section),
-  }));
+  return getRoleRouteDefinitions(role)
+    .filter((definition) => !definition.hidden)
+    .map(({ label, section }) => ({
+      label,
+      path: getRoleRoutePath(role, section),
+    }));
 };

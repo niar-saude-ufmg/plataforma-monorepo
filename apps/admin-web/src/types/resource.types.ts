@@ -1,5 +1,7 @@
 export type AsyncStatus = 'idle' | 'pending' | 'succeeded' | 'failed';
 
+export type ResourceStatus = AsyncStatus;
+
 export type ListState<Item, Filters, PaginationType, ErrorType> = {
   items: Item[];
   pagination: PaginationType | null;

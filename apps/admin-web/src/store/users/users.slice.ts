@@ -1,7 +1,15 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { UserApiError, UserListFilters, UserListItem, UserListPagination } from '../../types/user.types';
 import type { AsyncStatus, FileState, MutationState, ResourceState } from '../../types/resource.types';
-import { createUser, downloadUserCoepDocument, getUsers } from './users.api';
+import {
+  createUser,
+  downloadUserCoepDocument,
+  createResearcher,
+  createAdministrator,
+  createAuditor,
+  createCommitteeMember,
+  getUsers
+} from './users.api';
 
 export type UsersStatus = AsyncStatus;
 export type UserMutationOperation = 'create' | 'update' | 'approve' | 'reject';
@@ -90,6 +98,14 @@ const usersSlice = createSlice({
         state.download.status = 'idle';
       }
     },
+    clearUsersListError(state) {
+      state.list.error = null;
+      if (state.list.status === 'failed') state.list.status = 'idle';
+    },
+    clearUsersMutationError(state) {
+      state.mutation.error = null;
+      if (state.mutation.status === 'failed') state.mutation.status = 'idle';
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(getUsers.pending, (state, action) => {
@@ -115,21 +131,32 @@ const usersSlice = createSlice({
         message: 'Não foi possível carregar os usuários. Tente novamente.',
       };
     });
-    builder.addCase(createUser.pending, (state) => {
-      state.mutation = { operation: 'create', status: 'pending', error: null };
-    });
-    builder.addCase(createUser.fulfilled, (state) => {
-      state.mutation = { operation: 'create', status: 'succeeded', error: null };
-    });
-    builder.addCase(createUser.rejected, (state, action) => {
-      state.mutation = {
-        operation: 'create',
-        status: 'failed',
-        error: action.payload ?? {
-        message: 'Não foi possível cadastrar o pesquisador. Tente novamente.',
-        },
-      };
-    });
+
+    const createThunks = [
+      createUser,
+      createResearcher,
+      createAdministrator,
+      createAuditor,
+      createCommitteeMember,
+    ] as const;
+    for (const thunk of createThunks) {
+      builder.addCase(thunk.pending, (state) => {
+        state.mutation = { operation: 'create', status: 'pending', error: null };
+      });
+      builder.addCase(thunk.fulfilled, (state) => {
+        state.mutation = { operation: 'create', status: 'succeeded', error: null };
+      });
+      builder.addCase(thunk.rejected, (state, action) => {
+        state.mutation = {
+          operation: 'create',
+          status: 'failed',
+          error: action.payload ?? {
+            message: 'Não foi possível cadastrar o usuário. Tente novamente.',
+          },
+        };
+      });
+    }
+
     builder.addCase(downloadUserCoepDocument.pending, (state) => {
       state.download = { status: 'pending', error: null, filename: null };
     });
@@ -157,5 +184,7 @@ export const {
   setUsersPageSize,
   clearUsersState,
   clearUsersError,
+  clearUsersListError,
+  clearUsersMutationError,
 } = usersSlice.actions;
 export default usersSlice.reducer;

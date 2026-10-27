@@ -3,6 +3,9 @@ import type { ApiError } from '../../types/api.types';
 import type {
   UserApiError,
   CreateUserInput,
+  CreateAdministratorInput,
+  CreateAuditorInput,
+  CreateCommitteeMemberInput,
   User,
   UserListItem,
   UserListParams,
@@ -209,6 +212,8 @@ function translateValidationMessage(field: string | undefined, message: string) 
     'Approval date must be in YYYY-MM-DD format': 'Informe uma data válida.',
     'Approval date is not a valid calendar date': 'Informe uma data válida.',
     'Document filename is required': 'Anexe o parecer do COEP.',
+    'Specialty is required': 'Selecione uma especialidade.',
+    'Specialty not found': 'Especialidade não encontrada.',
   };
 
   return messages[message] ?? message;
@@ -225,6 +230,10 @@ function toUiField(path?: string[]) {
     return field;
   }
 
+  if (field === 'specialty_id') {
+    return 'specialtyId' as const;
+  }
+
   const nestedFields: Record<string, keyof NonNullable<UserApiError['fieldErrors']>> = {
     'profile.phone': 'phone',
     'profile.institution': 'institution',
@@ -236,6 +245,7 @@ function toUiField(path?: string[]) {
     'coep.opinion_number': 'opinionNumber',
     'coep.approval_date': 'approvalDate',
     'coep.document_filename': 'coepDocument',
+    'committee_profile.specialty_id': 'specialtyId'
   };
 
   if (path && path.length >= 2) {
@@ -307,6 +317,108 @@ export async function createUserRequest(input: CreateUserInput): Promise<User> {
   }
 
   return toUser(body as CreateUserApiResponse);
+}
+
+async function postUserJson(
+  path: string,
+  body: Record<string, unknown>,
+  fallbackMessage: string,
+): Promise<User> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${getAdminApiBaseUrl()}${path}`, {
+      method: 'POST',
+      headers: {
+        ...authHeaders(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw normalizeUserApiError('FETCH_ERROR', undefined, fallbackMessage);
+  }
+
+  const responseBody = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    throw normalizeUserApiError(response.status, responseBody, fallbackMessage);
+  }
+
+  return toUser(responseBody as CreateUserApiResponse);
+}
+
+export async function createResearcherRequest(input: CreateUserInput): Promise<User> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${getAdminApiBaseUrl()}/users/researchers`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: toCreateUserFormData(input),
+    });
+  } catch {
+    throw normalizeUserApiError(
+      'FETCH_ERROR',
+      undefined,
+      'Não foi possível cadastrar o pesquisador.',
+    );
+  }
+
+  const body = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    throw normalizeUserApiError(
+      response.status,
+      body,
+      'Não foi possível cadastrar o pesquisador.',
+    );
+  }
+
+  return toUser(body as CreateUserApiResponse);
+}
+
+export function createAdministratorRequest(
+  input: CreateAdministratorInput,
+): Promise<User> {
+  return postUserJson(
+    '/users/administrators',
+    {
+      full_name: input.fullName.trim(),
+      email: input.email.trim(),
+      password: input.password,
+    },
+    'Não foi possível cadastrar o administrador.',
+  );
+}
+
+export function createAuditorRequest(
+  input: CreateAuditorInput,
+): Promise<User> {
+  return postUserJson(
+    '/users/auditors',
+    {
+      full_name: input.fullName.trim(),
+      email: input.email.trim(),
+      password: input.password,
+    },
+    'Não foi possível cadastrar o auditor.',
+  );
+}
+
+export function createCommitteeMemberRequest(
+  input: CreateCommitteeMemberInput,
+): Promise<User> {
+  return postUserJson(
+    '/users/committee-members',
+    {
+      full_name: input.fullName.trim(),
+      email: input.email.trim(),
+      password: input.password,
+      specialty_id: input.specialtyId,
+    },
+    'Não foi possível cadastrar o membro do comitê.',
+  );
 }
 
 export async function downloadUserCoepDocumentRequest(userId: number): Promise<DownloadedFile> {
@@ -393,6 +505,7 @@ export function normalizeUserListApiError(
 export function normalizeUserApiError(
   status: number | string,
   body: unknown,
+  fallbackMessage = 'Não foi possível cadastrar o pesquisador.',
 ): UserApiError {
   const numericStatus = typeof status === 'number' ? status : undefined;
 
@@ -421,7 +534,7 @@ export function normalizeUserApiError(
   return {
     status: numericStatus,
     message: typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string'
-      ? 'Não foi possível cadastrar o pesquisador.'
-      : 'Não foi possível cadastrar o pesquisador. Tente novamente.',
+      ? fallbackMessage
+      : `${fallbackMessage} Tente novamente.`,
   };
 }

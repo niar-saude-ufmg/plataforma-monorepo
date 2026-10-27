@@ -1,65 +1,91 @@
-import type { UserRole } from '@niar/contracts';
-import { Form, Input } from '@niar/ui';
-import type { AuthUser } from '../../../types/user.types';
+import { Button, Form, Input } from '@niar/ui';
+import type { ReactNode } from 'react';
+import type { ProfileFormFields } from '../../../hooks/forms/use-profile-form/use-profile-form';
 import './ProfileForm.scss';
 
-export type ProfileFormValues = {
-  fullName: string;
-  email: string;
-  phone?: string;
-};
+export type { ProfileFormValues } from '../../../hooks/forms/use-profile-form/use-profile-form';
 
 export type ProfileFormProps = {
-  role: UserRole;
-  user: AuthUser;
   mode: 'readonly' | 'edit';
-  // Previstos pelo contrato do card; o submit e os botões entram na tarefa seguinte.
-  onSubmit?: (values: ProfileFormValues) => void;
-  onCancel?: () => void;
+  fields: ProfileFormFields;
+  showPhone: boolean;
+  /** Botões do cabeçalho em readonly; a página decide quais ações o papel tem. */
+  actions?: ReactNode;
+  submitting?: boolean;
+  onSubmit: () => void;
+  onCancel: () => void;
 };
 
-export function ProfileForm({ role, user, mode }: ProfileFormProps) {
-  // O Input oficial não expõe readOnly (slotProps é omitido do tipo) disabled é o estado oficial de campo não editável.
+export function ProfileForm({
+  mode,
+  fields,
+  showPhone,
+  actions,
+  submitting = false,
+  onSubmit,
+  onCancel,
+}: ProfileFormProps) {
   const isReadonly = mode === 'readonly';
 
   return (
     <div className="profile-form">
       <Form aria-level={2}>
         <div className="profile-form__content">
-          <h2 className="profile-form__title">Dados da conta</h2>
+          <div className="profile-form__header">
+            <h2 className="profile-form__title">Dados da conta</h2>
+            {isReadonly && actions ? (
+              <div className="profile-form__actions">{actions}</div>
+            ) : null}
+          </div>
+
           <div className="profile-form__account-grid">
             <Input
-              name="fullName"
+              {...fields.fullName}
               label="Nome completo"
               autoComplete="name"
-              defaultValue={user.name}
-              disabled={isReadonly}
+              disabled={isReadonly || submitting}
+              required={!isReadonly}
               fullWidth
-              margin="normal"
             />
             <Input
-              name="email"
+              {...fields.email}
               label="E-mail"
               type="email"
               autoComplete="email"
-              defaultValue={user.email}
-              disabled={isReadonly}
+              disabled={isReadonly || submitting}
+              required={!isReadonly}
               fullWidth
-              margin="normal"
             />
-            {role === 'researcher' && (
+            {showPhone && (
               <Input
-                name="phone"
+                {...fields.phone}
                 label="Telefone"
                 type="tel"
                 autoComplete="tel"
-                defaultValue={user.profile?.phone ?? ''}
-                disabled={isReadonly}
+                disabled={isReadonly || submitting}
+                required={!isReadonly}
                 fullWidth
-                margin="normal"
               />
             )}
           </div>
+
+          {!isReadonly && (
+            <div className="profile-form__footer">
+              <Button
+                color="secondary"
+                size="small"
+                variant="outlined"
+                type="button"
+                onClick={onCancel}
+                disabled={submitting}
+              >
+                Cancelar
+              </Button>
+              <Button size="small" variant="contained" onClick={onSubmit} disabled={submitting}>
+                Salvar
+              </Button>
+            </div>
+          )}
         </div>
       </Form>
     </div>

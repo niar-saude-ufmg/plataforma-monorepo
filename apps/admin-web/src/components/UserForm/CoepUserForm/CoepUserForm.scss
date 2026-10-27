@@ -28,7 +28,6 @@
 .coep-user-form__field-error {
   @include typography.typography-caption;
   color: var(--niar-colors-feedback-error);
-  font-weight: var(--niar-font-weight-semibold);
 }
 
 @media (max-width: 720px) {
