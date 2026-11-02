@@ -1,5 +1,12 @@
 import "@testing-library/jest-dom";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
@@ -185,7 +192,15 @@ const PROJECT_RESPONSE = {
           notes: null,
         },
       ],
-      documents: [],
+      documents: [
+        {
+          id: 101,
+          version_number: 1,
+          document_type: "project_docx",
+          original_filename: "projeto-v1.docx",
+          created_at: "2026-09-20T10:00:00.000Z",
+        },
+      ],
       evaluation_status: "to_review",
       evaluation_context: "pre_safe_room",
       evaluations: [],
@@ -415,7 +430,7 @@ describe("Projects — estados e tabela", () => {
     expect(await screen.findByTestId("project-row-42")).toBeInTheDocument();
   });
 
-  it("usa colunas por papel, StatusChip e ações visuais sem comportamento", async () => {
+  it("usa colunas por papel e abre as ações do projeto selecionado", async () => {
     const user = userEvent.setup();
     renderProjects("admin");
     const row = await screen.findByTestId("project-row-42");
@@ -438,14 +453,41 @@ describe("Projects — estados e tabela", () => {
     expect(within(row).getByText("A definir")).toBeInTheDocument();
     expect(within(row).getByText("02/10/2026")).toBeInTheDocument();
 
-    const callsBeforeClick = projectCalls().length;
     expect(
       within(row)
         .getAllByRole("button")
         .map((button) => button.textContent),
-    ).toEqual(["Detalhes"]);
-    await user.click(within(row).getByRole("button", { name: "Detalhes" }));
-    expect(projectCalls()).toHaveLength(callsBeforeClick);
+    ).toEqual(["Histórico", "Documentos"]);
+
+    await user.click(within(row).getByRole("button", { name: "Histórico" }));
+    expect(
+      screen.getByRole("heading", { name: "Histórico do projeto" }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("dialog")).getByText("Projeto de pesquisa"),
+    ).toBeInTheDocument();
+    expect(store.getState().projects.selected?.id).toBe(42);
+
+    await user.click(
+      screen.getByRole("button", { name: "Fechar histórico" }),
+    );
+    expect(store.getState().projects.selected).toBeNull();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Histórico do projeto" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    await user.click(
+      within(screen.getByTestId("project-row-42")).getByRole("button", {
+        name: "Documentos",
+      }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "Documentos do projeto" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("projeto-v1.docx")).toBeInTheDocument();
+    expect(store.getState().projects.selected?.id).toBe(42);
 
     cleanup();
     store.dispatch(clearProjectsState());
@@ -486,12 +528,12 @@ describe("Projects — estados e tabela", () => {
       within(researcherRow)
         .getAllByRole("button")
         .map((button) => button.textContent),
-    ).toEqual(["Detalhes"]);
+    ).toEqual(["Histórico", "Documentos"]);
     expect(
       within(scheduleRow)
         .getAllByRole("button")
         .map((button) => button.textContent),
-    ).toEqual(["Detalhes"]);
+    ).toEqual(["Histórico", "Documentos"]);
   });
 
   it.each(["auditor", "committee"] as const)(
@@ -519,16 +561,38 @@ describe("Projects — estados e tabela", () => {
         "warning",
       );
 
-      const callsBeforeClick = projectCalls().length;
       expect(
         within(row)
           .getAllByRole("button")
           .map((button) => button.textContent),
-      ).toEqual(["Detalhes"]);
-      await user.click(within(row).getByRole("button", { name: "Detalhes" }));
-      expect(projectCalls()).toHaveLength(callsBeforeClick);
+      ).toEqual(["Histórico", "Documentos"]);
+      await user.click(
+        within(row).getByRole("button", { name: "Histórico" }),
+      );
+      expect(
+        screen.getByRole("heading", { name: "Histórico do projeto" }),
+      ).toBeInTheDocument();
     },
   );
+
+  it("oculta a ação Documentos quando o projeto não possui documentos", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        ...PROJECT_RESPONSE,
+        items: [{ ...PROJECT_RESPONSE.items[0], documents: [] }],
+      }),
+    );
+
+    renderProjects("auditor");
+    const row = await screen.findByTestId("project-row-42");
+
+    expect(
+      within(row).getByRole("button", { name: "Histórico" }),
+    ).toBeInTheDocument();
+    expect(
+      within(row).queryByRole("button", { name: "Documentos" }),
+    ).not.toBeInTheDocument();
+  });
 
   it("exibe Aguardando atribuição quando o projeto ainda não possui avaliação", async () => {
     fetchMock.mockResolvedValue(
