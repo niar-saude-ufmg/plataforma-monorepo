@@ -13,7 +13,15 @@ import {
   EVALUATION_CONTEXT_LABELS,
   PROJECT_STATUS_LABELS,
 } from "@niar/contracts";
-import { Fragment, useEffect, type ChangeEvent, type ReactNode } from "react";
+import {
+  Fragment,
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
+import { ProjectDocumentsDialog } from "../../components/ProjectDocumentsDialog";
+import { ProjectHistoryDialog } from "../../components/ProjectHistoryDialog";
 import { useApiError } from "../../hooks/use-api-error/use-api-error";
 import { selectAuthSelected } from "../../store/auth/auth.selectors";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -26,10 +34,13 @@ import {
   selectProjectsListPage,
   selectProjectsListPageSize,
   selectProjectsListPagination,
+  selectProjectsSelected,
 } from "../../store/projects/projects.selectors";
 import {
+  clearSelectedProject,
   clearProjectsError,
   clearProjectsFilters,
+  setSelectedProject,
   setProjectsFilters,
   setProjectsPage,
   setProjectsPageSize,
@@ -143,8 +154,12 @@ const toListingRows = (projects: readonly Project[]) =>
 
 export function Projects() {
   const dispatch = useAppDispatch();
+  const [activeDialog, setActiveDialog] = useState<
+    "history" | "documents" | null
+  >(null);
   const user = useAppSelector(selectAuthSelected);
   const projects = useAppSelector(selectProjectsList);
+  const selectedProject = useAppSelector(selectProjectsSelected);
   const filters = useAppSelector(selectProjectsListFilters);
   const pagination = useAppSelector(selectProjectsListPagination);
   const page = useAppSelector(selectProjectsListPage);
@@ -191,6 +206,19 @@ export function Projects() {
   };
 
   const handleClearFilters = () => dispatch(clearProjectsFilters());
+
+  const openProjectDialog = (
+    dialog: "history" | "documents",
+    project: Project,
+  ) => {
+    dispatch(setSelectedProject(project));
+    setActiveDialog(dialog);
+  };
+
+  const closeProjectDialog = () => {
+    setActiveDialog(null);
+    dispatch(clearSelectedProject());
+  };
 
   const searchOptions = projects.map((project) => ({
     value: String(project.id),
@@ -249,11 +277,27 @@ export function Projects() {
     ProjectActionId,
     (project: Project) => ReactNode
   > = {
-    details: () => (
-      <Button type="button" size="small" variant="outlined">
-        Detalhes
+    history: (project) => (
+      <Button
+        type="button"
+        size="small"
+        variant="outlined"
+        onClick={() => openProjectDialog("history", project)}
+      >
+        Histórico
       </Button>
     ),
+    documents: (project) =>
+      project.documents.length ? (
+        <Button
+          type="button"
+          size="small"
+          variant="outlined"
+          onClick={() => openProjectDialog("documents", project)}
+        >
+          Documentos
+        </Button>
+      ) : null,
   };
 
   const columnDefinitions: Record<ProjectColumnId, TableColumn<Project>> = {
@@ -371,6 +415,16 @@ export function Projects() {
         loading={loading}
         pagination={paginationProps}
         emptyState={emptyStateProps}
+      />
+      <ProjectHistoryDialog
+        open={activeDialog === "history"}
+        project={selectedProject}
+        onClose={closeProjectDialog}
+      />
+      <ProjectDocumentsDialog
+        open={activeDialog === "documents"}
+        project={selectedProject}
+        onClose={closeProjectDialog}
       />
       <Snackbar {...errorSnackbar} />
     </>

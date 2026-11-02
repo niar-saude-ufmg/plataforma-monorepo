@@ -1,0 +1,30 @@
+.project-documents-dialog {
+  display: grid;
+  gap: var(--niar-spacing-lg);
+
+  &__title,
+  &__empty,
+  &__loading {
+    margin: 0;
+  }
+
+  &__title {
+    color: var(--niar-colors-text-subtitle);
+  }
+
+  &__list {
+    display: grid;
+    gap: var(--niar-spacing-md);
+  }
+
+  &__document {
+    align-items: center;
+    display: flex;
+    gap: var(--niar-spacing-md);
+    justify-content: space-between;
+  }
+
+  &__loading {
+    color: var(--niar-colors-text-subtitle);
+  }
+}
