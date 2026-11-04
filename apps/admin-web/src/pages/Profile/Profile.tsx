@@ -67,6 +67,20 @@ const formatApprovalDate = (value?: string | null) => {
   return day && month && year ? `${day}/${month}/${year}` : value;
 };
 
+// Fora do ListText: o value dele vira <p> e o StatusChip é <div>.
+function AccountStatusField({ user }: { user: AuthUser }) {
+  return (
+    <div className="profile__status-field">
+      <p className="profile__status-label">Status da conta</p>
+      <StatusChip
+        aria-label="Status da conta"
+        label={accountStatusLabels[user.accountStatus]}
+        status={accountStatusTone[user.accountStatus]}
+      />
+    </div>
+  );
+}
+
 function PlatformAccess({ roleConfig, user }: { roleConfig: ProfileRoleConfig; user: AuthUser }) {
   return (
     <ProfileReadonly title="Acesso à plataforma">
@@ -76,15 +90,21 @@ function PlatformAccess({ roleConfig, user }: { roleConfig: ProfileRoleConfig; u
           { label: 'Perfil de acesso', value: roleConfig.accessProfileLabel },
         ]}
       />
-      {/* Fora do ListText: o value dele vira <p> e o StatusChip é <div>. */}
-      <div className="profile__status-field">
-        <p className="profile__status-label">Status da conta</p>
-        <StatusChip
-          aria-label="Status da conta"
-          label={accountStatusLabels[user.accountStatus]}
-          status={accountStatusTone[user.accountStatus]}
-        />
-      </div>
+      <AccountStatusField user={user} />
+    </ProfileReadonly>
+  );
+}
+
+function CommitteeDetails({ user }: { user: AuthUser }) {
+  return (
+    <ProfileReadonly title="Dados da comissão">
+      <ListText
+        aria-label="Dados da comissão"
+        items={[
+          { label: 'Especialidade', value: orNotProvided(user.committeeProfile?.specialty.name) },
+        ]}
+      />
+      <AccountStatusField user={user} />
     </ProfileReadonly>
   );
 }
@@ -258,12 +278,13 @@ export function Profile() {
     );
   }
 
-  if (!roleConfig) return null;
+  // Os quatro papéis têm configuração; o opcional acima cobre só a sessão ausente.
+  const config = PROFILE_ROLE_CONFIG[user.role];
 
-  const canEdit = roleConfig.actions.includes('editProfile');
-  const canChangePassword = roleConfig.actions.includes('changePassword');
+  const canEdit = config.actions.includes('editProfile');
+  const canChangePassword = config.actions.includes('changePassword');
   const canDownloadCoep =
-    roleConfig.actions.includes('downloadCoep') && Boolean(user.coep?.documentFilename);
+    config.actions.includes('downloadCoep') && Boolean(user.coep?.documentFilename);
 
   const headerActions = mode === 'readonly' && !passwordOpen ? (
     <>
@@ -288,15 +309,15 @@ export function Profile() {
           description={
             mode === 'edit'
               ? 'Atualize os dados editáveis do seu perfil.'
-              : roleConfig.description
+              : config.description
           }
         />
 
-        {roleConfig.sections.includes('account') && (
+        {config.sections.includes('account') && (
           <ProfileForm
             mode={mode}
             fields={profileForm.fields}
-            showPhone={roleConfig.fields.phone.visible}
+            showPhone={config.fields.phone.visible}
             actions={headerActions}
             submitting={savingProfile}
             onSubmit={() => { void submitProfile(); }}
@@ -319,8 +340,9 @@ export function Profile() {
           />
         )}
 
-        {roleConfig.sections.includes('access') && <PlatformAccess roleConfig={roleConfig} user={user} />}
-        {roleConfig.sections.includes('researcherDetails') && (
+        {config.sections.includes('access') && <PlatformAccess roleConfig={config} user={user} />}
+        {config.sections.includes('committeeDetails') && <CommitteeDetails user={user} />}
+        {config.sections.includes('researcherDetails') && (
           <ResearcherDetails
             user={user}
             canDownloadCoep={canDownloadCoep}

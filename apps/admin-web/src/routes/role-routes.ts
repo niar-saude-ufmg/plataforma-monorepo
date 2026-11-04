@@ -45,11 +45,13 @@ const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
     ...commonRoleRouteDefinitions,
     { label: "Projetos", section: "projetos" },
     { label: "Usuários", section: "usuarios" },
+    { label: "Perfil", section: "perfil" },
   ],
   committee: [
     ...commonRoleRouteDefinitions,
     { label: "Projetos", section: "projetos" },
     { label: "Usuários", section: "usuarios" },
+    { label: "Perfil", section: "perfil" },
   ],
 };
 
