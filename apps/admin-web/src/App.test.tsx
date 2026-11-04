@@ -143,7 +143,7 @@ describe("Admin App", () => {
   });
 
   it.each([
-    ["committee", "/admin/comite/perfil"],
+    ["auditor", "/admin/comite/perfil"],
     ["auditor", "/admin/auditor/especialidades"],
     ["researcher", "/admin/pesquisador/usuarios"],
     ["committee", "/admin/comite/usuarios/novo"],

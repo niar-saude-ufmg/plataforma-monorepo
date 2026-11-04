@@ -23,3 +23,15 @@ describe('rotas de especialidades', () => {
     expect(getRoleNavigation(role).some(({ label }) => label === 'Especialidades')).toBe(false);
   });
 });
+
+describe('rotas de perfil', () => {
+  it.each([
+    ['admin', '/admin/administrador/perfil'],
+    ['researcher', '/admin/pesquisador/perfil'],
+    ['committee', '/admin/comite/perfil'],
+    ['auditor', '/admin/auditor/perfil'],
+  ] as const)('publica o Perfil no menu de %s', (role, path) => {
+    expect(getRoleRouteDefinitions(role).some(({ section }) => section === 'perfil')).toBe(true);
+    expect(getRoleNavigation(role)).toContainEqual({ label: 'Perfil', path });
+  });
+});
