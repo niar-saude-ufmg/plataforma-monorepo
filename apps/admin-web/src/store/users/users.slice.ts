@@ -8,7 +8,8 @@ import {
   createAdministrator,
   createAuditor,
   createCommitteeMember,
-  getUsers
+  getUsers,
+  updateUserStatus
 } from './users.api';
 
 export type UsersStatus = AsyncStatus;
@@ -170,6 +171,24 @@ const usersSlice = createSlice({
           message: 'Não foi possível baixar o documento do COEP. Tente novamente.',
         },
         filename: null,
+      };
+    });
+    builder.addCase(updateUserStatus.pending, (state, action) => {
+      state.mutation = {
+        operation: 'update',
+        status: 'pending',
+        error: null,
+      };
+    });
+    builder.addCase(updateUserStatus.fulfilled, (state) => {
+      state.mutation.status = 'succeeded';
+      state.mutation.error = null;
+      state.selected = null;
+    });
+    builder.addCase(updateUserStatus.rejected, (state, action) => {
+      state.mutation.status = 'failed';
+      state.mutation.error = action.payload ?? {
+        message: 'Não foi possível atualizar status. Tente novamente.',
       };
     });
   },
