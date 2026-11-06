@@ -176,6 +176,31 @@ vi.mock('@niar/ui', () => {
           {message}
         </div>
       ) : null,
+    Dialog: ({ open, title, children, actions }: any) => open ? (
+      <div role="dialog" aria-label={String(title)}>
+        <h2>{title}</h2>
+        {children}
+        <div>{actions}</div>
+      </div>
+    ) : null,
+    RadioGroup: ({ label, options, value, onChange }: any) => (
+      <div>
+        <span>{label}</span>
+        {options.map((opt: any) => (
+          <label key={opt.value}>
+            <input type="radio" name="decision" value={opt.value} checked={value === opt.value} onChange={(e) => onChange(e)} />
+            {opt.label}
+          </label>
+        ))}
+      </div>
+    ),
+    Textarea: ({ label, value, onChange, helperText }: any) => (
+      <label>
+        {label}
+        <textarea value={value} onChange={onChange} />
+        {helperText && <span data-testid="helper-text">{helperText}</span>}
+      </label>
+    ),
   };
 });
 
@@ -190,8 +215,8 @@ const API_ITEM_BASE = {
 
 const USERS_LIST_RESPONSE = {
   items: [
-    { ...API_ITEM_BASE, id: 1, full_name: 'Alice Pesquisadora', email: 'alice@x.org', role: 'researcher', account_status: 'active' },
-    { ...API_ITEM_BASE, id: 2, full_name: 'Bruno Admin',        email: 'bruno@x.org', role: 'admin',      account_status: 'pending' },
+    { ...API_ITEM_BASE, id: 1, full_name: 'Alice Pesquisadora', email: 'alice@x.org', role: 'researcher', account_status: 'pending', coep: { caae: '123', opinion_number: '123', approval_date: '2026-01-01', document_filename: 'doc.pdf' } },
+    { ...API_ITEM_BASE, id: 2, full_name: 'Bruno Admin',        email: 'bruno@x.org', role: 'admin',      account_status: 'active' },
     { ...API_ITEM_BASE, id: 3, full_name: 'Carla Comitê',       email: 'carla@x.org', role: 'committee',  account_status: 'disabled' },
   ],
   pagination: { page: 1, page_size: 20, total_items: 3, total_pages: 1 },
@@ -285,13 +310,13 @@ describe('Users — colunas e células', () => {
 
     const row0 = screen.getByTestId('row-0');
     expect(within(row0).getByText('Pesquisador')).toBeInTheDocument();
-    expect(within(row0).getByText('Ativo')).toBeInTheDocument();
-    expect(within(row0).getByTestId('status-chip')).toHaveAttribute('data-status', 'success');
+    expect(within(row0).getByText('Pendente')).toBeInTheDocument();
+    expect(within(row0).getByTestId('status-chip')).toHaveAttribute('data-status', 'warning');
 
     const row1 = screen.getByTestId('row-1');
     expect(within(row1).getByText('Administrador')).toBeInTheDocument();
-    expect(within(row1).getByText('Pendente')).toBeInTheDocument();
-    expect(within(row1).getByTestId('status-chip')).toHaveAttribute('data-status', 'warning');
+    expect(within(row1).getByText('Ativo')).toBeInTheDocument();
+    expect(within(row1).getByTestId('status-chip')).toHaveAttribute('data-status', 'success');
 
     const row2 = screen.getByTestId('row-2');
     expect(within(row2).getByText('Comitê')).toBeInTheDocument();
@@ -301,29 +326,28 @@ describe('Users — colunas e células', () => {
 
   it('exibe botões de ação conforme role e accountStatus', async () => {
     renderUsers();
-
     await waitFor(() => expect(screen.getByTestId('row-0')).toBeInTheDocument());
 
-    // researcher + active → Detalhes, Avaliar, Desativar
+    // researcher + pending → Detalhes, Avaliar
     const row0 = screen.getByTestId('row-0');
     expect(within(row0).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
-    // expect(within(row0).getByRole('button', { name: 'Avaliar' })).toBeInTheDocument();
-    // expect(within(row0).getByRole('button', { name: 'Desativar' })).toBeInTheDocument();
-    // expect(within(row0).queryByRole('button', { name: 'Ativar' })).not.toBeInTheDocument();
+    expect(within(row0).getByRole('button', { name: 'Avaliar' })).toBeInTheDocument();
+    expect(within(row0).queryByRole('button', { name: 'Desativar' })).not.toBeInTheDocument();
+    expect(within(row0).queryByRole('button', { name: 'Ativar' })).not.toBeInTheDocument();
 
-    // admin + pending → Detalhes, Ativar
+    // admin + active → Detalhes, Desativar
     const row1 = screen.getByTestId('row-1');
     expect(within(row1).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
-    // expect(within(row1).queryByRole('button', { name: 'Avaliar' })).not.toBeInTheDocument();
-    // expect(within(row1).getByRole('button', { name: 'Ativar' })).toBeInTheDocument();
-    // expect(within(row1).queryByRole('button', { name: 'Desativar' })).not.toBeInTheDocument();
+    expect(within(row1).getByRole('button', { name: 'Desativar' })).toBeInTheDocument();
+    expect(within(row1).queryByRole('button', { name: 'Avaliar' })).not.toBeInTheDocument();
+    expect(within(row1).queryByRole('button', { name: 'Ativar' })).not.toBeInTheDocument();
 
-    // committee + disabled → Detalhes, Ativar (sem Avaliar, sem Desativar)
+    // committee + disabled → Detalhes, Ativar
     const row2 = screen.getByTestId('row-2');
     expect(within(row2).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
-    // expect(within(row2).queryByRole('button', { name: 'Avaliar' })).not.toBeInTheDocument();
-    // expect(within(row2).getByRole('button', { name: 'Ativar' })).toBeInTheDocument();
-    // expect(within(row2).queryByRole('button', { name: 'Desativar' })).not.toBeInTheDocument();
+    expect(within(row2).getByRole('button', { name: 'Ativar' })).toBeInTheDocument();
+    expect(within(row2).queryByRole('button', { name: 'Avaliar' })).not.toBeInTheDocument();
+    expect(within(row2).queryByRole('button', { name: 'Desativar' })).not.toBeInTheDocument();
   });
 });
 

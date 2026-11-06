@@ -19,6 +19,7 @@ import {
   createUser,
   downloadUserCoepDocument,
   getUsers,
+  updateUserStatus
 } from './users.api';
 import type { UserListItem } from '../../types/user.types';
 
@@ -259,5 +260,35 @@ describe('usersSlice — clearUsersListError / clearUsersMutationError', () => {
     expect(after.mutation.status).toBe('idle');
     expect(after.list.error).toEqual(listError);
     expect(after.list.status).toBe('failed');
+  });
+});
+
+describe('usersSlice — updateUserStatus', () => {
+  it('pending define operation "update" e status "pending"', () => {
+    const state = reducer(undefined, pendingAction(updateUserStatus, { userId: 1, status: 'active' }));
+
+    expect(state.mutation).toEqual({
+      operation: 'update',
+      status: 'pending',
+      error: null
+    });
+  });
+
+  it('fulfilled define status "succeeded" e limpa o selected', () => {
+    let state = reducer(undefined, setSelectedUser(user));
+
+    state = reducer(state, fulfilledAction(updateUserStatus, { id: 1 }));
+
+    expect(state.mutation.status).toBe('succeeded');
+    expect(state.mutation.error).toBeNull();
+    expect(state.selected).toBeNull();
+  });
+
+  it('rejected define status "failed" e salva o erro', () => {
+    const error = { message: 'Transição não permitida' };
+    const state = reducer(undefined, rejectedAction(updateUserStatus, error));
+
+    expect(state.mutation.status).toBe('failed');
+    expect(state.mutation.error).toEqual(error);
   });
 });
