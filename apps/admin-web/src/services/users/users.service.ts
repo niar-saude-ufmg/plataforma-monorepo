@@ -2,6 +2,9 @@ import { ACCESS_TOKEN_STORAGE_KEY } from '@niar/auth';
 import type { ApiError } from '../../types/api.types';
 import type {
   UserApiError,
+  UpdateUserStatusInput,
+  EvaluateUserInput,
+  UserListEvaluation,
   CreateUserInput,
   CreateAdministratorInput,
   CreateAuditorInput,
@@ -536,5 +539,39 @@ export function normalizeUserApiError(
     message: typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string'
       ? fallbackMessage
       : `${fallbackMessage} Tente novamente.`,
+  };
+}
+
+function normalizeUserMutationApiError(status: number, body: unknown): ApiError {
+  if (status === 401) return normalizeUserListApiError(status, body);
+  if (status === 403) return { status, message: 'Você não tem permissão para realizar esta operação.' };
+  const message = typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string'
+    ? body.error : 'Não foi possível concluir a operação. Tente novamente.';
+  return { status, message };
+}
+
+export async function updateUserStatusRequest(input: UpdateUserStatusInput): Promise<UserListItem> {
+  const response = await fetch(`${getAdminApiBaseUrl()}/users/${input.userId}/status`, {
+    method: 'PATCH',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: input.status }),
+  });
+  const body = await response.json().catch(() => undefined);
+  if (!response.ok) throw normalizeUserMutationApiError(response.status, body);
+  return toUserListItem(body);
+}
+
+export async function evaluateUserRequest(input: EvaluateUserInput): Promise<UserListEvaluation> {
+  const response = await fetch(`${getAdminApiBaseUrl()}/users/${input.userId}/auth-evaluation`, {
+    method: 'POST',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: input.status, justification: input.justification }),
+  });
+  const body = await response.json().catch(() => undefined);
+  if (!response.ok) throw normalizeUserMutationApiError(response.status, body);
+  return {
+    id: body.id, userId: body.user_id, status: body.status, justification: body.justification,
+    evaluatedByUserId: body.evaluated_by_user_id, evaluatedAt: body.evaluated_at,
+    createdAt: body.created_at, userCoepDataId: body.user_coep_data_id,
   };
 }

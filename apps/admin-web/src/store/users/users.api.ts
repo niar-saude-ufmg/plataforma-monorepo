@@ -1,6 +1,8 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
   createUserRequest,
+  updateUserStatusRequest,
+  evaluateUserRequest,
   createResearcherRequest,
   createAdministratorRequest,
   createAuditorRequest,
@@ -15,6 +17,10 @@ import { downloadBlob } from '../../utils/download-file';
 import type { ApiError } from '../../types/api.types';
 import type {
   UserApiError,
+  UserListItem,
+  UserListEvaluation,
+  UpdateUserStatusInput,
+  EvaluateUserInput,
   CreateUserInput,
   CreateAdministratorInput,
   CreateAuditorInput,
@@ -173,3 +179,23 @@ export const downloadUserCoepDocument = createAsyncThunk<
     return rejectWithValue(normalizeUserDocumentApiError('UNKNOWN_ERROR'));
   }
 });
+
+export const updateUserStatus = createAsyncThunk<UserListItem, UpdateUserStatusInput, { rejectValue: ApiError }>(
+  'users/updateStatus', async (input, { rejectWithValue }) => {
+    try { return await updateUserStatusRequest(input); }
+    catch (error) { return rejectWithValue(normalizeUserMutationError(error)); }
+  },
+);
+
+export const evaluateUser = createAsyncThunk<UserListEvaluation, EvaluateUserInput, { rejectValue: ApiError }>(
+  'users/evaluate', async (input, { rejectWithValue }) => {
+    try { return await evaluateUserRequest(input); }
+    catch (error) { return rejectWithValue(normalizeUserMutationError(error)); }
+  },
+);
+
+function normalizeUserMutationError(error: unknown): ApiError {
+  return typeof error === 'object' && error !== null && 'message' in error
+    ? error as ApiError
+    : { message: 'Não foi possível concluir a operação. Tente novamente.' };
+}

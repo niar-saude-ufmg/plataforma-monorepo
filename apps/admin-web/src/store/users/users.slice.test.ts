@@ -6,12 +6,15 @@ import reducer, {
   clearUsersState,
   clearUsersFilters,
   setSelectedUser,
+  DEFAULT_USERS_PAGE_SIZE,
   setUsersFilters,
   setUsersPage,
   setUsersPageSize
 } from './users.slice';
 import { selectUsersListError } from './users.selectors';
 import {
+  updateUserStatus,
+  evaluateUser,
   createAdministrator,
   createAuditor,
   createCommitteeMember,
@@ -53,7 +56,7 @@ describe('usersSlice', () => {
         pagination: null,
         filters: {},
         page: 1,
-        pageSize: 20,
+        pageSize: DEFAULT_USERS_PAGE_SIZE,
         status: 'idle',
         error: null,
       },
@@ -83,7 +86,7 @@ describe('usersSlice', () => {
         pagination: null,
         filters: {},
         page: 1,
-        pageSize: 20,
+        pageSize: DEFAULT_USERS_PAGE_SIZE,
         status: 'idle',
         error: null,
       },
@@ -259,5 +262,27 @@ describe('usersSlice — clearUsersListError / clearUsersMutationError', () => {
     expect(after.mutation.status).toBe('idle');
     expect(after.list.error).toEqual(listError);
     expect(after.list.status).toBe('failed');
+  });
+});
+
+
+describe('usersSlice — gestão de acesso', () => {
+  it('atualiza lista e seleção após ativação ou desativação', () => {
+    let state = reducer(undefined, setSelectedUser(user));
+    state = { ...state, list: { ...state.list, items: [user] } };
+    const updated = { ...user, accountStatus: 'disabled' as const };
+    const next = reducer(state, updateUserStatus.fulfilled(updated, 'request', { userId: user.id, status: 'disabled' }));
+    expect(next.list.items).toEqual([updated]);
+    expect(next.selected).toEqual(updated);
+    expect(next.mutation.status).toBe('succeeded');
+  });
+
+  it('preserva a avaliação retornada pela API na lista e seleção', () => {
+    let state = reducer(undefined, setSelectedUser(user));
+    state = { ...state, list: { ...state.list, items: [user] } };
+    const evaluation = { id: 1, userId: user.id, status: 'rejected' as const, justification: 'Parecer inválido', evaluatedByUserId: 1, evaluatedAt: '2026-11-05', createdAt: '2026-11-05', userCoepDataId: 4 };
+    const next = reducer(state, evaluateUser.fulfilled(evaluation, 'request', { userId: user.id, status: 'rejected' }));
+    expect(next.selected?.latestAuthEvaluation).toEqual(evaluation);
+    expect(next.list.items[0].accountStatus).toBe('rejected');
   });
 });

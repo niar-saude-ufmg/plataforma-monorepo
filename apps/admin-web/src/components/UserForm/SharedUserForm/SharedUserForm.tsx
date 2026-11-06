@@ -5,16 +5,17 @@ import './SharedUserForm.scss';
 
 type SharedUserFormProps = {
   fields: SharedUserFormFields;
+  title?: string;
   alert?: {
     severity: NonNullable<AlertProps['severity']>;
     message: ReactNode;
   };
 };
 
-export function SharedUserForm({ fields, alert }: SharedUserFormProps) {
+export function SharedUserForm({ fields, alert, title = 'Dados de acesso' }: SharedUserFormProps) {
   return (
     <section className="shared-user-form" aria-labelledby="personal-data-title">
-      <h3 id="personal-data-title">Dados de acesso</h3>
+      <h3 id="personal-data-title">{title}</h3>
       {alert ? <Alert severity={alert.severity}>{alert.message}</Alert> : null}
       <div className="shared-user-form__grid">
         <Input {...fields.fullName} label="Nome completo" autoComplete="name" required fullWidth />

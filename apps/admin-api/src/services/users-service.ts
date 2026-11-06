@@ -14,6 +14,7 @@ import {
 
 import { specialtiesRepository } from "../repositories/specialties-repository.js";
 import {
+  UpdateUserStatusInput,
   CreateAdministratorInput,
   CreateAuditorInput,
   CreateCommitteeMemberInput,
@@ -159,6 +160,20 @@ const scopedRoleFor = (requestedRole: UserRole | undefined, currentUser: Authent
 };
 
 export const usersService = {
+  updateStatus: async (userId: number, data: UpdateUserStatusInput, currentUser: AuthenticatedUser): Promise<ConsolidatedUserResponse> => {
+    if (currentUser.role !== 'admin') throw new AppError('Acesso não permitido', 403);
+    if (data.status === 'disabled' && userId === currentUser.id) {
+      throw new AppError('Você não pode desativar a própria conta', 400);
+    }
+    const target = await usersRepository.findDetailById(userId);
+    if (!target) throw new AppError('Usuário não encontrado', 404);
+    const expectedStatus = data.status === 'active' ? 'disabled' : 'active';
+    if (target.accountStatus !== expectedStatus) {
+      throw new AppError('Esta alteração não é permitida para o status atual do usuário', 409);
+    }
+    const updated = await usersRepository.updateStatus({ userId, expectedStatus, status: data.status, actorUserId: currentUser.id });
+    return toConsolidatedUserResponse(updated);
+  },
   listUsers: async (query: ListUsersQuery, currentUser: AuthenticatedUser): Promise<PaginatedUsersResponse> => {
     const result = await usersRepository.findAll({
       role: scopedRoleFor(query.role, currentUser),

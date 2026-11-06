@@ -25,6 +25,7 @@ export type ListingProps<T extends Record<string, unknown>> = {
   description?: ReactNode;
   action?: ReactNode;
   filter?: ReactNode;
+  separateFilter?: boolean;
   "aria-label"?: string;
   columns: readonly TableColumn<T>[];
   rows?: readonly T[];
@@ -33,6 +34,7 @@ export type ListingProps<T extends Record<string, unknown>> = {
   selectable?: TableProps<T>["selectable"];
   onSelectionChange?: TableProps<T>["onSelectionChange"];
   tableBorder?: boolean;
+  tableSize?: TableProps<T>["size"];
   emptyStateAriaLabel?: string;
 };
 
@@ -43,6 +45,7 @@ export function Listing<T extends Record<string, unknown>>({
   description,
   action,
   filter,
+  separateFilter = false,
   "aria-label": ariaLabel = "Lista de registros",
   columns,
   rows = [],
@@ -51,6 +54,7 @@ export function Listing<T extends Record<string, unknown>>({
   selectable,
   onSelectionChange,
   tableBorder,
+  tableSize,
   emptyStateAriaLabel = "Lista de registros vazia",
 }: ListingProps<T>) {
   return (
@@ -67,6 +71,11 @@ export function Listing<T extends Record<string, unknown>>({
           ) : null}
         </Box>
       )}
+      {separateFilter && filter && (
+        <Card variant="outlined" sx={listingCardStyles}>
+          {loading ? <Skeleton variant="rounded" lines={1} height={48} /> : filter}
+        </Card>
+      )}
       {rows.length === 0 && !loading ? (
         <Box role="status" aria-label={emptyStateAriaLabel}>
           <Card variant="outlined" sx={listingCardStyles}>
@@ -78,8 +87,8 @@ export function Listing<T extends Record<string, unknown>>({
       ) : (
         <Card variant="outlined" sx={listingCardStyles}>
           <Box sx={{ display: "grid", gap: niar.spacing["2xl"] }}>
-            {loading ? filter ? <Skeleton variant="rounded" lines={1} height={48} /> : null : filter}
-            {loading ? <Box aria-live="polite"><Skeleton variant="rounded" lines={5} height={48} /></Box> : <Table columns={columns} rows={rows} aria-label={ariaLabel} pagination={pagination} selectable={selectable} onSelectionChange={onSelectionChange} border={tableBorder ?? true} />}
+            {!separateFilter && (loading ? filter ? <Skeleton variant="rounded" lines={1} height={48} /> : null : filter)}
+            {loading ? <Box aria-live="polite"><Skeleton variant="rounded" lines={5} height={48} /></Box> : <Table size={tableSize} columns={columns} rows={rows} aria-label={ariaLabel} pagination={pagination} selectable={selectable} onSelectionChange={onSelectionChange} border={tableBorder ?? true} />}
           </Box>
         </Card>
       )}

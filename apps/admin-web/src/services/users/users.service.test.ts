@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import type { CreateUserInput } from "../../types/user.types";
 import {
+  updateUserStatusRequest,
+  evaluateUserRequest,
   createAdministratorRequest,
   createAuditorRequest,
   createCommitteeMemberRequest,
@@ -383,5 +385,33 @@ describe("user service — cadastros privados", () => {
       message: "Revise os campos informados.",
       fieldErrors: { specialtyId: "Selecione uma especialidade." },
     });
+  });
+});
+
+
+describe('users service — gestão de acesso', () => {
+  afterEach(() => { vi.unstubAllGlobals(); window.localStorage.clear(); });
+
+  it('envia a alteração autenticada e normaliza o usuário retornado', async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, 'test-token');
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ...rawListUser, account_status: 'disabled' })));
+    vi.stubGlobal('fetch', fetchMock);
+    const result = await updateUserStatusRequest({ userId: 7, status: 'disabled' });
+    expect(result.accountStatus).toBe('disabled');
+    expect(result.fullName).toBe(rawListUser.full_name);
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/users/7/status'), expect.objectContaining({
+      method: 'PATCH', headers: { Authorization: 'Bearer test-token', 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'disabled' }),
+    }));
+  });
+
+  it('envia a decisão e normaliza a avaliação', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 4, user_id: 7, status: 'active', justification: null, evaluated_by_user_id: 1, evaluated_at: '2026-11-05', created_at: '2026-11-05', user_coep_data_id: 3 }))));
+    const result = await evaluateUserRequest({ userId: 7, status: 'active' });
+    expect(result).toMatchObject({ userId: 7, status: 'active', evaluatedByUserId: 1, userCoepDataId: 3 });
+  });
+
+  it('preserva a mensagem de conflito e não trata o erro como filtro inválido', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: 'Transição não permitida' }), { status: 409 })));
+    await expect(updateUserStatusRequest({ userId: 7, status: 'active' })).rejects.toMatchObject({ status: 409, message: 'Transição não permitida' });
   });
 });

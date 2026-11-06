@@ -65,6 +65,40 @@ usersRouter.get("/", authenticate, restrictTo("admin", "committee", "auditor"), 
 
 /**
  * @swagger
+ * /admin/users/{user_id}/status:
+ *   patch:
+ *     summary: Ativa ou desativa um usuário
+ *     description: Exclusivo de administrador. Permite active -> disabled e disabled -> active, com auditoria. Cadastros pendentes devem passar pela avaliação.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema: { type: integer, minimum: 1 }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status: { type: string, enum: [active, disabled] }
+ *     responses:
+ *       200: { description: Usuário atualizado }
+ *       400: { description: Dados inválidos }
+ *       401: { description: Não autenticado }
+ *       403: { description: Papel sem permissão }
+ *       404: { description: Usuário não encontrado }
+ *       409: { description: Transição inválida ou alteração concorrente }
+ */
+usersRouter.patch('/:user_id/status', authenticate, restrictTo('admin'), usersController.updateStatus);
+
+
+/**
+ * @swagger
  * /admin/users/{user_id}:
  *   get:
  *     summary: Consulta os dados consolidados de um usuário

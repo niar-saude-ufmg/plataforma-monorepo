@@ -3,6 +3,8 @@ import type { UserApiError, UserListFilters, UserListItem, UserListPagination } 
 import type { AsyncStatus, FileState, MutationState, ResourceState } from '../../types/resource.types';
 import {
   createUser,
+  updateUserStatus,
+  evaluateUser,
   downloadUserCoepDocument,
   createResearcher,
   createAdministrator,
@@ -12,9 +14,9 @@ import {
 } from './users.api';
 
 export type UsersStatus = AsyncStatus;
-export type UserMutationOperation = 'create' | 'update' | 'approve' | 'reject';
+export type UserMutationOperation = 'create' | 'update' | 'approve' | 'reject' | 'status' | 'evaluate';
 
-export const DEFAULT_USERS_PAGE_SIZE = 20;
+export const DEFAULT_USERS_PAGE_SIZE = 5;
 
 const createDefaultUsersFilters = (): UserListFilters => ({});
 
@@ -108,6 +110,36 @@ const usersSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder.addCase(updateUserStatus.pending, (state) => {
+      state.mutation = { operation: 'status', status: 'pending', error: null };
+    });
+    builder.addCase(updateUserStatus.fulfilled, (state, action) => {
+      state.mutation = { operation: 'status', status: 'succeeded', error: null };
+      state.list.items = state.list.items.map((user) => user.id === action.payload.id ? action.payload : user);
+      if (state.selected?.id === action.payload.id) state.selected = action.payload;
+    });
+    builder.addCase(updateUserStatus.rejected, (state, action) => {
+      state.mutation = { operation: 'status', status: 'failed', error: action.payload ?? { message: 'Não foi possível alterar o status.' } };
+    });
+    builder.addCase(evaluateUser.pending, (state) => {
+      state.mutation = { operation: 'evaluate', status: 'pending', error: null };
+    });
+    builder.addCase(evaluateUser.fulfilled, (state, action) => {
+      state.mutation = { operation: 'evaluate', status: 'succeeded', error: null };
+      for (const user of state.list.items) {
+        if (user.id === action.payload.userId) {
+          user.accountStatus = action.payload.status;
+          user.latestAuthEvaluation = action.payload;
+        }
+      }
+      if (state.selected?.id === action.payload.userId) {
+        state.selected.accountStatus = action.payload.status;
+        state.selected.latestAuthEvaluation = action.payload;
+      }
+    });
+    builder.addCase(evaluateUser.rejected, (state, action) => {
+      state.mutation = { operation: 'evaluate', status: 'failed', error: action.payload ?? { message: 'Não foi possível avaliar o cadastro.' } };
+    });
     builder.addCase(getUsers.pending, (state, action) => {
       state.list.status = 'pending';
       state.list.error = null;

@@ -1,0 +1,6 @@
+@use '@niar/ui/typography.scss' as typography;
+
+.confirmation-dialog-description {
+  @include typography.typography-body;
+  padding: var(--niar-spacing-md) 0;
+}
