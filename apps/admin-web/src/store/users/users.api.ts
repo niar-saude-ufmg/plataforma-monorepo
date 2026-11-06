@@ -10,6 +10,7 @@ import {
   normalizeUserApiError,
   normalizeUserDocumentApiError,
   normalizeUserListApiError,
+  updateUserStatusRequest
 } from '../../services/users/users.service';
 import { downloadBlob } from '../../utils/download-file';
 import type { ApiError } from '../../types/api.types';
@@ -22,7 +23,10 @@ import type {
   User,
   UserListParams,
   UserListResponse,
+  UserAuthEvaluation,
+  UserAuthEvaluationInput
 } from '../../types/user.types';
+import { UserAccountStatus } from '@niar/contracts';
 
 export const getUsers = createAsyncThunk<
   UserListResponse,
@@ -171,5 +175,26 @@ export const downloadUserCoepDocument = createAsyncThunk<
     }
 
     return rejectWithValue(normalizeUserDocumentApiError('UNKNOWN_ERROR'));
+  }
+});
+
+export const updateUserStatus = createAsyncThunk<
+  UserAuthEvaluation,
+  { userId: number; status: UserAccountStatus; justification?: string },
+  { rejectValue: ApiError }
+>('users/updateUserStatus', async ({ userId, status, justification }, { rejectWithValue }) => {
+  try {
+    return await updateUserStatusRequest(userId, status, justification);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
+      return rejectWithValue(error as ApiError);
+    }
+
+    return rejectWithValue(normalizeUserApiError('UNKNOWN_ERROR', undefined));
   }
 });

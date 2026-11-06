@@ -35,7 +35,7 @@ export const USER_LIST_CONFIG: Partial<
     emptyStateDescription: "Ainda não existem usuários para exibir.",
     columnIds: ["fullName", "email", "role", "accountStatus", "actions"],
     filters: ["search", "role", "accountStatus"],
-    actions: ["details"],
+    actions: ["details", "evaluate", "activate", "deactivate"],
     canCreateUser: true,
     filterLabels: {
       search: "Buscar usuário",
@@ -49,7 +49,7 @@ export const USER_LIST_CONFIG: Partial<
     emptyStateDescription: "Ainda não existem usuários para exibir.",
     columnIds: ["fullName", "email", "accountStatus", "actions"],
     filters: ["search", "accountStatus"],
-    actions: ["details"],
+    actions: ["details", "evaluate"],
     canCreateUser: false,
     filterLabels: {
       search: "Buscar usuário",
@@ -62,7 +62,7 @@ export const USER_LIST_CONFIG: Partial<
     emptyStateDescription: "Ainda não existem usuários para exibir.",
     columnIds: ["fullName", "email", "accountStatus", "actions"],
     filters: ["search", "accountStatus"],
-    actions: ["details"],
+    actions: ["details", "evaluate"],
     canCreateUser: false,
     filterLabels: {
       search: "Buscar usuário",

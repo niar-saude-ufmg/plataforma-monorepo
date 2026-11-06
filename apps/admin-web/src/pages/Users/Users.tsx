@@ -1,13 +1,22 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Listing, Filter, Button, StatusChip, Snackbar, TableColumn, StatusChipStatus, type AutocompleteOption } from "@niar/ui";
 import { selectAuthSelected } from '../../store/auth/auth.selectors';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  UserEvaluationDialog,
+  type UserEvaluationDecision,
+} from '../../components/UserDialogs/UserEvaluationDialog/UserEvaluationDialog';
+import { UserStatusDialog } from '../../components/UserDialogs/UserStatusDialog/UserStatusDialog';
+import { updateUserStatus, downloadUserCoepDocument } from '../../store/users/users.api';
 import {
   setUsersFilters,
   clearUsersFilters,
   setUsersPage,
   setUsersPageSize,
   clearUsersError,
+  setSelectedUser,
+  clearSelectedUser,
+  clearUsersMutationError
 } from "../../store/users/users.slice";
 import {
   selectUsersList,
@@ -17,6 +26,10 @@ import {
   selectUsersListPageSize,
   selectUsersListLoading,
   selectUsersListError,
+  selectUsersSelected,
+  selectUsersMutationError,
+  selectUsersMutationLoading,
+  selectUsersDownloadLoading,
 } from "../../store/users/users.selectors";
 import { getUsers } from '../../store/users/users.api';
 import { useApiError } from "../../hooks/use-api-error/use-api-error"
@@ -40,7 +53,6 @@ const roleOptions: readonly AutocompleteOption[] = [
   { value: "admin", label: "Administrador" },
   { value: "auditor", label: "Auditor" },
   { value: "committee", label: "Comitê" },
-  { value: "auditor", label: "Auditor" }
 ];
 
 const statusOptions: readonly AutocompleteOption[] = [
@@ -67,8 +79,15 @@ export function Users() {
   const pageSize = useAppSelector(selectUsersListPageSize);
   const loading = useAppSelector(selectUsersListLoading);
   const error = useAppSelector(selectUsersListError);
+  const selectedUser = useAppSelector(selectUsersSelected);
+  const mutationLoading = useAppSelector(selectUsersMutationLoading);
+  const mutationError = useAppSelector(selectUsersMutationError);
+  const downloadLoading = useAppSelector(selectUsersDownloadLoading);
+
   const roleConfig =
     USER_LIST_CONFIG[user?.role ?? "admin"] ?? USER_LIST_CONFIG.admin!;
+
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(getUsers({
@@ -110,6 +129,102 @@ export function Users() {
   const handlePageSizeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setUsersPageSize(Number(event.target.value)));
   };
+
+  type UserDialogAction = 'evaluate' | 'activate' | 'deactivate';
+  const [activeAction, setActiveAction] = useState<UserDialogAction | null>(null);
+
+  const handleEvaluateClick = (target: UserListItem) => {
+    dispatch(clearUsersMutationError());
+    dispatch(setSelectedUser(target));
+    setActiveAction('evaluate');
+  };
+
+  const handleCloseEvaluation = () => {
+    setActiveAction(null);
+    dispatch(clearSelectedUser());
+    dispatch(clearUsersMutationError());
+  };
+
+  const handleSubmitEvaluation = async (
+    decision: UserEvaluationDecision,
+    justification?: string,
+  ) => {
+    if (!selectedUser) return;
+
+    const result = await dispatch(
+      updateUserStatus({
+        userId: selectedUser.id,
+        status: decision,
+        justification,
+    }));
+
+    if (updateUserStatus.fulfilled.match(result)) {
+      setActiveAction(null);
+      dispatch(clearSelectedUser());
+      dispatch(clearUsersMutationError());
+      setSuccessMessage('Avaliação registrada com sucesso.');
+      dispatch(
+        getUsers({
+          page,
+          pageSize,
+          search: filters.search,
+          role: filters.role,
+          accountStatus: filters.accountStatus,
+        }),
+      );
+    }
+  };
+
+  const handleDownloadCoep = () => {
+    if (selectedUser) {
+      dispatch(downloadUserCoepDocument(selectedUser.id));
+    }
+  };
+
+  const handleActivateClick = (target: UserListItem) => {
+    dispatch(clearUsersMutationError());
+    dispatch(setSelectedUser(target));
+    setActiveAction('activate');
+  }
+
+  const handleDeactivateClick = (target: UserListItem) => {
+    dispatch(clearUsersMutationError());
+    dispatch(setSelectedUser(target));
+    setActiveAction('deactivate');
+  }
+
+  const handleCloseStatusDialog = () => {
+    setActiveAction(null);
+    dispatch(clearSelectedUser());
+    dispatch(clearUsersMutationError());
+  };
+
+  const handleConfirmStatusChange = async () => {
+    if (!selectedUser) return;
+
+    const newStatus = activeAction === 'activate' ? 'active' : 'disabled';
+
+    const result = await dispatch(updateUserStatus({
+      userId: selectedUser.id,
+      status: newStatus,
+    }));
+
+    if (updateUserStatus.fulfilled.match(result)) {
+      setActiveAction(null);
+      dispatch(clearSelectedUser());
+      dispatch(clearUsersMutationError());
+      setSuccessMessage(`Usuário ${newStatus === 'active' ? 'ativado' : 'desativado'} com sucesso.`);
+      dispatch(
+        getUsers({
+          page,
+          pageSize,
+          search: filters.search,
+          role: filters.role,
+          accountStatus: filters.accountStatus,
+        }),
+      );
+    }
+  }
 
   const selectedRole = roleOptions.find((opt) => opt.value === filters.role) ?? null;
   const selectedStatus = statusOptions.find((opt) => opt.value === filters.accountStatus) ?? null;
@@ -176,18 +291,24 @@ export function Users() {
         Detalhes
       </Button>
     ),
-    evaluate: (user) => user.role === "researcher" ? (
-      <Button size="small" variant="outlined" color="primary">
+    evaluate: (user) => user.role === "researcher" && user.accountStatus === "pending" ? (
+      <Button size="small" variant="outlined" color="primary"
+        onClick={() => handleEvaluateClick(user)}
+      >
         Avaliar
       </Button>
     ) : null,
     deactivate: (user) => user.accountStatus === "active" ? (
-      <Button size="small" variant="outlined" color="danger">
+      <Button size="small" variant="outlined" color="danger"
+        onClick={() => handleDeactivateClick(user)}
+      >
         Desativar
       </Button>
     ) : null,
-    activate: (user) => user.accountStatus === "pending" || user.accountStatus === "disabled" ? (
-      <Button size="small" variant="outlined" color="primary">
+    activate: (user) => user.accountStatus === "disabled" ? (
+      <Button size="small" variant="outlined" color="primary"
+        onClick={() => handleActivateClick(user)}
+      >
         Ativar
       </Button>
     ) : null,
@@ -225,6 +346,12 @@ export function Users() {
     "Não foi possível carregar os usuários. Tente novamente.",
   );
 
+  const mutationErrorSnackbar = useApiError(
+    mutationError,
+    () => dispatch(clearUsersMutationError()),
+    "Não foi possível atualizar o status do usuário. Verifique as regras de transição.",
+  )
+
   return (
     <>
       <Listing
@@ -258,6 +385,26 @@ export function Users() {
         }
       />
       <Snackbar {...errorSnackbar} />
+      <Snackbar {...mutationErrorSnackbar} />
+      <UserEvaluationDialog
+        open={activeAction === 'evaluate'}
+        user={selectedUser}
+        loading={mutationLoading}
+        error={mutationError}
+        downloadLoading={downloadLoading}
+        onDownloadCoep={handleDownloadCoep}
+        onClose={handleCloseEvaluation}
+        onSubmit={handleSubmitEvaluation}
+      />
+      <UserStatusDialog
+        open={activeAction === 'activate' || activeAction === 'deactivate'}
+        user={selectedUser}
+        action={activeAction === 'activate' ? 'activate' : 'deactivate'}
+        loading={mutationLoading}
+        error={mutationError}
+        onClose={handleCloseStatusDialog}
+        onConfirm={handleConfirmStatusChange}
+      />
     </>
   );
 };
