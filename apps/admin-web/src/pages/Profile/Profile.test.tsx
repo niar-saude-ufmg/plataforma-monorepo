@@ -417,6 +417,9 @@ describe('Perfil — edição, senha e download', () => {
         full_name: 'Nome Atualizado',
         role: user.role,
         account_status: 'active' as const,
+        ...(user.role === 'committee' && {
+          committee_profile: { specialty: { id: 7, code: 'EPI', name: 'Epidemiologia' } },
+        }),
       }),
     });
     renderPage(user);
@@ -433,6 +436,10 @@ describe('Perfil — edição, senha e download', () => {
     expect(init.method).toBe('PATCH');
     expect(Object.keys(JSON.parse(init.body)).sort()).toEqual(['email', 'full_name']);
     await waitFor(() => expect(store.getState().auth.selected?.name).toBe('Nome Atualizado'));
+    if (user.role === 'committee') {
+      expect(screen.getByText('Epidemiologia')).toBeInTheDocument();
+      expect(store.getState().auth.selected?.committeeProfile?.specialty.name).toBe('Epidemiologia');
+    }
   });
 
   it('usa o mesmo formulário de troca de senha para o Comitê', async () => {
@@ -445,6 +452,7 @@ describe('Perfil — edição, senha e download', () => {
         full_name: committee.name,
         role: 'committee' as const,
         account_status: 'active' as const,
+        committee_profile: { specialty: { id: 7, code: 'EPI', name: 'Epidemiologia' } },
       }),
     });
     renderPage(committee);
@@ -458,6 +466,9 @@ describe('Perfil — edição, senha e download', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(Object.keys(body).sort()).toEqual(['current_password', 'password']);
+    await waitFor(() => expect(screen.getByText('Senha atualizada.')).toBeInTheDocument());
+    expect(screen.getByText('Epidemiologia')).toBeInTheDocument();
+    expect(store.getState().auth.selected?.committeeProfile?.specialty.name).toBe('Epidemiologia');
   });
 
   it('mostra o erro da API no Snackbar também para o Auditor', async () => {

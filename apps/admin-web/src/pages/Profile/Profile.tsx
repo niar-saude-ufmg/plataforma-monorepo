@@ -269,7 +269,7 @@ export function Profile() {
     dispatch(changePassword(values));
   });
 
-  if (!user) {
+  if (!user || !roleConfig) {
     return (
       <>
         <Loading aria-label="Carregando perfil" />
@@ -278,13 +278,10 @@ export function Profile() {
     );
   }
 
-  // Os quatro papéis têm configuração; o opcional acima cobre só a sessão ausente.
-  const config = PROFILE_ROLE_CONFIG[user.role];
-
-  const canEdit = config.actions.includes('editProfile');
-  const canChangePassword = config.actions.includes('changePassword');
+  const canEdit = roleConfig.actions.includes('editProfile');
+  const canChangePassword = roleConfig.actions.includes('changePassword');
   const canDownloadCoep =
-    config.actions.includes('downloadCoep') && Boolean(user.coep?.documentFilename);
+    roleConfig.actions.includes('downloadCoep') && Boolean(user.coep?.documentFilename);
 
   const headerActions = mode === 'readonly' && !passwordOpen ? (
     <>
@@ -309,15 +306,15 @@ export function Profile() {
           description={
             mode === 'edit'
               ? 'Atualize os dados editáveis do seu perfil.'
-              : config.description
+              : roleConfig.description
           }
         />
 
-        {config.sections.includes('account') && (
+        {roleConfig.sections.includes('account') && (
           <ProfileForm
             mode={mode}
             fields={profileForm.fields}
-            showPhone={config.fields.phone.visible}
+            showPhone={roleConfig.fields.phone.visible}
             actions={headerActions}
             submitting={savingProfile}
             onSubmit={() => { void submitProfile(); }}
@@ -340,9 +337,9 @@ export function Profile() {
           />
         )}
 
-        {config.sections.includes('access') && <PlatformAccess roleConfig={config} user={user} />}
-        {config.sections.includes('committeeDetails') && <CommitteeDetails user={user} />}
-        {config.sections.includes('researcherDetails') && (
+        {roleConfig.sections.includes('access') && <PlatformAccess roleConfig={roleConfig} user={user} />}
+        {roleConfig.sections.includes('committeeDetails') && <CommitteeDetails user={user} />}
+        {roleConfig.sections.includes('researcherDetails') && (
           <ResearcherDetails
             user={user}
             canDownloadCoep={canDownloadCoep}
