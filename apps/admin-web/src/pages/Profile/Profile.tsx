@@ -67,6 +67,20 @@ const formatApprovalDate = (value?: string | null) => {
   return day && month && year ? `${day}/${month}/${year}` : value;
 };
 
+// Fora do ListText: o value dele vira <p> e o StatusChip é <div>.
+function AccountStatusField({ user }: { user: AuthUser }) {
+  return (
+    <div className="profile__status-field">
+      <p className="profile__status-label">Status da conta</p>
+      <StatusChip
+        aria-label="Status da conta"
+        label={accountStatusLabels[user.accountStatus]}
+        status={accountStatusTone[user.accountStatus]}
+      />
+    </div>
+  );
+}
+
 function PlatformAccess({ roleConfig, user }: { roleConfig: ProfileRoleConfig; user: AuthUser }) {
   return (
     <ProfileReadonly title="Acesso à plataforma">
@@ -76,15 +90,21 @@ function PlatformAccess({ roleConfig, user }: { roleConfig: ProfileRoleConfig; u
           { label: 'Perfil de acesso', value: roleConfig.accessProfileLabel },
         ]}
       />
-      {/* Fora do ListText: o value dele vira <p> e o StatusChip é <div>. */}
-      <div className="profile__status-field">
-        <p className="profile__status-label">Status da conta</p>
-        <StatusChip
-          aria-label="Status da conta"
-          label={accountStatusLabels[user.accountStatus]}
-          status={accountStatusTone[user.accountStatus]}
-        />
-      </div>
+      <AccountStatusField user={user} />
+    </ProfileReadonly>
+  );
+}
+
+function CommitteeDetails({ user }: { user: AuthUser }) {
+  return (
+    <ProfileReadonly title="Dados da comissão">
+      <ListText
+        aria-label="Dados da comissão"
+        items={[
+          { label: 'Especialidade', value: orNotProvided(user.committeeProfile?.specialty.name) },
+        ]}
+      />
+      <AccountStatusField user={user} />
     </ProfileReadonly>
   );
 }
@@ -249,7 +269,7 @@ export function Profile() {
     dispatch(changePassword(values));
   });
 
-  if (!user) {
+  if (!user || !roleConfig) {
     return (
       <>
         <Loading aria-label="Carregando perfil" />
@@ -257,8 +277,6 @@ export function Profile() {
       </>
     );
   }
-
-  if (!roleConfig) return null;
 
   const canEdit = roleConfig.actions.includes('editProfile');
   const canChangePassword = roleConfig.actions.includes('changePassword');
@@ -320,6 +338,7 @@ export function Profile() {
         )}
 
         {roleConfig.sections.includes('access') && <PlatformAccess roleConfig={roleConfig} user={user} />}
+        {roleConfig.sections.includes('committeeDetails') && <CommitteeDetails user={user} />}
         {roleConfig.sections.includes('researcherDetails') && (
           <ResearcherDetails
             user={user}
