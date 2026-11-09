@@ -13,6 +13,17 @@ export const publications: Publication[] = [
 		year: '2026',
 		metas: ['1'],
 		title:
+			'LEME: assistente RAG em português para normas brasileiras e internacionais sobre saúde e IA Responsável',
+		authors:
+			'Azevedo, K., Avelar, I., Carvalho, M., Lima, H.C., Cristina, I., Vasconcelos, M., Brandão, M., Meira Jr, W.',
+		journal:
+			'Anais Estendidos do XXXII Simpósio Brasileiro de Sistemas Multimídia e Web (WebMedia), Workshop de Ferramentas e Aplicações, 2026, p. 138-141',
+		doi: 'https://doi.org/10.5753/webmedia_estendido.2026.34656'
+	},
+	{
+		year: '2026',
+		metas: ['1'],
+		title:
 			'From Principles to Longitudinal AI Governance: An Evidence-Based Framework for Continuous Oversight',
 		authors:
 			'Vasconcelos, M., Pereira, R.G., Brito, L.E., Brandão, M.A., Marques-Neto, H.T., Almeida, J.M., Silva, A.P.C., Meira Jr, W., Almeida, V.',
