@@ -603,6 +603,13 @@ export async function updateUserStatusRequest(
   const body = await response.json().catch(() => undefined);
 
   if (!response.ok) {
+    if (response.status === 409) {
+      throw {
+        status: 409,
+        message: 'Não foi possível registrar a avaliação porque o status do cadastro mudou ou a transição não é permitida. Atualize a listagem e tente novamente.',
+      } satisfies ApiError;
+    }
+
     throw normalizeUserApiError(
       response.status,
       body,

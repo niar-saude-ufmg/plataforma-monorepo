@@ -388,6 +388,20 @@ describe("user service — cadastros privados", () => {
 });
 
 describe("user service — atualiza status", () => {
+  it("mostra conflito de avaliação quando a API retorna 409", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: "Transição de active para rejected não permitida" }),
+    }));
+
+    await expect(updateUserStatusRequest(3, "rejected", "Parecer inválido"))
+      .rejects.toEqual({
+        status: 409,
+        message: "Não foi possível registrar a avaliação porque o status do cadastro mudou ou a transição não é permitida. Atualize a listagem e tente novamente.",
+      });
+  });
+
   it("envia a mudança de status com justificativa e normaliza a resposta", async () => {
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
     vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
