@@ -17,7 +17,7 @@ export type ProjectFilterKey =
   | "evaluationStatus"
   | "evaluationContext";
 
-export type ProjectActionId = "details";
+export type ProjectActionId = "history" | "documents";
 
 export type ProjectListRoleConfig = RoleListConfig<ProjectColumnId, ProjectFilterKey> & {
   actions: readonly ProjectActionId[];
@@ -39,7 +39,7 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
       "actions",
     ],
     filters: ["search", "status"],
-    actions: ["details"],
+    actions: ["history", "documents"],
     columnLabels: { status: "Status do projeto" },
     filterLabels: { status: "Status do projeto" },
   },
@@ -49,12 +49,13 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
     emptyStateDescription: "Você ainda não possui projetos cadastrados.",
     columnIds: ["title", "status", "updatedAt", "actions"],
     filters: ["search", "status"],
-    actions: ["details"],
+    actions: ["history", "documents"],
     columnLabels: { status: "Status" },
   },
   auditor: {
     title: "Projetos",
-    description: "Acompanhe os projetos pendentes e atribuídos para avaliação.",
+    description:
+      "Consulte os projetos atribuídos a você, os documentos e o histórico de avaliações.",
     emptyStateDescription: "Ainda não existem projetos disponíveis para avaliação.",
     columnIds: [
       "title",
@@ -66,7 +67,7 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
       "actions",
     ],
     filters: ["search", "status", "evaluationStatus", "evaluationContext"],
-    actions: ["details"],
+    actions: ["history", "documents"],
     columnLabels: {
       status: "Status do projeto",
       evaluationContext: "Contexto da avaliação",
@@ -80,7 +81,8 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
   },
   committee: {
     title: "Projetos",
-    description: "Acompanhe os projetos encaminhados para avaliação do Comitê.",
+    description:
+      "Consulte os projetos disponíveis para avaliação, documentos e histórico de avaliações.",
     emptyStateDescription: "Ainda não existem projetos disponíveis para avaliação.",
     columnIds: [
       "title",
@@ -92,7 +94,7 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
       "actions",
     ],
     filters: ["search", "status", "evaluationStatus", "evaluationContext"],
-    actions: ["details"],
+    actions: ["history", "documents"],
     columnLabels: {
       status: "Status do projeto",
       evaluationContext: "Contexto da avaliação",
