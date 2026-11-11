@@ -22,7 +22,7 @@ const evaluationContextFor = (project: ProjectRecord) => {
   return latestVersion?.evaluations?.[0]?.context ?? null;
 };
 
-const DEFAULT_EXPORTS_DIR = resolve(process.cwd(), "apps/assistente-api/.local/exports");
+const DEFAULT_EXPORTS_DIR = resolve(process.cwd(), "../assistente-api/.local/exports");
 
 const exportsDirectory = () => resolve(process.env.EXPORTS_DIR ?? DEFAULT_EXPORTS_DIR);
 
