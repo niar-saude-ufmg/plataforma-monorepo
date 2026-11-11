@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -398,6 +399,87 @@ describe("Projects — estados e tabela", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Erro no servidor. Tente novamente.");
     await userEvent.click(screen.getByRole("button", { name: "Fechar erro" }));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("exibe o sucesso do download na página", async () => {
+    const user = userEvent.setup();
+    const anchorClick = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+    fetchMock.mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes("/documents/101/download")) {
+        return Promise.resolve(
+          new Response(new Blob(["documento"]), {
+            status: 200,
+            headers: {
+              "Content-Disposition": 'attachment; filename="projeto-v1.docx"',
+            },
+          }),
+        );
+      }
+      return Promise.resolve(jsonResponse(PROJECT_RESPONSE));
+    });
+    globalThis.URL.createObjectURL = vi.fn(() => "blob:project-document");
+    globalThis.URL.revokeObjectURL = vi.fn();
+
+    renderProjects();
+    const row = await screen.findByTestId("project-row-42");
+    await user.click(within(row).getByRole("button", { name: "Documentos" }));
+    await user.click(
+      screen.getByRole("button", { name: "Baixar projeto-v1.docx" }),
+    );
+    await waitFor(() =>
+      expect(store.getState().projects.download.status).toBe("succeeded"),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Fechar documentos" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Download de projeto-v1.docx concluído.",
+    );
+    anchorClick.mockRestore();
+  });
+
+  it("mantém o download após fechar o dialog e exibe o erro na página", async () => {
+    const user = userEvent.setup();
+    let resolveDownload!: (response: Response) => void;
+    const downloadResponse = new Promise<Response>((resolve) => {
+      resolveDownload = resolve;
+    });
+    fetchMock.mockImplementation((input) =>
+      String(input).includes("/documents/101/download")
+        ? downloadResponse
+        : Promise.resolve(jsonResponse(PROJECT_RESPONSE)),
+    );
+
+    renderProjects();
+    const row = await screen.findByTestId("project-row-42");
+    await user.click(within(row).getByRole("button", { name: "Documentos" }));
+    await user.click(
+      screen.getByRole("button", { name: "Baixar projeto-v1.docx" }),
+    );
+    expect(store.getState().projects.download.status).toBe("pending");
+
+    await user.click(
+      screen.getByRole("button", { name: "Fechar documentos" }),
+    );
+    expect(store.getState().projects.download.status).toBe("pending");
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Documentos do projeto" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    await act(async () => {
+      resolveDownload(jsonResponse({ error: "Acesso negado" }, 403));
+      await downloadResponse;
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Você não tem acesso a este documento.",
+    );
   });
 
   it.each([

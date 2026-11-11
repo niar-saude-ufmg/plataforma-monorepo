@@ -1,29 +1,8 @@
 import "@testing-library/jest-dom";
-import { configureStore } from "@reduxjs/toolkit";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Provider } from "react-redux";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Project } from "../../types/project.types";
-
-const mocks = vi.hoisted(() => ({
-  downloadProjectDocumentRequest: vi.fn(),
-  downloadBlob: vi.fn(),
-}));
-
-vi.mock("../../services/projects/projects.service", async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import("../../services/projects/projects.service")
-  >()),
-  downloadProjectDocumentRequest: mocks.downloadProjectDocumentRequest,
-}));
-
-vi.mock("../../utils/download-file", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("../../utils/download-file")>()),
-  downloadBlob: mocks.downloadBlob,
-}));
-
-import projectsReducer from "../../store/projects/projects.slice";
 import { ProjectDocumentsDialog } from "./ProjectDocumentsDialog";
 
 const project: Project = {
@@ -54,27 +33,24 @@ const project: Project = {
   ],
 };
 
-const makeStore = () =>
-  configureStore({
-    reducer: { projects: projectsReducer },
-  });
-
-const renderDialog = (onClose = vi.fn()) => {
-  const store = makeStore();
+const renderDialog = ({
+  downloadLoading = false,
+  onDownload = vi.fn(),
+  onClose = vi.fn(),
+} = {}) => {
   render(
-    <Provider store={store}>
-      <ProjectDocumentsDialog open project={project} onClose={onClose} />
-    </Provider>,
+    <ProjectDocumentsDialog
+      open
+      project={project}
+      downloadLoading={downloadLoading}
+      onDownload={onDownload}
+      onClose={onClose}
+    />,
   );
-  return { store, onClose };
+  return { onDownload, onClose };
 };
 
 describe("ProjectDocumentsDialog", () => {
-  beforeEach(() => {
-    mocks.downloadProjectDocumentRequest.mockReset();
-    mocks.downloadBlob.mockReset();
-  });
-
   afterEach(() => cleanup());
 
   it("lista os documentos e seus metadados usando ListText", () => {
@@ -94,39 +70,24 @@ describe("ProjectDocumentsDialog", () => {
     ).toBeInTheDocument();
   });
 
-  it("dispara o download existente com os ids do projeto e documento", async () => {
+  it("emite o documento selecionado para download", async () => {
     const user = userEvent.setup();
-    mocks.downloadProjectDocumentRequest.mockResolvedValue({
-      blob: new Blob(["documento"]),
-      filename: "projeto-v2.docx",
-    });
-    renderDialog();
+    const onDownload = vi.fn();
+    renderDialog({ onDownload });
 
     await user.click(
       screen.getByRole("button", { name: "Baixar projeto-v2.docx" }),
     );
 
-    await waitFor(() =>
-      expect(mocks.downloadProjectDocumentRequest).toHaveBeenCalledWith(42, 101),
-    );
-    expect(
-      await screen.findByText("Download de projeto-v2.docx concluído."),
-    ).toBeInTheDocument();
+    expect(onDownload).toHaveBeenCalledTimes(1);
+    expect(onDownload).toHaveBeenCalledWith(project.documents[0]);
   });
 
-  it("exibe loading e desabilita os downloads enquanto o thunk está pendente", async () => {
-    const user = userEvent.setup();
-    mocks.downloadProjectDocumentRequest.mockImplementation(
-      () => new Promise(() => undefined),
-    );
-    renderDialog();
-
-    await user.click(
-      screen.getByRole("button", { name: "Baixar projeto-v2.docx" }),
-    );
+  it("exibe loading e desabilita os downloads enquanto a operação está pendente", () => {
+    renderDialog({ downloadLoading: true });
 
     expect(
-      await screen.findByText("Baixando documento..."),
+      screen.getByText("Baixando documento..."),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Baixar projeto-v2.docx" }),
@@ -136,27 +97,10 @@ describe("ProjectDocumentsDialog", () => {
     ).toBeDisabled();
   });
 
-  it("exibe o erro normalizado do download", async () => {
-    const user = userEvent.setup();
-    mocks.downloadProjectDocumentRequest.mockRejectedValue({
-      status: 403,
-      message: "Você não tem acesso a este documento.",
-    });
-    renderDialog();
-
-    await user.click(
-      screen.getByRole("button", { name: "Baixar projeto-v2.docx" }),
-    );
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Você não tem acesso a este documento.",
-    );
-  });
-
   it("permite fechar o dialog", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderDialog(onClose);
+    renderDialog({ onClose });
 
     await user.click(
       screen.getByRole("button", { name: "Fechar documentos" }),

@@ -25,8 +25,14 @@ import { ProjectHistoryDialog } from "../../components/ProjectHistoryDialog";
 import { useApiError } from "../../hooks/use-api-error/use-api-error";
 import { selectAuthSelected } from "../../store/auth/auth.selectors";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { getProjects } from "../../store/projects/projects.api";
 import {
+  downloadProjectDocument,
+  getProjects,
+} from "../../store/projects/projects.api";
+import {
+  selectProjectsDownloadError,
+  selectProjectsDownloadFilename,
+  selectProjectsDownloadLoading,
   selectProjectsList,
   selectProjectsListError,
   selectProjectsListFilters,
@@ -49,6 +55,7 @@ import type {
   EvaluationContext,
   EvaluationStatus,
   Project,
+  ProjectDocument,
   ProjectStatus,
   ProjectStatusEntry,
 } from "../../types/project.types";
@@ -157,6 +164,9 @@ export function Projects() {
   const [activeDialog, setActiveDialog] = useState<
     "history" | "documents" | null
   >(null);
+  const [dismissedDownloadFilename, setDismissedDownloadFilename] = useState<
+    string | null
+  >(null);
   const user = useAppSelector(selectAuthSelected);
   const projects = useAppSelector(selectProjectsList);
   const selectedProject = useAppSelector(selectProjectsSelected);
@@ -166,6 +176,9 @@ export function Projects() {
   const pageSize = useAppSelector(selectProjectsListPageSize);
   const loading = useAppSelector(selectProjectsListLoading);
   const error = useAppSelector(selectProjectsListError);
+  const downloadLoading = useAppSelector(selectProjectsDownloadLoading);
+  const downloadError = useAppSelector(selectProjectsDownloadError);
+  const downloadedFilename = useAppSelector(selectProjectsDownloadFilename);
   const roleConfig =
     PROJECT_LIST_CONFIG[user?.role ?? "researcher"];
 
@@ -218,6 +231,17 @@ export function Projects() {
   const closeProjectDialog = () => {
     setActiveDialog(null);
     dispatch(clearSelectedProject());
+  };
+
+  const handleDownloadDocument = (document: ProjectDocument) => {
+    if (!selectedProject) return;
+    setDismissedDownloadFilename(null);
+    dispatch(
+      downloadProjectDocument({
+        projectId: selectedProject.id,
+        documentId: document.id,
+      }),
+    );
   };
 
   const searchOptions = projects.map((project) => ({
@@ -403,6 +427,14 @@ export function Projects() {
     () => dispatch(clearProjectsError()),
     "Não foi possível carregar os projetos. Tente novamente.",
   );
+  const downloadErrorSnackbar = useApiError(
+    downloadError,
+    () => dispatch(clearProjectsError()),
+    "Não foi possível baixar o documento. Tente novamente.",
+  );
+  const downloadSuccessOpen = Boolean(
+    downloadedFilename && downloadedFilename !== dismissedDownloadFilename,
+  );
 
   return (
     <>
@@ -424,9 +456,23 @@ export function Projects() {
       <ProjectDocumentsDialog
         open={activeDialog === "documents"}
         project={selectedProject}
+        downloadLoading={downloadLoading}
+        onDownload={handleDownloadDocument}
         onClose={closeProjectDialog}
       />
       <Snackbar {...errorSnackbar} />
+      <Snackbar {...downloadErrorSnackbar} />
+      <Snackbar
+        open={downloadSuccessOpen}
+        message={
+          downloadedFilename
+            ? `Download de ${downloadedFilename} concluído.`
+            : ""
+        }
+        severity="success"
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={() => setDismissedDownloadFilename(downloadedFilename)}
+      />
     </>
   );
 }
