@@ -1,6 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../App';
@@ -9,6 +8,7 @@ import { store } from '../../store';
 import { clearAuthMutation, setSelectedAuthUser } from '../../store/auth/auth.slice';
 import { clearUsersError } from '../../store/users/users.slice';
 import type { AuthUser } from '../../types/user.types';
+import { AdminMemoryRouter } from '../../test-utils/AdminMemoryRouter';
 
 const admin: AuthUser = {
   id: 1,
@@ -67,9 +67,9 @@ function renderPage(user: AuthUser | null) {
 
   return render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={['/admin/administrador/perfil']}>
+    <AdminMemoryRouter initialEntries={['/admin/administrador/perfil']}>
         <Profile />
-      </MemoryRouter>
+      </AdminMemoryRouter>
     </Provider>,
   );
 }
@@ -82,9 +82,9 @@ describe('rotas de Perfil', () => {
 
   it('abre /admin/administrador/perfil para o Administrador', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/administrador/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/administrador/perfil']}>
         <App mode="admin" currentUser={admin} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
@@ -92,9 +92,9 @@ describe('rotas de Perfil', () => {
 
   it('abre /admin/pesquisador/perfil para o Pesquisador', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/pesquisador/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/pesquisador/perfil']}>
         <App mode="admin" currentUser={researcher} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
@@ -107,9 +107,9 @@ describe('rotas de Perfil', () => {
     ['/admin/auditor/perfil', () => auditor],
   ])('renderiza a mesma página de Perfil em %s', async (entry, getUser) => {
     render(
-      <MemoryRouter initialEntries={[entry]}>
+      <AdminMemoryRouter initialEntries={[entry]}>
         <App mode="admin" currentUser={getUser()} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
@@ -120,9 +120,9 @@ describe('rotas de Perfil', () => {
 
   it('abre /admin/comite/perfil para o Comitê', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/comite/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/comite/perfil']}>
         <App mode="admin" currentUser={committee} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
@@ -131,9 +131,9 @@ describe('rotas de Perfil', () => {
 
   it('abre /admin/auditor/perfil para o Auditor', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/auditor/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/auditor/perfil']}>
         <App mode="admin" currentUser={auditor} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
@@ -142,9 +142,9 @@ describe('rotas de Perfil', () => {
 
   it('não leva o Comitê para a rota de Perfil do Auditor', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/auditor/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/auditor/perfil']}>
         <App mode="admin" currentUser={committee} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Boas vindas, Comitê Três.' })).toBeInTheDocument();
@@ -153,9 +153,9 @@ describe('rotas de Perfil', () => {
 
   it('não leva o Administrador para a rota de Perfil do Pesquisador', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/pesquisador/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/pesquisador/perfil']}>
         <App mode="admin" currentUser={admin} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Boas vindas, Gestora Um.' })).toBeInTheDocument();
@@ -168,9 +168,9 @@ describe('rotas de Perfil', () => {
     ['/admin/auditor/home', () => auditor],
   ])('mostra Perfil no menu em %s', async (entry, getUser) => {
     render(
-      <MemoryRouter initialEntries={[entry]}>
+      <AdminMemoryRouter initialEntries={[entry]}>
         <App mode="admin" currentUser={getUser()} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('tab', { name: 'Perfil' })).toBeInTheDocument();

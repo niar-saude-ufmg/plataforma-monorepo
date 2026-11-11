@@ -36,7 +36,7 @@ function SpecialtyRoute() {
 export const ADMIN_ROUTES: RouteObject[] = [
   {
     id: "admin",
-    path: "/admin/:role",
+    path: ":role",
     element: (
       <RoleGuard>
         <AdminLayout />
@@ -114,7 +114,7 @@ export function AdminRoutes() {
   const inRouterContext = useInRouterContext();
 
   return inRouterContext ? <RoleRoutes /> : (
-    <BrowserRouter>
+    <BrowserRouter basename="/admin">
       <RoleRoutes />
     </BrowserRouter>
   );

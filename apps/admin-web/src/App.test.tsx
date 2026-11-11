@@ -1,6 +1,5 @@
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 import { ACCESS_TOKEN_STORAGE_KEY, SESSION_STORAGE_KEY } from "@niar/auth";
 import { beforeEach, vi } from "vitest";
 
@@ -14,6 +13,7 @@ const specialtyServiceMocks = vi.hoisted(() => ({
 vi.mock("./services/specialties/specialties.service", () => specialtyServiceMocks);
 
 import App from "./App";
+import { AdminMemoryRouter } from "./test-utils/AdminMemoryRouter";
 import { store } from "./store";
 import { clearSpecialtiesState } from "./store/specialties/specialties.slice";
 
@@ -29,9 +29,9 @@ describe("Admin App", () => {
 
   it("redireciona a área administrativa para a home do papel autenticado", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin"]}>
+      <AdminMemoryRouter initialEntries={["/admin"]}>
         <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole("heading", { name: "Boas vindas, Admin." })).toBeInTheDocument();
@@ -39,9 +39,9 @@ describe("Admin App", () => {
 
   it("redireciona uma rota de outro papel para a home do usuário autenticado", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/administrador/home"]}>
+      <AdminMemoryRouter initialEntries={["/admin/administrador/home"]}>
         <App mode="admin" currentUser={{ id: 2, name: "Pesquisador", email: "pesquisador@niar.local", role: "researcher", accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole("heading", { name: "Boas vindas, Pesquisador." })).toBeInTheDocument();
@@ -52,9 +52,9 @@ describe("Admin App", () => {
     window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ id: 1 }));
 
     render(
-      <MemoryRouter initialEntries={["/admin"]}>
+      <AdminMemoryRouter initialEntries={["/admin"]}>
         <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     fireEvent.click(await screen.findByRole("button", { name: "Sair" }));
@@ -65,9 +65,9 @@ describe("Admin App", () => {
 
   it("permite que o administrador acesse Especialidades pelo menu", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/administrador/home"]}>
+      <AdminMemoryRouter initialEntries={["/admin/administrador/home"]}>
         <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     const specialtiesTab = await screen.findByRole("tab", { name: "Especialidades" });
@@ -79,9 +79,9 @@ describe("Admin App", () => {
 
   it("permite que o administrador acesse diretamente a rota de Especialidades", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/administrador/especialidades"]}>
+      <AdminMemoryRouter initialEntries={["/admin/administrador/especialidades"]}>
         <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole("heading", { name: "Especialidades" })).toBeInTheDocument();
@@ -96,9 +96,9 @@ describe("Admin App", () => {
 
   it("redireciona um modo inválido de especialidade para a listagem", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/administrador/especialidades/invalido"]}>
+      <AdminMemoryRouter initialEntries={["/admin/administrador/especialidades/invalido"]}>
         <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole("heading", { name: "Especialidades" })).toBeInTheDocument();
@@ -107,9 +107,9 @@ describe("Admin App", () => {
 
   it("abre o cadastro de especialidade pela subrota", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/administrador/especialidades/novo"]}>
+      <AdminMemoryRouter initialEntries={["/admin/administrador/especialidades/novo"]}>
         <App mode="admin" currentUser={{ id: 1, name: "Admin", email: "admin@niar.local", role: "admin", accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole("heading", { name: "Cadastrar especialidade" })).toBeInTheDocument();
@@ -121,9 +121,9 @@ describe("Admin App", () => {
     ["auditor", "Auditor", "/admin/auditor/home"],
   ] as const)("não mostra Especialidades no menu de %s", async (role, name, path) => {
     render(
-      <MemoryRouter initialEntries={[path]}>
+      <AdminMemoryRouter initialEntries={[path]}>
         <App mode="admin" currentUser={{ id: 2, name, email: `${role}@niar.local`, role, accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole("heading", { name: `Boas vindas, ${name}.` })).toBeInTheDocument();
@@ -132,9 +132,9 @@ describe("Admin App", () => {
 
   it.each(["researcher", "committee"] as const)("bloqueia a rota administrativa de especialidades para %s", async (role) => {
     render(
-      <MemoryRouter initialEntries={["/admin/administrador/especialidades"]}>
+      <AdminMemoryRouter initialEntries={["/admin/administrador/especialidades"]}>
         <App mode="admin" currentUser={{ id: 2, name: "Visitante", email: "visitante@niar.local", role, accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole("heading", { name: "Boas vindas, Visitante." })).toBeInTheDocument();
@@ -149,9 +149,9 @@ describe("Admin App", () => {
     ["committee", "/admin/comite/usuarios/novo"],
   ] as const)("bloqueia acesso direto não disponível para %s", async (role, path) => {
     render(
-      <MemoryRouter initialEntries={[path]}>
+      <AdminMemoryRouter initialEntries={[path]}>
         <App mode="admin" currentUser={{ id: 2, name: "Visitante", email: "visitante@niar.local", role, accountStatus: "active" }} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole("heading", { name: "Boas vindas, Visitante." })).toBeInTheDocument();

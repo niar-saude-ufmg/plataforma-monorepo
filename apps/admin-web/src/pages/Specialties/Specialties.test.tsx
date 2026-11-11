@@ -3,7 +3,7 @@ import { NiarProvider } from '@niar/ui';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpecialtyListResponse, Specialty } from '../../types/specialty.types';
 import authReducer from '../../store/auth/auth.slice';
@@ -26,6 +26,7 @@ vi.mock('../../services/specialties/specialties.service', () => serviceMocks);
 
 import { Specialties } from './Specialties';
 import { Specialty as SpecialtyPage } from '../Specialty/Specialty';
+import { AdminMemoryRouter } from '../../test-utils/AdminMemoryRouter';
 
 const buildSpecialty = (overrides: Partial<Specialty> = {}): Specialty => ({
   id: 1,
@@ -69,9 +70,9 @@ const renderPage = (store = makeStore()) => {
   render(
     <NiarProvider>
       <Provider store={store}>
-        <MemoryRouter initialEntries={['/admin/administrador/especialidades']}>
+        <AdminMemoryRouter initialEntries={['/admin/administrador/especialidades']}>
           <SpecialtyTestRoutes />
-        </MemoryRouter>
+        </AdminMemoryRouter>
       </Provider>
     </NiarProvider>,
   );

@@ -2,7 +2,6 @@ import "@testing-library/jest-dom";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
-import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import { store } from "../../store";
@@ -11,6 +10,7 @@ import { clearProjectsState } from "../../store/projects/projects.slice";
 import { getRoleNavigation } from "../../routes/role-routes";
 import type { UserRole } from "../../types/user.types";
 import { Projects } from "./Projects";
+import { AdminMemoryRouter } from "../../test-utils/AdminMemoryRouter";
 
 const fetchMock = vi.hoisted(() => {
   const mock = vi.fn();
@@ -652,9 +652,9 @@ describe("Projects — rotas e navegação por papel", () => {
     ["committee" as const, "/admin/comite/projetos"],
   ])("permite a rota de projetos para %s", async (role, path) => {
     render(
-      <MemoryRouter initialEntries={[path]}>
+      <AdminMemoryRouter initialEntries={[path]}>
         <App currentUser={authUser(role)} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
     expect(
       await screen.findByRole("heading", {
@@ -665,9 +665,9 @@ describe("Projects — rotas e navegação por papel", () => {
 
   it("protege a rota de Auditor contra acesso do Comitê", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/auditor/projetos"]}>
+      <AdminMemoryRouter initialEntries={["/admin/auditor/projetos"]}>
         <App currentUser={authUser("committee")} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
     expect(await screen.findByRole("heading", { name: "Boas vindas, Comitê." })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Projetos" })).not.toBeInTheDocument();
@@ -675,9 +675,9 @@ describe("Projects — rotas e navegação por papel", () => {
 
   it("redireciona pesquisador que tenta acessar a rota de administrador", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/administrador/projetos"]}>
+      <AdminMemoryRouter initialEntries={["/admin/administrador/projetos"]}>
         <App currentUser={authUser("researcher")} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
     expect(await screen.findByRole("heading", { name: "Boas vindas, Maria." })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Projetos" })).not.toBeInTheDocument();
