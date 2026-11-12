@@ -12,9 +12,7 @@ export type UserFilterKey = "search" | "role" | "accountStatus";
 
 export type UserActionId =
   | "details"
-  | "evaluate"
-  | "activate"
-  | "deactivate";
+  | "evaluate";
 
 export type UserListRoleConfig = RoleListConfig<UserColumnId, UserFilterKey> & {
   actions: readonly UserActionId[];
@@ -35,7 +33,7 @@ export const USER_LIST_CONFIG: Partial<
     emptyStateDescription: "Ainda não existem usuários para exibir.",
     columnIds: ["fullName", "email", "role", "accountStatus", "actions"],
     filters: ["search", "role", "accountStatus"],
-    actions: ["details"],
+    actions: ["details", "evaluate"],
     canCreateUser: true,
     filterLabels: {
       search: "Buscar usuário",
@@ -49,7 +47,7 @@ export const USER_LIST_CONFIG: Partial<
     emptyStateDescription: "Ainda não existem usuários para exibir.",
     columnIds: ["fullName", "email", "accountStatus", "actions"],
     filters: ["search", "accountStatus"],
-    actions: ["details"],
+    actions: ["details", "evaluate"],
     canCreateUser: false,
     filterLabels: {
       search: "Buscar usuário",
@@ -62,7 +60,7 @@ export const USER_LIST_CONFIG: Partial<
     emptyStateDescription: "Ainda não existem usuários para exibir.",
     columnIds: ["fullName", "email", "accountStatus", "actions"],
     filters: ["search", "accountStatus"],
-    actions: ["details"],
+    actions: ["details", "evaluate"],
     canCreateUser: false,
     filterLabels: {
       search: "Buscar usuário",

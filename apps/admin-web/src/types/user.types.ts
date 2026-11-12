@@ -293,3 +293,12 @@ export interface ChangePasswordInput {
   currentPassword: string;
   password: string;
 }
+
+export type UserEvaluationDecision = 'active' | 'rejected';
+
+export type UserAuthEvaluationInput = {
+  status: UserEvaluationDecision;
+  justification?: string;
+};
+
+export type UserAuthEvaluation = UserListEvaluation;

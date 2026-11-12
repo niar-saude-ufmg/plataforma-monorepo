@@ -1,13 +1,22 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Listing, Filter, Button, StatusChip, Snackbar, TableColumn, StatusChipStatus, type AutocompleteOption } from "@niar/ui";
 import { selectAuthSelected } from '../../store/auth/auth.selectors';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  UserEvaluationDialog,
+  type UserEvaluationDecision,
+} from '../../components/UserEvaluationDialog/UserEvaluationDialog';
+import { createUserAuthEvaluation, downloadUserCoepDocument } from '../../store/users/users.api';
 import {
   setUsersFilters,
   clearUsersFilters,
   setUsersPage,
   setUsersPageSize,
   clearUsersError,
+  setSelectedUser,
+  clearSelectedUser,
+  clearUsersMutationError,
+  clearUsersDownloadError
 } from "../../store/users/users.slice";
 import {
   selectUsersList,
@@ -17,6 +26,11 @@ import {
   selectUsersListPageSize,
   selectUsersListLoading,
   selectUsersListError,
+  selectUsersSelected,
+  selectUsersMutationError,
+  selectUsersMutationLoading,
+  selectUsersDownloadLoading,
+  selectUsersDownloadError
 } from "../../store/users/users.selectors";
 import { getUsers } from '../../store/users/users.api';
 import { useApiError } from "../../hooks/use-api-error/use-api-error"
@@ -40,7 +54,6 @@ const roleOptions: readonly AutocompleteOption[] = [
   { value: "admin", label: "Administrador" },
   { value: "auditor", label: "Auditor" },
   { value: "committee", label: "Comitê" },
-  { value: "auditor", label: "Auditor" }
 ];
 
 const statusOptions: readonly AutocompleteOption[] = [
@@ -67,8 +80,16 @@ export function Users() {
   const pageSize = useAppSelector(selectUsersListPageSize);
   const loading = useAppSelector(selectUsersListLoading);
   const error = useAppSelector(selectUsersListError);
+  const selectedUser = useAppSelector(selectUsersSelected);
+  const mutationLoading = useAppSelector(selectUsersMutationLoading);
+  const mutationError = useAppSelector(selectUsersMutationError);
+  const downloadLoading = useAppSelector(selectUsersDownloadLoading);
+  const downloadError = useAppSelector(selectUsersDownloadError);
+
   const roleConfig =
     USER_LIST_CONFIG[user?.role ?? "admin"] ?? USER_LIST_CONFIG.admin!;
+
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(getUsers({
@@ -109,6 +130,56 @@ export function Users() {
 
   const handlePageSizeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setUsersPageSize(Number(event.target.value)));
+  };
+
+  const [activeAction, setActiveAction] = useState<'evaluate' | null>(null);
+
+  const handleEvaluateClick = (target: UserListItem) => {
+    dispatch(clearUsersMutationError());
+    dispatch(setSelectedUser(target));
+    setActiveAction('evaluate');
+  };
+
+  const handleCloseEvaluation = () => {
+    setActiveAction(null);
+    dispatch(clearSelectedUser());
+    dispatch(clearUsersMutationError());
+  };
+
+  const handleSubmitEvaluation = async (
+    decision: UserEvaluationDecision,
+    justification?: string,
+  ) => {
+    if (!selectedUser) return;
+
+    const result = await dispatch(
+      createUserAuthEvaluation({
+        userId: selectedUser.id,
+        status: decision,
+        justification,
+    }));
+
+    if (createUserAuthEvaluation.fulfilled.match(result)) {
+      setActiveAction(null);
+      dispatch(clearSelectedUser());
+      dispatch(clearUsersMutationError());
+      setSuccessMessage('Avaliação registrada com sucesso.');
+      dispatch(
+        getUsers({
+          page,
+          pageSize,
+          search: filters.search,
+          role: filters.role,
+          accountStatus: filters.accountStatus,
+        }),
+      );
+    }
+  };
+
+  const handleDownloadCoep = () => {
+    if (selectedUser) {
+      dispatch(downloadUserCoepDocument(selectedUser.id));
+    }
   };
 
   const selectedRole = roleOptions.find((opt) => opt.value === filters.role) ?? null;
@@ -176,19 +247,11 @@ export function Users() {
         Detalhes
       </Button>
     ),
-    evaluate: (user) => user.role === "researcher" ? (
-      <Button size="small" variant="outlined" color="primary">
+    evaluate: (user) => user.role === "researcher" && user.accountStatus === "pending" ? (
+      <Button size="small" variant="outlined" color="primary"
+        onClick={() => handleEvaluateClick(user)}
+      >
         Avaliar
-      </Button>
-    ) : null,
-    deactivate: (user) => user.accountStatus === "active" ? (
-      <Button size="small" variant="outlined" color="danger">
-        Desativar
-      </Button>
-    ) : null,
-    activate: (user) => user.accountStatus === "pending" || user.accountStatus === "disabled" ? (
-      <Button size="small" variant="outlined" color="primary">
-        Ativar
       </Button>
     ) : null,
   };
@@ -219,11 +282,34 @@ export function Users() {
         description: roleConfig.emptyStateDescription,
       };
 
-  const errorSnackbar = useApiError(
-    error,
-    () => dispatch(clearUsersError()),
-    "Não foi possível carregar os usuários. Tente novamente.",
+  const pageError = mutationError ?? downloadError ?? error;
+  const pageErrorFallback = mutationError
+    ? "Não foi possível registrar a avaliação do usuário. Tente novamente."
+    : downloadError
+      ? "Não foi possível baixar o parecer do COEP. Tente novamente."
+      : "Não foi possível carregar os usuários. Tente novamente.";
+  const pageErrorSnackbar = useApiError(
+    pageError,
+    () => {
+      if (mutationError) {
+        dispatch(clearUsersMutationError());
+      } else if (downloadError) {
+        dispatch(clearUsersDownloadError());
+      } else {
+        dispatch(clearUsersError());
+      }
+    },
+    pageErrorFallback,
   );
+  const snackbarProps = pageError
+    ? pageErrorSnackbar
+    : {
+        ...pageErrorSnackbar,
+        open: Boolean(successMessage),
+        message: successMessage ?? '',
+        severity: 'success' as const,
+        onClose: () => setSuccessMessage(null),
+      };
 
   return (
     <>
@@ -257,7 +343,16 @@ export function Users() {
           />
         }
       />
-      <Snackbar {...errorSnackbar} />
+      <Snackbar {...snackbarProps} />
+      <UserEvaluationDialog
+        open={activeAction === 'evaluate'}
+        user={selectedUser}
+        loading={mutationLoading}
+        downloadLoading={downloadLoading}
+        onDownloadCoep={handleDownloadCoep}
+        onClose={handleCloseEvaluation}
+        onSubmit={handleSubmitEvaluation}
+      />
     </>
   );
 };

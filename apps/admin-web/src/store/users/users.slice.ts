@@ -8,7 +8,8 @@ import {
   createAdministrator,
   createAuditor,
   createCommitteeMember,
-  getUsers
+  getUsers,
+  createUserAuthEvaluation,
 } from './users.api';
 
 export type UsersStatus = AsyncStatus;
@@ -106,6 +107,12 @@ const usersSlice = createSlice({
       state.mutation.error = null;
       if (state.mutation.status === 'failed') state.mutation.status = 'idle';
     },
+    clearUsersDownloadError(state) {
+      state.download.error = null;
+      if (state.download.status === 'failed') {
+        state.download.status = 'idle';
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(getUsers.pending, (state, action) => {
@@ -172,6 +179,24 @@ const usersSlice = createSlice({
         filename: null,
       };
     });
+    builder.addCase(createUserAuthEvaluation.pending, (state) => {
+      state.mutation = {
+        operation: 'update',
+        status: 'pending',
+        error: null,
+      };
+    });
+    builder.addCase(createUserAuthEvaluation.fulfilled, (state) => {
+      state.mutation.status = 'succeeded';
+      state.mutation.error = null;
+      state.selected = null;
+    });
+    builder.addCase(createUserAuthEvaluation.rejected, (state, action) => {
+      state.mutation.status = 'failed';
+      state.mutation.error = action.payload ?? {
+        message: 'Não foi possível atualizar status. Tente novamente.',
+      };
+    });
   },
 });
 
@@ -186,5 +211,6 @@ export const {
   clearUsersError,
   clearUsersListError,
   clearUsersMutationError,
+  clearUsersDownloadError
 } = usersSlice.actions;
 export default usersSlice.reducer;

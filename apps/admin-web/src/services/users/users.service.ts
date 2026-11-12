@@ -11,12 +11,15 @@ import type {
   UserListParams,
   UserListResponse,
   UserRole,
+  UserAuthEvaluation,
+  UserAuthEvaluationInput,
 } from '../../types/user.types';
 import { getAdminApiBaseUrl } from '../auth/auth.service';
 import {
   getFilenameFromContentDisposition,
   type DownloadedFile,
 } from '../../utils/download-file';
+import type { UserAccountStatus } from '@niar/contracts';
 
 type ApiValidationIssue = {
   message: string;
@@ -537,4 +540,82 @@ export function normalizeUserApiError(
       ? fallbackMessage
       : `${fallbackMessage} Tente novamente.`,
   };
+}
+
+type UserAuthEvaluationApiResponse = {
+  id: number;
+  user_id: number;
+  status: UserAccountStatus;
+  justification: string | null;
+  evaluated_by_user_id: number | null;
+  evaluated_at: string | null;
+  created_at: string;
+  user_coep_data_id: number | null;
+};
+
+export function toUserAuthEvaluation(
+  response: UserAuthEvaluationApiResponse,
+): UserAuthEvaluation {
+  return {
+    id: response.id,
+    userId: response.user_id,
+    status: response.status,
+    justification: response.justification,
+    evaluatedByUserId: response.evaluated_by_user_id,
+    evaluatedAt: response.evaluated_at,
+    createdAt: response.created_at,
+    userCoepDataId: response.user_coep_data_id,
+  };
+}
+
+export async function createUserAuthEvaluationRequest(
+  userId: number,
+  status: UserAuthEvaluationInput['status'],
+  justification?: string,
+): Promise<UserAuthEvaluation> {
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${getAdminApiBaseUrl()}/users/${userId}/auth-evaluation`,
+      {
+        method: 'POST',
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: status,
+          ...(justification !== undefined
+            ? { justification: justification }
+            : {}),
+        }),
+      },
+    );
+  } catch {
+    throw normalizeUserApiError(
+      'FETCH_ERROR',
+      undefined,
+      'Não foi possível registrar a avaliação do usuário.',
+    );
+  }
+
+  const body = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    if (response.status === 409) {
+      throw {
+        status: 409,
+        message: 'Não foi possível registrar a avaliação porque o status do cadastro mudou ou a transição não é permitida. Atualize a listagem e tente novamente.',
+      } satisfies ApiError;
+    }
+
+    throw normalizeUserApiError(
+      response.status,
+      body,
+      'Não foi possível registrar a avaliação do usuário.',
+    );
+  }
+
+  return toUserAuthEvaluation(body as UserAuthEvaluationApiResponse);
 }
