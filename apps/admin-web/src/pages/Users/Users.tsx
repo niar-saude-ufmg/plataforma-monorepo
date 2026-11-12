@@ -3,6 +3,16 @@ import { Listing, Filter, Button, StatusChip, Snackbar, TableColumn, StatusChipS
 import { selectAuthSelected } from '../../store/auth/auth.selectors';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
+  UserEvaluationDialog,
+  type UserEvaluationDecision,
+} from '../../components/UserEvaluationDialog/UserEvaluationDialog';
+import {
+  createUserAuthEvaluation,
+  downloadUserCoepDocument,
+  getUsers,
+  updateUserStatus,
+} from '../../store/users/users.api';
+import {
   setUsersFilters,
   clearUsersFilters,
   setUsersPage,
@@ -17,6 +27,7 @@ import {
   selectUsersList,
   selectUsersSelected,
   selectUsersMutationLoading,
+  selectUsersMutationOperation,
   selectUsersMutationError,
   selectUsersDownloadLoading,
   selectUsersDownloadError,
@@ -27,12 +38,6 @@ import {
   selectUsersListLoading,
   selectUsersListError,
 } from "../../store/users/users.selectors";
-import {
-  createUserAuthEvaluation,
-  downloadUserCoepDocument,
-  getUsers,
-  updateUserStatus,
-} from '../../store/users/users.api';
 import { useApiError } from "../../hooks/use-api-error/use-api-error"
 import { UserListItem, UserRole } from '../../types/user.types';
 import { UserAccountStatus } from '@niar/contracts';
@@ -44,10 +49,6 @@ import {
   type UserActionId,
 } from './Users.roles';
 import { ConfirmationDialog } from '../../components/ConfirmationDialog';
-import {
-  UserEvaluationDialog,
-  type UserEvaluationDecision,
-} from '../../components/UserEvaluationDialog/UserEvaluationDialog';
 import { UserDetailsDialog } from '../../components/UserDetailsDialog';
 import './Users.scss';
 
@@ -80,8 +81,10 @@ const STATUS_CHIP_MAP: Record<UserAccountStatus, StatusChipStatus> = {
 
 export function Users() {
   const dispatch = useAppDispatch();
-  const [operation, setOperation] = useState<'evaluate' | 'active' | 'disabled' | null>(null);
+  const [activeAction, setActiveAction] = useState<'evaluate' | null>(null);
+  const [statusAction, setStatusAction] = useState<'active' | 'disabled' | null>(null);
   const mutationLoading = useAppSelector(selectUsersMutationLoading);
+  const mutationOperation = useAppSelector(selectUsersMutationOperation);
   const mutationError = useAppSelector(selectUsersMutationError);
   const downloadLoading = useAppSelector(selectUsersDownloadLoading);
   const downloadError = useAppSelector(selectUsersDownloadError);
@@ -146,47 +149,79 @@ export function Users() {
     dispatch(setUsersPageSize(Number(event.target.value)));
   };
 
-  const closeOperation = () => {
+  const handleCloseEvaluation = () => {
     if (mutationLoading) return;
-    setOperation(null);
+    setActiveAction(null);
     dispatch(clearSelectedUser());
-    dispatch(clearUsersError());
+    dispatch(clearUsersMutationError());
   };
 
-  const openOperation = (target: UserListItem, next: 'evaluate' | 'active' | 'disabled') => {
-    dispatch(clearUsersError());
+  const handleEvaluateClick = (target: UserListItem) => {
+    dispatch(clearUsersMutationError());
     dispatch(setSelectedUser(target));
-    setOperation(next);
+    setActiveAction('evaluate');
   };
 
   const refreshUsers = () => dispatch(getUsers({ page, pageSize, ...filters }));
+
+  const handleStatusClick = (target: UserListItem, status: 'active' | 'disabled') => {
+    dispatch(clearUsersMutationError());
+    dispatch(setSelectedUser(target));
+    setStatusAction(status);
+  };
+
+  const handleCloseStatus = () => {
+    if (mutationLoading) return;
+    setStatusAction(null);
+    dispatch(clearSelectedUser());
+    dispatch(clearUsersMutationError());
+  };
+
   const confirmStatus = async () => {
-    if (!selectedUser || mutationLoading || (operation !== 'active' && operation !== 'disabled')) return;
-    const result = await dispatch(updateUserStatus({ userId: selectedUser.id, status: operation }));
+    if (!selectedUser || mutationLoading || !statusAction) return;
+    const result = await dispatch(updateUserStatus({ userId: selectedUser.id, status: statusAction }));
     if (updateUserStatus.fulfilled.match(result)) {
-      setOperation(null);
+      setStatusAction(null);
       dispatch(clearSelectedUser());
+      setSuccessMessage('Status do usuário atualizado com sucesso.');
       void refreshUsers();
     }
   };
 
-  const submitEvaluation = async (
+  const handleSubmitEvaluation = async (
     decision: UserEvaluationDecision,
     justification?: string,
   ) => {
     if (!selectedUser) return;
 
-    const result = await dispatch(createUserAuthEvaluation({
-      userId: selectedUser.id,
-      status: decision,
-      justification,
-    }));
+    const result = await dispatch(
+      createUserAuthEvaluation({
+        userId: selectedUser.id,
+        status: decision,
+        justification,
+      }),
+    );
 
     if (createUserAuthEvaluation.fulfilled.match(result)) {
-      setOperation(null);
+      setActiveAction(null);
       dispatch(clearSelectedUser());
+      dispatch(clearUsersMutationError());
       setSuccessMessage('Avaliação registrada com sucesso.');
-      void refreshUsers();
+      dispatch(
+        getUsers({
+          page,
+          pageSize,
+          search: filters.search,
+          role: filters.role,
+          accountStatus: filters.accountStatus,
+        }),
+      );
+    }
+  };
+
+  const handleDownloadCoep = () => {
+    if (selectedUser) {
+      dispatch(downloadUserCoepDocument(selectedUser.id));
     }
   };
 
@@ -261,17 +296,19 @@ export function Users() {
       </Button>
     ),
     evaluate: (user) => user.role === "researcher" && user.accountStatus === "pending" ? (
-      <Button size="small" variant="outlined" color="primary" disabled={mutationLoading} onClick={() => openOperation(user, 'evaluate')}>
+      <Button size="small" variant="outlined" color="primary"
+        onClick={() => handleEvaluateClick(user)}
+      >
         Avaliar
       </Button>
     ) : null,
     deactivate: (target) => target.accountStatus === "active" && target.id !== user?.id ? (
-      <Button size="small" variant="outlined" color="danger" disabled={mutationLoading} onClick={() => openOperation(target, 'disabled')}>
+      <Button size="small" variant="outlined" color="danger" disabled={mutationLoading} onClick={() => handleStatusClick(target, 'disabled')}>
         Desativar
       </Button>
     ) : null,
     activate: (user) => user.accountStatus === "disabled" ? (
-      <Button size="small" variant="outlined" color="primary" disabled={mutationLoading} onClick={() => openOperation(user, 'active')}>
+      <Button size="small" variant="outlined" color="primary" disabled={mutationLoading} onClick={() => handleStatusClick(user, 'active')}>
         Ativar
       </Button>
     ) : null,
@@ -308,7 +345,9 @@ export function Users() {
 
   const pageError = mutationError ?? downloadError ?? error;
   const pageErrorFallback = mutationError
-    ? "Não foi possível concluir a operação do usuário. Tente novamente."
+    ? mutationOperation === 'status'
+      ? "Não foi possível alterar o status do usuário. Tente novamente."
+      : "Não foi possível registrar a avaliação do usuário. Tente novamente."
     : downloadError
       ? "Não foi possível baixar o parecer do COEP. Tente novamente."
       : "Não foi possível carregar os usuários. Tente novamente.";
@@ -375,33 +414,31 @@ export function Users() {
         />
       </div>
       <UserDetailsDialog
-        open={Boolean(selectedUser) && !operation}
+        open={Boolean(selectedUser) && !activeAction && !statusAction}
         user={selectedUser}
         config={detailsConfig}
         onClose={() => dispatch(clearSelectedUser())}
       />
       <ConfirmationDialog
-        open={Boolean(selectedUser) && (operation === 'active' || operation === 'disabled')}
-        title={operation === 'active' ? 'Ativar usuário' : 'Desativar usuário'}
-        confirmLabel={operation === 'active' ? 'Ativar' : 'Desativar'}
-        onClose={closeOperation}
+        open={Boolean(selectedUser) && Boolean(statusAction)}
+        title={statusAction === 'active' ? 'Ativar usuário' : 'Desativar usuário'}
+        confirmLabel={statusAction === 'active' ? 'Ativar' : 'Desativar'}
+        onClose={handleCloseStatus}
         onConfirm={() => { void confirmStatus(); }}
         loading={mutationLoading}
       >
-        Deseja {operation === 'active' ? 'ativar' : 'desativar'} o usuário “{selectedUser?.fullName}”?
+        Deseja {statusAction === 'active' ? 'ativar' : 'desativar'} o usuário “{selectedUser?.fullName}”?
       </ConfirmationDialog>
-      {operation === 'evaluate' && selectedUser ? (
-        <UserEvaluationDialog
-          open
-          user={selectedUser}
-          loading={mutationLoading}
-          downloadLoading={downloadLoading}
-          onClose={closeOperation}
-          onDownloadCoep={() => { void dispatch(downloadUserCoepDocument(selectedUser.id)); }}
-          onSubmit={submitEvaluation}
-        />
-      ) : null}
       <Snackbar {...snackbarProps} />
+      <UserEvaluationDialog
+        open={activeAction === 'evaluate'}
+        user={selectedUser}
+        loading={mutationLoading}
+        downloadLoading={downloadLoading}
+        onDownloadCoep={handleDownloadCoep}
+        onClose={handleCloseEvaluation}
+        onSubmit={handleSubmitEvaluation}
+      />
     </>
   );
 };

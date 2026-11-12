@@ -259,6 +259,21 @@ export const usersRepository = {
       data: { accountStatus: data.status },
     });
     if (result.count !== 1) throw new AppError('O status do usuário foi alterado por outra operação', 409);
+    const coep = await transaction.userCoepData.findFirst({
+      where: { userId: data.userId },
+      select: { id: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    await transaction.userAuthEvaluation.create({
+      data: {
+        userId: data.userId,
+        status: data.status,
+        justification: null,
+        evaluatedByUserId: data.actorUserId,
+        evaluatedAt: new Date(),
+        userCoepDataId: coep?.id ?? null,
+      },
+    });
     await auditRepository.create({
       userId: data.actorUserId,
       action: data.status === 'active' ? 'activate_user' : 'deactivate_user',

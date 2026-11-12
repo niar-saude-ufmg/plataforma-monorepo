@@ -557,7 +557,7 @@ function normalizeUserMutationApiError(status: number, body: unknown): ApiError 
 export async function updateUserStatusRequest(
   input: UpdateUserStatusInput,
 ): Promise<UserListItem> {
-  const response = await fetch(`${getAdminApiBaseUrl()}/users/${input.userId}/status`, {
+  const response = await fetch(`${getAdminApiBaseUrl()}/users/${input.userId}/auth-evaluation`, {
     method: 'PATCH',
     headers: { ...authHeaders(), 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: input.status }),

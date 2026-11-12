@@ -14,7 +14,7 @@ import {
 } from './users.api';
 
 export type UsersStatus = AsyncStatus;
-export type UserMutationOperation = 'create' | 'update' | 'approve' | 'reject' | 'status' | 'evaluate';
+export type UserMutationOperation = 'create' | 'update' | 'approve' | 'reject' | 'status';
 
 export const DEFAULT_USERS_PAGE_SIZE = 20;
 
@@ -198,25 +198,15 @@ const usersSlice = createSlice({
         error: null,
       };
     });
-    builder.addCase(createUserAuthEvaluation.fulfilled, (state, action) => {
+    builder.addCase(createUserAuthEvaluation.fulfilled, (state) => {
       state.mutation.status = 'succeeded';
       state.mutation.error = null;
-      for (const user of state.list.items) {
-        if (user.id === action.payload.userId) {
-          user.accountStatus = action.payload.status;
-          user.latestAuthEvaluation = action.payload;
-        }
-      }
-      if (state.selected?.id === action.payload.userId) {
-        state.selected.accountStatus = action.payload.status;
-        state.selected.latestAuthEvaluation = action.payload;
-      }
       state.selected = null;
     });
     builder.addCase(createUserAuthEvaluation.rejected, (state, action) => {
       state.mutation.status = 'failed';
       state.mutation.error = action.payload ?? {
-        message: 'Não foi possível registrar a avaliação. Tente novamente.',
+        message: 'Não foi possível atualizar status. Tente novamente.',
       };
     });
   },

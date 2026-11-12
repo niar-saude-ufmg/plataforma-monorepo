@@ -18,10 +18,10 @@ const target = (status: 'active' | 'disabled' | 'pending' | 'rejected' = 'active
   id: 2, fullName: 'Usuário', email: 'user@example.org', role: 'auditor', accountStatus: status,
   createdAt: new Date('2026-01-01'), profile: null, researcherProfile: null, committeeProfile: null, coepData: [], authEvaluations: [],
 });
-const patch = (body: Record<string, unknown>) => request(app).patch('/api/admin/users/2/status').set('Authorization', `Bearer ${token}`).send(body);
+const patch = (body: Record<string, unknown>) => request(app).patch('/api/admin/users/2/auth-evaluation').set('Authorization', `Bearer ${token}`).send(body);
 beforeEach(() => { jest.resetAllMocks(); findById.mockResolvedValue(actor); });
 
-describe('PATCH /api/admin/users/:user_id/status', () => {
+describe('PATCH /api/admin/users/:user_id/auth-evaluation', () => {
   it.each([['active', 'disabled'], ['disabled', 'active']] as Array<['active' | 'disabled', 'active' | 'disabled']>)('altera %s para %s', async (previous, status) => {
     findDetailById.mockResolvedValue(target(previous));
     updateStatus.mockResolvedValue(target(status));
@@ -37,7 +37,7 @@ describe('PATCH /api/admin/users/:user_id/status', () => {
     expect(updateStatus).not.toHaveBeenCalled();
   });
   it('exige autenticação', async () => {
-    expect((await request(app).patch('/api/admin/users/2/status').send({ status: 'disabled' })).status).toBe(401);
+    expect((await request(app).patch('/api/admin/users/2/auth-evaluation').send({ status: 'disabled' })).status).toBe(401);
   });
   it.each(['pending', 'rejected', 'disabled'] as const)('não desativa conta %s', async (status) => {
     findDetailById.mockResolvedValue(target(status));
@@ -60,7 +60,7 @@ describe('PATCH /api/admin/users/:user_id/status', () => {
 
 
 it('impede o administrador de desativar a própria conta', async () => {
-  const response = await request(app).patch('/api/admin/users/1/status')
+  const response = await request(app).patch('/api/admin/users/1/auth-evaluation')
     .set('Authorization', `Bearer ${token}`).send({ status: 'disabled' });
   expect(response.status).toBe(400);
   expect(response.body.error).toBe('Você não pode desativar a própria conta');
