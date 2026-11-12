@@ -248,6 +248,41 @@ export type CreatedResearcherRecord = {
 };
 
 export const usersRepository = {
+  updateStatus: (data: {
+    userId: number;
+    expectedStatus: 'active' | 'disabled';
+    status: 'active' | 'disabled';
+    actorUserId: number;
+  }): Promise<ConsolidatedUserRecord> => prisma.$transaction(async (transaction) => {
+    const result = await transaction.user.updateMany({
+      where: { id: data.userId, accountStatus: data.expectedStatus },
+      data: { accountStatus: data.status },
+    });
+    if (result.count !== 1) throw new AppError('O status do usuário foi alterado por outra operação', 409);
+    const coep = await transaction.userCoepData.findFirst({
+      where: { userId: data.userId },
+      select: { id: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    await transaction.userAuthEvaluation.create({
+      data: {
+        userId: data.userId,
+        status: data.status,
+        justification: null,
+        evaluatedByUserId: data.actorUserId,
+        evaluatedAt: new Date(),
+        userCoepDataId: coep?.id ?? null,
+      },
+    });
+    await auditRepository.create({
+      userId: data.actorUserId,
+      action: data.status === 'active' ? 'activate_user' : 'deactivate_user',
+      resourceType: 'user',
+      resourceId: String(data.userId),
+      details: JSON.stringify({ previousStatus: data.expectedStatus, status: data.status }),
+    }, transaction);
+    return transaction.user.findUniqueOrThrow({ where: { id: data.userId }, select: consolidatedUserSelect });
+  }),
   // Relações são carregadas pelo próprio Prisma para a página inteira; não há
   // consultas disparadas dentro de um loop por usuário.
   findAll: async (filter: UserListFilter): Promise<UserListPage> => {

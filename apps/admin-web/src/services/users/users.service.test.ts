@@ -14,7 +14,8 @@ import {
   toUserListItem,
   toCreateUserFormData,
   toUser,
-  createUserAuthEvaluationRequest
+  createUserAuthEvaluationRequest,
+  updateUserStatusRequest,
 } from "./users.service";
 
 const input: CreateUserInput = {
@@ -388,6 +389,35 @@ describe("user service — cadastros privados", () => {
 });
 
 describe("user service — atualiza status", () => {
+  it("envia ativação/desativação pelo endpoint de auth-evaluation", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id: 3,
+        full_name: "Ana Beatriz Souza",
+        email: "ana@example.org",
+        role: "researcher",
+        account_status: "disabled",
+        created_at: "2026-11-06T18:00:00.000Z",
+        profile: null,
+        researcher_profile: null,
+        committee_profile: null,
+        coep: null,
+        latest_auth_evaluation: null,
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateUserStatusRequest({ userId: 3, status: "disabled" });
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("http://localhost:3333/api/admin/users/3/auth-evaluation");
+    expect(request.method).toBe("PATCH");
+    expect(JSON.parse(String(request.body))).toEqual({ status: "disabled" });
+  });
+
   it("mostra conflito de avaliação quando a API retorna 409", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: false,

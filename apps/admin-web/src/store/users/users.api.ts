@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
   createUserRequest,
+  updateUserStatusRequest,
   createResearcherRequest,
   createAdministratorRequest,
   createAuditorRequest,
@@ -16,6 +17,8 @@ import { downloadBlob } from '../../utils/download-file';
 import type { ApiError } from '../../types/api.types';
 import type {
   UserApiError,
+  UserListItem,
+  UpdateUserStatusInput,
   CreateUserInput,
   CreateAdministratorInput,
   CreateAuditorInput,
@@ -174,6 +177,29 @@ export const downloadUserCoepDocument = createAsyncThunk<
     }
 
     return rejectWithValue(normalizeUserDocumentApiError('UNKNOWN_ERROR'));
+  }
+});
+
+export const updateUserStatus = createAsyncThunk<
+  UserListItem,
+  UpdateUserStatusInput,
+  { rejectValue: ApiError }
+>('users/updateStatus', async (input, { rejectWithValue }) => {
+  try {
+    return await updateUserStatusRequest(input);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
+      return rejectWithValue(error as ApiError);
+    }
+
+    return rejectWithValue({
+      message: 'Não foi possível alterar o status do usuário. Tente novamente.',
+    });
   }
 });
 

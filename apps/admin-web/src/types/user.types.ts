@@ -302,3 +302,8 @@ export type UserAuthEvaluationInput = {
 };
 
 export type UserAuthEvaluation = UserListEvaluation;
+
+export type UpdateUserStatusInput = {
+  userId: number;
+  status: 'active' | 'disabled';
+};

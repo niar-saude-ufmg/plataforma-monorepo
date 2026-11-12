@@ -2,6 +2,7 @@ import { ACCESS_TOKEN_STORAGE_KEY } from '@niar/auth';
 import type { ApiError } from '../../types/api.types';
 import type {
   UserApiError,
+  UpdateUserStatusInput,
   CreateUserInput,
   CreateAdministratorInput,
   CreateAuditorInput,
@@ -540,6 +541,34 @@ export function normalizeUserApiError(
       ? fallbackMessage
       : `${fallbackMessage} Tente novamente.`,
   };
+}
+
+function normalizeUserMutationApiError(status: number, body: unknown): ApiError {
+  if (status === 401) return normalizeUserListApiError(status, body);
+  if (status === 403) return { status, message: 'Você não tem permissão para realizar esta operação.' };
+
+  const message = typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string'
+    ? body.error
+    : 'Não foi possível concluir a operação. Tente novamente.';
+
+  return { status, message };
+}
+
+export async function updateUserStatusRequest(
+  input: UpdateUserStatusInput,
+): Promise<UserListItem> {
+  const response = await fetch(`${getAdminApiBaseUrl()}/users/${input.userId}/auth-evaluation`, {
+    method: 'PATCH',
+    headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: input.status }),
+  });
+  const body = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    throw normalizeUserMutationApiError(response.status, body);
+  }
+
+  return toUserListItem(body as UserListApiResponse);
 }
 
 type UserAuthEvaluationApiResponse = {

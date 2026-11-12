@@ -179,3 +179,9 @@ export type PublicUserCreatedResponse = UserResponse & {
   researcher_profile: ResearcherProfileResponse;
   coep: CoepResponse;
 };
+
+export const updateUserStatusSchema = z.object({
+  status: z.enum(['active', 'disabled']),
+}).strict();
+
+export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;

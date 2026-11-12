@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors/app-error.js";
 import {
   listUsersQuerySchema,
+  updateUserStatusSchema,
   createAdministratorSchema,
   createAuditorSchema,
   createUserAuthEvaluationSchema,
@@ -49,6 +50,16 @@ const parseResearcherMultipartRequest = (request: Request) => {
 };
 
 export const usersController = {
+  updateStatus: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      if (!request.user) throw new AppError('Não autenticado', 401);
+      const { user_id } = userAuthEvaluationParamsSchema.parse(request.params);
+      const data = updateUserStatusSchema.parse(request.body);
+      response.json(await usersService.updateStatus(user_id, data, request.user));
+    } catch (error) {
+      next(error);
+    }
+  },
   list: async (request: Request, response: Response, next: NextFunction) => {
     try {
       if (!request.user) {

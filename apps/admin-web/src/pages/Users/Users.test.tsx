@@ -176,6 +176,13 @@ vi.mock('@niar/ui', () => {
           {message}
         </div>
       ) : null,
+    Details: ({ open, title, children, onClose }: any) => open ? (
+      <div role="dialog" aria-label={String(title)}>
+        <h2>{title}</h2>
+        {children}
+        <button onClick={onClose}>Fechar</button>
+      </div>
+    ) : null,
     Dialog: ({ open, title, children, actions }: any) => open ? (
       <div role="dialog" aria-label={String(title)}>
         <h2>{title}</h2>

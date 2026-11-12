@@ -103,6 +103,7 @@ export function User() {
     ? USER_ROLE_CONFIG[selectedRole]
     : {
       label: '',
+      title: undefined,
       description: 'Selecione o tipo de usuário para continuar o cadastro.',
       profile: 'none' as const,
     };
@@ -262,9 +263,9 @@ export function User() {
 
   return (
     <div className="user-page">
-      <Form title="Cadastrar usuário" description={roleConfig.description} aria-level={1}>
+      <Form title={roleConfig.title ?? "Cadastrar usuário"} description={roleConfig.description} aria-level={1}>
         <div className="user-page__body">
-          <SharedUserForm fields={sharedFields} alert={roleConfig.alert} />
+          <SharedUserForm fields={sharedFields} alert={roleConfig.alert} title={selectedRole === 'researcher' ? 'Dados de acesso' : 'Dados do usuário'} />
           <SelectRoleForm fields={roleFields} />
           {profileRenderers[roleConfig.profile]({
             researcher: researcherFields,
