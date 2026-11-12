@@ -1,4 +1,4 @@
-import { Button, Dialog, type ButtonProps } from '@niar/ui';
+import { Dialog } from '@niar/ui';
 import type { ReactNode } from 'react';
 
 export type FixedDialogProps = {
@@ -18,7 +18,7 @@ export function FixedDialog({
   onClose,
   actions,
   ariaLabel = 'Ação obrigatória',
-  minWidth = "360",
+  minWidth = '360px',
 }: FixedDialogProps) {
   return (
     <Dialog

@@ -9,7 +9,7 @@ import {
   createResearcher,
   downloadUserCoepDocument,
   getUsers,
-  updateUserStatus
+  createUserAuthEvaluation
 } from './users.api';
 import usersReducer from './users.slice';
 
@@ -345,7 +345,7 @@ describe('users api', () => {
     expect(store.getState().users.list.error).toBeNull();
   });
 
-  it('updateUserStatus envia POST para /auth-evaluation e atualiza mutation', async () => {
+  it('createUserAuthEvaluation envia POST para /auth-evaluation e atualiza mutation', async () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify({
         id: 1,
@@ -360,7 +360,7 @@ describe('users api', () => {
     );
     const store = createTestStore();
 
-    const result = await store.dispatch(updateUserStatus({
+    const result = await store.dispatch(createUserAuthEvaluation({
       userId: 3,
       status: 'active',
       justification: 'Aprovado'
@@ -383,15 +383,15 @@ describe('users api', () => {
     expect(store.getState().users.selected).toBeNull();
   });
 
-  it('updateUserStatus.rejected salva o erro no estado', async () => {
+  it('createUserAuthEvaluation.rejected salva o erro no estado', async () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify({ error: 'Transição não permitida' }), { status: 400 }),
     );
     const store = createTestStore();
 
-    await store.dispatch(updateUserStatus({
+    await store.dispatch(createUserAuthEvaluation({
       userId: 3,
-      status: 'disabled'
+      status: 'active'
     }));
 
     expect(store.getState().users.mutation).toMatchObject({

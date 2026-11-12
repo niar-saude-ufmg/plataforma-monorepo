@@ -6,7 +6,7 @@ import {
   UserEvaluationDialog,
   type UserEvaluationDecision,
 } from '../../components/UserEvaluationDialog/UserEvaluationDialog';
-import { updateUserStatus, downloadUserCoepDocument } from '../../store/users/users.api';
+import { createUserAuthEvaluation, downloadUserCoepDocument } from '../../store/users/users.api';
 import {
   setUsersFilters,
   clearUsersFilters,
@@ -153,13 +153,13 @@ export function Users() {
     if (!selectedUser) return;
 
     const result = await dispatch(
-      updateUserStatus({
+      createUserAuthEvaluation({
         userId: selectedUser.id,
         status: decision,
         justification,
     }));
 
-    if (updateUserStatus.fulfilled.match(result)) {
+    if (createUserAuthEvaluation.fulfilled.match(result)) {
       setActiveAction(null);
       dispatch(clearSelectedUser());
       dispatch(clearUsersMutationError());
@@ -181,12 +181,6 @@ export function Users() {
       dispatch(downloadUserCoepDocument(selectedUser.id));
     }
   };
-
-  const downloadErrorSnackbar = useApiError(
-    downloadError,
-    () => dispatch(clearUsersDownloadError()),
-    "Não foi possível baixar o parecer do COEP."
-  );
 
   const selectedRole = roleOptions.find((opt) => opt.value === filters.role) ?? null;
   const selectedStatus = statusOptions.find((opt) => opt.value === filters.accountStatus) ?? null;
@@ -260,16 +254,6 @@ export function Users() {
         Avaliar
       </Button>
     ) : null,
-    deactivate: (user) => user.accountStatus === "active" ? (
-      <Button size="small" variant="outlined" color="danger">
-        Desativar
-      </Button>
-    ) : null,
-    activate: (user) => user.accountStatus === "disabled" ? (
-      <Button size="small" variant="outlined" color="primary">
-        Ativar
-      </Button>
-    ) : null,
   };
 
   const paginationProps = {
@@ -298,17 +282,34 @@ export function Users() {
         description: roleConfig.emptyStateDescription,
       };
 
-  const errorSnackbar = useApiError(
-    error,
-    () => dispatch(clearUsersError()),
-    "Não foi possível carregar os usuários. Tente novamente.",
+  const pageError = mutationError ?? downloadError ?? error;
+  const pageErrorFallback = mutationError
+    ? "Não foi possível registrar a avaliação do usuário. Tente novamente."
+    : downloadError
+      ? "Não foi possível baixar o parecer do COEP. Tente novamente."
+      : "Não foi possível carregar os usuários. Tente novamente.";
+  const pageErrorSnackbar = useApiError(
+    pageError,
+    () => {
+      if (mutationError) {
+        dispatch(clearUsersMutationError());
+      } else if (downloadError) {
+        dispatch(clearUsersDownloadError());
+      } else {
+        dispatch(clearUsersError());
+      }
+    },
+    pageErrorFallback,
   );
-
-  const mutationErrorSnackbar = useApiError(
-    mutationError,
-    () => dispatch(clearUsersMutationError()),
-    "Não foi possível atualizar o status do usuário. Verifique as regras de transição.",
-  )
+  const snackbarProps = pageError
+    ? pageErrorSnackbar
+    : {
+        ...pageErrorSnackbar,
+        open: Boolean(successMessage),
+        message: successMessage ?? '',
+        severity: 'success' as const,
+        onClose: () => setSuccessMessage(null),
+      };
 
   return (
     <>
@@ -342,21 +343,11 @@ export function Users() {
           />
         }
       />
-      <Snackbar {...errorSnackbar} />
-      <Snackbar {...mutationErrorSnackbar} />
-      <Snackbar {...downloadErrorSnackbar} />
-      <Snackbar
-        open={Boolean(successMessage)}
-        message={successMessage ?? ''}
-        severity="success"
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        onClose={() => setSuccessMessage(null)}
-      />
+      <Snackbar {...snackbarProps} />
       <UserEvaluationDialog
         open={activeAction === 'evaluate'}
         user={selectedUser}
         loading={mutationLoading}
-        error={mutationError}
         downloadLoading={downloadLoading}
         onDownloadCoep={handleDownloadCoep}
         onClose={handleCloseEvaluation}

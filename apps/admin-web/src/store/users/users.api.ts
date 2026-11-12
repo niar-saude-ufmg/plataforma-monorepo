@@ -10,7 +10,7 @@ import {
   normalizeUserApiError,
   normalizeUserDocumentApiError,
   normalizeUserListApiError,
-  updateUserStatusRequest
+  createUserAuthEvaluationRequest,
 } from '../../services/users/users.service';
 import { downloadBlob } from '../../utils/download-file';
 import type { ApiError } from '../../types/api.types';
@@ -24,9 +24,8 @@ import type {
   UserListParams,
   UserListResponse,
   UserAuthEvaluation,
-  UserAuthEvaluationInput
+  UserAuthEvaluationInput,
 } from '../../types/user.types';
-import { UserAccountStatus } from '@niar/contracts';
 
 export const getUsers = createAsyncThunk<
   UserListResponse,
@@ -178,13 +177,13 @@ export const downloadUserCoepDocument = createAsyncThunk<
   }
 });
 
-export const updateUserStatus = createAsyncThunk<
+export const createUserAuthEvaluation = createAsyncThunk<
   UserAuthEvaluation,
-  { userId: number; status: UserAccountStatus; justification?: string },
+  { userId: number } & UserAuthEvaluationInput,
   { rejectValue: ApiError }
->('users/updateUserStatus', async ({ userId, status, justification }, { rejectWithValue }) => {
+>('users/createUserAuthEvaluation', async ({ userId, status, justification }, { rejectWithValue }) => {
   try {
-    return await updateUserStatusRequest(userId, status, justification);
+    return await createUserAuthEvaluationRequest(userId, status, justification);
   } catch (error) {
     if (
       typeof error === 'object' &&

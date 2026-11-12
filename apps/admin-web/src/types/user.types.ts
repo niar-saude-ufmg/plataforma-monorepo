@@ -297,7 +297,7 @@ export interface ChangePasswordInput {
 export type UserEvaluationDecision = 'active' | 'rejected';
 
 export type UserAuthEvaluationInput = {
-  status: Extract<UserAccountStatus, 'active' | 'rejected' | 'disabled'>;
+  status: UserEvaluationDecision;
   justification?: string;
 };
 

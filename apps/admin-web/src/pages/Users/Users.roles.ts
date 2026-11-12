@@ -12,9 +12,7 @@ export type UserFilterKey = "search" | "role" | "accountStatus";
 
 export type UserActionId =
   | "details"
-  | "evaluate"
-  | "activate"
-  | "deactivate";
+  | "evaluate";
 
 export type UserListRoleConfig = RoleListConfig<UserColumnId, UserFilterKey> & {
   actions: readonly UserActionId[];

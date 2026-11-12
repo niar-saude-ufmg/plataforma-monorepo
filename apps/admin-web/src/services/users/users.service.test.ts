@@ -14,7 +14,7 @@ import {
   toUserListItem,
   toCreateUserFormData,
   toUser,
-  updateUserStatusRequest
+  createUserAuthEvaluationRequest
 } from "./users.service";
 
 const input: CreateUserInput = {
@@ -395,7 +395,7 @@ describe("user service — atualiza status", () => {
       json: async () => ({ error: "Transição de active para rejected não permitida" }),
     }));
 
-    await expect(updateUserStatusRequest(3, "rejected", "Parecer inválido"))
+    await expect(createUserAuthEvaluationRequest(3, "rejected", "Parecer inválido"))
       .rejects.toEqual({
         status: 409,
         message: "Não foi possível registrar a avaliação porque o status do cadastro mudou ou a transição não é permitida. Atualize a listagem e tente novamente.",
@@ -422,7 +422,7 @@ describe("user service — atualiza status", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await updateUserStatusRequest(3, "active", "Cadastro aprovado.");
+    const result = await createUserAuthEvaluationRequest(3, "active", "Cadastro aprovado.");
     const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
 
     expect(url).toBe("http://localhost:3333/api/admin/users/3/auth-evaluation");
@@ -449,35 +449,6 @@ describe("user service — atualiza status", () => {
     });
   });
 
-  it("envia a mudança de status sem justificativa (ex: desativar)", async () => {
-    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
-    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
-
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 201,
-      json: async () => ({
-        id: 13,
-        user_id: 3,
-        status: "disabled",
-        justification: null,
-        evaluated_by_user_id: 1,
-        evaluated_at: "2026-11-06T18:00:00.000Z",
-        created_at: "2026-11-06T18:00:00.000Z",
-        user_coep_data_id: null,
-      }),
-    });
-    vi.stubGlobal("fetch", fetchMock);
-
-    await updateUserStatusRequest(3, "disabled");
-    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
-
-    expect(JSON.parse(String(request.body))).toEqual({
-      status: "disabled",
-    });
-    expect(JSON.parse(String(request.body))).not.toHaveProperty("justification");
-  });
-
   it("normaliza erro 400 de transição não permitida", async () => {
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
     vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
@@ -489,9 +460,9 @@ describe("user service — atualiza status", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(updateUserStatusRequest(3, "active")).rejects.toEqual({
+    await expect(createUserAuthEvaluationRequest(3, "active")).rejects.toEqual({
       status: 400,
-      message: "Não foi possível atualizar o status do usuário.",
+      message: "Não foi possível registrar a avaliação do usuário.",
     });
   });
 
@@ -508,7 +479,7 @@ describe("user service — atualiza status", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(updateUserStatusRequest(3, "active")).rejects.toEqual({
+    await expect(createUserAuthEvaluationRequest(3, "active")).rejects.toEqual({
       status: 400,
       message: "Revise os campos informados.",
       fieldErrors: {},

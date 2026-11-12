@@ -19,7 +19,7 @@ import {
   createUser,
   downloadUserCoepDocument,
   getUsers,
-  updateUserStatus
+  createUserAuthEvaluation
 } from './users.api';
 import type { UserListItem } from '../../types/user.types';
 
@@ -263,9 +263,9 @@ describe('usersSlice — clearUsersListError / clearUsersMutationError', () => {
   });
 });
 
-describe('usersSlice — updateUserStatus', () => {
+describe('usersSlice — createUserAuthEvaluation', () => {
   it('pending define operation "update" e status "pending"', () => {
-    const state = reducer(undefined, pendingAction(updateUserStatus, { userId: 1, status: 'active' }));
+    const state = reducer(undefined, pendingAction(createUserAuthEvaluation, { userId: 1, status: 'active' }));
 
     expect(state.mutation).toEqual({
       operation: 'update',
@@ -277,7 +277,7 @@ describe('usersSlice — updateUserStatus', () => {
   it('fulfilled define status "succeeded" e limpa o selected', () => {
     let state = reducer(undefined, setSelectedUser(user));
 
-    state = reducer(state, fulfilledAction(updateUserStatus, { id: 1 }));
+    state = reducer(state, fulfilledAction(createUserAuthEvaluation, { id: 1 }));
 
     expect(state.mutation.status).toBe('succeeded');
     expect(state.mutation.error).toBeNull();
@@ -286,7 +286,7 @@ describe('usersSlice — updateUserStatus', () => {
 
   it('rejected define status "failed" e salva o erro', () => {
     const error = { message: 'Transição não permitida' };
-    const state = reducer(undefined, rejectedAction(updateUserStatus, error));
+    const state = reducer(undefined, rejectedAction(createUserAuthEvaluation, error));
 
     expect(state.mutation.status).toBe('failed');
     expect(state.mutation.error).toEqual(error);

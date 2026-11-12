@@ -568,9 +568,9 @@ export function toUserAuthEvaluation(
   };
 }
 
-export async function updateUserStatusRequest(
+export async function createUserAuthEvaluationRequest(
   userId: number,
-  status: UserAccountStatus,
+  status: UserAuthEvaluationInput['status'],
   justification?: string,
 ): Promise<UserAuthEvaluation> {
   let response: Response;
@@ -596,7 +596,7 @@ export async function updateUserStatusRequest(
     throw normalizeUserApiError(
       'FETCH_ERROR',
       undefined,
-      'Não foi possível atualizar o status do usuário.',
+      'Não foi possível registrar a avaliação do usuário.',
     );
   }
 
@@ -613,7 +613,7 @@ export async function updateUserStatusRequest(
     throw normalizeUserApiError(
       response.status,
       body,
-      'Não foi possível atualizar o status do usuário.',
+      'Não foi possível registrar a avaliação do usuário.',
     );
   }
 

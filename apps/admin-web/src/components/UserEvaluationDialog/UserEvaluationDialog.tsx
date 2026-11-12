@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Button, RadioGroup, Textarea } from '@niar/ui';
-import { FixedDialog, FixedDialogProps } from '../FixedDialog';
+import { FixedDialog } from '../FixedDialog';
 import type { UserListItem } from '../../types/user.types';
 import './UserEvaluationDialog.scss';
-import { ApiError } from '../../types/api.types';
 
 export type UserEvaluationDecision = 'active' | 'rejected';
 
@@ -11,7 +10,6 @@ export type UserEvaluationDialogProps = {
   open: boolean;
   user: UserListItem | null;
   loading?: boolean;
-  error?: ApiError | null;
   downloadLoading?: boolean;
   onDownloadCoep: () => void;
   onClose: () => void;
@@ -22,7 +20,6 @@ export function UserEvaluationDialog({
   open,
   user,
   loading = false,
-  error = null,
   downloadLoading = false,
   onDownloadCoep,
   onClose,
@@ -72,7 +69,7 @@ export function UserEvaluationDialog({
     <FixedDialog
       open={open}
       title={`Avaliar cadastro de ${user.fullName}`}
-      onClose={loading ? () => {} : onClose}
+      onClose={onClose}
       ariaLabel="Avaliar cadastro de pesquisador"
       minWidth="600px"
       actions={
