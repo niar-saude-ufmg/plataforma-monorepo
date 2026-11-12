@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   getRoleNavigation,
   getRoleRouteDefinitions,
-  getSpecialtyCreatePath,
-  getSpecialtyEditPath,
 } from './role-routes';
 
 describe('rotas de especialidades', () => {
@@ -13,13 +11,27 @@ describe('rotas de especialidades', () => {
     });
   });
 
-  it('mantém novo e editar como modos da mesma página de especialidade', () => {
-    expect(getSpecialtyCreatePath('admin')).toBe('/admin/administrador/especialidades/novo');
-    expect(getSpecialtyEditPath('admin')).toBe('/admin/administrador/especialidades/editar');
+  it('mantém novo usuário como subrota da listagem', () => {
+    expect(getRoleNavigation('admin')).not.toContainEqual({
+      label: 'Novo usuário',
+      path: '/admin/administrador/usuarios/novo',
+    });
   });
 
   it.each(['researcher', 'committee', 'auditor'] as const)('não disponibiliza rota ou menu para %s', (role) => {
     expect(getRoleRouteDefinitions(role).some(({ section }) => section === 'especialidades')).toBe(false);
     expect(getRoleNavigation(role).some(({ label }) => label === 'Especialidades')).toBe(false);
+  });
+});
+
+describe('rotas de perfil', () => {
+  it.each([
+    ['admin', '/admin/administrador/perfil'],
+    ['researcher', '/admin/pesquisador/perfil'],
+    ['committee', '/admin/comite/perfil'],
+    ['auditor', '/admin/auditor/perfil'],
+  ] as const)('publica o Perfil no menu de %s', (role, path) => {
+    expect(getRoleRouteDefinitions(role).some(({ section }) => section === 'perfil')).toBe(true);
+    expect(getRoleNavigation(role)).toContainEqual({ label: 'Perfil', path });
   });
 });

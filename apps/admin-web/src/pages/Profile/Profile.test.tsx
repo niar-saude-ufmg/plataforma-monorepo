@@ -1,6 +1,5 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../App';
@@ -9,7 +8,7 @@ import { store } from '../../store';
 import { clearAuthMutation, setSelectedAuthUser } from '../../store/auth/auth.slice';
 import { clearUsersError } from '../../store/users/users.slice';
 import type { AuthUser } from '../../types/user.types';
-import type { ProfileRole } from '../../types/role-profile';
+import { AdminMemoryRouter } from '../../test-utils/AdminMemoryRouter';
 
 const admin: AuthUser = {
   id: 1,
@@ -43,16 +42,34 @@ const researcher: AuthUser = {
   },
 };
 
+const committee: AuthUser = {
+  id: 3,
+  name: 'Comitê Três',
+  email: 'comite@niar.local',
+  role: 'committee',
+  accountStatus: 'active',
+  committeeProfile: {
+    specialty: { id: 7, code: 'EPI', name: 'Epidemiologia' },
+  },
+};
+
+const auditor: AuthUser = {
+  id: 4,
+  name: 'Auditor Quatro',
+  email: 'auditor@niar.local',
+  role: 'auditor',
+  accountStatus: 'active',
+};
+
 // Renderiza a página direto, com o usuário já no authSlice.
-function renderPage(user: AuthUser | null, props: Partial<{ sessionError: unknown }> = {}) {
+function renderPage(user: AuthUser | null) {
   store.dispatch(setSelectedAuthUser(user));
-  const role: ProfileRole = user?.role === 'researcher' ? 'researcher' : 'admin';
 
   return render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={['/admin/administrador/perfil']}>
-        <Profile role={role} {...props} />
-      </MemoryRouter>
+    <AdminMemoryRouter initialEntries={['/admin/administrador/perfil']}>
+        <Profile />
+      </AdminMemoryRouter>
     </Provider>,
   );
 }
@@ -65,9 +82,9 @@ describe('rotas de Perfil', () => {
 
   it('abre /admin/administrador/perfil para o Administrador', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/administrador/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/administrador/perfil']}>
         <App mode="admin" currentUser={admin} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
@@ -75,44 +92,59 @@ describe('rotas de Perfil', () => {
 
   it('abre /admin/pesquisador/perfil para o Pesquisador', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/pesquisador/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/pesquisador/perfil']}>
         <App mode="admin" currentUser={researcher} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
   });
 
-  it('renderiza a mesma página nos dois papéis', async () => {
+  it.each([
+    ['/admin/administrador/perfil', () => admin],
+    ['/admin/pesquisador/perfil', () => researcher],
+    ['/admin/comite/perfil', () => committee],
+    ['/admin/auditor/perfil', () => auditor],
+  ])('renderiza a mesma página de Perfil em %s', async (entry, getUser) => {
     render(
-      <MemoryRouter initialEntries={['/admin/administrador/perfil']}>
-        <App mode="admin" currentUser={admin} />
-      </MemoryRouter>,
+      <AdminMemoryRouter initialEntries={[entry]}>
+        <App mode="admin" currentUser={getUser()} />
+      </AdminMemoryRouter>,
     );
-    expect(await screen.findByRole('heading', { name: 'Dados da conta', level: 2 })).toBeInTheDocument();
-    cleanup();
 
-    render(
-      <MemoryRouter initialEntries={['/admin/pesquisador/perfil']}>
-        <App mode="admin" currentUser={researcher} />
-      </MemoryRouter>,
-    );
-    expect(await screen.findByRole('heading', { name: 'Dados da conta', level: 2 })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dados da conta', level: 2 })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Editar perfil' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trocar senha' })).toBeInTheDocument();
   });
 
-  it('não oferece rota de Perfil para o Comitê', async () => {
-    const committee: AuthUser = {
-      id: 3,
-      name: 'Comitê Três',
-      email: 'comite@niar.local',
-      role: 'committee',
-      accountStatus: 'active',
-    };
-
+  it('abre /admin/comite/perfil para o Comitê', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/comite/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/comite/perfil']}>
         <App mode="admin" currentUser={committee} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dados da conta', level: 2 })).toBeInTheDocument();
+  });
+
+  it('abre /admin/auditor/perfil para o Auditor', async () => {
+    render(
+      <AdminMemoryRouter initialEntries={['/admin/auditor/perfil']}>
+        <App mode="admin" currentUser={auditor} />
+      </AdminMemoryRouter>,
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dados da conta', level: 2 })).toBeInTheDocument();
+  });
+
+  it('não leva o Comitê para a rota de Perfil do Auditor', async () => {
+    render(
+      <AdminMemoryRouter initialEntries={['/admin/auditor/perfil']}>
+        <App mode="admin" currentUser={committee} />
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Boas vindas, Comitê Três.' })).toBeInTheDocument();
@@ -121,38 +153,27 @@ describe('rotas de Perfil', () => {
 
   it('não leva o Administrador para a rota de Perfil do Pesquisador', async () => {
     render(
-      <MemoryRouter initialEntries={['/admin/pesquisador/perfil']}>
+      <AdminMemoryRouter initialEntries={['/admin/pesquisador/perfil']}>
         <App mode="admin" currentUser={admin} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
 
     expect(await screen.findByRole('heading', { name: 'Boas vindas, Gestora Um.' })).toBeInTheDocument();
   });
 
-  it('mostra Perfil no menu apenas de Administrador e Pesquisador', async () => {
+  it.each([
+    ['/admin/administrador/home', () => admin],
+    ['/admin/pesquisador/home', () => researcher],
+    ['/admin/comite/home', () => committee],
+    ['/admin/auditor/home', () => auditor],
+  ])('mostra Perfil no menu em %s', async (entry, getUser) => {
     render(
-      <MemoryRouter initialEntries={['/admin/administrador/home']}>
-        <App mode="admin" currentUser={admin} />
-      </MemoryRouter>,
+      <AdminMemoryRouter initialEntries={[entry]}>
+        <App mode="admin" currentUser={getUser()} />
+      </AdminMemoryRouter>,
     );
+
     expect(await screen.findByRole('tab', { name: 'Perfil' })).toBeInTheDocument();
-    cleanup();
-
-    const committee: AuthUser = {
-      id: 3,
-      name: 'Comitê Três',
-      email: 'comite@niar.local',
-      role: 'committee',
-      accountStatus: 'active',
-    };
-
-    render(
-      <MemoryRouter initialEntries={['/admin/comite/home']}>
-        <App mode="admin" currentUser={committee} />
-      </MemoryRouter>,
-    );
-    expect(await screen.findByRole('heading', { name: 'Boas vindas, Comitê Três.' })).toBeInTheDocument();
-    expect(screen.queryByRole('tab', { name: 'Perfil' })).not.toBeInTheDocument();
   });
 });
 
@@ -265,12 +286,6 @@ describe('página de Perfil', () => {
     expect(screen.queryByRole('textbox', { name: 'Nome completo' })).not.toBeInTheDocument();
   });
 
-  it('mostra o erro de carregamento no Snackbar oficial', () => {
-    renderPage(admin, { sessionError: { message: 'Falha ao carregar o perfil.' } });
-
-    expect(screen.getByRole('alert')).toHaveTextContent('Falha ao carregar o perfil.');
-  });
-
   it('mantém o Snackbar fechado sem erro', () => {
     renderPage(admin);
 
@@ -282,6 +297,65 @@ describe('página de Perfil', () => {
 
     expect(screen.queryByRole('button', { name: 'Salvar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Senha atual' })).not.toBeInTheDocument();
+  });
+
+  it('exibe a especialidade e o status da conta para o Comitê', () => {
+    renderPage(committee);
+
+    expect(screen.getByRole('heading', { name: 'Dados da comissão', level: 2 })).toBeInTheDocument();
+    expect(screen.getByText('Especialidade')).toBeInTheDocument();
+    expect(screen.getByText('Epidemiologia')).toBeInTheDocument();
+    expect(screen.getByLabelText('Status da conta')).toHaveTextContent('Ativo');
+  });
+
+  it('não exibe Acesso à plataforma para o Comitê', () => {
+    renderPage(committee);
+
+    expect(screen.queryByRole('heading', { name: 'Acesso à plataforma' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Perfil de acesso')).not.toBeInTheDocument();
+  });
+
+  it('exibe perfil de acesso e status da conta para o Auditor', () => {
+    renderPage(auditor);
+
+    expect(screen.getByRole('heading', { name: 'Acesso à plataforma', level: 2 })).toBeInTheDocument();
+    expect(screen.getByText('Auditor do NIAR')).toBeInTheDocument();
+    expect(screen.getByLabelText('Status da conta')).toHaveTextContent('Ativo');
+    expect(screen.queryByRole('heading', { name: 'Dados da comissão' })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['Comitê', () => committee],
+    ['Auditor', () => auditor],
+  ])('esconde telefone, dados acadêmicos e COEP de %s', (_rotulo, getUser) => {
+    renderPage(getUser());
+
+    expect(screen.queryByRole('textbox', { name: 'Telefone' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Dados acadêmicos e institucionais' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Dados de avaliação no COEP' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Baixar' })).not.toBeInTheDocument();
+  });
+
+  it('usa a descrição do Figma para Comitê e Auditor', () => {
+    renderPage(committee);
+    expect(
+      screen.getByText('Gerencie seus dados pessoais e as informações do seu vínculo com a comissão.'),
+    ).toBeInTheDocument();
+    cleanup();
+
+    renderPage(auditor);
+    expect(
+      screen.getByText('Gerencie seus dados pessoais e as permissões de acesso à plataforma.'),
+    ).toBeInTheDocument();
+  });
+
+  it('mostra "Não informado" quando o Comitê está sem especialidade', () => {
+    renderPage({ ...committee, committeeProfile: undefined });
+
+    expect(screen.getByRole('heading', { name: 'Dados da comissão', level: 2 })).toBeInTheDocument();
+    expect(screen.getByText('Não informado')).toBeInTheDocument();
   });
 });
 
@@ -317,6 +391,100 @@ describe('Perfil — edição, senha e download', () => {
     expect(screen.getByRole('button', { name: 'Editar perfil' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Trocar senha' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Baixar' })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['Comitê', () => committee],
+    ['Auditor', () => auditor],
+  ])('oferece editar perfil e trocar senha para %s', (_rotulo, getUser) => {
+    renderPage(getUser());
+
+    expect(screen.getByRole('button', { name: 'Editar perfil' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trocar senha' })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['Comitê', () => committee],
+    ['Auditor', () => auditor],
+  ])('envia só nome e e-mail ao salvar o perfil de %s', async (_rotulo, getUser) => {
+    const user = getUser();
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id: user.id,
+        email: user.email,
+        full_name: 'Nome Atualizado',
+        role: user.role,
+        account_status: 'active' as const,
+        ...(user.role === 'committee' && {
+          committee_profile: { specialty: { id: 7, code: 'EPI', name: 'Epidemiologia' } },
+        }),
+      }),
+    });
+    renderPage(user);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    const nome = screen.getByRole('textbox', { name: 'Nome completo' });
+    await userEvent.clear(nome);
+    await userEvent.type(nome, 'Nome Atualizado');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain('/auth/me');
+    expect(init.method).toBe('PATCH');
+    expect(Object.keys(JSON.parse(init.body)).sort()).toEqual(['email', 'full_name']);
+    await waitFor(() => expect(store.getState().auth.selected?.name).toBe('Nome Atualizado'));
+    if (user.role === 'committee') {
+      expect(screen.getByText('Epidemiologia')).toBeInTheDocument();
+      expect(store.getState().auth.selected?.committeeProfile?.specialty.name).toBe('Epidemiologia');
+    }
+  });
+
+  it('usa o mesmo formulário de troca de senha para o Comitê', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id: committee.id,
+        email: committee.email,
+        full_name: committee.name,
+        role: 'committee' as const,
+        account_status: 'active' as const,
+        committee_profile: { specialty: { id: 7, code: 'EPI', name: 'Epidemiologia' } },
+      }),
+    });
+    renderPage(committee);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
+    await userEvent.type(screen.getByLabelText('Senha atual'), 'senha-atual');
+    await userEvent.type(screen.getByLabelText('Nova senha'), 'nova-senha-123');
+    await userEvent.type(screen.getByLabelText('Repetir senha'), 'nova-senha-123');
+    await userEvent.click(screen.getByRole('button', { name: 'Trocar senha' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(Object.keys(body).sort()).toEqual(['current_password', 'password']);
+    await waitFor(() => expect(screen.getByText('Senha atualizada.')).toBeInTheDocument());
+    expect(screen.getByText('Epidemiologia')).toBeInTheDocument();
+    expect(store.getState().auth.selected?.committeeProfile?.specialty.name).toBe('Epidemiologia');
+  });
+
+  it('mostra o erro da API no Snackbar também para o Auditor', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: 'E-mail já utilizado por outro usuário' }),
+    });
+    renderPage(auditor);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('Este e-mail já está em uso por outro usuário.'),
+    );
   });
 
   it('oferece o download do COEP só para o Pesquisador com documento', () => {

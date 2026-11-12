@@ -17,7 +17,7 @@ export type ProfileFormFields = {
 
 type UseProfileFormOptions = {
   user: AuthUser | null;
-  fields: ProfileRoleConfig['fields'];
+  fields?: ProfileRoleConfig['fields'];
 };
 
 const EMPTY_VALUES: ProfileFormValues = {
@@ -38,10 +38,10 @@ const toFormValues = (user: AuthUser | null): ProfileFormValues =>
 export function useProfileForm({ user, fields: fieldConfig }: UseProfileFormOptions) {
   const defaultValues = useMemo(() => toFormValues(user), [user]);
   const schema = useMemo(
-    () => fieldConfig.phone.editable
+    () => fieldConfig?.phone.editable
       ? profileFormSchema
       : profileFormSchema.extend({ phone: z.string().trim().optional() }),
-    [fieldConfig.phone.editable],
+    [fieldConfig?.phone.editable],
   );
   const form = useForm<ProfileFormValues>({
     schema,

@@ -10,6 +10,8 @@ import {
   clearUsersError,
   setSelectedUser,
   clearSelectedUser,
+  clearUsersMutationError,
+  clearUsersDownloadError,
 } from "../../store/users/users.slice";
 import {
   selectUsersList,
@@ -25,7 +27,12 @@ import {
   selectUsersListLoading,
   selectUsersListError,
 } from "../../store/users/users.selectors";
-import { getUsers, updateUserStatus, evaluateUser, downloadUserCoepDocument } from '../../store/users/users.api';
+import {
+  createUserAuthEvaluation,
+  downloadUserCoepDocument,
+  getUsers,
+  updateUserStatus,
+} from '../../store/users/users.api';
 import { useApiError } from "../../hooks/use-api-error/use-api-error"
 import { UserListItem, UserRole } from '../../types/user.types';
 import { UserAccountStatus } from '@niar/contracts';
@@ -37,7 +44,10 @@ import {
   type UserActionId,
 } from './Users.roles';
 import { ConfirmationDialog } from '../../components/ConfirmationDialog';
-import { UserEvaluationDialog } from '../../components/UserEvaluationDialog/UserEvaluationDialog';
+import {
+  UserEvaluationDialog,
+  type UserEvaluationDecision,
+} from '../../components/UserEvaluationDialog/UserEvaluationDialog';
 import { UserDetailsDialog } from '../../components/UserDetailsDialog';
 import './Users.scss';
 
@@ -51,7 +61,7 @@ const roleOptions: readonly AutocompleteOption[] = [
   { value: "researcher", label: "Pesquisador" },
   { value: "admin", label: "Administrador" },
   { value: "auditor", label: "Auditor" },
-  { value: "committee", label: "Comissão" }
+  { value: "committee", label: "Comitê" }
 ];
 
 const statusOptions: readonly AutocompleteOption[] = [
@@ -88,6 +98,8 @@ export function Users() {
   const error = useAppSelector(selectUsersListError);
   const roleConfig =
     USER_LIST_CONFIG[user?.role ?? "admin"] ?? USER_LIST_CONFIG.admin!;
+
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(getUsers({
@@ -154,6 +166,26 @@ export function Users() {
     if (updateUserStatus.fulfilled.match(result)) {
       setOperation(null);
       dispatch(clearSelectedUser());
+      void refreshUsers();
+    }
+  };
+
+  const submitEvaluation = async (
+    decision: UserEvaluationDecision,
+    justification?: string,
+  ) => {
+    if (!selectedUser) return;
+
+    const result = await dispatch(createUserAuthEvaluation({
+      userId: selectedUser.id,
+      status: decision,
+      justification,
+    }));
+
+    if (createUserAuthEvaluation.fulfilled.match(result)) {
+      setOperation(null);
+      dispatch(clearSelectedUser());
+      setSuccessMessage('Avaliação registrada com sucesso.');
       void refreshUsers();
     }
   };
@@ -252,7 +284,7 @@ export function Users() {
     count: pagination?.totalItems ?? 0,
     page: page - 1,                             // API=1-based → UI=0-based
     rowsPerPage: pageSize,
-    rowsPerPageOptions: [5, 10, 20, 50, 100],
+    rowsPerPageOptions: [10, 20, 50, 100],
     onPageChange: handlePageChange,
     onRowsPerPageChange: handlePageSizeChange,
   };
@@ -274,11 +306,34 @@ export function Users() {
         description: roleConfig.emptyStateDescription,
       };
 
-  const errorSnackbar = useApiError(
-    mutationError ?? downloadError ?? error,
-    () => dispatch(clearUsersError()),
-    "Não foi possível carregar os usuários. Tente novamente.",
+  const pageError = mutationError ?? downloadError ?? error;
+  const pageErrorFallback = mutationError
+    ? "Não foi possível concluir a operação do usuário. Tente novamente."
+    : downloadError
+      ? "Não foi possível baixar o parecer do COEP. Tente novamente."
+      : "Não foi possível carregar os usuários. Tente novamente.";
+  const pageErrorSnackbar = useApiError(
+    pageError,
+    () => {
+      if (mutationError) {
+        dispatch(clearUsersMutationError());
+      } else if (downloadError) {
+        dispatch(clearUsersDownloadError());
+      } else {
+        dispatch(clearUsersError());
+      }
+    },
+    pageErrorFallback,
   );
+  const snackbarProps = pageError
+    ? pageErrorSnackbar
+    : {
+        ...pageErrorSnackbar,
+        open: Boolean(successMessage),
+        message: successMessage ?? '',
+        severity: 'success' as const,
+        onClose: () => setSuccessMessage(null),
+      };
 
   return (
     <>
@@ -286,7 +341,7 @@ export function Users() {
         <Listing
           title={roleConfig.title}
           description={roleConfig.description}
-          action={
+          action={roleConfig.canCreateUser ? (
             <Button
               variant="contained"
               color="primary"
@@ -294,7 +349,7 @@ export function Users() {
             >
               Cadastrar usuário
             </Button>
-          }
+          ) : undefined}
           separateFilter
           tableSize="small"
           columns={toTableColumns(columns)}
@@ -337,24 +392,16 @@ export function Users() {
       </ConfirmationDialog>
       {operation === 'evaluate' && selectedUser ? (
         <UserEvaluationDialog
-          key={selectedUser.id}
+          open
           user={selectedUser}
           loading={mutationLoading}
-          downloading={downloadLoading}
+          downloadLoading={downloadLoading}
           onClose={closeOperation}
-          onDownload={() => { void dispatch(downloadUserCoepDocument(selectedUser.id)); }}
-          onSave={(input) => {
-            void dispatch(evaluateUser(input)).then((result) => {
-              if (evaluateUser.fulfilled.match(result)) {
-                setOperation(null);
-                dispatch(clearSelectedUser());
-                void refreshUsers();
-              }
-            });
-          }}
+          onDownloadCoep={() => { void dispatch(downloadUserCoepDocument(selectedUser.id)); }}
+          onSubmit={submitEvaluation}
         />
       ) : null}
-      <Snackbar {...errorSnackbar} />
+      <Snackbar {...snackbarProps} />
     </>
   );
 };

@@ -6,15 +6,12 @@ import reducer, {
   clearUsersState,
   clearUsersFilters,
   setSelectedUser,
-  DEFAULT_USERS_PAGE_SIZE,
   setUsersFilters,
   setUsersPage,
   setUsersPageSize
 } from './users.slice';
 import { selectUsersListError } from './users.selectors';
 import {
-  updateUserStatus,
-  evaluateUser,
   createAdministrator,
   createAuditor,
   createCommitteeMember,
@@ -22,6 +19,7 @@ import {
   createUser,
   downloadUserCoepDocument,
   getUsers,
+  createUserAuthEvaluation
 } from './users.api';
 import type { UserListItem } from '../../types/user.types';
 
@@ -56,7 +54,7 @@ describe('usersSlice', () => {
         pagination: null,
         filters: {},
         page: 1,
-        pageSize: DEFAULT_USERS_PAGE_SIZE,
+        pageSize: 20,
         status: 'idle',
         error: null,
       },
@@ -86,7 +84,7 @@ describe('usersSlice', () => {
         pagination: null,
         filters: {},
         page: 1,
-        pageSize: DEFAULT_USERS_PAGE_SIZE,
+        pageSize: 20,
         status: 'idle',
         error: null,
       },
@@ -265,24 +263,32 @@ describe('usersSlice — clearUsersListError / clearUsersMutationError', () => {
   });
 });
 
+describe('usersSlice — createUserAuthEvaluation', () => {
+  it('pending define operation "update" e status "pending"', () => {
+    const state = reducer(undefined, pendingAction(createUserAuthEvaluation, { userId: 1, status: 'active' }));
 
-describe('usersSlice — gestão de acesso', () => {
-  it('atualiza lista e seleção após ativação ou desativação', () => {
-    let state = reducer(undefined, setSelectedUser(user));
-    state = { ...state, list: { ...state.list, items: [user] } };
-    const updated = { ...user, accountStatus: 'disabled' as const };
-    const next = reducer(state, updateUserStatus.fulfilled(updated, 'request', { userId: user.id, status: 'disabled' }));
-    expect(next.list.items).toEqual([updated]);
-    expect(next.selected).toEqual(updated);
-    expect(next.mutation.status).toBe('succeeded');
+    expect(state.mutation).toEqual({
+      operation: 'update',
+      status: 'pending',
+      error: null
+    });
   });
 
-  it('preserva a avaliação retornada pela API na lista e seleção', () => {
+  it('fulfilled define status "succeeded" e limpa o selected', () => {
     let state = reducer(undefined, setSelectedUser(user));
-    state = { ...state, list: { ...state.list, items: [user] } };
-    const evaluation = { id: 1, userId: user.id, status: 'rejected' as const, justification: 'Parecer inválido', evaluatedByUserId: 1, evaluatedAt: '2026-11-05', createdAt: '2026-11-05', userCoepDataId: 4 };
-    const next = reducer(state, evaluateUser.fulfilled(evaluation, 'request', { userId: user.id, status: 'rejected' }));
-    expect(next.selected?.latestAuthEvaluation).toEqual(evaluation);
-    expect(next.list.items[0].accountStatus).toBe('rejected');
+
+    state = reducer(state, fulfilledAction(createUserAuthEvaluation, { id: 1 }));
+
+    expect(state.mutation.status).toBe('succeeded');
+    expect(state.mutation.error).toBeNull();
+    expect(state.selected).toBeNull();
+  });
+
+  it('rejected define status "failed" e salva o erro', () => {
+    const error = { message: 'Transição não permitida' };
+    const state = reducer(undefined, rejectedAction(createUserAuthEvaluation, error));
+
+    expect(state.mutation.status).toBe('failed');
+    expect(state.mutation.error).toEqual(error);
   });
 });

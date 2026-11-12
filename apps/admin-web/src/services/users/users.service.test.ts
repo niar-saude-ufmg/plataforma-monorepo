@@ -2,8 +2,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import type { CreateUserInput } from "../../types/user.types";
 import {
-  updateUserStatusRequest,
-  evaluateUserRequest,
   createAdministratorRequest,
   createAuditorRequest,
   createCommitteeMemberRequest,
@@ -16,6 +14,7 @@ import {
   toUserListItem,
   toCreateUserFormData,
   toUser,
+  createUserAuthEvaluationRequest
 } from "./users.service";
 
 const input: CreateUserInput = {
@@ -388,30 +387,102 @@ describe("user service — cadastros privados", () => {
   });
 });
 
-
-describe('users service — gestão de acesso', () => {
-  afterEach(() => { vi.unstubAllGlobals(); window.localStorage.clear(); });
-
-  it('envia a alteração autenticada e normaliza o usuário retornado', async () => {
-    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, 'test-token');
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ...rawListUser, account_status: 'disabled' })));
-    vi.stubGlobal('fetch', fetchMock);
-    const result = await updateUserStatusRequest({ userId: 7, status: 'disabled' });
-    expect(result.accountStatus).toBe('disabled');
-    expect(result.fullName).toBe(rawListUser.full_name);
-    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/users/7/status'), expect.objectContaining({
-      method: 'PATCH', headers: { Authorization: 'Bearer test-token', 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'disabled' }),
+describe("user service — atualiza status", () => {
+  it("mostra conflito de avaliação quando a API retorna 409", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: "Transição de active para rejected não permitida" }),
     }));
+
+    await expect(createUserAuthEvaluationRequest(3, "rejected", "Parecer inválido"))
+      .rejects.toEqual({
+        status: 409,
+        message: "Não foi possível registrar a avaliação porque o status do cadastro mudou ou a transição não é permitida. Atualize a listagem e tente novamente.",
+      });
   });
 
-  it('envia a decisão e normaliza a avaliação', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 4, user_id: 7, status: 'active', justification: null, evaluated_by_user_id: 1, evaluated_at: '2026-11-05', created_at: '2026-11-05', user_coep_data_id: 3 }))));
-    const result = await evaluateUserRequest({ userId: 7, status: 'active' });
-    expect(result).toMatchObject({ userId: 7, status: 'active', evaluatedByUserId: 1, userCoepDataId: 3 });
+  it("envia a mudança de status com justificativa e normaliza a resposta", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: 12,
+        user_id: 3,
+        status: "active",
+        justification: "Cadastro aprovado.",
+        evaluated_by_user_id: 1,
+        evaluated_at: "2026-11-06T18:00:00.000Z",
+        created_at: "2026-11-06T18:00:00.000Z",
+        user_coep_data_id: null,
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await createUserAuthEvaluationRequest(3, "active", "Cadastro aprovado.");
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toBe("http://localhost:3333/api/admin/users/3/auth-evaluation");
+    expect(request.method).toBe("POST");
+    expect(request.headers).toEqual({
+      Authorization: "Bearer fake-token",
+      "Content-Type": "application/json",
+    });
+    expect(JSON.parse(String(request.body))).toEqual({
+      status: "active",
+      justification: "Cadastro aprovado.",
+    });
+
+    // Garante que o toUserAuthEvaluation foi aplicado (camelCase)
+    expect(result).toEqual({
+      id: 12,
+      userId: 3,
+      status: "active",
+      justification: "Cadastro aprovado.",
+      evaluatedByUserId: 1,
+      evaluatedAt: "2026-11-06T18:00:00.000Z",
+      createdAt: "2026-11-06T18:00:00.000Z",
+      userCoepDataId: null,
+    });
   });
 
-  it('preserva a mensagem de conflito e não trata o erro como filtro inválido', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: 'Transição não permitida' }), { status: 409 })));
-    await expect(updateUserStatusRequest({ userId: 7, status: 'active' })).rejects.toMatchObject({ status: 409, message: 'Transição não permitida' });
+  it("normaliza erro 400 de transição não permitida", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: "Transição de status não permitida" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createUserAuthEvaluationRequest(3, "active")).rejects.toEqual({
+      status: 400,
+      message: "Não foi possível registrar a avaliação do usuário.",
+    });
+  });
+
+  it("normaliza erro 400 de validação do backend (Zod)", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        errors: [{ path: ["status"], message: "Invalid enum value" }],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createUserAuthEvaluationRequest(3, "active")).rejects.toEqual({
+      status: 400,
+      message: "Revise os campos informados.",
+      fieldErrors: {},
+    });
   });
 });

@@ -1,4 +1,8 @@
-import type { EvaluationContext } from "@niar/contracts";
+import type {
+  EvaluationContext,
+  EvaluationStatus as ContractEvaluationStatus,
+  ProjectStatus as ContractProjectStatus,
+} from "@niar/contracts";
 
 /**
  * Contratos de dados do módulo de projetos.
@@ -8,27 +12,15 @@ import type { EvaluationContext } from "@niar/contracts";
  */
 
 /** Resultado da avaliação da comissão. */
-export type EvaluationStatus =
-  | "waiting"
-  | "to_review"
-  | "sent_to_committee"
-  | "approved_by_committee"
-  | "rejected_by_committee"
-  | "needs_changes_by_committee"
-  | "approved"
-  | "needs_changes"
-  | "rejected";
+export type EvaluationStatus = ContractEvaluationStatus;
 
 export type { EvaluationContext } from "@niar/contracts";
 
-/** Status do fluxo do projeto. Deve acompanhar o contrato da API. */
-export type ProjectStatus =
-  | "submitted_to_committee"
-  | "resubmitted_to_committee"
-  | "under_review"
-  | "needs_changes"
-  | "approved"
-  | "rejected";
+/** Status persistidos no domínio administrativo de projetos. */
+export type ProjectStatus = Exclude<
+  ContractProjectStatus,
+  "draft" | "saved" | "changes_requested"
+>;
 
 /** Pesquisador dono do projeto (resumo exibido na lista). */
 export interface ResearcherSummary {
@@ -39,7 +31,7 @@ export interface ResearcherSummary {
 
 /** Item do histórico de status do projeto. */
 export interface ProjectStatusEntry {
-  code: string;
+  code: ProjectStatus;
   label: string;
   versionNumber: number;
   createdAt: string;
@@ -106,7 +98,7 @@ export interface ProjectListPagination {
 
 export type ProjectListFilters = Pick<
   ProjectListParams,
-  "search" | "status" | "evaluationStatus"
+  "search" | "status" | "evaluationStatus" | "evaluationContext"
 >;
 
 export interface ProjectListParams {

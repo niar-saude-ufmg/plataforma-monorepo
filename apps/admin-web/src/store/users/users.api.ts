@@ -2,7 +2,6 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
   createUserRequest,
   updateUserStatusRequest,
-  evaluateUserRequest,
   createResearcherRequest,
   createAdministratorRequest,
   createAuditorRequest,
@@ -12,15 +11,14 @@ import {
   normalizeUserApiError,
   normalizeUserDocumentApiError,
   normalizeUserListApiError,
+  createUserAuthEvaluationRequest,
 } from '../../services/users/users.service';
 import { downloadBlob } from '../../utils/download-file';
 import type { ApiError } from '../../types/api.types';
 import type {
   UserApiError,
   UserListItem,
-  UserListEvaluation,
   UpdateUserStatusInput,
-  EvaluateUserInput,
   CreateUserInput,
   CreateAdministratorInput,
   CreateAuditorInput,
@@ -28,6 +26,8 @@ import type {
   User,
   UserListParams,
   UserListResponse,
+  UserAuthEvaluation,
+  UserAuthEvaluationInput,
 } from '../../types/user.types';
 
 export const getUsers = createAsyncThunk<
@@ -180,22 +180,46 @@ export const downloadUserCoepDocument = createAsyncThunk<
   }
 });
 
-export const updateUserStatus = createAsyncThunk<UserListItem, UpdateUserStatusInput, { rejectValue: ApiError }>(
-  'users/updateStatus', async (input, { rejectWithValue }) => {
-    try { return await updateUserStatusRequest(input); }
-    catch (error) { return rejectWithValue(normalizeUserMutationError(error)); }
-  },
-);
+export const updateUserStatus = createAsyncThunk<
+  UserListItem,
+  UpdateUserStatusInput,
+  { rejectValue: ApiError }
+>('users/updateStatus', async (input, { rejectWithValue }) => {
+  try {
+    return await updateUserStatusRequest(input);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
+      return rejectWithValue(error as ApiError);
+    }
 
-export const evaluateUser = createAsyncThunk<UserListEvaluation, EvaluateUserInput, { rejectValue: ApiError }>(
-  'users/evaluate', async (input, { rejectWithValue }) => {
-    try { return await evaluateUserRequest(input); }
-    catch (error) { return rejectWithValue(normalizeUserMutationError(error)); }
-  },
-);
+    return rejectWithValue({
+      message: 'Não foi possível alterar o status do usuário. Tente novamente.',
+    });
+  }
+});
 
-function normalizeUserMutationError(error: unknown): ApiError {
-  return typeof error === 'object' && error !== null && 'message' in error
-    ? error as ApiError
-    : { message: 'Não foi possível concluir a operação. Tente novamente.' };
-}
+export const createUserAuthEvaluation = createAsyncThunk<
+  UserAuthEvaluation,
+  { userId: number } & UserAuthEvaluationInput,
+  { rejectValue: ApiError }
+>('users/createUserAuthEvaluation', async ({ userId, status, justification }, { rejectWithValue }) => {
+  try {
+    return await createUserAuthEvaluationRequest(userId, status, justification);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
+      return rejectWithValue(error as ApiError);
+    }
+
+    return rejectWithValue(normalizeUserApiError('UNKNOWN_ERROR', undefined));
+  }
+});

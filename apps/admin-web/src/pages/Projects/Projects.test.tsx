@@ -1,8 +1,15 @@
 import "@testing-library/jest-dom";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Provider } from "react-redux";
-import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import { store } from "../../store";
@@ -11,6 +18,7 @@ import { clearProjectsState } from "../../store/projects/projects.slice";
 import { getRoleNavigation } from "../../routes/role-routes";
 import type { UserRole } from "../../types/user.types";
 import { Projects } from "./Projects";
+import { AdminMemoryRouter } from "../../test-utils/AdminMemoryRouter";
 
 const fetchMock = vi.hoisted(() => {
   const mock = vi.fn();
@@ -185,7 +193,15 @@ const PROJECT_RESPONSE = {
           notes: null,
         },
       ],
-      documents: [],
+      documents: [
+        {
+          id: 101,
+          version_number: 1,
+          document_type: "project_docx",
+          original_filename: "projeto-v1.docx",
+          created_at: "2026-09-20T10:00:00.000Z",
+        },
+      ],
       evaluation_status: "to_review",
       evaluation_context: "pre_safe_room",
       evaluations: [],
@@ -226,7 +242,7 @@ const authUser = (role: UserRole) => ({
   accountStatus: "active" as const,
 });
 
-const renderProjects = (role: "admin" | "researcher" = "admin") => {
+const renderProjects = (role: UserRole = "admin") => {
   store.dispatch(setSelectedAuthUser(authUser(role)));
   return render(
     <Provider store={store}>
@@ -284,10 +300,11 @@ describe("Projects — Redux, filtros e paginação", () => {
     });
   });
 
-  it("não exibe filtro de avaliação para nenhum dos dois perfis", async () => {
+  it("mantém os filtros de administrador e pesquisador sem avaliação", async () => {
     renderProjects("admin");
     await screen.findByTestId("project-row-42");
-    expect(screen.queryByLabelText("Avaliação")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Status da avaliação")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Contexto da avaliação")).not.toBeInTheDocument();
     expect(lastProjectUrl().searchParams.has("evaluation_status")).toBe(false);
 
     cleanup();
@@ -296,9 +313,58 @@ describe("Projects — Redux, filtros e paginação", () => {
     renderProjects("researcher");
     await screen.findByTestId("project-row-42");
 
-    expect(screen.queryByLabelText("Avaliação")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Status da avaliação")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Contexto da avaliação")).not.toBeInTheDocument();
     expect(lastProjectUrl().searchParams.has("evaluation_status")).toBe(false);
   });
+
+  it.each(["auditor", "committee"] as const)(
+    "envia filtros de projeto, avaliação e contexto para %s",
+    async (role) => {
+      const user = userEvent.setup();
+      renderProjects(role);
+      await screen.findByTestId("project-row-42");
+
+      expect(
+        screen.getByRole("option", { name: "Sala segura agendada" }),
+      ).toBeInTheDocument();
+
+      await user.selectOptions(
+        screen.getByLabelText("Status do projeto"),
+        "scheduled_for_safe_room",
+      );
+      await user.selectOptions(
+        screen.getByLabelText("Status da avaliação"),
+        "to_review",
+      );
+      await user.selectOptions(
+        screen.getByLabelText("Contexto da avaliação"),
+        "pre_safe_room",
+      );
+
+      await waitFor(() => {
+        expect(lastProjectUrl().searchParams.get("status")).toBe(
+          "scheduled_for_safe_room",
+        );
+        expect(lastProjectUrl().searchParams.get("evaluation_status")).toBe(
+          "to_review",
+        );
+        expect(lastProjectUrl().searchParams.get("evaluation_context")).toBe(
+          "pre_safe_room",
+        );
+      });
+
+      await user.selectOptions(screen.getByLabelText("Status do projeto"), "");
+      await user.selectOptions(screen.getByLabelText("Status da avaliação"), "");
+      await user.selectOptions(screen.getByLabelText("Contexto da avaliação"), "");
+
+      await waitFor(() => {
+        expect(lastProjectUrl().searchParams.has("status")).toBe(false);
+        expect(lastProjectUrl().searchParams.has("evaluation_status")).toBe(false);
+        expect(lastProjectUrl().searchParams.has("evaluation_context")).toBe(false);
+      });
+    },
+  );
 
   it("converte paginação base 0/base 1 e reseta página ao mudar a quantidade", async () => {
     const user = userEvent.setup();
@@ -335,9 +401,92 @@ describe("Projects — estados e tabela", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("exibe o sucesso do download na página", async () => {
+    const user = userEvent.setup();
+    const anchorClick = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+    fetchMock.mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes("/documents/101/download")) {
+        return Promise.resolve(
+          new Response(new Blob(["documento"]), {
+            status: 200,
+            headers: {
+              "Content-Disposition": 'attachment; filename="projeto-v1.docx"',
+            },
+          }),
+        );
+      }
+      return Promise.resolve(jsonResponse(PROJECT_RESPONSE));
+    });
+    globalThis.URL.createObjectURL = vi.fn(() => "blob:project-document");
+    globalThis.URL.revokeObjectURL = vi.fn();
+
+    renderProjects();
+    const row = await screen.findByTestId("project-row-42");
+    await user.click(within(row).getByRole("button", { name: "Documentos" }));
+    await user.click(
+      screen.getByRole("button", { name: "Baixar projeto-v1.docx" }),
+    );
+    await waitFor(() =>
+      expect(store.getState().projects.download.status).toBe("succeeded"),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Fechar documentos" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Download de projeto-v1.docx concluído.",
+    );
+    anchorClick.mockRestore();
+  });
+
+  it("mantém o download após fechar o dialog e exibe o erro na página", async () => {
+    const user = userEvent.setup();
+    let resolveDownload!: (response: Response) => void;
+    const downloadResponse = new Promise<Response>((resolve) => {
+      resolveDownload = resolve;
+    });
+    fetchMock.mockImplementation((input) =>
+      String(input).includes("/documents/101/download")
+        ? downloadResponse
+        : Promise.resolve(jsonResponse(PROJECT_RESPONSE)),
+    );
+
+    renderProjects();
+    const row = await screen.findByTestId("project-row-42");
+    await user.click(within(row).getByRole("button", { name: "Documentos" }));
+    await user.click(
+      screen.getByRole("button", { name: "Baixar projeto-v1.docx" }),
+    );
+    expect(store.getState().projects.download.status).toBe("pending");
+
+    await user.click(
+      screen.getByRole("button", { name: "Fechar documentos" }),
+    );
+    expect(store.getState().projects.download.status).toBe("pending");
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Documentos do projeto" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    await act(async () => {
+      resolveDownload(jsonResponse({ error: "Acesso negado" }, 403));
+      await downloadResponse;
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Você não tem acesso a este documento.",
+    );
+  });
+
   it.each([
     ["admin" as const, "Ainda não existem projetos para exibir."],
     ["researcher" as const, "Você ainda não possui projetos cadastrados."],
+    ["auditor" as const, "Ainda não existem projetos disponíveis para avaliação."],
+    ["committee" as const, "Ainda não existem projetos disponíveis para avaliação."],
   ])("configura EmptyState sem filtros para %s", async (role, description) => {
     fetchMock.mockResolvedValue(jsonResponse(EMPTY_RESPONSE));
     renderProjects(role);
@@ -363,7 +512,7 @@ describe("Projects — estados e tabela", () => {
     expect(await screen.findByTestId("project-row-42")).toBeInTheDocument();
   });
 
-  it("usa colunas por papel, StatusChip e ações visuais sem comportamento", async () => {
+  it("usa colunas por papel e abre as ações do projeto selecionado", async () => {
     const user = userEvent.setup();
     renderProjects("admin");
     const row = await screen.findByTestId("project-row-42");
@@ -386,14 +535,41 @@ describe("Projects — estados e tabela", () => {
     expect(within(row).getByText("A definir")).toBeInTheDocument();
     expect(within(row).getByText("02/10/2026")).toBeInTheDocument();
 
-    const callsBeforeClick = projectCalls().length;
     expect(
       within(row)
         .getAllByRole("button")
         .map((button) => button.textContent),
-    ).toEqual(["Detalhes"]);
-    await user.click(within(row).getByRole("button", { name: "Detalhes" }));
-    expect(projectCalls()).toHaveLength(callsBeforeClick);
+    ).toEqual(["Histórico", "Documentos"]);
+
+    await user.click(within(row).getByRole("button", { name: "Histórico" }));
+    expect(
+      screen.getByRole("heading", { name: "Histórico do projeto" }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("dialog")).getByText("Projeto de pesquisa"),
+    ).toBeInTheDocument();
+    expect(store.getState().projects.selected?.id).toBe(42);
+
+    await user.click(
+      screen.getByRole("button", { name: "Fechar histórico" }),
+    );
+    expect(store.getState().projects.selected).toBeNull();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("heading", { name: "Histórico do projeto" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    await user.click(
+      within(screen.getByTestId("project-row-42")).getByRole("button", {
+        name: "Documentos",
+      }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "Documentos do projeto" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("projeto-v1.docx")).toBeInTheDocument();
+    expect(store.getState().projects.selected?.id).toBe(42);
 
     cleanup();
     store.dispatch(clearProjectsState());
@@ -434,12 +610,170 @@ describe("Projects — estados e tabela", () => {
       within(researcherRow)
         .getAllByRole("button")
         .map((button) => button.textContent),
-    ).toEqual(["Detalhes"]);
+    ).toEqual(["Histórico", "Documentos"]);
     expect(
       within(scheduleRow)
         .getAllByRole("button")
         .map((button) => button.textContent),
-    ).toEqual(["Detalhes"]);
+    ).toEqual(["Histórico", "Documentos"]);
+  });
+
+  it.each(["auditor", "committee"] as const)(
+    "configura colunas e ação visual de %s",
+    async (role) => {
+      const user = userEvent.setup();
+      renderProjects(role);
+      const row = await screen.findByTestId("project-row-42");
+
+      expect(
+        screen.getAllByRole("columnheader").map((header) => header.textContent),
+      ).toEqual([
+        "Projeto",
+        "Pesquisador",
+        "Status do projeto",
+        "Contexto da avaliação",
+        "Status da avaliação",
+        "Atualizado",
+        "Ações",
+      ]);
+      expect(within(row).getByText("Maria Pesquisadora")).toBeInTheDocument();
+      expect(within(row).getByText("Pré-sala segura")).toBeInTheDocument();
+      expect(within(row).getByText("Aguardando avaliação")).toHaveAttribute(
+        "data-status",
+        "warning",
+      );
+
+      expect(
+        within(row)
+          .getAllByRole("button")
+          .map((button) => button.textContent),
+      ).toEqual(["Histórico", "Documentos"]);
+      await user.click(
+        within(row).getByRole("button", { name: "Histórico" }),
+      );
+      expect(
+        screen.getByRole("heading", { name: "Histórico do projeto" }),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it("oculta a ação Documentos quando o projeto não possui documentos", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        ...PROJECT_RESPONSE,
+        items: [{ ...PROJECT_RESPONSE.items[0], documents: [] }],
+      }),
+    );
+
+    renderProjects("auditor");
+    const row = await screen.findByTestId("project-row-42");
+
+    expect(
+      within(row).getByRole("button", { name: "Histórico" }),
+    ).toBeInTheDocument();
+    expect(
+      within(row).queryByRole("button", { name: "Documentos" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("exibe Aguardando atribuição quando o projeto ainda não possui avaliação", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        ...PROJECT_RESPONSE,
+        items: [
+          {
+            ...PROJECT_RESPONSE.items[0],
+            evaluation_status: "waiting",
+            evaluations: [],
+          },
+        ],
+      }),
+    );
+
+    renderProjects("auditor");
+    const row = await screen.findByTestId("project-row-42");
+
+    expect(within(row).getByText("Aguardando atribuição")).toHaveAttribute(
+      "data-status",
+      "default",
+    );
+  });
+
+  it("renderiza para Auditor os não atribuídos, atribuídos a si e enviados por si", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        ...PROJECT_RESPONSE,
+        items: [
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 42,
+            title: "Projeto aguardando atribuição",
+            evaluation_status: "waiting",
+            evaluation_context: null,
+            evaluations: [],
+          },
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 43,
+            title: "Projeto atribuído ao auditor",
+            evaluation_status: "to_review",
+            evaluation_context: "pre_safe_room",
+          },
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 44,
+            title: "Projeto enviado pelo auditor ao Comitê",
+            evaluation_status: "sent_to_committee",
+            evaluation_context: "pre_safe_room",
+          },
+        ],
+      }),
+    );
+
+    renderProjects("auditor");
+
+    expect(
+      await screen.findByText("Projeto aguardando atribuição"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Projeto atribuído ao auditor")).toBeInTheDocument();
+    expect(
+      screen.getByText("Projeto enviado pelo auditor ao Comitê"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Projeto pós-sala do Comitê")).not.toBeInTheDocument();
+  });
+
+  it("renderiza para Comitê somente o pré atribuído e os itens pós-sala autorizados", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        ...PROJECT_RESPONSE,
+        items: [
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 45,
+            title: "Projeto pré-sala atribuído ao Comitê",
+            evaluation_status: "to_review",
+            evaluation_context: "pre_safe_room",
+          },
+          {
+            ...PROJECT_RESPONSE.items[0],
+            id: 46,
+            title: "Projeto pós-sala autorizado",
+            evaluation_status: "to_review",
+            evaluation_context: "post_safe_room",
+          },
+        ],
+      }),
+    );
+
+    renderProjects("committee");
+
+    expect(
+      await screen.findByText("Projeto pré-sala atribuído ao Comitê"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Projeto pós-sala autorizado")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Projeto aguardando atribuição do Auditor"),
+    ).not.toBeInTheDocument();
   });
 
   it("usa somente um Listing, sem estruturas visuais paralelas", async () => {
@@ -450,30 +784,36 @@ describe("Projects — estados e tabela", () => {
 });
 
 describe("Projects — rotas e navegação por papel", () => {
-  it("adiciona Projetos apenas aos menus de administrador e pesquisador", () => {
+  it("adiciona Projetos aos menus dos quatro papéis", () => {
     expect(getRoleNavigation("admin").map(({ label }) => label)).toContain("Projetos");
     expect(getRoleNavigation("researcher").map(({ label }) => label)).toContain("Meus projetos");
-    expect(getRoleNavigation("committee").map(({ label }) => label)).not.toContain("Projetos");
-    expect(getRoleNavigation("auditor").map(({ label }) => label)).not.toContain("Projetos");
+    expect(getRoleNavigation("committee").map(({ label }) => label)).toContain("Projetos");
+    expect(getRoleNavigation("auditor").map(({ label }) => label)).toContain("Projetos");
   });
 
   it.each([
     ["admin" as const, "/admin/administrador/projetos"],
     ["researcher" as const, "/admin/pesquisador/projetos"],
+    ["auditor" as const, "/admin/auditor/projetos"],
+    ["committee" as const, "/admin/comite/projetos"],
   ])("permite a rota de projetos para %s", async (role, path) => {
     render(
-      <MemoryRouter initialEntries={[path]}>
+      <AdminMemoryRouter initialEntries={[path]}>
         <App currentUser={authUser(role)} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
-    expect(await screen.findByRole("heading", { name: role === "admin" ? "Projetos" : "Meus projetos" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: role === "researcher" ? "Meus projetos" : "Projetos",
+      }),
+    ).toBeInTheDocument();
   });
 
-  it("não cria rota para comitê e o redireciona para sua home", async () => {
+  it("protege a rota de Auditor contra acesso do Comitê", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/comite/projetos"]}>
+      <AdminMemoryRouter initialEntries={["/admin/auditor/projetos"]}>
         <App currentUser={authUser("committee")} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
     expect(await screen.findByRole("heading", { name: "Boas vindas, Comitê." })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Projetos" })).not.toBeInTheDocument();
@@ -481,9 +821,9 @@ describe("Projects — rotas e navegação por papel", () => {
 
   it("redireciona pesquisador que tenta acessar a rota de administrador", async () => {
     render(
-      <MemoryRouter initialEntries={["/admin/administrador/projetos"]}>
+      <AdminMemoryRouter initialEntries={["/admin/administrador/projetos"]}>
         <App currentUser={authUser("researcher")} />
-      </MemoryRouter>,
+      </AdminMemoryRouter>,
     );
     expect(await screen.findByRole("heading", { name: "Boas vindas, Maria." })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Projetos" })).not.toBeInTheDocument();

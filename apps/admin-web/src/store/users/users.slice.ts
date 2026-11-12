@@ -4,19 +4,19 @@ import type { AsyncStatus, FileState, MutationState, ResourceState } from '../..
 import {
   createUser,
   updateUserStatus,
-  evaluateUser,
   downloadUserCoepDocument,
   createResearcher,
   createAdministrator,
   createAuditor,
   createCommitteeMember,
-  getUsers
+  getUsers,
+  createUserAuthEvaluation,
 } from './users.api';
 
 export type UsersStatus = AsyncStatus;
 export type UserMutationOperation = 'create' | 'update' | 'approve' | 'reject' | 'status' | 'evaluate';
 
-export const DEFAULT_USERS_PAGE_SIZE = 5;
+export const DEFAULT_USERS_PAGE_SIZE = 20;
 
 const createDefaultUsersFilters = (): UserListFilters => ({});
 
@@ -108,6 +108,12 @@ const usersSlice = createSlice({
       state.mutation.error = null;
       if (state.mutation.status === 'failed') state.mutation.status = 'idle';
     },
+    clearUsersDownloadError(state) {
+      state.download.error = null;
+      if (state.download.status === 'failed') {
+        state.download.status = 'idle';
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(updateUserStatus.pending, (state) => {
@@ -120,25 +126,6 @@ const usersSlice = createSlice({
     });
     builder.addCase(updateUserStatus.rejected, (state, action) => {
       state.mutation = { operation: 'status', status: 'failed', error: action.payload ?? { message: 'Não foi possível alterar o status.' } };
-    });
-    builder.addCase(evaluateUser.pending, (state) => {
-      state.mutation = { operation: 'evaluate', status: 'pending', error: null };
-    });
-    builder.addCase(evaluateUser.fulfilled, (state, action) => {
-      state.mutation = { operation: 'evaluate', status: 'succeeded', error: null };
-      for (const user of state.list.items) {
-        if (user.id === action.payload.userId) {
-          user.accountStatus = action.payload.status;
-          user.latestAuthEvaluation = action.payload;
-        }
-      }
-      if (state.selected?.id === action.payload.userId) {
-        state.selected.accountStatus = action.payload.status;
-        state.selected.latestAuthEvaluation = action.payload;
-      }
-    });
-    builder.addCase(evaluateUser.rejected, (state, action) => {
-      state.mutation = { operation: 'evaluate', status: 'failed', error: action.payload ?? { message: 'Não foi possível avaliar o cadastro.' } };
     });
     builder.addCase(getUsers.pending, (state, action) => {
       state.list.status = 'pending';
@@ -204,6 +191,34 @@ const usersSlice = createSlice({
         filename: null,
       };
     });
+    builder.addCase(createUserAuthEvaluation.pending, (state) => {
+      state.mutation = {
+        operation: 'update',
+        status: 'pending',
+        error: null,
+      };
+    });
+    builder.addCase(createUserAuthEvaluation.fulfilled, (state, action) => {
+      state.mutation.status = 'succeeded';
+      state.mutation.error = null;
+      for (const user of state.list.items) {
+        if (user.id === action.payload.userId) {
+          user.accountStatus = action.payload.status;
+          user.latestAuthEvaluation = action.payload;
+        }
+      }
+      if (state.selected?.id === action.payload.userId) {
+        state.selected.accountStatus = action.payload.status;
+        state.selected.latestAuthEvaluation = action.payload;
+      }
+      state.selected = null;
+    });
+    builder.addCase(createUserAuthEvaluation.rejected, (state, action) => {
+      state.mutation.status = 'failed';
+      state.mutation.error = action.payload ?? {
+        message: 'Não foi possível registrar a avaliação. Tente novamente.',
+      };
+    });
   },
 });
 
@@ -218,5 +233,6 @@ export const {
   clearUsersError,
   clearUsersListError,
   clearUsersMutationError,
+  clearUsersDownloadError
 } = usersSlice.actions;
 export default usersSlice.reducer;

@@ -294,5 +294,16 @@ export interface ChangePasswordInput {
   password: string;
 }
 
-export type UpdateUserStatusInput = { userId: number; status: 'active' | 'disabled' };
-export type EvaluateUserInput = { userId: number; status: 'active' | 'rejected'; justification?: string };
+export type UserEvaluationDecision = 'active' | 'rejected';
+
+export type UserAuthEvaluationInput = {
+  status: UserEvaluationDecision;
+  justification?: string;
+};
+
+export type UserAuthEvaluation = UserListEvaluation;
+
+export type UpdateUserStatusInput = {
+  userId: number;
+  status: 'active' | 'disabled';
+};

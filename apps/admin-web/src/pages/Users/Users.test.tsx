@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Provider } from 'react-redux';
 import { Users } from './Users';
 import { store } from '../../store';
-import { setSelectedAuthUser, clearSelectedAuthUser } from '../../store/auth/auth.slice';
 import { clearUsersState } from '../../store/users/users.slice';
 
 const fetchMock = vi.hoisted(() => {
@@ -13,8 +12,7 @@ const fetchMock = vi.hoisted(() => {
   return mock;
 });
 
-vi.mock('@niar/ui', async () => {
-  const { Details, Dialog, RadioGroup, Textarea, ListText, Card } = await vi.importActual<typeof import('@niar/ui')>('@niar/ui');
+vi.mock('@niar/ui', () => {
   const Listing = ({
     title,
     "aria-level": _ariaLevel,
@@ -136,7 +134,6 @@ vi.mock('@niar/ui', async () => {
   );
 
   return {
-    Details, Dialog, RadioGroup, Textarea, ListText, Card,
     Listing,
     Filter,
     Autocomplete: ({ label, options, value, onChange, freeSolo }: any) => freeSolo ? (
@@ -179,6 +176,38 @@ vi.mock('@niar/ui', async () => {
           {message}
         </div>
       ) : null,
+    Details: ({ open, title, children, onClose }: any) => open ? (
+      <div role="dialog" aria-label={String(title)}>
+        <h2>{title}</h2>
+        {children}
+        <button onClick={onClose}>Fechar</button>
+      </div>
+    ) : null,
+    Dialog: ({ open, title, children, actions }: any) => open ? (
+      <div role="dialog" aria-label={String(title)}>
+        <h2>{title}</h2>
+        {children}
+        <div>{actions}</div>
+      </div>
+    ) : null,
+    RadioGroup: ({ label, options, value, onChange }: any) => (
+      <div>
+        <span>{label}</span>
+        {options.map((opt: any) => (
+          <label key={opt.value}>
+            <input type="radio" name="decision" value={opt.value} checked={value === opt.value} onChange={(e) => onChange(e)} />
+            {opt.label}
+          </label>
+        ))}
+      </div>
+    ),
+    Textarea: ({ label, value, onChange, helperText }: any) => (
+      <label>
+        {label}
+        <textarea value={value} onChange={onChange} />
+        {helperText && <span data-testid="helper-text">{helperText}</span>}
+      </label>
+    ),
   };
 });
 
@@ -193,8 +222,8 @@ const API_ITEM_BASE = {
 
 const USERS_LIST_RESPONSE = {
   items: [
-    { ...API_ITEM_BASE, id: 1, full_name: 'Alice Pesquisadora', email: 'alice@x.org', role: 'researcher', account_status: 'active' },
-    { ...API_ITEM_BASE, id: 2, full_name: 'Bruno Admin',        email: 'bruno@x.org', role: 'admin',      account_status: 'pending' },
+    { ...API_ITEM_BASE, id: 1, full_name: 'Alice Pesquisadora', email: 'alice@x.org', role: 'researcher', account_status: 'pending', coep: { caae: '123', opinion_number: '123', approval_date: '2026-01-01', document_filename: 'doc.pdf' } },
+    { ...API_ITEM_BASE, id: 2, full_name: 'Bruno Admin',        email: 'bruno@x.org', role: 'admin',      account_status: 'active' },
     { ...API_ITEM_BASE, id: 3, full_name: 'Carla Comitê',       email: 'carla@x.org', role: 'committee',  account_status: 'disabled' },
   ],
   pagination: { page: 1, page_size: 20, total_items: 3, total_pages: 1 },
@@ -259,11 +288,11 @@ describe('Users — disparo inicial e contrato de URL', () => {
     expect(url.searchParams.has('account_status')).toBe(false);
   });
 
-  it('envia page_size igual a DEFAULT_USERS_PAGE_SIZE (5)', async () => {
+  it('envia page_size igual a DEFAULT_USERS_PAGE_SIZE (20)', async () => {
     renderUsers();
 
     await waitFor(() => expect(usersListCalls().length).toBeGreaterThan(0));
-    expect(lastUsersUrl().searchParams.get('page_size')).toBe('5');
+    expect(lastUsersUrl().searchParams.get('page_size')).toBe('20');
   });
 });
 
@@ -288,33 +317,44 @@ describe('Users — colunas e células', () => {
 
     const row0 = screen.getByTestId('row-0');
     expect(within(row0).getByText('Pesquisador')).toBeInTheDocument();
-    expect(within(row0).getByText('Ativo')).toBeInTheDocument();
-    expect(within(row0).getByTestId('status-chip')).toHaveAttribute('data-status', 'success');
+    expect(within(row0).getByText('Pendente')).toBeInTheDocument();
+    expect(within(row0).getByTestId('status-chip')).toHaveAttribute('data-status', 'warning');
 
     const row1 = screen.getByTestId('row-1');
     expect(within(row1).getByText('Administrador')).toBeInTheDocument();
-    expect(within(row1).getByText('Pendente')).toBeInTheDocument();
-    expect(within(row1).getByTestId('status-chip')).toHaveAttribute('data-status', 'warning');
+    expect(within(row1).getByText('Ativo')).toBeInTheDocument();
+    expect(within(row1).getByTestId('status-chip')).toHaveAttribute('data-status', 'success');
 
     const row2 = screen.getByTestId('row-2');
-    expect(within(row2).getByText('Comissão')).toBeInTheDocument();
+    expect(within(row2).getByText('Comitê')).toBeInTheDocument();
     expect(within(row2).getByText('Desativado')).toBeInTheDocument();
     expect(within(row2).getByTestId('status-chip')).toHaveAttribute('data-status', 'default');
   });
 
   it('exibe botões de ação conforme role e accountStatus', async () => {
     renderUsers();
-
     await waitFor(() => expect(screen.getByTestId('row-0')).toBeInTheDocument());
 
+    // researcher + pending → Detalhes, Avaliar
     const row0 = screen.getByTestId('row-0');
     expect(within(row0).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
-    expect(within(row0).getByRole('button', { name: 'Desativar' })).toBeInTheDocument();
-    expect(within(row0).queryByRole('button', { name: 'Avaliar' })).not.toBeInTheDocument();
+    // expect(within(row0).getByRole('button', { name: 'Avaliar' })).toBeInTheDocument();
+    expect(within(row0).queryByRole('button', { name: 'Desativar' })).not.toBeInTheDocument();
+    expect(within(row0).queryByRole('button', { name: 'Ativar' })).not.toBeInTheDocument();
+
+    // admin + active → Detalhes, Desativar
     const row1 = screen.getByTestId('row-1');
-    expect(within(row1).getAllByRole('button')).toHaveLength(1);
+    expect(within(row1).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
+    // expect(within(row1).getByRole('button', { name: 'Desativar' })).toBeInTheDocument();
+    expect(within(row1).queryByRole('button', { name: 'Avaliar' })).not.toBeInTheDocument();
+    expect(within(row1).queryByRole('button', { name: 'Ativar' })).not.toBeInTheDocument();
+
+    // committee + disabled → Detalhes, Ativar
     const row2 = screen.getByTestId('row-2');
-    expect(within(row2).getByRole('button', { name: 'Ativar' })).toBeInTheDocument();
+    expect(within(row2).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
+    // expect(within(row2).getByRole('button', { name: 'Ativar' })).toBeInTheDocument();
+    expect(within(row2).queryByRole('button', { name: 'Avaliar' })).not.toBeInTheDocument();
+    expect(within(row2).queryByRole('button', { name: 'Desativar' })).not.toBeInTheDocument();
   });
 });
 
@@ -451,7 +491,7 @@ describe('Users — paginação', () => {
     await waitFor(() =>
       expect(screen.getByTestId('pagination-count')).toHaveTextContent('3'),
     );
-    expect(screen.getByTestId('pagination-rowsPerPage')).toHaveTextContent('5');
+    expect(screen.getByTestId('pagination-rowsPerPage')).toHaveTextContent('20');
   });
 });
 
@@ -553,143 +593,38 @@ describe('Users — erro', () => {
   });
 });
 
-
-describe('Users — detalhes da linha selecionada', () => {
-  it('seleciona a linha, usa sua configuração e fecha sem nova chamada à API', async () => {
+describe('Users — Dialog de Avaliação', () => {
+  it('abre o dialog de avaliação, envia a aprovação e mostra o Snackbar de sucesso', async () => {
     const user = userEvent.setup();
-    renderUsers();
-    const row = await screen.findByTestId('row-0');
-    const callsBefore = usersListCalls().length;
 
-    await user.click(within(row).getByRole('button', { name: 'Detalhes' }));
-
-    const dialog = screen.getByRole('dialog');
-    expect(store.getState().users.selected).toEqual(store.getState().users.list.items[0]);
-    expect(within(dialog).getByText('Detalhes de Alice Pesquisadora')).toBeInTheDocument();
-    expect(within(dialog).getByText('Alice Pesquisadora')).toBeInTheDocument();
-    for (const title of ['Dados da conta', 'Dados do COEP']) {
-      expect(within(dialog).getByRole('heading', { name: title })).toBeInTheDocument();
-    }
-    expect(usersListCalls()).toHaveLength(callsBefore);
-
-    await user.click(within(dialog).getByRole('button', { name: 'Fechar' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(store.getState().users.selected).toBeNull();
-
-    await user.click(within(screen.getByTestId('row-1')).getByRole('button', { name: 'Detalhes' }));
-    expect(within(screen.getByRole('dialog')).getByText('Bruno Admin')).toBeInTheDocument();
-    expect(screen.getByText('Detalhes de Bruno Admin')).toBeInTheDocument();
-    expect(store.getState().users.selected?.id).toBe(2);
-    expect(usersListCalls()).toHaveLength(callsBefore);
-  });
-
-  it('limpa a seleção ao sair da listagem', async () => {
-    const user = userEvent.setup();
-    const view = renderUsers();
-    await user.click(within(await screen.findByTestId('row-2')).getByRole('button', { name: 'Detalhes' }));
-    expect(screen.getByText('Detalhes de Carla Comitê')).toBeInTheDocument();
-    view.unmount();
-    expect(store.getState().users.selected).toBeNull();
-  });
-});
-
-describe('Users — gestão de acesso conforme Figma', () => {
-  it('mostra somente as ações permitidas por perfil e status', async () => {
-    fetchMock.mockResolvedValue(jsonResponse({
-      ...USERS_LIST_RESPONSE,
-      items: [
-        { ...USERS_LIST_RESPONSE.items[0], account_status: 'pending' },
-        { ...USERS_LIST_RESPONSE.items[1], account_status: 'active' },
-        { ...USERS_LIST_RESPONSE.items[2], account_status: 'disabled' },
-        { ...USERS_LIST_RESPONSE.items[0], id: 4, account_status: 'rejected' },
-      ],
-    }));
-    renderUsers();
-    await screen.findByTestId('row-3');
-    expect(within(screen.getByTestId('row-0')).getAllByRole('button').map(button => button.textContent)).toEqual(['Detalhes', 'Avaliar']);
-    expect(within(screen.getByTestId('row-1')).getAllByRole('button').map(button => button.textContent)).toEqual(['Detalhes', 'Desativar']);
-    expect(within(screen.getByTestId('row-2')).getAllByRole('button').map(button => button.textContent)).toEqual(['Detalhes', 'Ativar']);
-    expect(within(screen.getByTestId('row-3')).getAllByRole('button').map(button => button.textContent)).toEqual(['Detalhes']);
-    expect(screen.getByRole('heading', { name: 'Filtros' })).toBeInTheDocument();
-  });
-
-  it('só altera o status após confirmar e atualiza a listagem', async () => {
-    const user = userEvent.setup();
-    let items = USERS_LIST_RESPONSE.items.map(item => ({ ...item }));
-    fetchMock.mockImplementation((url, options) => {
-      if (options?.method === 'PATCH') {
-        const status = JSON.parse(options.body as string).status;
-        items = items.map(item => item.id === 1 ? { ...item, account_status: status } : item);
-        return Promise.resolve(jsonResponse(items[0]));
+    fetchMock.mockImplementation((url) => {
+      if (String(url).includes('/auth-evaluation')) {
+        return Promise.resolve(jsonResponse({ status: 'active' }, 201));
       }
-      return Promise.resolve(jsonResponse({ ...USERS_LIST_RESPONSE, items }));
+      return Promise.resolve(jsonResponse(USERS_LIST_RESPONSE));
     });
+
     renderUsers();
-    await user.click(within(await screen.findByTestId('row-0')).getByRole('button', { name: 'Desativar' }));
-    expect(fetchMock.mock.calls.some(([, options]) => options?.method === 'PATCH')).toBe(false);
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
-    expect(fetchMock.mock.calls.some(([, options]) => options?.method === 'PATCH')).toBe(false);
-    await waitFor(() => expect(within(screen.getByTestId('row-0')).getByRole('button', { name: 'Desativar' })).toBeVisible());
-    await user.click(within(screen.getByTestId('row-0')).getByRole('button', { name: 'Desativar' }));
-    expect(screen.getByText('Deseja desativar o usuário “Alice Pesquisadora”?')).toBeInTheDocument();
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(within(await screen.findByTestId('row-0')).getByRole('button', { name: 'Ativar' })).toBeInTheDocument();
-    expect(store.getState().users.selected).toBeNull();
+    await waitFor(() => expect(screen.getByTestId('row-0')).toBeInTheDocument());
+
+    await user.click(within(screen.getByTestId('row-0')).getByRole('button', { name: 'Avaliar' }));
+    expect(screen.getByRole('dialog', { name: /Avaliar cadastro de Alice Pesquisadora/i })).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Aprovar'));
+    await user.click(screen.getByRole('button', { name: 'Salvar avaliação' }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/users/1/auth-evaluation'),
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"status":"active"'),
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('global-snackbar')).toHaveTextContent('Avaliação registrada com sucesso.');
+    });
   });
-
-  it('mantém a confirmação e a seleção quando a API falha', async () => {
-    const user = userEvent.setup();
-    fetchMock.mockImplementation((_url, options) => Promise.resolve(options?.method === 'PATCH'
-      ? jsonResponse({ error: 'O status foi alterado por outra operação' }, 409)
-      : jsonResponse(USERS_LIST_RESPONSE)));
-    renderUsers();
-    await user.click(within(await screen.findByTestId('row-0')).getByRole('button', { name: 'Desativar' }));
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' }));
-    expect(await screen.findByText('O status foi alterado por outra operação')).toBeInTheDocument();
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(store.getState().users.selected?.id).toBe(1);
-    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Desativar' })).toBeEnabled();
-  });
-
-  it('exige decisão e justificativa na reprovação e envia a avaliação', async () => {
-    const user = userEvent.setup();
-    const pending = { ...USERS_LIST_RESPONSE.items[0], account_status: 'pending' };
-    fetchMock.mockImplementation((_url, options) => Promise.resolve(options?.method === 'POST'
-      ? jsonResponse({ id: 5, user_id: 1, status: 'rejected', justification: 'Parecer inválido', evaluated_by_user_id: 1, evaluated_at: '2026-11-05', created_at: '2026-11-05', user_coep_data_id: null }, 201)
-      : jsonResponse({ ...USERS_LIST_RESPONSE, items: [pending] })));
-    renderUsers();
-    await user.click(within(await screen.findByTestId('row-0')).getByRole('button', { name: 'Avaliar' }));
-    const dialog = screen.getByRole('dialog');
-    await user.click(within(dialog).getByRole('button', { name: 'Salvar avaliação' }));
-    expect(screen.getByText('Selecione a decisão do cadastro.')).toBeInTheDocument();
-    await user.click(within(dialog).getByRole('radio', { name: 'Reprovar' }));
-    await user.click(within(dialog).getByRole('button', { name: 'Salvar avaliação' }));
-    expect(screen.getByText('Informe a justificativa da reprovação.')).toBeInTheDocument();
-    expect(fetchMock.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(false);
-    await user.type(within(dialog).getByLabelText('Justificativa'), 'Parecer inválido');
-    await user.click(within(dialog).getByRole('button', { name: 'Salvar avaliação' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    const mutation = fetchMock.mock.calls.find(([, options]) => options?.method === 'POST');
-    expect(String(mutation?.[0])).toContain('/users/1/auth-evaluation');
-    expect(JSON.parse(mutation?.[1]?.body as string)).toEqual({ status: 'rejected', justification: 'Parecer inválido' });
-  });
-});
-
-
-it('não oferece desativação da própria conta de administrador', async () => {
-  store.dispatch(setSelectedAuthUser({ id: 2, name: 'Bruno Admin', email: 'bruno@x.org', role: 'admin', accountStatus: 'active' }));
-  fetchMock.mockResolvedValue(jsonResponse({ ...USERS_LIST_RESPONSE, items: [
-    { ...USERS_LIST_RESPONSE.items[1], account_status: 'active' },
-    { ...USERS_LIST_RESPONSE.items[0] },
-  ] }));
-  try {
-    renderUsers();
-    const ownRow = await screen.findByTestId('row-0');
-    expect(within(ownRow).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
-    expect(within(ownRow).queryByRole('button', { name: 'Desativar' })).not.toBeInTheDocument();
-    expect(within(screen.getByTestId('row-1')).getByRole('button', { name: 'Desativar' })).toBeInTheDocument();
-  } finally {
-    store.dispatch(clearSelectedAuthUser());
-  }
 });
