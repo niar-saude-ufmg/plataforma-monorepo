@@ -107,6 +107,12 @@ const usersSlice = createSlice({
       state.mutation.error = null;
       if (state.mutation.status === 'failed') state.mutation.status = 'idle';
     },
+    clearUsersDownloadError(state) {
+      state.download.error = null;
+      if (state.download.status === 'failed') {
+        state.download.status = 'idle';
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(getUsers.pending, (state, action) => {
@@ -205,5 +211,6 @@ export const {
   clearUsersError,
   clearUsersListError,
   clearUsersMutationError,
+  clearUsersDownloadError
 } = usersSlice.actions;
 export default usersSlice.reducer;

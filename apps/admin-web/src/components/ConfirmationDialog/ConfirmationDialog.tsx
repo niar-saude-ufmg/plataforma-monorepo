@@ -11,7 +11,6 @@ export type ConfirmationDialogProps = {
   cancelLabel?: string;
   type?: 'default' | 'danger';
   ariaLabel?: string;
-  minWidth?: string;
 };
 
 export function ConfirmationDialog({
@@ -24,7 +23,6 @@ export function ConfirmationDialog({
   cancelLabel = 'Cancelar',
   type = 'default',
   ariaLabel = 'Confirmar ação',
-  minWidth = "360",
 }: ConfirmationDialogProps) {
   const confirmColor: ButtonProps['color'] = type === 'danger' ? 'danger' : 'primary';
 
@@ -34,10 +32,6 @@ export function ConfirmationDialog({
       title={title}
       aria-label={ariaLabel}
       onClose={onClose}
-      showCloseButton={false}
-      minWidth={minWidth}
-      closeOnBackdropClick={false}
-      disableEscapeKeyDown={true}
       actions={(
         <>
           <Button type="button" variant="text" onClick={onClose}>

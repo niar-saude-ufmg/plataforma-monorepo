@@ -5,8 +5,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   UserEvaluationDialog,
   type UserEvaluationDecision,
-} from '../../components/UserDialogs/UserEvaluationDialog/UserEvaluationDialog';
-import { UserStatusDialog } from '../../components/UserDialogs/UserStatusDialog/UserStatusDialog';
+} from '../../components/UserEvaluationDialog/UserEvaluationDialog';
 import { updateUserStatus, downloadUserCoepDocument } from '../../store/users/users.api';
 import {
   setUsersFilters,
@@ -16,7 +15,8 @@ import {
   clearUsersError,
   setSelectedUser,
   clearSelectedUser,
-  clearUsersMutationError
+  clearUsersMutationError,
+  clearUsersDownloadError
 } from "../../store/users/users.slice";
 import {
   selectUsersList,
@@ -30,6 +30,7 @@ import {
   selectUsersMutationError,
   selectUsersMutationLoading,
   selectUsersDownloadLoading,
+  selectUsersDownloadError
 } from "../../store/users/users.selectors";
 import { getUsers } from '../../store/users/users.api';
 import { useApiError } from "../../hooks/use-api-error/use-api-error"
@@ -83,6 +84,7 @@ export function Users() {
   const mutationLoading = useAppSelector(selectUsersMutationLoading);
   const mutationError = useAppSelector(selectUsersMutationError);
   const downloadLoading = useAppSelector(selectUsersDownloadLoading);
+  const downloadError = useAppSelector(selectUsersDownloadError);
 
   const roleConfig =
     USER_LIST_CONFIG[user?.role ?? "admin"] ?? USER_LIST_CONFIG.admin!;
@@ -130,8 +132,7 @@ export function Users() {
     dispatch(setUsersPageSize(Number(event.target.value)));
   };
 
-  type UserDialogAction = 'evaluate' | 'activate' | 'deactivate';
-  const [activeAction, setActiveAction] = useState<UserDialogAction | null>(null);
+  const [activeAction, setActiveAction] = useState<'evaluate' | null>(null);
 
   const handleEvaluateClick = (target: UserListItem) => {
     dispatch(clearUsersMutationError());
@@ -181,50 +182,11 @@ export function Users() {
     }
   };
 
-  const handleActivateClick = (target: UserListItem) => {
-    dispatch(clearUsersMutationError());
-    dispatch(setSelectedUser(target));
-    setActiveAction('activate');
-  }
-
-  const handleDeactivateClick = (target: UserListItem) => {
-    dispatch(clearUsersMutationError());
-    dispatch(setSelectedUser(target));
-    setActiveAction('deactivate');
-  }
-
-  const handleCloseStatusDialog = () => {
-    setActiveAction(null);
-    dispatch(clearSelectedUser());
-    dispatch(clearUsersMutationError());
-  };
-
-  const handleConfirmStatusChange = async () => {
-    if (!selectedUser) return;
-
-    const newStatus = activeAction === 'activate' ? 'active' : 'disabled';
-
-    const result = await dispatch(updateUserStatus({
-      userId: selectedUser.id,
-      status: newStatus,
-    }));
-
-    if (updateUserStatus.fulfilled.match(result)) {
-      setActiveAction(null);
-      dispatch(clearSelectedUser());
-      dispatch(clearUsersMutationError());
-      setSuccessMessage(`Usuário ${newStatus === 'active' ? 'ativado' : 'desativado'} com sucesso.`);
-      dispatch(
-        getUsers({
-          page,
-          pageSize,
-          search: filters.search,
-          role: filters.role,
-          accountStatus: filters.accountStatus,
-        }),
-      );
-    }
-  }
+  const downloadErrorSnackbar = useApiError(
+    downloadError,
+    () => dispatch(clearUsersDownloadError()),
+    "Não foi possível baixar o parecer do COEP."
+  );
 
   const selectedRole = roleOptions.find((opt) => opt.value === filters.role) ?? null;
   const selectedStatus = statusOptions.find((opt) => opt.value === filters.accountStatus) ?? null;
@@ -299,16 +261,12 @@ export function Users() {
       </Button>
     ) : null,
     deactivate: (user) => user.accountStatus === "active" ? (
-      <Button size="small" variant="outlined" color="danger"
-        onClick={() => handleDeactivateClick(user)}
-      >
+      <Button size="small" variant="outlined" color="danger">
         Desativar
       </Button>
     ) : null,
     activate: (user) => user.accountStatus === "disabled" ? (
-      <Button size="small" variant="outlined" color="primary"
-        onClick={() => handleActivateClick(user)}
-      >
+      <Button size="small" variant="outlined" color="primary">
         Ativar
       </Button>
     ) : null,
@@ -386,6 +344,14 @@ export function Users() {
       />
       <Snackbar {...errorSnackbar} />
       <Snackbar {...mutationErrorSnackbar} />
+      <Snackbar {...downloadErrorSnackbar} />
+      <Snackbar
+        open={Boolean(successMessage)}
+        message={successMessage ?? ''}
+        severity="success"
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        onClose={() => setSuccessMessage(null)}
+      />
       <UserEvaluationDialog
         open={activeAction === 'evaluate'}
         user={selectedUser}
@@ -395,15 +361,6 @@ export function Users() {
         onDownloadCoep={handleDownloadCoep}
         onClose={handleCloseEvaluation}
         onSubmit={handleSubmitEvaluation}
-      />
-      <UserStatusDialog
-        open={activeAction === 'activate' || activeAction === 'deactivate'}
-        user={selectedUser}
-        action={activeAction === 'activate' ? 'activate' : 'deactivate'}
-        loading={mutationLoading}
-        error={mutationError}
-        onClose={handleCloseStatusDialog}
-        onConfirm={handleConfirmStatusChange}
       />
     </>
   );

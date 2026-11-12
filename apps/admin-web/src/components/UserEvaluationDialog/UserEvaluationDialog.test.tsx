@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { UserEvaluationDialog } from './UserEvaluationDialog';
-import type { UserListItem } from '../../../types/user.types';
+import type { UserListItem } from '../../types/user.types';
 
 vi.mock('@niar/ui', () => ({
   Button: ({ children, onClick, disabled }: any) => (
@@ -133,5 +133,21 @@ describe('UserEvaluationDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Salvar avaliação' }));
 
     expect(onSubmit).toHaveBeenCalledWith('rejected', 'Documento ilegível.');
+  });
+
+  it('desabilita os botões e impede o fechamento durante o loading', async () => {
+    const onClose = vi.fn();
+    const onSubmit = vi.fn();
+    renderDialog({ loading: true, onClose, onSubmit });
+
+
+    const saveButton = screen.getByRole('button', { name: 'Salvando...' });
+    expect(saveButton).toBeDisabled();
+
+    const cancelButton = screen.getByRole('button', { name: 'Cancelar' });
+    expect(cancelButton).toBeDisabled();
+
+    await userEvent.setup().click(saveButton);
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

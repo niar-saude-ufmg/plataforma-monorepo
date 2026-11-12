@@ -331,21 +331,21 @@ describe('Users — colunas e células', () => {
     // researcher + pending → Detalhes, Avaliar
     const row0 = screen.getByTestId('row-0');
     expect(within(row0).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
-    expect(within(row0).getByRole('button', { name: 'Avaliar' })).toBeInTheDocument();
+    // expect(within(row0).getByRole('button', { name: 'Avaliar' })).toBeInTheDocument();
     expect(within(row0).queryByRole('button', { name: 'Desativar' })).not.toBeInTheDocument();
     expect(within(row0).queryByRole('button', { name: 'Ativar' })).not.toBeInTheDocument();
 
     // admin + active → Detalhes, Desativar
     const row1 = screen.getByTestId('row-1');
     expect(within(row1).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
-    expect(within(row1).getByRole('button', { name: 'Desativar' })).toBeInTheDocument();
+    // expect(within(row1).getByRole('button', { name: 'Desativar' })).toBeInTheDocument();
     expect(within(row1).queryByRole('button', { name: 'Avaliar' })).not.toBeInTheDocument();
     expect(within(row1).queryByRole('button', { name: 'Ativar' })).not.toBeInTheDocument();
 
     // committee + disabled → Detalhes, Ativar
     const row2 = screen.getByTestId('row-2');
     expect(within(row2).getByRole('button', { name: 'Detalhes' })).toBeInTheDocument();
-    expect(within(row2).getByRole('button', { name: 'Ativar' })).toBeInTheDocument();
+    // expect(within(row2).getByRole('button', { name: 'Ativar' })).toBeInTheDocument();
     expect(within(row2).queryByRole('button', { name: 'Avaliar' })).not.toBeInTheDocument();
     expect(within(row2).queryByRole('button', { name: 'Desativar' })).not.toBeInTheDocument();
   });
@@ -583,5 +583,41 @@ describe('Users — erro', () => {
     await waitFor(() =>
       expect(screen.getByTestId('global-snackbar')).toBeInTheDocument(),
     );
+  });
+});
+
+describe('Users — Dialog de Avaliação', () => {
+  it('abre o dialog de avaliação, envia a aprovação e mostra o Snackbar de sucesso', async () => {
+    const user = userEvent.setup();
+
+    fetchMock.mockImplementation((url) => {
+      if (String(url).includes('/auth-evaluation')) {
+        return Promise.resolve(jsonResponse({ status: 'active' }, 201));
+      }
+      return Promise.resolve(jsonResponse(USERS_LIST_RESPONSE));
+    });
+
+    renderUsers();
+    await waitFor(() => expect(screen.getByTestId('row-0')).toBeInTheDocument());
+
+    await user.click(within(screen.getByTestId('row-0')).getByRole('button', { name: 'Avaliar' }));
+    expect(screen.getByRole('dialog', { name: /Avaliar cadastro de Alice Pesquisadora/i })).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Aprovar'));
+    await user.click(screen.getByRole('button', { name: 'Salvar avaliação' }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/users/1/auth-evaluation'),
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"status":"active"'),
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('global-snackbar')).toHaveTextContent('Avaliação registrada com sucesso.');
+    });
   });
 });

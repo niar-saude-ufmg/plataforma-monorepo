@@ -35,7 +35,7 @@ export const USER_LIST_CONFIG: Partial<
     emptyStateDescription: "Ainda não existem usuários para exibir.",
     columnIds: ["fullName", "email", "role", "accountStatus", "actions"],
     filters: ["search", "role", "accountStatus"],
-    actions: ["details", "evaluate", "activate", "deactivate"],
+    actions: ["details", "evaluate"],
     canCreateUser: true,
     filterLabels: {
       search: "Buscar usuário",

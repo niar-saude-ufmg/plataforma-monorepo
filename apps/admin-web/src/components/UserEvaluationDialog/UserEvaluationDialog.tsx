@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Button, RadioGroup, Textarea } from '@niar/ui';
-import { ConfirmationDialog } from '../../ConfirmationDialog/ConfirmationDialog';
-import type { UserListItem } from '../../../types/user.types';
+import { FixedDialog, FixedDialogProps } from '../FixedDialog';
+import type { UserListItem } from '../../types/user.types';
 import './UserEvaluationDialog.scss';
-import { ApiError } from 'apps/admin-web/src/types/api.types';
+import { ApiError } from '../../types/api.types';
 
 export type UserEvaluationDecision = 'active' | 'rejected';
 
@@ -69,16 +69,22 @@ export function UserEvaluationDialog({
   };
 
   return (
-    <ConfirmationDialog
+    <FixedDialog
       open={open}
       title={`Avaliar cadastro de ${user.fullName}`}
-      onClose={onClose}
-      onConfirm={handleConfirm}
-      confirmLabel={loading ? 'Salvando…' : 'Salvar avaliação'}
-      cancelLabel="Cancelar"
-      type="default"
+      onClose={loading ? () => {} : onClose}
       ariaLabel="Avaliar cadastro de pesquisador"
       minWidth="600px"
+      actions={
+        <>
+          <Button type="button" variant="text" onClick={onClose} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button type="button" variant="contained" color="primary" onClick={handleConfirm} disabled={loading} >
+            {loading ? "Salvando..." : "Salvar avaliação" }
+          </Button>
+        </>
+      }
     >
       <div className="user-evaluation-dialog">
         <p className="user-evaluation-dialog__description">
@@ -102,7 +108,6 @@ export function UserEvaluationDialog({
                 <span className="user-evaluation-dialog__value">{formatDate(user.coep.approvalDate)}</span>
               </div>
               <div className="user-evaluation-dialog__coep-action">
-                {/* implementar erro de download do COAP */}
                 <Button
                   variant="outlined"
                   color="primary"
@@ -148,6 +153,6 @@ export function UserEvaluationDialog({
           />
         </div>
       </div>
-    </ConfirmationDialog>
+    </FixedDialog>
   );
 }
