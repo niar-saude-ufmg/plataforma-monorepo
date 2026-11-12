@@ -1,4 +1,9 @@
 import {
+  EVALUATION_CONTEXT_LABELS,
+  EVALUATION_STATUS_LABELS,
+  PROJECT_STATUS_LABELS,
+} from "@niar/contracts";
+import {
   Button,
   Filter,
   Listing,
@@ -8,11 +13,6 @@ import {
   type StatusChipStatus,
   type TableColumn,
 } from "@niar/ui";
-import {
-  EVALUATION_STATUS_LABELS,
-  EVALUATION_CONTEXT_LABELS,
-  PROJECT_STATUS_LABELS,
-} from "@niar/contracts";
 import {
   Fragment,
   useEffect,
@@ -43,13 +43,13 @@ import {
   selectProjectsSelected,
 } from "../../store/projects/projects.selectors";
 import {
-  clearSelectedProject,
   clearProjectsError,
   clearProjectsFilters,
-  setSelectedProject,
+  clearSelectedProject,
   setProjectsFilters,
   setProjectsPage,
   setProjectsPageSize,
+  setSelectedProject,
 } from "../../store/projects/projects.slice";
 import type {
   EvaluationContext,
@@ -395,6 +395,9 @@ export function Projects() {
   });
 
   const paginationProps = {
+    labelRowsPerPage: 'Linhas por página',
+    labelDisplayedRows: ({ from, to, count }: { from: number; to: number; count: number }) => `${from}–${to} de ${count}`,
+    getItemAriaLabel: (type: 'first' | 'last' | 'next' | 'previous') => ({ first: 'Primeira página', last: 'Última página', next: 'Próxima página', previous: 'Página anterior' })[type],
     count: pagination?.totalItems ?? 0,
     page: (pagination?.page ?? page) - 1,
     rowsPerPage: pagination?.pageSize ?? pageSize,
