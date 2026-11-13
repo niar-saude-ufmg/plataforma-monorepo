@@ -466,11 +466,6 @@ export const usersRepository = {
     audit: RegistrationAudit,
   ) => createAdministrativeUser(data, audit),
 
-  createAuditor: (
-    data: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status },
-    audit: RegistrationAudit,
-  ) => createAdministrativeUser(data, audit),
-
   createCommitteeMember: (data: {
     user: { fullName: string; email: string; hashedPassword: string, role: UserRole, accountStatus: user_account_status };
     committeeMemberProfile: { specialtyId: number };

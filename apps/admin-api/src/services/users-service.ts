@@ -16,7 +16,6 @@ import { specialtiesRepository } from "../repositories/specialties-repository.js
 import {
   UpdateUserStatusInput,
   CreateAdministratorInput,
-  CreateAuditorInput,
   CreateCommitteeMemberInput,
   CreatePublicUserInput,
   CreateResearcherInput,
@@ -150,10 +149,10 @@ const toConsolidatedUserResponse = (user: ConsolidatedUserRecord): ConsolidatedU
 };
 
 const scopedRoleFor = (requestedRole: UserRole | undefined, currentUser: AuthenticatedUser): UserRole | undefined => {
-  if (currentUser.role !== "committee" && currentUser.role !== "auditor") return requestedRole;
+  if (currentUser.role !== "committee") return requestedRole;
 
   if (requestedRole && requestedRole !== "researcher") {
-    throw new AppError("Comitê e auditor só podem consultar pesquisadores", 403);
+    throw new AppError("Comitê só pode consultar pesquisadores", 403);
   }
 
   return "researcher";
@@ -197,7 +196,7 @@ export const usersService = {
   getUser: async (userId: number, currentUser: AuthenticatedUser): Promise<ConsolidatedUserResponse> => {
     const user = await usersRepository.findDetailById(
       userId,
-      currentUser.role === "committee" || currentUser.role === "auditor" ? "researcher" : undefined
+      currentUser.role === "committee" ? "researcher" : undefined
     );
 
     if (!user) {
@@ -387,26 +386,6 @@ export const usersService = {
     return toUserResponse(user);
   },
 
-  createAuditor: async (
-    data: CreateAuditorInput,
-    adminId: number,
-  ): Promise<UserResponse> => {
-    const { hashedPassword } = await prepareUserData(data.email, data.password);
-
-    const user = await usersRepository.createAuditor(
-      {
-        fullName: data.full_name,
-        email: data.email,
-        hashedPassword,
-        role: "auditor",
-        accountStatus: "active",
-      },
-      { actorUserId: adminId, role: "auditor", email: data.email },
-    );
-
-    return toUserResponse(user);
-  },
-
   createAuthEvaluation: async (
     userId: number,
     data: CreateUserAuthEvaluationInput,
@@ -457,8 +436,7 @@ export const usersService = {
   getCoepDocument: async (userId: number, currentUser: AuthenticatedUser) => {
     const canDownloadAnyResearcherDocument =
       currentUser.role === "admin" ||
-      currentUser.role === "committee" ||
-      currentUser.role === "auditor";
+      currentUser.role === "committee";
     const isOwnDocument = currentUser.role === "researcher" && currentUser.id === userId;
 
     if (!canDownloadAnyResearcherDocument && !isOwnDocument) {

@@ -4,7 +4,6 @@ import {
   updateUserStatusRequest,
   createResearcherRequest,
   createAdministratorRequest,
-  createAuditorRequest,
   createCommitteeMemberRequest,
   downloadUserCoepDocumentRequest,
   getUsersRequest,
@@ -21,7 +20,6 @@ import type {
   UpdateUserStatusInput,
   CreateUserInput,
   CreateAdministratorInput,
-  CreateAuditorInput,
   CreateCommitteeMemberInput,
   User,
   UserListParams,
@@ -108,28 +106,6 @@ export const createAdministrator = createAsyncThunk<
         'UNKNOWN_ERROR',
         undefined,
         'Não foi possível cadastrar o administrador.',
-      ),
-    );
-  }
-});
-
-/** Cadastro privado de Auditor. */
-export const createAuditor = createAsyncThunk<
-  User,
-  CreateAuditorInput,
-  { rejectValue: UserApiError }
->('users/createAuditor', async (input, { rejectWithValue }) => {
-  try {
-    return await createAuditorRequest(input);
-  } catch (error) {
-    if (typeof error === 'object' && error !== null && 'message' in error) {
-      return rejectWithValue(error as UserApiError);
-    }
-    return rejectWithValue(
-      normalizeUserApiError(
-        'UNKNOWN_ERROR',
-        undefined,
-        'Não foi possível cadastrar o auditor.',
       ),
     );
   }

@@ -17,7 +17,7 @@ const user: UserListItem = {
 afterEach(cleanup);
 
 describe('UserDetailsDialog', () => {
-  it.each(['admin', 'researcher', 'committee', 'auditor'] as const)('renderiza a configuração de %s', (role: UserRole) => {
+  it.each(['admin', 'researcher', 'committee'] as const)('renderiza a configuração de %s', (role: UserRole) => {
     const config = USER_DETAILS_CONFIG[role]!;
     render(<UserDetailsDialog open user={{ ...user, role }} config={config} onClose={vi.fn()} />);
     const dialog = screen.getByRole('dialog');
@@ -38,7 +38,7 @@ describe('UserDetailsDialog', () => {
     for (const label of expectedLabels) {
       expect(within(dialog).getByText(label)).toBeInTheDocument();
     }
-    if (role === 'admin' || role === 'auditor') {
+    if (role === 'admin') {
       expect(within(dialog).queryByRole('heading', { name: 'Dados da conta' })).not.toBeInTheDocument();
     }
     if (role === 'committee') {

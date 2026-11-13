@@ -89,8 +89,6 @@ describe("POST /api/admin/users/:user_id/auth-evaluation", () => {
     ["admin" as const, 10, "rejected" as const],
     ["committee" as const, 11, "active" as const],
     ["committee" as const, 11, "rejected" as const],
-    ["auditor" as const, 12, "active" as const],
-    ["auditor" as const, 12, "rejected" as const]
   ])("permite que %s revise cadastro pendente", async (role, actorId, status) => {
     findById.mockResolvedValueOnce(authUser(actorId, role));
     findAuthEvaluationTarget.mockResolvedValueOnce(target());
@@ -208,8 +206,7 @@ describe("GET /api/admin/users/:user_id/coep-document", () => {
 
   it.each([
     ["admin" as const, 10],
-    ["committee" as const, 11],
-    ["auditor" as const, 12]
+    ["committee" as const, 11]
   ])("permite download para revisor %s", async (role, actorId) => {
     mkdirSync(documentDirectory, { recursive: true });
     writeFileSync(documentPath, "%PDF-1.7\nfixture");

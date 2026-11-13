@@ -3,7 +3,6 @@ export * from "./questionnaires.js";
 export const USER_ROLE_VALUES = [
   "researcher",
   "admin",
-  "auditor",
   "committee"
 ] as const;
 
@@ -14,7 +13,6 @@ export type UserAccountStatus = "pending" | "active" | "rejected" | "disabled";
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   researcher: "Pesquisador",
   admin: "Gestor",
-  auditor: "Auditor",
   committee: "Comitê"
 };
 
@@ -70,29 +68,20 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
 export type EvaluationStatus =
   | "waiting"
   | "to_review"
-  | "sent_to_committee"
-  | "approved_by_committee"
-  | "rejected_by_committee"
-  | "needs_changes_by_committee"
-  | "needs_changes"
-  | "approved"
-  | "rejected";
+  | "project_approved"
+  | "project_rejected"
+  | "project_changes_requested"
+  | "report_approved"
+  | "report_rejected"
+  | "report_changes_requested";
 
 export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
   waiting: "Aguardando atribuição",
   to_review: "Aguardando avaliação",
-  sent_to_committee: "Enviado ao comitê",
-  approved_by_committee: "Aprovado pelo comitê",
-  rejected_by_committee: "Rejeitado pelo comitê",
-  needs_changes_by_committee: "Há alterações pelo comitê",
-  needs_changes: "Precisa de alterações",
-  approved: "Aprovado",
-  rejected: "Rejeitado"
-};
-
-export type EvaluationContext = "pre_safe_room" | "post_safe_room";
-
-export const EVALUATION_CONTEXT_LABELS: Record<EvaluationContext, string> = {
-  pre_safe_room: "Pré-sala segura",
-  post_safe_room: "Pós-sala segura"
+  project_approved: "Aprovado",
+  project_rejected: "Rejeitado",
+  project_changes_requested: "Solicitar alterações",
+  report_approved: "Aprovado",
+  report_rejected: "Rejeitado",
+  report_changes_requested: "Solicitar alterações"
 };

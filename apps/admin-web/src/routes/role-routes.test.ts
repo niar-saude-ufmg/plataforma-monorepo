@@ -18,7 +18,7 @@ describe('rotas de especialidades', () => {
     });
   });
 
-  it.each(['researcher', 'committee', 'auditor'] as const)('não disponibiliza rota ou menu para %s', (role) => {
+  it.each(['researcher', 'committee'] as const)('não disponibiliza rota ou menu para %s', (role) => {
     expect(getRoleRouteDefinitions(role).some(({ section }) => section === 'especialidades')).toBe(false);
     expect(getRoleNavigation(role).some(({ label }) => label === 'Especialidades')).toBe(false);
   });
@@ -29,7 +29,6 @@ describe('rotas de perfil', () => {
     ['admin', '/admin/administrador/perfil'],
     ['researcher', '/admin/pesquisador/perfil'],
     ['committee', '/admin/comite/perfil'],
-    ['auditor', '/admin/auditor/perfil'],
   ] as const)('publica o Perfil no menu de %s', (role, path) => {
     expect(getRoleRouteDefinitions(role).some(({ section }) => section === 'perfil')).toBe(true);
     expect(getRoleNavigation(role)).toContainEqual({ label: 'Perfil', path });

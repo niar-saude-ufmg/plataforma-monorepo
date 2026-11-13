@@ -53,14 +53,6 @@ const committee: AuthUser = {
   },
 };
 
-const auditor: AuthUser = {
-  id: 4,
-  name: 'Auditor Quatro',
-  email: 'auditor@niar.local',
-  role: 'auditor',
-  accountStatus: 'active',
-};
-
 // Renderiza a página direto, com o usuário já no authSlice.
 function renderPage(user: AuthUser | null) {
   store.dispatch(setSelectedAuthUser(user));
@@ -104,7 +96,6 @@ describe('rotas de Perfil', () => {
     ['/admin/administrador/perfil', () => admin],
     ['/admin/pesquisador/perfil', () => researcher],
     ['/admin/comite/perfil', () => committee],
-    ['/admin/auditor/perfil', () => auditor],
   ])('renderiza a mesma página de Perfil em %s', async (entry, getUser) => {
     render(
       <AdminMemoryRouter initialEntries={[entry]}>
@@ -122,17 +113,6 @@ describe('rotas de Perfil', () => {
     render(
       <AdminMemoryRouter initialEntries={['/admin/comite/perfil']}>
         <App mode="admin" currentUser={committee} />
-      </AdminMemoryRouter>,
-    );
-
-    expect(await screen.findByRole('heading', { name: 'Perfil', level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Dados da conta', level: 2 })).toBeInTheDocument();
-  });
-
-  it('abre /admin/auditor/perfil para o Auditor', async () => {
-    render(
-      <AdminMemoryRouter initialEntries={['/admin/auditor/perfil']}>
-        <App mode="admin" currentUser={auditor} />
       </AdminMemoryRouter>,
     );
 
@@ -165,7 +145,6 @@ describe('rotas de Perfil', () => {
     ['/admin/administrador/home', () => admin],
     ['/admin/pesquisador/home', () => researcher],
     ['/admin/comite/home', () => committee],
-    ['/admin/auditor/home', () => auditor],
   ])('mostra Perfil no menu em %s', async (entry, getUser) => {
     render(
       <AdminMemoryRouter initialEntries={[entry]}>
@@ -315,18 +294,8 @@ describe('página de Perfil', () => {
     expect(screen.queryByText('Perfil de acesso')).not.toBeInTheDocument();
   });
 
-  it('exibe perfil de acesso e status da conta para o Auditor', () => {
-    renderPage(auditor);
-
-    expect(screen.getByRole('heading', { name: 'Acesso à plataforma', level: 2 })).toBeInTheDocument();
-    expect(screen.getByText('Auditor do NIAR')).toBeInTheDocument();
-    expect(screen.getByLabelText('Status da conta')).toHaveTextContent('Ativo');
-    expect(screen.queryByRole('heading', { name: 'Dados da comissão' })).not.toBeInTheDocument();
-  });
-
   it.each([
     ['Comitê', () => committee],
-    ['Auditor', () => auditor],
   ])('esconde telefone, dados acadêmicos e COEP de %s', (_rotulo, getUser) => {
     renderPage(getUser());
 
@@ -338,16 +307,10 @@ describe('página de Perfil', () => {
     expect(screen.queryByRole('button', { name: 'Baixar' })).not.toBeInTheDocument();
   });
 
-  it('usa a descrição do Figma para Comitê e Auditor', () => {
+  it('usa a descrição do Figma para Comitê', () => {
     renderPage(committee);
     expect(
       screen.getByText('Gerencie seus dados pessoais e as informações do seu vínculo com a comissão.'),
-    ).toBeInTheDocument();
-    cleanup();
-
-    renderPage(auditor);
-    expect(
-      screen.getByText('Gerencie seus dados pessoais e as permissões de acesso à plataforma.'),
     ).toBeInTheDocument();
   });
 
@@ -395,7 +358,6 @@ describe('Perfil — edição, senha e download', () => {
 
   it.each([
     ['Comitê', () => committee],
-    ['Auditor', () => auditor],
   ])('oferece editar perfil e trocar senha para %s', (_rotulo, getUser) => {
     renderPage(getUser());
 
@@ -405,7 +367,6 @@ describe('Perfil — edição, senha e download', () => {
 
   it.each([
     ['Comitê', () => committee],
-    ['Auditor', () => auditor],
   ])('envia só nome e e-mail ao salvar o perfil de %s', async (_rotulo, getUser) => {
     const user = getUser();
     fetchMock.mockResolvedValueOnce({
@@ -471,13 +432,13 @@ describe('Perfil — edição, senha e download', () => {
     expect(store.getState().auth.selected?.committeeProfile?.specialty.name).toBe('Epidemiologia');
   });
 
-  it('mostra o erro da API no Snackbar também para o Auditor', async () => {
+  it('mostra o erro da API no Snackbar para o Comitê', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: false,
       status: 409,
       json: async () => ({ error: 'E-mail já utilizado por outro usuário' }),
     });
-    renderPage(auditor);
+    renderPage(committee);
 
     await userEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));

@@ -29,7 +29,7 @@ describe('SelectRoleForm', () => {
         value: 'admin',
         options: [
           { value: 'admin', label: 'Administrador' },
-          { value: 'auditor', label: 'Auditor' },
+          { value: 'committee', label: 'Comitê' },
         ],
         onChange,
         onBlur,
@@ -42,8 +42,8 @@ describe('SelectRoleForm', () => {
 
     expect(screen.getByLabelText('Tipo de usuário')).toHaveValue('admin');
 
-    await userEvent.selectOptions(screen.getByLabelText('Tipo de usuário'), 'auditor');
-    expect(onChange).toHaveBeenCalledWith('auditor');
+    await userEvent.selectOptions(screen.getByLabelText('Tipo de usuário'), 'committee');
+    expect(onChange).toHaveBeenCalledWith('committee');
 
     fireEvent.blur(screen.getByLabelText('Tipo de usuário'));
     expect(onBlur).toHaveBeenCalledOnce();

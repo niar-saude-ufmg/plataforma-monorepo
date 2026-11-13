@@ -31,15 +31,6 @@ export const USER_ROLE_CONFIG: Record<UserRole, UserRoleConfig> = {
       message: 'Este usuário terá acesso administrativo à plataforma.',
     },
   },
-  auditor: {
-    label: 'Auditor do NIAR',
-    description: 'Adicione um novo auditor do NIAR à plataforma.',
-    profile: 'none',
-    alert: {
-      severity: 'warning',
-      message: 'Este usuário terá acesso às funções de auditoria da plataforma.',
-    },
-  },
   committee: {
     label: 'Comitê',
     description: 'Adicione um novo usuário da comissão à plataforma.',

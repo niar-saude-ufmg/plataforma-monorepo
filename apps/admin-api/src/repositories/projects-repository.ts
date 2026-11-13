@@ -1,10 +1,4 @@
-import {
-  Prisma,
-  type evaluation_context as EvaluationContext,
-  type evaluation_status as EvaluationStatus,
-  type project_status as ProjectStatus,
-  prisma
-} from "@niar/database";
+import { Prisma, type evaluation_status as EvaluationStatus, type project_status as ProjectStatus, prisma } from "@niar/database";
 import type { UserRole } from "@niar/contracts";
 
 const projectInclude = {
@@ -23,8 +17,6 @@ const projectInclude = {
       evaluations: {
         orderBy: [{ updatedAt: "desc" as const }, { id: "desc" as const }],
         include: {
-          assignedTo: { select: { id: true, fullName: true, email: true, role: true } },
-          assignedBy: { select: { id: true, fullName: true, email: true, role: true } },
           evaluatedBy: { select: { id: true, fullName: true, email: true, role: true } }
         }
       }
@@ -46,8 +38,7 @@ export type ProjectListFilter = {
   currentUserRole?: UserRole;
   ownerUserId?: number;
   status?: ProjectStatus;
-  evaluationStatus?: "waiting" | EvaluationStatus;
-  evaluationContext?: EvaluationContext;
+  evaluationStatus?: EvaluationStatus | "waiting";
   submittedFrom?: Date;
   submittedTo?: Date;
   updatedFrom?: Date;
@@ -60,54 +51,14 @@ export type ProjectListFilter = {
   orderDirection: "asc" | "desc";
 };
 
-const POST_SAFE_ROOM_STATUSES: ProjectStatus[] = [
-  "under_safe_room",
-  "report_submitted",
-  "report_under_review",
-  "safe_room_reuse_requested",
-  "rescheduled_for_safe_room",
-  "reapproved_for_safe_room",
-  "report_resubmitted"
-];
-
 const visibilityVersionWhere = (
   role: UserRole | undefined,
   userId: number | undefined
 ): Prisma.ProjectVersionWhereInput | undefined => {
   if (!userId || role === "admin" || role === "researcher") return undefined;
 
-  if (role === "auditor") {
-    return {
-      status: { notIn: POST_SAFE_ROOM_STATUSES },
-      OR: [
-        { evaluations: { none: {} } },
-        {
-          evaluations: {
-            some: {
-              context: "pre_safe_room",
-              OR: [{ assignedToUserId: userId }, { assignedByUserId: userId }]
-            }
-          }
-        }
-      ]
-    };
-  }
-
   if (role === "committee") {
-    return {
-      OR: [
-        { status: { in: POST_SAFE_ROOM_STATUSES } },
-        { evaluations: { some: { context: "post_safe_room" } } },
-        {
-          evaluations: {
-            some: {
-              context: "pre_safe_room",
-              assignedToUserId: userId
-            }
-          }
-        }
-      ]
-    };
+    return { submittedAt: { not: null } };
   }
 
   return undefined;
@@ -119,11 +70,10 @@ const buildWhere = (filter: Omit<ProjectListFilter, "page" | "pageSize" | "order
   if (filter.status) versionWhere.status = filter.status;
   if (filter.evaluationStatus === "waiting") {
     versionWhere.evaluations = { none: {} };
-  } else if (filter.evaluationStatus || filter.evaluationContext) {
+  } else if (filter.evaluationStatus) {
     versionWhere.evaluations = {
       some: {
-        ...(filter.evaluationContext ? { context: filter.evaluationContext } : {}),
-        ...(filter.evaluationStatus ? { status: filter.evaluationStatus } : {})
+        status: filter.evaluationStatus
       }
     };
   }

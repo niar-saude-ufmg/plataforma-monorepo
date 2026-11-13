@@ -118,7 +118,6 @@ describe("Admin App", () => {
   it.each([
     ["researcher", "Pesquisador", "/admin/pesquisador/home"],
     ["committee", "Comitê", "/admin/comite/home"],
-    ["auditor", "Auditor", "/admin/auditor/home"],
   ] as const)("não mostra Especialidades no menu de %s", async (role, name, path) => {
     render(
       <AdminMemoryRouter initialEntries={[path]}>
@@ -143,8 +142,6 @@ describe("Admin App", () => {
   });
 
   it.each([
-    ["auditor", "/admin/comite/perfil"],
-    ["auditor", "/admin/auditor/especialidades"],
     ["researcher", "/admin/pesquisador/usuarios"],
     ["committee", "/admin/comite/usuarios/novo"],
   ] as const)("bloqueia acesso direto não disponível para %s", async (role, path) => {

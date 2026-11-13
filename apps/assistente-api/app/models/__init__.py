@@ -20,7 +20,6 @@ from app.core.database import Base
 class UserRole(str, enum.Enum):
     researcher = "researcher"
     admin = "admin"
-    auditor = "auditor"
     committee = "committee"
 
 
@@ -606,13 +605,12 @@ class ProjectStatusHistory(Base):
 
 class EvaluationStatus(str, enum.Enum):
     to_review = "to_review"
-    sent_to_committee = "sent_to_committee"
-    approved_by_committee = "approved_by_committee"
-    rejected_by_committee = "rejected_by_committee"
-    needs_changes_by_committee = "needs_changes_by_committee"
-    needs_changes = "needs_changes"
-    approved = "approved"
-    rejected = "rejected"
+    project_approved = "project_approved"
+    project_rejected = "project_rejected"
+    project_changes_requested = "project_changes_requested"
+    report_approved = "report_approved"
+    report_rejected = "report_rejected"
+    report_changes_requested = "report_changes_requested"
 
 
 EVALUATION_STATUS_ENUM = Enum(
@@ -623,14 +621,14 @@ EVALUATION_STATUS_ENUM = Enum(
 )
 
 
-class EvaluationContext(str, enum.Enum):
-    pre_safe_room = "pre_safe_room"
-    post_safe_room = "post_safe_room"
+class CertificationDecision(str, enum.Enum):
+    granted = "granted"
+    not_granted = "not_granted"
 
 
-EVALUATION_CONTEXT_ENUM = Enum(
-    EvaluationContext,
-    name="evaluation_context",
+CERTIFICATION_DECISION_ENUM = Enum(
+    CertificationDecision,
+    name="certification_decision",
     schema="admin",
     create_type=False,
 )
@@ -643,9 +641,6 @@ class Evaluation(Base):
     project_version_id: Mapped[int] = mapped_column(
         ForeignKey("project_versions.id", ondelete="CASCADE")
     )
-    context: Mapped[EvaluationContext] = mapped_column(
-        "evaluation_context", EVALUATION_CONTEXT_ENUM
-    )
     assigned_to_user_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -657,6 +652,10 @@ class Evaluation(Base):
     )
     status: Mapped[EvaluationStatus] = mapped_column(EVALUATION_STATUS_ENUM)
     justification: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    certification_decision: Mapped[Optional[CertificationDecision]] = mapped_column(
+        CERTIFICATION_DECISION_ENUM, nullable=True
+    )
+    certification_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     evaluated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

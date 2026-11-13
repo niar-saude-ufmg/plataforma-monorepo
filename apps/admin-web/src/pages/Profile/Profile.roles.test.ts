@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PROFILE_ROLE_CONFIG } from './Profile.roles';
 import type { ProfileRole } from '../../types/role-profile';
 
-const ALL_PROFILE_ROLES: readonly ProfileRole[] = ['admin', 'researcher', 'committee', 'auditor'];
+const ALL_PROFILE_ROLES: readonly ProfileRole[] = ['admin', 'researcher', 'committee'];
 
 describe('PROFILE_ROLE_CONFIG', () => {
   it('define os campos, seções e ações do Administrador', () => {
@@ -37,21 +37,13 @@ describe('PROFILE_ROLE_CONFIG', () => {
     expect(PROFILE_ROLE_CONFIG.committee.sections).not.toContain('access');
   });
 
-  it('define o acesso à plataforma para o Auditor', () => {
-    expect(PROFILE_ROLE_CONFIG.auditor).toMatchObject({
-      accessProfileLabel: 'Auditor do NIAR',
-      sections: ['account', 'access'],
-      actions: ['editProfile', 'changePassword'],
-    });
-    expect(PROFILE_ROLE_CONFIG.auditor.sections).not.toContain('committeeDetails');
-  });
-
-  it.each(['committee', 'auditor'] as const)('esconde o telefone e o COEP de %s', (role) => {
+  it('esconde o telefone e o COEP do Comitê', () => {
+    const role = 'committee';
     expect(PROFILE_ROLE_CONFIG[role].fields.phone).toEqual({ visible: false, editable: false });
     expect(PROFILE_ROLE_CONFIG[role].actions).not.toContain('downloadCoep');
   });
 
-  it('configura os quatro perfis com nome e e-mail editáveis', () => {
+  it('configura os três perfis com nome e e-mail editáveis', () => {
     ALL_PROFILE_ROLES.forEach((role) => {
       const config = PROFILE_ROLE_CONFIG[role];
       expect(config.description.length).toBeGreaterThan(0);

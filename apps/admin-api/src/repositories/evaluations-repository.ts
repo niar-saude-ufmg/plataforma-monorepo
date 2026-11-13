@@ -8,9 +8,10 @@ const evaluationDetailsSelect = {
   assignedToUserId: true,
   assignedByUserId: true,
   evaluatedByUserId: true,
-  context: true,
   status: true,
   justification: true,
+  certificationDecision: true,
+  certificationReason: true,
   evaluatedAt: true,
   createdAt: true,
   updatedAt: true,
@@ -30,9 +31,7 @@ const evaluationDetailsSelect = {
   }
 } satisfies Prisma.EvaluationSelect;
 
-export type EvaluationDetails = Prisma.EvaluationGetPayload<{
-  select: typeof evaluationDetailsSelect;
-}>;
+export type EvaluationDetails = Prisma.EvaluationGetPayload<{ select: typeof evaluationDetailsSelect }>;
 
 type AssignmentData = {
   projectVersionId: number;
@@ -42,72 +41,50 @@ type AssignmentData = {
   ipAddress: string;
 };
 
-type UpdateData = {
+type DecisionStatus =
+  | "project_approved"
+  | "project_rejected"
+  | "project_changes_requested"
+  | "report_approved"
+  | "report_rejected"
+  | "report_changes_requested";
+
+type DecisionData = {
   projectVersionId: number;
   actorUserId: number;
-  actorRole: UserRole;
-  status:
-    | "sent_to_committee"
-    | "approved"
-    | "rejected"
-    | "needs_changes"
-    | "approved_by_committee"
-    | "rejected_by_committee"
-    | "needs_changes_by_committee";
-  committeeMemberUserId?: number;
+  status: DecisionStatus;
   justification: string;
+  certificationDecision?: "granted" | "not_granted";
+  certificationReason?: string;
   ipAddress: string;
 };
 
-const POST_SAFE_ROOM_STATUSES = new Set([
-  "under_safe_room",
-  "report_submitted",
-  "report_under_review",
-  "safe_room_reuse_requested",
-  "rescheduled_for_safe_room",
-  "reapproved_for_safe_room",
-  "report_resubmitted"
-]);
+const projectReviewStatuses = new Set(["under_review"]);
+const reportReviewStatuses = new Set(["report_under_review"]);
 
-const loadEvaluation = (client: Prisma.TransactionClient, projectVersionId: number) =>
-  client.evaluation.findFirstOrThrow({
-    where: { projectVersionId },
-    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-    select: evaluationDetailsSelect
-  });
-
-const isCommitteeReviewStatus = (status: string) =>
-  status === "approved_by_committee" ||
-  status === "rejected_by_committee" ||
-  status === "needs_changes_by_committee";
-
-const isAuditorStatus = (status: UpdateData["status"]) =>
-  status === "sent_to_committee" ||
-  status === "approved" ||
-  status === "rejected" ||
-  status === "needs_changes";
-
-const isCommitteeStatus = (status: UpdateData["status"]) =>
-  status === "approved_by_committee" ||
-  status === "rejected_by_committee" ||
-  status === "needs_changes_by_committee";
-
-const projectStatusFor = (status: UpdateData["status"]) => {
-  if (status === "approved") return "approved_to_schedule" as const;
-  if (status === "needs_changes") return "needs_changes" as const;
-  if (status === "rejected") return "rejected" as const;
-  return "under_review" as const;
+const statusForDecision = (status: DecisionStatus) => {
+  switch (status) {
+    case "project_approved": return "approved_to_schedule" as const;
+    case "project_rejected": return "rejected_to_safe_room" as const;
+    case "project_changes_requested": return "needs_changes" as const;
+    case "report_approved": return "approved" as const;
+    case "report_rejected": return "rejected" as const;
+    case "report_changes_requested": return "safe_room_reuse_requested" as const;
+  }
 };
 
-const assertJustification = (status: UpdateData["status"], justification: string) => {
-  if (
-    (status === "needs_changes" ||
-      status === "rejected" ||
-      status === "needs_changes_by_committee" ||
-      status === "rejected_by_committee") &&
-    !justification
-  ) {
-    throw new AppError("Justificativa é obrigatória para este encaminhamento", 400);
+const assertDecisionForPhase = (status: DecisionStatus, projectStatus: string) => {
+  if (status.startsWith("project_") && !projectReviewStatuses.has(projectStatus)) {
+    throw new AppError("O projeto não está disponível para avaliação inicial", 409);
+  }
+  if (status.startsWith("report_") && !reportReviewStatuses.has(projectStatus)) {
+    throw new AppError("O relatório não está disponível para avaliação", 409);
+  }
+};
+
+const assertJustification = (status: DecisionStatus, justification: string) => {
+  if ((status.endsWith("rejected") || status.endsWith("changes_requested")) && !justification) {
+    throw new AppError("Justificativa é obrigatória para esta decisão", 400);
   }
 };
 
@@ -115,229 +92,100 @@ export const evaluationsRepository = {
   findByProjectVersionId: async (projectVersionId: number): Promise<EvaluationDetails> => {
     const evaluation = await prisma.evaluation.findFirst({
       where: { projectVersionId },
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: evaluationDetailsSelect
     });
-
     if (!evaluation) throw new AppError("Avaliação não encontrada", 404);
     return evaluation;
   },
 
-  createAssignment: async (data: AssignmentData): Promise<EvaluationDetails> =>
-    prisma.$transaction(async (transaction) => {
+  assign: async (data: AssignmentData) => prisma.$transaction(async (transaction) => {
+    const version = await transaction.projectVersion.findUnique({
+      where: { id: data.projectVersionId },
+      select: { id: true, status: true, projectId: true, evaluations: { orderBy: { createdAt: "desc" }, take: 1, select: { id: true } } }
+    });
+    if (!version) throw new AppError("Versão do projeto não encontrada", 404);
+    if (data.actorRole !== "admin" && data.assignedToUserId !== data.actorUserId) {
+      throw new AppError("O membro do comitê só pode assumir o próprio projeto", 403);
+    }
+
+    const member = await transaction.user.findUnique({
+      where: { id: data.assignedToUserId },
+      select: { role: true, accountStatus: true, committeeProfile: { select: { userId: true } } }
+    });
+    if (member?.role !== "committee" || member.accountStatus !== "active" || !member.committeeProfile) {
+      throw new AppError("O responsável precisa ser um membro ativo do comitê", 400);
+    }
+    if (version.evaluations[0]) throw new AppError("Esta versão já possui uma avaliação atribuída", 409);
+
+    const evaluation = await transaction.evaluation.create({
+      data: { projectVersionId: version.id, assignedToUserId: data.assignedToUserId, assignedByUserId: data.actorUserId, status: "to_review" },
+      select: { id: true }
+    });
+
+    const nextStatus = version.status === "report_submitted" || version.status === "report_resubmitted"
+      ? "report_under_review"
+      : "under_review";
+    await transaction.projectVersion.update({ where: { id: version.id }, data: { status: nextStatus } });
+    await transaction.projectStatusHistory.create({
+      data: { projectVersionId: version.id, status: nextStatus, notes: "Projeto atribuído para avaliação do comitê.", actorUserId: data.actorUserId, evaluationId: evaluation.id }
+    });
+    await transaction.auditLog.create({
+      data: {
+        userId: data.actorUserId,
+        action: "assign_evaluation",
+        resourceType: "evaluation",
+        resourceId: String(evaluation.id),
+        details: JSON.stringify({ project_version_id: version.id, assigned_to_user_id: data.assignedToUserId, status: "to_review" }),
+        ipAddress: data.ipAddress
+      }
+    });
+    return transaction.evaluation.findUniqueOrThrow({ where: { id: evaluation.id }, select: evaluationDetailsSelect });
+  }),
+
+  decide: async (data: DecisionData): Promise<EvaluationDetails> => {
+    assertJustification(data.status, data.justification);
+    return prisma.$transaction(async (transaction) => {
       const version = await transaction.projectVersion.findUnique({
         where: { id: data.projectVersionId },
-        select: {
-          id: true,
-          status: true,
-          evaluations: {
-            orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-            take: 1,
-            select: { id: true }
-          }
-        }
+        select: { id: true, status: true, evaluations: { orderBy: { createdAt: "desc" }, take: 1, select: { id: true, assignedToUserId: true } } }
       });
-
       if (!version) throw new AppError("Versão do projeto não encontrada", 404);
-      if (version.evaluations[0]) {
-        throw new AppError("Esta versão já possui uma avaliação atribuída", 409);
-      }
-
-      const context = POST_SAFE_ROOM_STATUSES.has(version.status) ? "post_safe_room" : "pre_safe_room";
-      const expectedRole = context === "post_safe_room" ? "committee" : "auditor";
-
-      if (data.actorRole !== "admin" && data.assignedToUserId !== data.actorUserId) {
-        throw new AppError("O usuário só pode assumir a própria avaliação", 403);
-      }
-
-      const assignedUser = await transaction.user.findUnique({
-        where: { id: data.assignedToUserId },
-        select: {
-          role: true,
-          accountStatus: true,
-          committeeProfile: { select: { userId: true } }
-        }
-      });
-
-      if (
-        assignedUser?.role !== expectedRole ||
-        assignedUser.accountStatus !== "active" ||
-        (expectedRole === "committee" && !assignedUser.committeeProfile)
-      ) {
-        throw new AppError(`Usuário responsável precisa ser um ${expectedRole} ativo`, 400);
-      }
-
-      const evaluation = await transaction.evaluation.create({
-        data: {
-          projectVersionId: data.projectVersionId,
-          assignedToUserId: data.assignedToUserId,
-          assignedByUserId: data.actorUserId,
-          context,
-          status: "to_review"
-        },
-        select: { id: true }
-      });
-
-      await transaction.projectVersion.update({
-        where: { id: data.projectVersionId },
-        data: { status: "under_review" }
-      });
-
-      await transaction.projectStatusHistory.create({
-        data: {
-          projectVersionId: data.projectVersionId,
-          status: "under_review",
-          notes: "Projeto atribuído para avaliação.",
-          actorUserId: data.actorUserId,
-          evaluationId: evaluation.id
-        }
-      });
-
-      await transaction.auditLog.create({
-        data: {
-          userId: data.actorUserId,
-          action: "assign_evaluation",
-          resourceType: "evaluation",
-          resourceId: String(evaluation.id),
-          details: JSON.stringify({
-            project_version_id: data.projectVersionId,
-            assigned_to_user_id: data.assignedToUserId,
-            context,
-            status: "to_review"
-          }),
-          ipAddress: data.ipAddress
-        }
-      });
-
-      return loadEvaluation(transaction, data.projectVersionId);
-    }),
-
-  update: async (data: UpdateData): Promise<EvaluationDetails> => {
-    assertJustification(data.status, data.justification);
-
-    return prisma.$transaction(async (transaction) => {
-      const evaluation = await transaction.evaluation.findFirst({
-        where: { projectVersionId: data.projectVersionId },
-        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-        select: { id: true, status: true, assignedToUserId: true, assignedByUserId: true }
-      });
-
+      const evaluation = version.evaluations[0];
       if (!evaluation) throw new AppError("Avaliação não encontrada", 404);
-
-      if (
-        (data.actorRole === "auditor" || data.actorRole === "committee") &&
-        evaluation.assignedToUserId !== data.actorUserId
-      ) {
-        throw new AppError("A avaliação está atribuída a outro usuário", 403);
+      if (evaluation.assignedToUserId !== data.actorUserId) {
+        throw new AppError("O projeto está atribuído a outro membro do comitê", 403);
       }
-
-      if (data.actorRole === "auditor") {
-        if (!isAuditorStatus(data.status)) {
-          throw new AppError("Auditor não pode usar um status exclusivo do comitê", 403);
-        }
-
-        if (data.status === "sent_to_committee" && evaluation.status !== "to_review") {
-          throw new AppError("Somente uma avaliação aguardando o auditor pode ser enviada ao comitê", 409);
-        }
-
-        const canAuditorDecide = evaluation.status === "to_review" || isCommitteeReviewStatus(evaluation.status);
-        if (data.status !== "sent_to_committee" && !canAuditorDecide) {
-          throw new AppError("A avaliação não está disponível para decisão do auditor", 409);
-        }
-      }
-
-      if (data.actorRole === "committee") {
-        if (!isCommitteeStatus(data.status)) {
-          throw new AppError("Comitê só pode usar os status da avaliação do comitê", 403);
-        }
-
-        if (evaluation.status !== "sent_to_committee") {
-          throw new AppError("A avaliação não está aguardando decisão do comitê", 409);
-        }
-      }
-
-      if (data.actorRole === "auditor" && data.status === "sent_to_committee") {
-        if (!data.committeeMemberUserId) {
-          throw new AppError("committee_member_user_id é obrigatório ao encaminhar ao comitê", 400);
-        }
-
-        const committeeMember = await transaction.user.findUnique({
-          where: { id: data.committeeMemberUserId },
-          select: { role: true, accountStatus: true, committeeProfile: { select: { userId: true } } }
-        });
-
-        if (
-          committeeMember?.role !== "committee" ||
-          committeeMember.accountStatus !== "active" ||
-          !committeeMember.committeeProfile
-        ) {
-          throw new AppError("Membro responsável do comitê inválido", 400);
-        }
-      } else if (data.committeeMemberUserId !== undefined) {
-        throw new AppError("committee_member_user_id só pode ser enviado ao encaminhar ao comitê", 400);
-      }
+      assertDecisionForPhase(data.status, version.status);
 
       const now = new Date();
-      const projectStatus = projectStatusFor(data.status);
-      const updated = await transaction.evaluation.updateMany({
-        where: { id: evaluation.id, status: evaluation.status },
+      await transaction.evaluation.update({
+        where: { id: evaluation.id },
         data: {
-          status: data.status,
-          assignedToUserId:
-            data.status === "sent_to_committee"
-              ? data.committeeMemberUserId
-              : data.actorRole === "committee"
-                ? evaluation.assignedByUserId
-                : evaluation.assignedToUserId,
-          assignedByUserId:
-            data.status === "sent_to_committee" || data.actorRole === "committee"
-              ? data.actorUserId
-              : undefined,
           evaluatedByUserId: data.actorUserId,
-          justification: data.justification,
-          evaluatedAt: data.status === "sent_to_committee" ? null : now,
-          updatedAt: now
+          status: data.status,
+          justification: data.justification || null,
+          certificationDecision: data.certificationDecision,
+          certificationReason: data.certificationReason || null,
+          evaluatedAt: now
         }
       });
-
-      if (updated.count !== 1) {
-        throw new AppError("A avaliação foi alterada por outra solicitação", 409);
-      }
-
-      await transaction.projectVersion.update({
-        where: { id: data.projectVersionId },
-        data: { status: projectStatus }
-      });
-
+      const projectStatus = statusForDecision(data.status);
+      await transaction.projectVersion.update({ where: { id: version.id }, data: { status: projectStatus } });
       await transaction.projectStatusHistory.create({
-        data: {
-          projectVersionId: data.projectVersionId,
-          status: projectStatus,
-          notes: data.justification,
-          actorUserId: data.actorUserId,
-          evaluationId: evaluation.id
-        }
+        data: { projectVersionId: version.id, status: projectStatus, notes: data.justification || null, actorUserId: data.actorUserId, evaluationId: evaluation.id }
       });
-
       await transaction.auditLog.create({
         data: {
           userId: data.actorUserId,
-          action: "update_evaluation",
+          action: "record_project_evaluation",
           resourceType: "evaluation",
           resourceId: String(evaluation.id),
-          details: JSON.stringify({
-            project_version_id: data.projectVersionId,
-            previous_status: evaluation.status,
-            status: data.status,
-            project_status: projectStatus,
-            committee_member_user_id: data.committeeMemberUserId ?? null,
-            justification: data.justification
-          }),
+          details: JSON.stringify({ project_version_id: version.id, status: data.status, project_status: projectStatus, certification_decision: data.certificationDecision ?? null }),
           ipAddress: data.ipAddress
         }
       });
-
-      return loadEvaluation(transaction, data.projectVersionId);
+      return transaction.evaluation.findUniqueOrThrow({ where: { id: evaluation.id }, select: evaluationDetailsSelect });
     });
   }
 };

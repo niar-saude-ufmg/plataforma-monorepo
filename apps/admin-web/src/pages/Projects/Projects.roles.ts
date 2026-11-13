@@ -5,17 +5,14 @@ export type ProjectColumnId =
   | "title"
   | "researcher"
   | "status"
-  | "evaluationContext"
   | "evaluationStatus"
   | "updatedAt"
-  | "evaluations"
   | "actions";
 
 export type ProjectFilterKey =
   | "search"
   | "status"
-  | "evaluationStatus"
-  | "evaluationContext";
+  | "evaluationStatus";
 
 export type ProjectActionId = "history" | "documents";
 
@@ -33,9 +30,7 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
       "title",
       "researcher",
       "status",
-      "evaluationContext",
       "updatedAt",
-      "evaluations",
       "actions",
     ],
     filters: ["search", "status"],
@@ -52,33 +47,6 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
     actions: ["history", "documents"],
     columnLabels: { status: "Status" },
   },
-  auditor: {
-    title: "Projetos",
-    description:
-      "Consulte os projetos atribuídos a você, os documentos e o histórico de avaliações.",
-    emptyStateDescription: "Ainda não existem projetos disponíveis para avaliação.",
-    columnIds: [
-      "title",
-      "researcher",
-      "status",
-      "evaluationContext",
-      "evaluationStatus",
-      "updatedAt",
-      "actions",
-    ],
-    filters: ["search", "status", "evaluationStatus", "evaluationContext"],
-    actions: ["history", "documents"],
-    columnLabels: {
-      status: "Status do projeto",
-      evaluationContext: "Contexto da avaliação",
-      evaluationStatus: "Status da avaliação",
-    },
-    filterLabels: {
-      status: "Status do projeto",
-      evaluationStatus: "Status da avaliação",
-      evaluationContext: "Contexto da avaliação",
-    },
-  },
   committee: {
     title: "Projetos",
     description:
@@ -88,22 +56,19 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
       "title",
       "researcher",
       "status",
-      "evaluationContext",
       "evaluationStatus",
       "updatedAt",
       "actions",
     ],
-    filters: ["search", "status", "evaluationStatus", "evaluationContext"],
+    filters: ["search", "status", "evaluationStatus"],
     actions: ["history", "documents"],
     columnLabels: {
       status: "Status do projeto",
-      evaluationContext: "Contexto da avaliação",
       evaluationStatus: "Status da avaliação",
     },
     filterLabels: {
       status: "Status do projeto",
       evaluationStatus: "Status da avaliação",
-      evaluationContext: "Contexto da avaliação",
     },
   },
 };

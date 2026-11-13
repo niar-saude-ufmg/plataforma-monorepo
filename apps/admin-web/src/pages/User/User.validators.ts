@@ -14,7 +14,6 @@ import type { UserRole } from "../../types/user.types";
 export const researcherSchema = sharedUserSchema.and(researcherProfileSchema);
 
 export const administratorSchema = sharedUserSchema;
-export const auditorSchema = sharedUserSchema;
 export const committeeSchema = sharedUserSchema.and(committeeProfileSchema);
 
 const roleSchema = z.object({
@@ -31,10 +30,6 @@ const roleSpecificSchema = z.discriminatedUnion("role", [
   }),
   z.object({
     role: z.literal("admin"),
-    ...sharedUserFields,
-  }),
-  z.object({
-    role: z.literal("auditor"),
     ...sharedUserFields,
   }),
   z.object({

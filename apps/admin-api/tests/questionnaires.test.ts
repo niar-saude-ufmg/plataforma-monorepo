@@ -46,7 +46,7 @@ describe("questionnaire API", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it.each<UserRole>(["researcher", "committee", "auditor"])("impede gestão pelo perfil %s", async (role) => {
+  it.each<UserRole>(["researcher", "committee"])("impede gestão pelo perfil %s", async (role) => {
     findUserById.mockResolvedValue(user(role));
     const requests = [
       request(app).get("/api/admin/questionnaires"),

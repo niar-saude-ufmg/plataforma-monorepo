@@ -5,7 +5,6 @@ import type {
   UpdateUserStatusInput,
   CreateUserInput,
   CreateAdministratorInput,
-  CreateAuditorInput,
   CreateCommitteeMemberInput,
   User,
   UserListItem,
@@ -393,20 +392,6 @@ export function createAdministratorRequest(
       password: input.password,
     },
     'Não foi possível cadastrar o administrador.',
-  );
-}
-
-export function createAuditorRequest(
-  input: CreateAuditorInput,
-): Promise<User> {
-  return postUserJson(
-    '/users/auditors',
-    {
-      full_name: input.fullName.trim(),
-      email: input.email.trim(),
-      password: input.password,
-    },
-    'Não foi possível cadastrar o auditor.',
   );
 }
 

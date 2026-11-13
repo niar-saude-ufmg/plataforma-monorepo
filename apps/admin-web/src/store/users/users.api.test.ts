@@ -4,7 +4,6 @@ import type { CreateUserInput } from '../../types/user.types';
 import {
   createUser,
   createAdministrator,
-  createAuditor,
   createCommitteeMember,
   createResearcher,
   downloadUserCoepDocument,
@@ -241,34 +240,6 @@ describe('users api', () => {
     });
     expect(store.getState().users.mutation.status).toBe("succeeded");
     expect(store.getState().users.list.status).toBe("idle");  // separação
-  });
-
-  it("createAuditor envia JSON para /users/auditors", async () => {
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({
-        id: 10,
-        full_name: "Carla Auditora",
-        email: "carla@niar-saude.org",
-        role: "auditor",
-        created_at: "2026-09-04T10:00:00.000Z",
-      }), { status: 201, headers: { "Content-Type": "application/json" } }),
-    );
-    const store = createTestStore();
-
-    await store.dispatch(createAuditor({
-      fullName: "Carla Auditora",
-      email: "carla@niar-saude.org",
-      password: "senhaforte1",
-    }));
-    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
-
-    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({
-      full_name: "Carla Auditora",
-      email: "carla@niar-saude.org",
-      password: "senhaforte1",
-    });
-    expect(url).toContain("/users/auditors");
-    expect(store.getState().users.mutation.status).toBe("succeeded");
   });
 
   it("createCommitteeMember envia specialty_id numérico em snake_case", async () => {

@@ -3,7 +3,6 @@ import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import type { CreateUserInput } from "../../types/user.types";
 import {
   createAdministratorRequest,
-  createAuditorRequest,
   createCommitteeMemberRequest,
   createResearcherRequest,
   createUserRequest,
@@ -267,37 +266,6 @@ describe("user service — cadastros privados", () => {
     expect(JSON.parse(String(request.body))).toEqual({
       full_name: "Bruno Admin",       // .trim() aplicado
       email: "bruno@niar-saude.org",
-      password: "senhaforte1",
-    });
-  });
-
-  it("envia auditor como JSON com auth para /users/auditors", async () => {
-    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
-    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 201,
-      json: async () => ({
-        id: 10,
-        full_name: "Carla Auditora",
-        email: "carla@niar-saude.org",
-        role: "auditor",
-        created_at: "2026-09-04T10:00:00.000Z",
-      }),
-    });
-    vi.stubGlobal("fetch", fetchMock);
-
-    await createAuditorRequest({
-      fullName: "Carla Auditora",
-      email: "carla@niar-saude.org",
-      password: "senhaforte1",
-    });
-    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
-
-    expect(url).toBe("http://localhost:3333/api/admin/users/auditors");
-    expect(JSON.parse(String(request.body))).toEqual({
-      full_name: "Carla Auditora",
-      email: "carla@niar-saude.org",
       password: "senhaforte1",
     });
   });

@@ -13,7 +13,6 @@ import reducer, {
 import { selectUsersListError } from './users.selectors';
 import {
   createAdministrator,
-  createAuditor,
   createCommitteeMember,
   createResearcher,
   createUser,
@@ -219,7 +218,6 @@ describe('usersSlice — separação entre list, mutation e download', () => {
     ['createUser', createUser],
     ['createResearcher', createResearcher],
     ['createAdministrator', createAdministrator],
-    ['createAuditor', createAuditor],
     ['createCommitteeMember', createCommitteeMember],
   ])('%s.pending seta mutation.operation = "create"', (_name, thunk) => {
     const state = reducer(undefined, pendingAction(thunk));

@@ -174,7 +174,6 @@ describe('User — seleção de role', () => {
 
   it.each([
     ['admin', false, false, false],
-    ['auditor', false, false, false],
     ['committee', true, false, true],
     ['researcher', true, true, false],
   ] as const)(
@@ -287,17 +286,6 @@ describe('User — payloads por role', () => {
     });
     expect(body).not.toHaveProperty('passwordConfirmation');
     expect(body).not.toHaveProperty('password_confirmation');
-  });
-
-  it('auditor envia JSON para /users/auditors', async () => {
-    renderUser();
-    await selectRole('auditor');
-    await fillShared();
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Cadastrar' }));
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    const [url] = lastFetchCall()!;
-    expect(url).toContain('/users/auditors');
   });
 
   it('committee envia specialty_id numérico e não specialtyId nem objeto', async () => {

@@ -1,8 +1,4 @@
-import {
-  EVALUATION_CONTEXT_LABELS,
-  EVALUATION_STATUS_LABELS,
-  PROJECT_STATUS_LABELS,
-} from "@niar/contracts";
+import { EVALUATION_STATUS_LABELS, PROJECT_STATUS_LABELS } from "@niar/contracts";
 import {
   Button,
   Filter,
@@ -52,7 +48,6 @@ import {
   setSelectedProject,
 } from "../../store/projects/projects.slice";
 import type {
-  EvaluationContext,
   EvaluationStatus,
   Project,
   ProjectDocument,
@@ -91,13 +86,12 @@ const PROJECT_STATUS_CHIP: Record<ProjectStatus, StatusChipStatus> = {
 const EVALUATION_STATUS_CHIP: Record<EvaluationStatus, StatusChipStatus> = {
   waiting: "default",
   to_review: "warning",
-  sent_to_committee: "info",
-  approved_by_committee: "success",
-  rejected_by_committee: "error",
-  needs_changes_by_committee: "warning",
-  needs_changes: "warning",
-  approved: "success",
-  rejected: "error",
+  project_approved: "success",
+  project_rejected: "error",
+  project_changes_requested: "warning",
+  report_approved: "success",
+  report_rejected: "error",
+  report_changes_requested: "warning",
 };
 
 const PROJECT_STATUS_OPTIONS: readonly AutocompleteOption[] = (
@@ -107,10 +101,6 @@ const PROJECT_STATUS_OPTIONS: readonly AutocompleteOption[] = (
 const EVALUATION_STATUS_OPTIONS: readonly AutocompleteOption[] = (
   Object.keys(EVALUATION_STATUS_LABELS) as EvaluationStatus[]
 ).map((value) => ({ value, label: EVALUATION_STATUS_LABELS[value] }));
-
-const EVALUATION_CONTEXT_OPTIONS: readonly AutocompleteOption[] = (
-  Object.keys(EVALUATION_CONTEXT_LABELS) as EvaluationContext[]
-).map((value) => ({ value, label: EVALUATION_CONTEXT_LABELS[value] }));
 
 const optionValue = (value: unknown): string | undefined => {
   if (typeof value === "string") return value.trim() || undefined;
@@ -140,11 +130,7 @@ const statusColor = (entry: ProjectStatusEntry | undefined): StatusChipStatus =>
   return PROJECT_STATUS_CHIP[entry.code] ?? "default";
 };
 
-const evaluationStatus = (project: Project): EvaluationStatus | undefined =>
-  project.evaluationStatus ??
-  (project.evaluations && project.evaluations.length === 0
-    ? "waiting"
-    : undefined);
+const evaluationStatus = (project: Project): EvaluationStatus | undefined => project.evaluationStatus;
 
 const formatDate = (value: string) => {
   const date = new Date(value);
@@ -190,12 +176,10 @@ export function Projects() {
         search: filters.search || undefined,
         status: filters.status || undefined,
         evaluationStatus: filters.evaluationStatus || undefined,
-        evaluationContext: filters.evaluationContext || undefined,
       }),
     );
   }, [
     dispatch,
-    filters.evaluationContext,
     filters.evaluationStatus,
     filters.search,
     filters.status,
@@ -210,9 +194,6 @@ export function Projects() {
         status: optionValue(values.status) as ProjectStatus | undefined,
         evaluationStatus: optionValue(values.evaluationStatus) as
           | EvaluationStatus
-          | undefined,
-        evaluationContext: optionValue(values.evaluationContext) as
-          | EvaluationContext
           | undefined,
       }),
     );
@@ -262,17 +243,12 @@ export function Projects() {
       EVALUATION_STATUS_OPTIONS,
       filters.evaluationStatus,
     ),
-    evaluationContext: selectedOption(
-      EVALUATION_CONTEXT_OPTIONS,
-      filters.evaluationContext,
-    ),
   };
 
   const filterDefinitions: Record<ProjectFilterKey, AutocompleteOption[] | undefined> = {
     search: searchOptions,
     status: [...PROJECT_STATUS_OPTIONS],
     evaluationStatus: [...EVALUATION_STATUS_OPTIONS],
-    evaluationContext: [...EVALUATION_CONTEXT_OPTIONS],
   };
 
   const filter = (
@@ -285,7 +261,6 @@ export function Projects() {
             search: "Buscar projeto",
             status: "Status",
             evaluationStatus: "Status da avaliação",
-            evaluationContext: "Contexto da avaliação",
           } satisfies Record<ProjectFilterKey, string>)[key],
         options: filterDefinitions[key] ?? [],
         ...(key === "search" ? { freeSolo: true } : {}),
@@ -339,14 +314,6 @@ export function Projects() {
         return <StatusChip label={statusLabel(entry)} status={statusColor(entry)} />;
       },
     },
-    evaluationContext: {
-      key: "evaluationContext",
-      label: "Contexto",
-      render: (_value, project) =>
-        project.evaluationContext
-          ? EVALUATION_CONTEXT_LABELS[project.evaluationContext]
-          : "—",
-    },
     evaluationStatus: {
       key: "evaluationStatus",
       label: "Status da avaliação",
@@ -366,12 +333,6 @@ export function Projects() {
       key: "updatedAt",
       label: "Atualizado",
       render: (value) => formatDate(String(value)),
-    },
-    evaluations: {
-      key: "evaluations",
-      label: "Avaliador",
-      render: (_value, project) =>
-        project.evaluations?.at(-1)?.assignedTo?.fullName ?? "A definir",
     },
     actions: {
       variant: "actions",

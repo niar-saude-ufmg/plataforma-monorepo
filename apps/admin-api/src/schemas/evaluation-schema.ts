@@ -10,16 +10,26 @@ export const assignEvaluationSchema = z.object({
 
 export const updateEvaluationSchema = z.object({
   status: z.enum([
-    "sent_to_committee",
-    "approved",
-    "rejected",
-    "needs_changes",
-    "approved_by_committee",
-    "rejected_by_committee",
-    "needs_changes_by_committee"
+    "project_approved",
+    "project_rejected",
+    "project_changes_requested",
+    "report_approved",
+    "report_rejected",
+    "report_changes_requested"
   ]),
-  committee_member_user_id: z.coerce.number().int().positive().optional(),
-  justification: z.string().trim().optional()
+  justification: z.string().trim().optional(),
+  certification_decision: z.enum(["granted", "not_granted"]).optional(),
+  certification_reason: z.string().trim().optional()
+}).superRefine((data, context) => {
+  if (data.status === "report_approved" && !data.certification_decision) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["certification_decision"], message: "A decisão sobre o selo é obrigatória ao aprovar o relatório" });
+  }
+  if (data.status !== "report_approved" && (data.certification_decision || data.certification_reason)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["certification_decision"], message: "A decisão sobre o selo só pode ser registrada ao aprovar o relatório" });
+  }
+  if (data.certification_decision === "not_granted" && !data.certification_reason) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["certification_reason"], message: "A justificativa é obrigatória quando o selo não é concedido" });
+  }
 });
 
 export type AssignEvaluationInput = z.infer<typeof assignEvaluationSchema>;

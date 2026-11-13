@@ -15,7 +15,7 @@ const { app } = await import('../src/app.js');
 const token = jwt.sign({ sub: '1' }, process.env.SECRET_KEY);
 const actor: AuthenticatedUser = { id: 1, fullName: 'Admin', email: 'admin@example.org', role: 'admin', accountStatus: 'active' };
 const target = (status: 'active' | 'disabled' | 'pending' | 'rejected' = 'active'): ConsolidatedUserRecord => ({
-  id: 2, fullName: 'Usuário', email: 'user@example.org', role: 'auditor', accountStatus: status,
+  id: 2, fullName: 'Usuário', email: 'user@example.org', role: 'committee', accountStatus: status,
   createdAt: new Date('2026-01-01'), profile: null, researcherProfile: null, committeeProfile: null, coepData: [], authEvaluations: [],
 });
 const patch = (body: Record<string, unknown>) => request(app).patch('/api/admin/users/2/auth-evaluation').set('Authorization', `Bearer ${token}`).send(body);
@@ -31,7 +31,7 @@ describe('PATCH /api/admin/users/:user_id/auth-evaluation', () => {
     expect(response.body).not.toHaveProperty('hashedPassword');
     expect(updateStatus).toHaveBeenCalledWith({ userId: 2, expectedStatus: previous, status, actorUserId: 1 });
   });
-  it.each(['researcher', 'committee', 'auditor'] as const)('bloqueia %s', async (role) => {
+  it.each(['researcher', 'committee'] as const)('bloqueia %s', async (role) => {
     findById.mockResolvedValue({ ...actor, role });
     expect((await patch({ status: 'disabled' })).status).toBe(403);
     expect(updateStatus).not.toHaveBeenCalled();

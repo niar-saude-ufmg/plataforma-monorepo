@@ -21,7 +21,6 @@ import {
 } from '../../store/specialties/specialties.selectors';
 import {
   createAdministrator,
-  createAuditor,
   createCommitteeMember,
   createResearcher,
 } from '../../store/users/users.api';
@@ -216,20 +215,6 @@ export function User() {
 
     if (selectedRole === 'admin') {
       const result = await dispatch(createAdministrator({
-        fullName: values.fullName,
-        email: values.email,
-        password: values.password,
-      }));
-
-      if (result.meta.requestStatus === 'fulfilled') {
-        reset();
-        navigate(USERS_LIST_ROUTE);
-      }
-      return;
-    }
-
-    if (selectedRole === 'auditor') {
-      const result = await dispatch(createAuditor({
         fullName: values.fullName,
         email: values.email,
         password: values.password,

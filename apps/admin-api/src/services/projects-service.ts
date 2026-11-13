@@ -17,11 +17,6 @@ const evaluationStatusFor = (project: ProjectRecord): ProjectEvaluationStatusCod
   return latestVersion?.evaluations?.[0]?.status ?? "waiting";
 };
 
-const evaluationContextFor = (project: ProjectRecord) => {
-  const latestVersion = project.versions.at(-1);
-  return latestVersion?.evaluations?.[0]?.context ?? null;
-};
-
 const DEFAULT_EXPORTS_DIR = resolve(process.cwd(), "../assistente-api/.local/exports");
 
 const exportsDirectory = () => resolve(process.env.EXPORTS_DIR ?? DEFAULT_EXPORTS_DIR);
@@ -85,7 +80,6 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
 
   if (currentUser.role !== "researcher") {
     response.evaluation_status = evaluationStatusFor(project);
-    response.evaluation_context = evaluationContextFor(project);
     response.evaluations = project.versions.flatMap((version) => {
       const evaluation = version.evaluations[0];
       if (!evaluation) return [];
@@ -94,23 +88,9 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
         id: evaluation.id,
         version_number: version.versionNumber,
         status: evaluation.status,
-        assigned_to: evaluation.assignedTo
-          ? {
-              user_id: evaluation.assignedTo.id,
-              full_name: evaluation.assignedTo.fullName,
-              email: evaluation.assignedTo.email,
-              role: evaluation.assignedTo.role
-            }
-          : null,
-        assigned_by: evaluation.assignedBy
-          ? {
-              user_id: evaluation.assignedBy.id,
-              full_name: evaluation.assignedBy.fullName,
-              email: evaluation.assignedBy.email,
-              role: evaluation.assignedBy.role
-            }
-          : null,
         justification: evaluation.justification,
+        certification_decision: evaluation.certificationDecision,
+        certification_reason: evaluation.certificationReason,
         evaluated_at: evaluation.evaluatedAt?.toISOString() ?? null,
         updated_at: evaluation.updatedAt.toISOString()
       }];
@@ -146,7 +126,6 @@ const toRepositoryFilter = (query: ListProjectsQuery, currentUser: Authenticated
     ownerUserId: currentUser.role === "researcher" ? currentUser.id : query.researcher_id,
     status: query.status,
     evaluationStatus: query.evaluation_status,
-    evaluationContext: query.evaluation_context,
     submittedFrom: query.submitted_from,
     submittedTo: query.submitted_to,
     updatedFrom: query.updated_from,

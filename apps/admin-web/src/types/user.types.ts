@@ -87,13 +87,6 @@ export interface CreateAdministratorInput {
   password: string;
 }
 
-/** Entrada do cadastro privado de Auditor — só campos básicos. */
-export interface CreateAuditorInput {
-  fullName: string;
-  email: string;
-  password: string;
-}
-
 /** Entrada do cadastro privado de Membro do Comitê — básicos + especialidade. */
 export interface CreateCommitteeMemberInput {
   fullName: string;

@@ -1,8 +1,4 @@
-import type {
-  EvaluationContext,
-  EvaluationStatus as ContractEvaluationStatus,
-  ProjectStatus as ContractProjectStatus,
-} from "@niar/contracts";
+import type { EvaluationStatus as ContractEvaluationStatus, ProjectStatus as ContractProjectStatus } from "@niar/contracts";
 
 /**
  * Contratos de dados do módulo de projetos.
@@ -13,8 +9,6 @@ import type {
 
 /** Resultado da avaliação da comissão. */
 export type EvaluationStatus = ContractEvaluationStatus;
-
-export type { EvaluationContext } from "@niar/contracts";
 
 /** Status persistidos no domínio administrativo de projetos. */
 export type ProjectStatus = Exclude<
@@ -47,22 +41,14 @@ export interface ProjectDocument {
   createdAt: string;
 }
 
-/** Usuário relacionado à atribuição da avaliação. */
-export interface EvaluationUser {
-  userId: number;
-  fullName: string;
-  email: string;
-  role: string;
-}
-
 /** Avaliação unificada de uma versão. */
 export interface ProjectEvaluation {
   id: number;
   versionNumber: number;
   status: EvaluationStatus;
-  assignedTo: EvaluationUser | null;
-  assignedBy: EvaluationUser | null;
   justification: string | null;
+  certificationDecision: "granted" | "not_granted" | null;
+  certificationReason: string | null;
   evaluatedAt: string | null;
   updatedAt: string;
 }
@@ -70,8 +56,7 @@ export interface ProjectEvaluation {
 /**
  * Projeto como a UI precisa dele.
  *
- * `evaluationStatus`, `evaluationContext` e `evaluations` só vêm para admin,
- * committee e auditor.
+ * `evaluationStatus` e `evaluations` só vêm para admin e committee.
  * Para researcher, ficam `undefined`.
  */
 export interface Project {
@@ -82,7 +67,6 @@ export interface Project {
   status: ProjectStatusEntry[];
   documents: ProjectDocument[];
   evaluationStatus?: EvaluationStatus;
-  evaluationContext?: EvaluationContext | null;
   evaluations?: ProjectEvaluation[];
 }
 
@@ -98,7 +82,7 @@ export interface ProjectListPagination {
 
 export type ProjectListFilters = Pick<
   ProjectListParams,
-  "search" | "status" | "evaluationStatus" | "evaluationContext"
+  "search" | "status" | "evaluationStatus"
 >;
 
 export interface ProjectListParams {
@@ -106,7 +90,6 @@ export interface ProjectListParams {
   pageSize?: number;
   status?: ProjectStatus;
   evaluationStatus?: EvaluationStatus;
-  evaluationContext?: EvaluationContext;
   submittedFrom?: string;
   submittedTo?: string;
   updatedFrom?: string;

@@ -57,26 +57,12 @@ export const USER_LIST_CONFIG: Partial<
       accountStatus: "Status",
     },
   },
-  auditor: {
-    title: "Usuários Auditores",
-    description: "Consulte os usuários e o status de acesso à plataforma.",
-    emptyStateDescription: "Ainda não existem usuários para exibir.",
-    columnIds: ["fullName", "email", "accountStatus", "actions"],
-    filters: ["search", "accountStatus"],
-    actions: ["details", "evaluate"],
-    canCreateUser: false,
-    filterLabels: {
-      search: "Buscar usuário",
-      accountStatus: "Status",
-    },
-  },
 };
 
 const roleLabels: Record<UserRole, string> = {
   admin: 'Administrador',
   researcher: 'Pesquisador',
   committee: 'Comitê gestor',
-  auditor: 'Auditor',
 };
 
 const statusLabels = {
@@ -139,9 +125,5 @@ export const USER_DETAILS_CONFIG: Partial<Record<UserRole, RoleDetailsConfig<Use
         ],
       },
     ],
-  },
-  auditor: {
-    title: detailsTitle,
-    sections: [accountSection],
   },
 };

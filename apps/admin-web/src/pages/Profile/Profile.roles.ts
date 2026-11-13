@@ -33,11 +33,4 @@ export const PROFILE_ROLE_CONFIG: Record<ProfileRole, ProfileRoleConfig> = {
     fields: basicAccountFields,
     actions: ['editProfile', 'changePassword'],
   },
-  auditor: {
-    description: 'Gerencie seus dados pessoais e as permissões de acesso à plataforma.',
-    accessProfileLabel: 'Auditor do NIAR',
-    sections: ['account', 'access'],
-    fields: basicAccountFields,
-    actions: ['editProfile', 'changePassword'],
-  },
 };

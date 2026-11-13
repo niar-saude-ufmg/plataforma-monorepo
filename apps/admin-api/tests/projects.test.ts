@@ -58,6 +58,9 @@ const projectRecord = (): ProjectRecord =>
   ({
     id: 42,
     ownerUserId: 10,
+    assignedCommitteeMemberUserId: null,
+    assignedByUserId: null,
+    assignedAt: null,
     title: "Projeto de pesquisa",
     submittedAt: new Date("2026-09-20T10:00:00.000Z"),
     createdAt: new Date("2026-09-20T10:00:00.000Z"),
@@ -67,6 +70,8 @@ const projectRecord = (): ProjectRecord =>
       fullName: "Pesquisador 10",
       email: "researcher10@niar.local"
     },
+    assignedCommitteeMember: null,
+    assignedBy: null,
     versions: [
       {
         id: 51,
@@ -220,7 +225,6 @@ describe("GET /api/admin/projects", () => {
         id: 42,
         title: "Projeto de pesquisa",
         updated_at: "2026-09-25T12:00:00.000Z",
-        evaluation_context: null,
         evaluation_status: "waiting",
         researcher: {
           id: 10,
@@ -267,23 +271,22 @@ describe("GET /api/admin/projects", () => {
     expect(JSON.stringify(response.body)).not.toContain("/segredo/interno");
   });
 
-  it("retorna a avaliação para todos os perfis dentro do próprio escopo", async () => {
+  it("retorna a decisão para perfis administrativos, mas não para o pesquisador", async () => {
     const record = projectRecord();
     record.versions[0].evaluations = [{
       id: 88,
       projectVersionId: 51,
-      context: "pre_safe_room",
       assignedToUserId: 31,
       assignedByUserId: 20,
-      evaluatedByUserId: null,
-      status: "to_review",
+      evaluatedByUserId: 31,
+      status: "project_approved",
       justification: null,
-      evaluatedAt: null,
+      certificationDecision: null,
+      certificationReason: null,
+      evaluatedAt: new Date("2026-09-22T10:00:00.000Z"),
       createdAt: new Date("2026-09-22T10:00:00.000Z"),
       updatedAt: new Date("2026-09-22T10:00:00.000Z"),
-      assignedTo: { id: 31, fullName: "Avaliador 31", email: "auditor31@niar.local", role: "auditor" },
-      assignedBy: { id: 20, fullName: "Administrador", email: "admin20@niar.local", role: "admin" },
-      evaluatedBy: null
+      evaluatedBy: { id: 31, fullName: "Membro 31", email: "comite31@niar.local", role: "committee" }
     }];
 
     findUserById.mockResolvedValueOnce(authUser(20, "admin"));
@@ -296,25 +299,14 @@ describe("GET /api/admin/projects", () => {
     expect(adminResponse.body.items[0].evaluations).toEqual([{
       id: 88,
       version_number: 1,
-      status: "to_review",
-      assigned_to: {
-        user_id: 31,
-        full_name: "Avaliador 31",
-        email: "auditor31@niar.local",
-        role: "auditor"
-      },
-      assigned_by: {
-        user_id: 20,
-        full_name: "Administrador",
-        email: "admin20@niar.local",
-        role: "admin"
-      },
+      status: "project_approved",
       justification: null,
-      evaluated_at: null,
+      certification_decision: null,
+      certification_reason: null,
+      evaluated_at: "2026-09-22T10:00:00.000Z",
       updated_at: "2026-09-22T10:00:00.000Z"
     }]);
-    expect(adminResponse.body.items[0].evaluation_status).toBe("to_review");
-    expect(adminResponse.body.items[0].evaluation_context).toBe("pre_safe_room");
+    expect(adminResponse.body.items[0].evaluation_status).toBe("project_approved");
 
     findUserById.mockResolvedValueOnce(authUser(10, "researcher"));
     findAll.mockResolvedValueOnce({ items: [record], total: 1 });
@@ -325,7 +317,6 @@ describe("GET /api/admin/projects", () => {
 
     expect(researcherResponse.body.items[0]).not.toHaveProperty("evaluations");
     expect(researcherResponse.body.items[0]).not.toHaveProperty("evaluation_status");
-    expect(researcherResponse.body.items[0]).not.toHaveProperty("evaluation_context");
   });
 
   it("repassa o filtro derivado de avaliação", async () => {
@@ -333,15 +324,15 @@ describe("GET /api/admin/projects", () => {
     findAll.mockResolvedValueOnce({ items: [], total: 0 });
 
     const response = await request(app)
-      .get("/api/admin/projects?evaluation_status=waiting")
+      .get("/api/admin/projects?evaluation_status=project_approved")
       .set("Authorization", `Bearer ${tokenFor(30)}`);
 
     expect(response.status).toBe(200);
-    expect(findAll).toHaveBeenCalledWith(expect.objectContaining({ evaluationStatus: "waiting" }));
+    expect(findAll).toHaveBeenCalledWith(expect.objectContaining({ evaluationStatus: "project_approved" }));
   });
 
-  it("repassa o papel do auditor para aplicar o escopo pré-sala segura", async () => {
-    findUserById.mockResolvedValueOnce(authUser(40, "auditor"));
+  it("repassa o papel do comitê para aplicar o escopo de projetos enviados", async () => {
+    findUserById.mockResolvedValueOnce(authUser(40, "committee"));
     findAll.mockResolvedValueOnce({ items: [], total: 0 });
 
     const response = await request(app)
@@ -352,7 +343,7 @@ describe("GET /api/admin/projects", () => {
     expect(findAll).toHaveBeenCalledWith(
       expect.objectContaining({
         currentUserId: 40,
-        currentUserRole: "auditor"
+        currentUserRole: "committee"
       })
     );
   });

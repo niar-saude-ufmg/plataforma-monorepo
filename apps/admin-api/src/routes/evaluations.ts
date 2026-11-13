@@ -32,7 +32,7 @@ export const evaluationsRouter = Router();
 evaluationsRouter.post(
   "/:project_version_id/evaluation",
   authenticate,
-  restrictTo("admin", "auditor", "committee"),
+  restrictTo("admin", "committee"),
   evaluationsController.assign
 );
 
@@ -47,7 +47,7 @@ evaluationsRouter.post(
 evaluationsRouter.get(
   "/:project_version_id/evaluation",
   authenticate,
-  restrictTo("admin", "auditor", "committee"),
+  restrictTo("admin", "committee"),
   evaluationsController.get
 );
 
@@ -55,13 +55,13 @@ evaluationsRouter.get(
  * @swagger
  * /admin/project-versions/{project_version_id}/evaluation:
  *   put:
- *     summary: Registra uma decisão do auditor ou do comitê
+ *     summary: Registra uma decisão do membro responsável do comitê
  *     tags: [Evaluations]
  *     security: [{ bearerAuth: [] }]
  */
 evaluationsRouter.put(
   "/:project_version_id/evaluation",
   authenticate,
-  restrictTo("auditor", "committee"),
+  restrictTo("committee"),
   evaluationsController.update
 );

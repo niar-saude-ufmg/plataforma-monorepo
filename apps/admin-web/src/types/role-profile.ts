@@ -1,6 +1,6 @@
 import type { UserRole } from '@niar/contracts';
 
-export type ProfileRole = Extract<UserRole, 'admin' | 'researcher' | 'committee' | 'auditor'>;
+export type ProfileRole = Extract<UserRole, 'admin' | 'researcher' | 'committee'>;
 
 export type ProfileSectionId = 'account' | 'access' | 'researcherDetails' | 'committeeDetails';
 

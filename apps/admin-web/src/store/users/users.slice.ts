@@ -7,7 +7,6 @@ import {
   downloadUserCoepDocument,
   createResearcher,
   createAdministrator,
-  createAuditor,
   createCommitteeMember,
   getUsers,
   createUserAuthEvaluation,
@@ -155,7 +154,6 @@ const usersSlice = createSlice({
       createUser,
       createResearcher,
       createAdministrator,
-      createAuditor,
       createCommitteeMember,
     ] as const;
     for (const thunk of createThunks) {

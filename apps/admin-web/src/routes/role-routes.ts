@@ -20,7 +20,6 @@ export type RoleRouteDefinition = {
 const rolePathSegments: Record<UserRole, string> = {
   admin: "administrador",
   researcher: "pesquisador",
-  auditor: "auditor",
   committee: "comite",
 };
 
@@ -39,12 +38,6 @@ const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
   researcher: [
     ...commonRoleRouteDefinitions,
     { label: "Meus projetos", section: "projetos" },
-    { label: "Perfil", section: "perfil" },
-  ],
-  auditor: [
-    ...commonRoleRouteDefinitions,
-    { label: "Projetos", section: "projetos" },
-    { label: "Usuários", section: "usuarios" },
     { label: "Perfil", section: "perfil" },
   ],
   committee: [
