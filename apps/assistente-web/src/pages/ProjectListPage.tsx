@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api, WizardSession } from '../api/client';
+import type { WizardSession } from '../types/assistant.types';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { getProjects } from '../store/projects/projects.api';
+import { selectProjects, selectProjectsError } from '../store/projects/projects.selectors';
 import { assistantRoute } from '../routes';
 import { DOC_STEP_LABELS } from '../constants';
 
@@ -16,14 +19,13 @@ function cleaningStatusLabel(session: WizardSession): string {
 }
 
 export default function ProjectListPage() {
-  const [sessions, setSessions] = useState<WizardSession[]>([]);
-  const [error, setError] = useState('');
+  const dispatch = useAppDispatch();
+  const sessions = useAppSelector(selectProjects);
+  const error = useAppSelector(selectProjectsError);
 
   useEffect(() => {
-    api.listProjects()
-      .then(setSessions)
-      .catch((e) => setError(e.message));
-  }, []);
+    dispatch(getProjects());
+  }, [dispatch]);
 
   return (
     <div className="page">
@@ -31,7 +33,7 @@ export default function ProjectListPage() {
         <h1>Sessões de Projeto</h1>
         <Link to={assistantRoute('/projects/new')} className="btn">Novo Projeto</Link>
       </header>
-      {error && <p className="error">{error}</p>}
+      {error && <p className="error">{error.message}</p>}
       {sessions.length === 0 && <p className="muted">Nenhuma sessão salva ainda. Inicie um novo projeto para criar uma.</p>}
       <ul className="session-list">
         {sessions.map((s) => (
