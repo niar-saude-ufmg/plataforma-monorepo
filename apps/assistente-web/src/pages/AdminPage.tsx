@@ -1,21 +1,27 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api/client';
-
-type AdminUser = {
-  id: number;
-  email: string;
-  full_name: string;
-  role: string;
-  account_status: string;
-};
+import { errorMessage } from '../services/http';
+import { getAudit } from '../store/audit/audit.api';
+import { selectAudit } from '../store/audit/audit.selectors';
+import {
+  createDataset, createDatasetTable, createTableColumn, deleteDataset,
+  deleteTableColumn, getAdminDatasets, getDatasetTables,
+} from '../store/datasets/datasets.api';
+import { selectAdminDatasets, selectDatasetTables } from '../store/datasets/datasets.selectors';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { getSettings, updateSetting } from '../store/settings/settings.api';
+import { selectSettings } from '../store/settings/settings.selectors';
+import { createUser as createAdminUser, getUsers } from '../store/users/users.api';
+import { selectUsers, selectUsersMutation } from '../store/users/users.selectors';
 
 export default function AdminPage() {
-  const [datasets, setDatasets] = useState<Array<{ id: number; name: string; description: string; enabled: boolean }>>([]);
-  const [settings, setSettings] = useState<Array<{ key: string; value: string }>>([]);
-  const [audit, setAudit] = useState<Array<Record<string, unknown>>>([]);
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const dispatch = useAppDispatch();
+  const datasets = useAppSelector(selectAdminDatasets);
+  const settings = useAppSelector(selectSettings);
+  const audit = useAppSelector(selectAudit);
+  const users = useAppSelector(selectUsers);
+  const tables = useAppSelector(selectDatasetTables);
+  const userMutation = useAppSelector(selectUsersMutation);
   const [selectedDataset, setSelectedDataset] = useState<number | null>(null);
-  const [tables, setTables] = useState<Array<Record<string, unknown>>>([]);
   const [newDataset, setNewDataset] = useState({ name: '', description: '' });
   const [newTable, setNewTable] = useState({ name: '', description: '' });
   const [newColumn, setNewColumn] = useState({ tableId: 0, name: '', data_type: 'VARCHAR(255)', description: '' });
@@ -26,17 +32,18 @@ export default function AdminPage() {
     role: 'researcher',
   });
   const [userMessage, setUserMessage] = useState('');
-  const [creatingUser, setCreatingUser] = useState(false);
   const [error, setError] = useState('');
 
   const load = async () => {
     try {
-      setDatasets(await api.adminDatasets());
-      setSettings(await api.listSettings());
-      setAudit(await api.listAudit());
-      setUsers(await api.listUsers());
+      await Promise.all([
+        dispatch(getAdminDatasets()).unwrap(),
+        dispatch(getSettings()).unwrap(),
+        dispatch(getAudit()).unwrap(),
+        dispatch(getUsers()).unwrap(),
+      ]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha ao carregar dados de administração');
+      setError(errorMessage(e, 'Falha ao carregar dados de administração'));
     }
   };
 
@@ -44,7 +51,7 @@ export default function AdminPage() {
 
   const loadTables = async (datasetId: number) => {
     setSelectedDataset(datasetId);
-    setTables(await api.listTables(datasetId));
+    await dispatch(getDatasetTables(datasetId)).unwrap();
   };
 
   const createUser = async () => {
@@ -54,21 +61,18 @@ export default function AdminPage() {
       setError('Preencha nome, e-mail e senha (mínimo 8 caracteres).');
       return;
     }
-    setCreatingUser(true);
     try {
-      await api.createUser({
+      await dispatch(createAdminUser({
         email: newUser.email.trim(),
         full_name: newUser.full_name.trim(),
         password: newUser.password,
         role: newUser.role,
-      });
+      })).unwrap();
       setNewUser({ email: '', full_name: '', password: '', role: 'researcher' });
       setUserMessage('Usuário criado com sucesso.');
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha ao criar usuário');
-    } finally {
-      setCreatingUser(false);
+      setError(errorMessage(e, 'Falha ao criar usuário'));
     }
   };
 
@@ -111,8 +115,8 @@ export default function AdminPage() {
             <option value="researcher">Pesquisador</option>
             <option value="admin">Administrador</option>
           </select>
-          <button type="button" onClick={createUser} disabled={creatingUser}>
-            {creatingUser ? 'Criando…' : 'Criar usuário'}
+          <button type="button" onClick={createUser} disabled={userMutation.status === 'pending'}>
+            {userMutation.status === 'pending' ? 'Criando…' : 'Criar usuário'}
           </button>
         </div>
         <table className="schema-table">
@@ -154,7 +158,7 @@ export default function AdminPage() {
                   <input
                     defaultValue={s.value}
                     onBlur={async (e) => {
-                      await api.updateSetting(s.key, e.target.value);
+                      await dispatch(updateSetting({ key: s.key, value: e.target.value })).unwrap();
                       load();
                     }}
                   />
@@ -172,7 +176,7 @@ export default function AdminPage() {
           <input placeholder="Nome" value={newDataset.name} onChange={(e) => setNewDataset({ ...newDataset, name: e.target.value })} />
           <input placeholder="Descrição" value={newDataset.description} onChange={(e) => setNewDataset({ ...newDataset, description: e.target.value })} />
           <button onClick={async () => {
-            await api.createDataset({ ...newDataset, enabled: true });
+            await dispatch(createDataset({ ...newDataset, enabled: true })).unwrap();
             setNewDataset({ name: '', description: '' });
             load();
           }}>Adicionar Conjunto</button>
@@ -182,7 +186,7 @@ export default function AdminPage() {
             <li key={d.id}>
               <button onClick={() => loadTables(d.id)}>{d.name}</button>
               {d.enabled ? ' (ativo)' : ' (inativo)'}
-              <button className="btn danger small" onClick={async () => { await api.deleteDataset(d.id); load(); }}>Excluir</button>
+              <button className="btn danger small" onClick={async () => { await dispatch(deleteDataset(d.id)).unwrap(); await load(); }}>Excluir</button>
             </li>
           ))}
         </ul>
@@ -195,7 +199,7 @@ export default function AdminPage() {
             <input placeholder="Nome da tabela" value={newTable.name} onChange={(e) => setNewTable({ ...newTable, name: e.target.value })} />
             <input placeholder="Descrição" value={newTable.description} onChange={(e) => setNewTable({ ...newTable, description: e.target.value })} />
             <button onClick={async () => {
-              await api.createTable(selectedDataset, newTable);
+              await dispatch(createDatasetTable({ datasetId: selectedDataset, data: newTable })).unwrap();
               setNewTable({ name: '', description: '' });
               loadTables(selectedDataset);
             }}>Adicionar Tabela</button>
@@ -213,7 +217,7 @@ export default function AdminPage() {
                       <td>{c.data_type as string}</td>
                       <td>{c.description as string}</td>
                       <td><button className="btn danger small" onClick={async () => {
-                        await api.deleteColumn(c.id as number);
+                        await dispatch(deleteTableColumn(c.id as number)).unwrap();
                         loadTables(selectedDataset);
                       }}>Excluir</button></td>
                     </tr>
@@ -225,11 +229,11 @@ export default function AdminPage() {
                 <input placeholder="Tipo" value={newColumn.data_type} onChange={(e) => setNewColumn({ ...newColumn, data_type: e.target.value })} />
                 <input placeholder="Descrição" onChange={(e) => setNewColumn({ ...newColumn, tableId: t.id as number, description: e.target.value })} />
                 <button onClick={async () => {
-                  await api.createColumn(newColumn.tableId, {
+                  await dispatch(createTableColumn({ tableId: newColumn.tableId, data: {
                     name: newColumn.name,
                     data_type: newColumn.data_type,
                     description: newColumn.description,
-                  });
+                  } })).unwrap();
                   loadTables(selectedDataset);
                 }}>Adicionar Coluna</button>
               </div>

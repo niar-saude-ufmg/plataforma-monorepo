@@ -1,14 +1,5 @@
-export interface CleaningVersion {
-  id: number;
-  session_id: number;
-  version_number: number;
-  label: string;
-  script_content: string;
-  validation_result: Record<string, unknown>;
-  messages_snapshot: Array<{ role: string; content: string }>;
-  notes: string;
-  created_at: string;
-}
+import type { CleaningVersion } from '../types/assistant.types';
+export type { CleaningVersion } from '../types/assistant.types';
 
 interface CleaningVersionsPanelProps {
   versions: CleaningVersion[];
