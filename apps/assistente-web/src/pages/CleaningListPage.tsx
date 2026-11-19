@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api, WizardSession } from '../api/client';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { getCleaningList } from '../store/cleaning/cleaning.api';
+import { selectCleaningList } from '../store/cleaning/cleaning.selectors';
 import { assistantRoute } from '../routes';
 import { CLEAN_STEP_LABELS } from '../constants';
 
 export default function CleaningListPage() {
-  const [sessions, setSessions] = useState<WizardSession[]>([]);
+  const dispatch = useAppDispatch();
+  const sessions = useAppSelector(selectCleaningList);
 
   useEffect(() => {
-    api.listCleaning().then(setSessions);
-  }, []);
+    dispatch(getCleaningList());
+  }, [dispatch]);
 
   return (
     <div className="page">
