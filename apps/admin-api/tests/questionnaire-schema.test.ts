@@ -1,6 +1,6 @@
-import { formatQuestionnaireVersion, QUESTIONNAIRE_CHOICE_TYPES, QUESTIONNAIRE_QUESTION_TYPES } from "@niar/contracts";
+import { formatQuestionnaireVersion, QUESTIONNAIRE_CHOICE_TYPES, QUESTIONNAIRE_INFORMATION_SEVERITIES, QUESTIONNAIRE_QUESTION_TYPES } from "@niar/contracts";
 import { createQuestionnaireSchema, questionnaireDefinitionSchema, updateQuestionnaireSchema } from "../src/schemas/questionnaire-schema.js";
-import { questionnaireInput } from "./fixtures/questionnaires.js";
+import { questionnaireInput, questionnaireWithGroupInput } from "./fixtures/questionnaires.js";
 
 const withQuestion = (question: unknown) => ({
   ...questionnaireInput,
@@ -10,6 +10,74 @@ const question = { id: "pergunta", label: "Enunciado", required: true };
 const options = [{ id: "a", value: "Primeira" }, { id: "b", value: "Segunda" }];
 
 describe("contrato do questionário", () => {
+  const group = {
+    id: "fontes", type: "group", title: "Fontes",
+    fields: [{ id: "nome_fonte", label: "Fonte", type: "text" }]
+  };
+
+  it("preserva questões, grupos e campos na ordem configurada no formulário", () => {
+    expect(createQuestionnaireSchema.parse(questionnaireWithGroupInput)).toEqual(questionnaireWithGroupInput);
+    expect(updateQuestionnaireSchema.parse({ sections: questionnaireWithGroupInput.sections })).toEqual({ sections: questionnaireWithGroupInput.sections });
+    expect(questionnaireDefinitionSchema.parse({ ...questionnaireWithGroupInput, version: 2 })).toEqual({ ...questionnaireWithGroupInput, version: 2 });
+  });
+
+  it("rejeita IDs repetidos entre campos de grupo e questões diretas", () => {
+    const input = { ...questionnaireInput, sections: [
+      { id: "dados", title: "Dados", questions: [group] },
+      { id: "outra", title: "Outra", questions: [{ id: "nome_fonte", type: "text", label: "Nome", required: true }] }
+    ] };
+    const result = createQuestionnaireSchema.safeParse(input);
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0].path).toEqual(["sections", 1, "questions", 0, "id"]);
+  });
+
+  it("permite grupo sem título e sem informação de apoio", () => {
+    const withoutTitle = { id: group.id, type: group.type, fields: group.fields };
+    expect(createQuestionnaireSchema.parse(withQuestion(withoutTitle)).sections[0].questions[0]).toEqual(withoutTitle);
+  });
+
+  it.each(QUESTIONNAIRE_INFORMATION_SEVERITIES)("aceita informação %s vinculada à questão ou ao grupo", (severity) => {
+    const information = { content: "  **Confira** as fontes.  ", severity };
+    for (const item of [{ ...question, type: "textarea" }, group]) {
+      const parsed = createQuestionnaireSchema.parse(withQuestion({ ...item, information }));
+      expect(parsed.sections[0].questions[0].information).toEqual({ content: "**Confira** as fontes.", severity });
+    }
+  });
+
+  it.each([
+    { content: " ", severity: "info" },
+    { content: "Orientação" },
+    { severity: "warning" },
+    { content: "Orientação", severity: "invalid" },
+    { content: "Orientação", severity: "info", id: "aviso" }
+  ])("rejeita informação incompleta ou com propriedades inválidas: %j", (information) => {
+    expect(createQuestionnaireSchema.safeParse(withQuestion({ ...group, information })).success).toBe(false);
+  });
+
+  it("rejeita grupo vazio, grupo aninhado e informação como questão independente", () => {
+    for (const item of [
+      { ...group, fields: [] },
+      { ...group, fields: [group] },
+      { id: "aviso", type: "information", content: "Orientação" }
+    ]) {
+      expect(createQuestionnaireSchema.safeParse(withQuestion(item)).success).toBe(false);
+    }
+  });
+
+  it.each(QUESTIONNAIRE_CHOICE_TYPES)("rejeita %s nos campos internos de um grupo", (type) => {
+    expect(createQuestionnaireSchema.safeParse(withQuestion({ ...group, fields: [{ ...question, type, options }] })).success).toBe(false);
+  });
+
+  it("rejeita IDs repetidos dentro de um grupo e entre grupos", () => {
+    expect(createQuestionnaireSchema.safeParse(withQuestion({ ...group, fields: [group.fields[0], group.fields[0]] })).success).toBe(false);
+    const input = { ...questionnaireInput, sections: [{ id: "dados", title: "Dados", questions: [group, { ...group, id: "outras_fontes" }] }] };
+    expect(createQuestionnaireSchema.safeParse(input).success).toBe(false);
+  });
+
+  it("rejeita o formato descartado com items e grupos repetíveis", () => {
+    expect(createQuestionnaireSchema.safeParse(withQuestion({ ...group, repeatable: true })).success).toBe(false);
+    expect(createQuestionnaireSchema.safeParse({ ...questionnaireInput, sections: [{ id: "dados", title: "Dados", questions: [], items: [group] }] }).success).toBe(false);
+  });
   it.each(QUESTIONNAIRE_QUESTION_TYPES)("aceita o tipo compartilhado %s", (type) => {
     const input = withQuestion({ ...question, type, ...(["radio", "checkbox", "select"].includes(type) ? { options } : {}) });
     expect(createQuestionnaireSchema.safeParse(input).success).toBe(true);

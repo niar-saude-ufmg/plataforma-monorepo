@@ -1,6 +1,6 @@
 import { jest } from "@jest/globals";
 import type { QuestionnaireRecord } from "../src/repositories/questionnaires-repository.js";
-import { questionnaireInput } from "./fixtures/questionnaires.js";
+import { questionnaireInput, questionnaireWithGroupInput } from "./fixtures/questionnaires.js";
 
 const findUnique = jest.fn<(args: unknown) => Promise<QuestionnaireRecord | null>>();
 const findFirst = jest.fn<(args: unknown) => Promise<QuestionnaireRecord | null>>();
@@ -52,6 +52,30 @@ describe("questionnairesRepository", () => {
     findFirst.mockResolvedValue(record({ version: 9 }));
     await questionnairesRepository.create(questionnaireInput);
     expect(create).toHaveBeenCalledWith({ data: expect.objectContaining({ version: 10, definitionJson: { ...questionnaireInput, version: 10 } }) });
+  });
+
+  it("persiste o JSON com grupos e revalida essa estrutura na publicação", async () => {
+    const input = questionnaireWithGroupInput;
+    const definitionJson = { ...input, version: 1 };
+    await questionnairesRepository.create(input);
+    expect(create).toHaveBeenCalledWith({ data: {
+      questionnaireKey: input.key, title: input.title, version: 1, definitionJson
+    } });
+    findUnique.mockResolvedValue(record({ questionnaireKey: input.key, title: input.title, definitionJson }));
+    await questionnairesRepository.publish(1);
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { questionnaireKey: input.key, isActive: true, id: { not: 1 } },
+      data: { isActive: false, updatedAt: expect.any(Date) }
+    });
+  });
+
+  it("não publica JSON persistido com tipos de campo inválidos no grupo", async () => {
+    findUnique.mockResolvedValue(record({ definitionJson: { ...questionnaireInput, version: 1, sections: [{
+      id: "dados", title: "Dados", questions: [{ id: "grupo", type: "group", fields: [{ id: "campo", type: "select", label: "Campo" }] }]
+    }] } }));
+    await expect(questionnairesRepository.publish(1)).rejects.toThrow();
+    expect(updateMany).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
   });
 
   it("não permite trocar o título de uma família existente", async () => {
