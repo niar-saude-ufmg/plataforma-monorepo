@@ -46,8 +46,10 @@ const safeDocumentPath = async (storagePath: string) => {
 };
 
 const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUser): ProjectResponse => {
+  const latestVersion = project.versions.at(-1);
   const response: ProjectResponse = {
     id: project.id,
+    project_version_id: latestVersion?.id ?? null,
     title: project.title,
     updated_at: project.updatedAt.toISOString(),
     researcher: {

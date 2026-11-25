@@ -7,6 +7,7 @@ import {
   createCommitteeMemberRequest,
   downloadUserCoepDocumentRequest,
   getUsersRequest,
+  getActiveCommitteeMembersRequest,
   normalizeUserApiError,
   normalizeUserDocumentApiError,
   normalizeUserListApiError,
@@ -35,6 +36,27 @@ export const getUsers = createAsyncThunk<
 >('users/getUsers', async (params, { rejectWithValue }) => {
   try {
     return await getUsersRequest(params);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
+      return rejectWithValue(error as ApiError);
+    }
+
+    return rejectWithValue(normalizeUserListApiError('UNKNOWN_ERROR', undefined));
+  }
+});
+
+export const getActiveCommitteeMembers = createAsyncThunk<
+  UserListItem[],
+  { search?: string },
+  { rejectValue: ApiError }
+>('users/getActiveCommitteeMembers', async ({ search }, { rejectWithValue }) => {
+  try {
+    return await getActiveCommitteeMembersRequest(search);
   } catch (error) {
     if (
       typeof error === 'object' &&

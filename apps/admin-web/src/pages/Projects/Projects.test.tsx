@@ -14,7 +14,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../../App";
 import { store } from "../../store";
 import { setSelectedAuthUser } from "../../store/auth/auth.slice";
-import { clearProjectsState } from "../../store/projects/projects.slice";
+import { clearProjectsState, setSelectedProject } from "../../store/projects/projects.slice";
+import { setProjectsFilters, setProjectsPage } from "../../store/projects/projects.slice";
 import { getRoleNavigation } from "../../routes/role-routes";
 import type { UserRole } from "../../types/user.types";
 import { Projects } from "./Projects";
@@ -152,6 +153,49 @@ vi.mock("@niar/ui", async (importOriginal) => {
 
   return {
     ...actual,
+    Autocomplete: ({ label, options, value, onChange, onInputChange, disabled }: any) => (
+      <div>
+        <label>
+          Buscar {label}
+          <input
+            aria-label={`Buscar ${label}`}
+            disabled={disabled}
+            onChange={(event) => onInputChange?.(event, event.target.value, "input")}
+          />
+        </label>
+        <label>
+          {label}
+          <select
+            aria-label={label}
+            value={value?.value ?? ""}
+            disabled={disabled}
+            onChange={(event) => onChange?.(
+              event,
+              options.find((option: any) => option.value === event.target.value) ?? null,
+            )}
+          >
+            <option value="">Selecione</option>
+            {options.map((option: any) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+    ),
+    ListText: ({ items }: any) => (
+      <dl>{items.map((item: any) => <div key={item.label}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}</dl>
+    ),
+    Checkbox: ({ label, checked, onChange, disabled }: any) => (
+      <label>
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          disabled={disabled}
+        />
+        {label}
+      </label>
+    ),
     Listing,
     Filter,
     StatusChip: ({ label, status }: any) => (
@@ -170,6 +214,7 @@ const PROJECT_RESPONSE = {
   items: [
     {
       id: 42,
+      project_version_id: 84,
       title: "Projeto de pesquisa",
       updated_at: "2026-10-02T12:00:00.000Z",
       researcher: {
@@ -214,6 +259,63 @@ const EMPTY_RESPONSE = {
   pagination: { page: 1, page_size: 20, total_items: 0, total_pages: 0 },
 };
 
+const ASSIGNABLE_PROJECT_RESPONSE = {
+  ...PROJECT_RESPONSE,
+  items: [{
+    ...PROJECT_RESPONSE.items[0],
+    project_version_id: 84,
+    evaluation_status: "waiting",
+    evaluations: [],
+    status: [{
+      code: "submitted_to_committee",
+      label: "Enviado ao comitê",
+      version_number: 2,
+      created_at: "2026-10-02T12:00:00.000Z",
+      notes: null,
+    }],
+  }],
+};
+
+const COMMITTEE_MEMBERS_RESPONSE = {
+  items: [{
+    id: 12,
+    full_name: "Joana Comitê",
+    email: "joana@niar.local",
+    role: "committee",
+    account_status: "active",
+    created_at: "2026-01-01T00:00:00.000Z",
+    profile: null,
+    researcher_profile: null,
+    committee_profile: null,
+    coep: null,
+    latest_auth_evaluation: null,
+  }],
+  pagination: { page: 1, page_size: 100, total_items: 1, total_pages: 1 },
+};
+
+const ASSIGNMENT_RESPONSE = {
+  id: 50,
+  project_version: {
+    id: 84,
+    project_id: 42,
+    version_number: 2,
+    status: "under_review",
+    submitted_at: "2026-10-01T12:00:00.000Z",
+    created_at: "2026-09-30T12:00:00.000Z",
+  },
+  project: { id: 42, owner_user_id: 7, title: "Projeto de pesquisa" },
+  assigned_to: { user_id: 12, full_name: "Joana Comitê", email: "joana@niar.local", role: "committee" },
+  assigned_by: { user_id: 1, full_name: "Administrador", email: "admin@niar.local", role: "admin" },
+  evaluated_by: null,
+  status: "to_review",
+  justification: null,
+  certification_decision: null,
+  certification_reason: null,
+  evaluated_at: null,
+  created_at: "2026-10-02T12:00:00.000Z",
+  updated_at: "2026-10-02T12:00:00.000Z",
+};
+
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -227,6 +329,9 @@ const lastProjectUrl = () => {
   const calls = projectCalls();
   return new URL(String(calls[calls.length - 1][0]), "http://localhost");
 };
+
+const assignmentCalls = () =>
+  fetchMock.mock.calls.filter(([url]) => String(url).includes("/project-versions/"));
 
 const authUser = (role: UserRole) => ({
   id: role === "researcher" ? 7 : 1,
@@ -690,6 +795,158 @@ describe("Projects — estados e tabela", () => {
     renderProjects();
     await screen.findByTestId("project-row-42");
     expect(screen.getAllByTestId("projects-listing")).toHaveLength(1);
+  });
+});
+
+describe("Projects — atribuição de avaliação", () => {
+  it("permite ao gestor selecionar membro, usa o ID da versão e preserva a consulta", async () => {
+    fetchMock.mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes("/project-versions/84/evaluation")) {
+        return Promise.resolve(jsonResponse(ASSIGNMENT_RESPONSE, 201));
+      }
+      if (url.includes("/users")) {
+        return Promise.resolve(jsonResponse(COMMITTEE_MEMBERS_RESPONSE));
+      }
+      return Promise.resolve(jsonResponse(ASSIGNABLE_PROJECT_RESPONSE));
+    });
+    store.dispatch(setProjectsFilters({ status: "submitted_to_committee" }));
+    store.dispatch(setProjectsPage(2));
+    const user = userEvent.setup();
+    renderProjects("admin");
+
+    const row = await screen.findByTestId("project-row-42");
+    await user.click(within(row).getByRole("button", { name: "Atribuir" }));
+    await screen.findByRole("option", { name: "Joana Comitê — joana@niar.local" });
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /^Selecione membro do comitê$/ }),
+      "12",
+    );
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() => expect(assignmentCalls()).toHaveLength(1));
+    const [assignmentUrl, assignmentInit] = assignmentCalls()[0] as [string, RequestInit];
+    expect(assignmentUrl).toContain("/project-versions/84/evaluation");
+    expect(assignmentInit.body).toBe(JSON.stringify({ assigned_to_user_id: 12 }));
+    expect(await screen.findByText("Avaliação atribuída com sucesso.")).toBeInTheDocument();
+    await waitFor(() => expect(projectCalls().length).toBeGreaterThanOrEqual(2));
+    expect(lastProjectUrl().searchParams.get("page")).toBe("2");
+    expect(lastProjectUrl().searchParams.get("status")).toBe("submitted_to_committee");
+    expect(screen.queryByRole("dialog", { name: "Atribuir projeto" })).not.toBeInTheDocument();
+  });
+
+  it("permite ao Comitê assumir a avaliação enviando objeto vazio", async () => {
+    fetchMock.mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes("/project-versions/84/evaluation")) {
+        return Promise.resolve(jsonResponse(ASSIGNMENT_RESPONSE, 201));
+      }
+      return Promise.resolve(jsonResponse(ASSIGNABLE_PROJECT_RESPONSE));
+    });
+    const user = userEvent.setup();
+    renderProjects("committee");
+
+    const row = await screen.findByTestId("project-row-42");
+    await user.click(within(row).getByRole("button", { name: "Assumir avaliação" }));
+    await user.click(screen.getByRole("checkbox", { name: "Atribuir este projeto para mim" }));
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() => expect(assignmentCalls()).toHaveLength(1));
+    expect((assignmentCalls()[0][1] as RequestInit).body).toBe("{}");
+    expect(await screen.findByText("Avaliação assumida com sucesso.")).toBeInTheDocument();
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/users"))).toBe(false);
+  });
+
+  it("não oferece atribuição ao pesquisador", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(ASSIGNABLE_PROJECT_RESPONSE));
+    renderProjects("researcher");
+
+    const row = await screen.findByTestId("project-row-42");
+    expect(within(row).queryByRole("button", { name: /Atribuir|Assumir/ })).not.toBeInTheDocument();
+  });
+
+  it("não aplica um resultado atrasado a outro projeto selecionado", async () => {
+    let resolveAssignment!: (response: Response) => void;
+    const assignmentResponse = new Promise<Response>((resolve) => {
+      resolveAssignment = resolve;
+    });
+    const responseWithTwoProjects = {
+      ...ASSIGNABLE_PROJECT_RESPONSE,
+      items: [
+        ASSIGNABLE_PROJECT_RESPONSE.items[0],
+        {
+          ...ASSIGNABLE_PROJECT_RESPONSE.items[0],
+          id: 43,
+          project_version_id: 85,
+          title: "Outro projeto",
+        },
+      ],
+      pagination: { page: 1, page_size: 20, total_items: 2, total_pages: 1 },
+    };
+    fetchMock.mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes("/project-versions/84/evaluation")) return assignmentResponse;
+      if (url.includes("/users")) return Promise.resolve(jsonResponse(COMMITTEE_MEMBERS_RESPONSE));
+      return Promise.resolve(jsonResponse(responseWithTwoProjects));
+    });
+    const user = userEvent.setup();
+    renderProjects("admin");
+
+    const firstRow = await screen.findByTestId("project-row-42");
+    await user.click(within(firstRow).getByRole("button", { name: "Atribuir" }));
+    await screen.findByRole("option", { name: "Joana Comitê — joana@niar.local" });
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /^Selecione membro do comitê$/ }),
+      "12",
+    );
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+    await waitFor(() => expect(assignmentCalls()).toHaveLength(1));
+
+    const secondProject = store.getState().projects.list.items.find(
+      (project) => project.id === 43,
+    );
+    expect(secondProject).toBeDefined();
+    act(() => {
+      store.dispatch(setSelectedProject(secondProject!));
+    });
+    const assignmentDialog = screen.getByRole("dialog", { name: "Atribuir projeto" });
+    expect(within(assignmentDialog).getByText("Outro projeto")).toBeInTheDocument();
+
+    await act(async () => {
+      resolveAssignment(jsonResponse(ASSIGNMENT_RESPONSE, 201));
+      await assignmentResponse;
+    });
+
+    expect(await screen.findByText("Avaliação atribuída com sucesso.")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Atribuir projeto" })).toBeInTheDocument();
+    expect(within(assignmentDialog).getByText("Outro projeto")).toBeInTheDocument();
+  });
+
+  it("mantém o diálogo e a seleção no conflito 409 e atualiza a lista", async () => {
+    fetchMock.mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes("/project-versions/84/evaluation")) {
+        return Promise.resolve(jsonResponse({ error: "Esta versão já possui uma avaliação atribuída" }, 409));
+      }
+      if (url.includes("/users")) {
+        return Promise.resolve(jsonResponse(COMMITTEE_MEMBERS_RESPONSE));
+      }
+      return Promise.resolve(jsonResponse(ASSIGNABLE_PROJECT_RESPONSE));
+    });
+    const user = userEvent.setup();
+    renderProjects("admin");
+
+    const row = await screen.findByTestId("project-row-42");
+    await user.click(within(row).getByRole("button", { name: "Atribuir" }));
+    await screen.findByRole("option", { name: "Joana Comitê — joana@niar.local" });
+    const memberSelect = screen.getByRole("combobox", { name: /^Selecione membro do comitê$/ });
+    await user.selectOptions(memberSelect, "12");
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+
+    expect(await screen.findByText("Esta avaliação já foi atribuída. A lista foi atualizada.")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Atribuir projeto" })).toBeInTheDocument();
+    expect(memberSelect).toHaveValue("12");
+    await waitFor(() => expect(projectCalls().length).toBeGreaterThanOrEqual(2));
   });
 });
 

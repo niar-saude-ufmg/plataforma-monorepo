@@ -16,6 +16,11 @@ export const selectProjectsListStatus = (state: ProjectsRootState) => selectProj
 export const selectProjectsListError = (state: ProjectsRootState) => selectProjectsState(state).list.error;
 export const selectProjectsListLoading = (state: ProjectsRootState) => selectProjectsState(state).list.status === "pending";
 export const selectProjectsListHasItems = (state: ProjectsRootState) => selectProjectsState(state).list.items.length > 0;
+export const selectProjectsMutation = (state: ProjectsRootState) => selectProjectsState(state).mutation;
+export const selectProjectsMutationStatus = (state: ProjectsRootState) => selectProjectsState(state).mutation.status;
+export const selectProjectsMutationOperation = (state: ProjectsRootState) => selectProjectsState(state).mutation.operation;
+export const selectProjectsMutationLoading = (state: ProjectsRootState) => selectProjectsState(state).mutation.status === "pending";
+export const selectProjectsMutationError = (state: ProjectsRootState) => selectProjectsState(state).mutation.error;
 export const selectProjectsDownload = (state: ProjectsRootState) => selectProjectsState(state).download;
 export const selectProjectsDownloadStatus = (state: ProjectsRootState) => selectProjectsState(state).download.status;
 export const selectProjectsDownloadLoading = (state: ProjectsRootState) => selectProjectsState(state).download.status === "pending";

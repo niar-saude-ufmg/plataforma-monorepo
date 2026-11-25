@@ -7,6 +7,7 @@ import { ProjectDocumentsDialog } from "./ProjectDocumentsDialog";
 
 const project: Project = {
   id: 42,
+  projectVersionId: 84,
   title: "Estudo de saúde pública",
   updatedAt: "2026-10-02T12:00:00.000Z",
   researcher: {

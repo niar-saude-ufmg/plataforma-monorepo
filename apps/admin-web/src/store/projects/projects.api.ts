@@ -1,13 +1,21 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
+  assignProjectEvaluationRequest,
   getProjectsRequest,
   getProjectRequest,
   downloadProjectDocumentRequest,
   normalizeProjectDocumentApiError,
+  normalizeProjectAssignmentApiError,
   normalizeProjectApiError,
 } from '../../services/projects/projects.service';
 import { downloadBlob } from '../../utils/download-file';
-import type { Project, ProjectListParams, ProjectListResponse } from '../../types/project.types';
+import type {
+  AssignedProjectEvaluation,
+  AssignProjectEvaluationInput,
+  Project,
+  ProjectListParams,
+  ProjectListResponse,
+} from '../../types/project.types';
 import type { ApiError } from "../../types/api.types";
 
 // * prefix seguindo padrão usado em users.api.ts
@@ -43,6 +51,27 @@ export const getProject = createAsyncThunk<
       return rejectWithValue(error as ApiError);
     }
     return rejectWithValue(normalizeProjectApiError("UNKNOWN_ERROR", undefined));
+  }
+});
+
+export const assignProjectEvaluation = createAsyncThunk<
+  AssignedProjectEvaluation,
+  AssignProjectEvaluationInput,
+  { rejectValue: ApiError }
+>('projects/assignEvaluation', async (input, { rejectWithValue }) => {
+  try {
+    return await assignProjectEvaluationRequest(input);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
+      return rejectWithValue(error as ApiError);
+    }
+
+    return rejectWithValue(normalizeProjectAssignmentApiError('UNKNOWN_ERROR'));
   }
 });
 

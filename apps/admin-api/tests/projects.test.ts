@@ -223,6 +223,7 @@ describe("GET /api/admin/projects", () => {
       items: [
         {
         id: 42,
+        project_version_id: 51,
         title: "Projeto de pesquisa",
         updated_at: "2026-09-25T12:00:00.000Z",
         evaluation_status: "waiting",
