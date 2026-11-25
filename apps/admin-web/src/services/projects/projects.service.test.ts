@@ -57,6 +57,8 @@ const rawProjectFromApi = {
         role: "admin",
       },
       justification: null,
+      certification_decision: null,
+      certification_reason: null,
       evaluated_at: null,
       updated_at: "2026-09-22T10:00:00.000Z",
     },
@@ -137,19 +139,9 @@ describe("projects service", () => {
             id: 88,
             versionNumber: 1,
             status: "to_review",
-            assignedTo: {
-              userId: 31,
-              fullName: "Avaliador 31",
-              email: "auditor31@niar.local",
-              role: "auditor",
-            },
-            assignedBy: {
-              userId: 20,
-              fullName: "Administrador",
-              email: "admin20@niar.local",
-              role: "admin",
-            },
             justification: null,
+            certificationDecision: null,
+            certificationReason: null,
             evaluatedAt: null,
             updatedAt: "2026-09-22T10:00:00.000Z",
           },
@@ -158,7 +150,11 @@ describe("projects service", () => {
     });
 
     it("não inclui evaluationStatus/evaluations quando a API não os envia (researcher)", () => {
-      const { evaluation_status, evaluations, ...rawResearcher } = rawProjectFromApi;
+      const {
+        evaluation_status,
+        evaluations,
+        ...rawResearcher
+      } = rawProjectFromApi;
 
       const project = toProject(rawResearcher);
 
@@ -235,7 +231,7 @@ describe("projects service", () => {
         page: 2,
         pageSize: 10,
         status: "under_review",
-        evaluationStatus: "waiting",
+        evaluationStatus: "project_approved",
         submittedFrom: "2026-09-01",
         submittedTo: "2026-09-30",
         updatedFrom: "2026-09-01T00:00:00.000Z",
@@ -252,7 +248,8 @@ describe("projects service", () => {
       expect(url).toContain("page=2");
       expect(url).toContain("page_size=10");
       expect(url).toContain("status=under_review");
-      expect(url).toContain("evaluation_status=waiting");
+      expect(url).toContain("evaluation_status=project_approved");
+      expect(url).not.toContain("evaluation_context");
       expect(url).toContain("submitted_from=2026-09-01");
       expect(url).toContain("submitted_to=2026-09-30");
       expect(url).toContain("updated_from=2026-09-01T00%3A00%3A00.000Z");

@@ -18,9 +18,9 @@ model User {
   createdAt             DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
   accountStatus         user_account_status     @default(pending) @map("account_status")
   committeeProfile      CommitteeMemberProfile?
-  evaluationsAssignedBy Evaluation[]            @relation("EvaluationAssigner")
-  evaluationsAssigned   Evaluation[]            @relation("EvaluationAssignee")
   evaluationsPerformed  Evaluation[]            @relation("EvaluationEvaluator")
+  evaluationsAssigned   Evaluation[]            @relation("EvaluationAssignee")
+  evaluationsAssignedBy Evaluation[]            @relation("EvaluationAssigner")
   projects              Project[]               @relation("ProjectOwner")
   researcherProfile     ResearcherProfile?
   coepData              UserCoepData[]
@@ -249,14 +249,14 @@ model CleaningVersion {
 }
 
 model Project {
-  id          Int              @id @default(autoincrement())
-  ownerUserId Int              @map("owner_user_id")
-  title       String           @db.VarChar(255)
-  submittedAt DateTime?        @map("submitted_at") @db.Timestamptz(6)
-  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
-  versions    ProjectVersion[]
-  owner       User             @relation("ProjectOwner", fields: [ownerUserId], references: [id], onUpdate: NoAction)
+  id                            Int              @id @default(autoincrement())
+  ownerUserId                   Int              @map("owner_user_id")
+  title                         String           @db.VarChar(255)
+  submittedAt                   DateTime?        @map("submitted_at") @db.Timestamptz(6)
+  createdAt                     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                     DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  versions                      ProjectVersion[]
+  owner                         User             @relation("ProjectOwner", fields: [ownerUserId], references: [id], onUpdate: NoAction)
 
   @@index([ownerUserId], map: "idx_admin_projects_owner_user_id")
   @@map("projects")
@@ -389,17 +389,18 @@ model UserCoepData {
 model Evaluation {
   id                Int                    @id @default(autoincrement())
   projectVersionId  Int                    @map("project_version_id")
-  context           evaluation_context     @map("evaluation_context")
   assignedToUserId  Int?                   @map("assigned_to_user_id")
   assignedByUserId  Int?                   @map("assigned_by_user_id")
   evaluatedByUserId Int?                   @map("evaluated_by_user_id")
   status            evaluation_status
   justification     String?
+  certificationDecision certification_decision? @map("certification_decision")
+  certificationReason String?              @map("certification_reason")
   evaluatedAt       DateTime?              @map("evaluated_at") @db.Timestamptz(6)
   createdAt         DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime               @default(now()) @map("updated_at") @db.Timestamptz(6)
-  assignedBy        User?                  @relation("EvaluationAssigner", fields: [assignedByUserId], references: [id], onUpdate: NoAction)
   assignedTo        User?                  @relation("EvaluationAssignee", fields: [assignedToUserId], references: [id], onUpdate: NoAction)
+  assignedBy        User?                  @relation("EvaluationAssigner", fields: [assignedByUserId], references: [id], onUpdate: NoAction)
   evaluatedBy       User?                  @relation("EvaluationEvaluator", fields: [evaluatedByUserId], references: [id], onUpdate: NoAction)
   projectVersion    ProjectVersion         @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   statusHistory     ProjectStatusHistory[]
@@ -422,7 +423,6 @@ enum user_role {
   researcher
   admin
   committee
-  auditor
 
   @@schema("shared")
 }
@@ -438,20 +438,19 @@ enum user_account_status {
 
 enum evaluation_status {
   to_review
-  sent_to_committee
-  approved_by_committee
-  rejected_by_committee
-  needs_changes_by_committee
-  needs_changes
-  approved
-  rejected
+  project_approved
+  project_rejected
+  project_changes_requested
+  report_approved
+  report_rejected
+  report_changes_requested
 
   @@schema("admin")
 }
 
-enum evaluation_context {
-  pre_safe_room
-  post_safe_room
+enum certification_decision {
+  granted
+  not_granted
 
   @@schema("admin")
 }

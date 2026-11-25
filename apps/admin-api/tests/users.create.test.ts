@@ -38,10 +38,6 @@ const createAdministrator = jest.fn<(
   data: unknown,
   audit: { actorUserId: number; role: UserRole; email: string },
 ) => Promise<StoredUser>>();
-const createAuditor = jest.fn<(
-  data: unknown,
-  audit: { actorUserId: number; role: UserRole; email: string },
-) => Promise<StoredUser>>();
 const findSpecialtyById = jest.fn<(id: number) => Promise<{ id: number; isActive: boolean } | null>>();
 
 // Mesma técnica usada em users.list.test.ts: mocka o repository antes de qualquer coisa importar o app, pra n depender de um Postgres real.
@@ -53,7 +49,6 @@ jest.unstable_mockModule("../src/repositories/users-repository.js", () => ({
     createResearcher,
     createCommitteeMember,
     createAdministrator,
-    createAuditor,
     createResearcherWithProfile
   }
 }));
@@ -73,8 +68,7 @@ const buildStoredUser = (overrides: Partial<StoredUser> = {}): StoredUser => ({
   accountStatus: "active",
   createdAt: new Date("2026-08-25T15:00:00.000Z"),
   ...overrides
-});
-
+}); // fim dos testes de criação de administrador
 type CreatedResearcher = {
   user: StoredUser;
   profile: { phone: string; institution: string; organizationalUnit: string; contactAddress: string };
@@ -415,7 +409,6 @@ describe("POST /api/admin/users (público)", () => {
     });
   });
 });
-
 describe("POST /api/admin/users/researchers", () => {
   beforeEach(() => {
     findByEmail.mockReset();
@@ -717,90 +710,5 @@ describe("POST /api/admin/users/administrators", () => {
 
     expect(response.status).toBe(409);
     expect(createAdministrator).not.toHaveBeenCalled();
-  });
-});
-
-describe("POST /api/admin/users/auditors", () => {
-  const validPayload = {
-    full_name: "Auditor NIAR",
-    email: "auditor@niar.local",
-    password: "senha12345",
-  };
-
-  beforeEach(() => {
-    findByEmail.mockReset();
-    findById.mockReset();
-    createAuditor.mockReset();
-  });
-
-  it("admin autenticado cria auditor ativo e gera audit log", async () => {
-    findById.mockResolvedValueOnce(buildAdmin(10));
-    findByEmail.mockResolvedValueOnce(null);
-    createAuditor.mockResolvedValueOnce(
-      buildStoredUser({ id: 33, role: "auditor", email: validPayload.email, fullName: validPayload.full_name })
-    );
-
-    const response = await request(app)
-      .post("/api/admin/users/auditors")
-      .set("Authorization", `Bearer ${tokenFor(10)}`)
-      .send(validPayload);
-
-    expect(response.status).toBe(201);
-    expect(response.body.role).toBe("auditor");
-    expect(response.body).not.toHaveProperty("password");
-    expect(response.body).not.toHaveProperty("hashed_password");
-    expect(createAuditor).toHaveBeenCalledWith(
-      expect.objectContaining({
-        role: "auditor",
-        accountStatus: "active",
-      }),
-      { actorUserId: 10, role: "auditor", email: validPayload.email },
-    );
-  });
-
-  it("retorna 401 sem autenticação", async () => {
-    const response = await request(app)
-      .post("/api/admin/users/auditors")
-      .send(validPayload);
-
-    expect(response.status).toBe(401);
-    expect(createAuditor).not.toHaveBeenCalled();
-  });
-
-  it("committee autenticado não pode criar auditor", async () => {
-    findById.mockResolvedValueOnce(buildStoredUser({ id: 21, role: "committee" }));
-
-    const response = await request(app)
-      .post("/api/admin/users/auditors")
-      .set("Authorization", `Bearer ${tokenFor(21)}`)
-      .send(validPayload);
-
-    expect(response.status).toBe(403);
-    expect(createAuditor).not.toHaveBeenCalled();
-  });
-
-  it("retorna 400 para payload incompleto", async () => {
-    findById.mockResolvedValueOnce(buildAdmin(10));
-
-    const response = await request(app)
-      .post("/api/admin/users/auditors")
-      .set("Authorization", `Bearer ${tokenFor(10)}`)
-      .send({ email: "x@niar.local" });
-
-    expect(response.status).toBe(400);
-    expect(createAuditor).not.toHaveBeenCalled();
-  });
-
-  it("retorna 409 para e-mail duplicado", async () => {
-    findById.mockResolvedValueOnce(buildAdmin(10));
-    findByEmail.mockResolvedValueOnce(buildStoredUser({ email: validPayload.email }));
-
-    const response = await request(app)
-      .post("/api/admin/users/auditors")
-      .set("Authorization", `Bearer ${tokenFor(10)}`)
-      .send(validPayload);
-
-    expect(response.status).toBe(409);
-    expect(createAuditor).not.toHaveBeenCalled();
   });
 });

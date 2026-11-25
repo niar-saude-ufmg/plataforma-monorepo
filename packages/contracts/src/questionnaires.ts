@@ -14,11 +14,28 @@ export const QUESTIONNAIRE_QUESTION_TYPE_LABELS: Record<QuestionnaireQuestionTyp
 
 export type QuestionnaireOption = { id: string; value: string };
 
+export const QUESTIONNAIRE_INFORMATION_SEVERITIES = ["info", "success", "warning", "error"] as const;
+export type QuestionnaireInformationSeverity = (typeof QUESTIONNAIRE_INFORMATION_SEVERITIES)[number];
+
+export const QUESTIONNAIRE_INFORMATION_SEVERITY_LABELS: Record<QuestionnaireInformationSeverity, string> = {
+  info: "Informativa",
+  success: "Sucesso",
+  warning: "Aviso",
+  error: "Erro"
+};
+
+export type QuestionnaireInformation = {
+  content: string;
+  severity: QuestionnaireInformationSeverity;
+};
+
 type QuestionnaireQuestionBase = {
   id: string;
   label: string;
   required: boolean;
   description?: string;
+  /** Ausente quando Adicionar informação estiver desmarcado. */
+  information?: QuestionnaireInformation;
 };
 
 export type QuestionnaireQuestion = QuestionnaireQuestionBase & (
@@ -26,11 +43,29 @@ export type QuestionnaireQuestion = QuestionnaireQuestionBase & (
   | { type: "radio" | "checkbox" | "select"; options: QuestionnaireOption[] }
 );
 
+export type QuestionnaireGroupField = {
+  id: string;
+  label: string;
+  /** O Checkbox Texto longo marcado corresponde a textarea. */
+  type: (typeof QUESTIONNAIRE_TEXT_TYPES)[number];
+};
+
+export type QuestionnaireGroup = {
+  id: string;
+  type: "group";
+  title?: string;
+  information?: QuestionnaireInformation;
+  /** A quantidade e a ordem dos campos são determinadas por este array. */
+  fields: QuestionnaireGroupField[];
+};
+
+export type QuestionnaireItem = QuestionnaireQuestion | QuestionnaireGroup;
+
 export type QuestionnaireSection = {
   id: string;
   title: string;
   description?: string;
-  questions: QuestionnaireQuestion[];
+  questions: QuestionnaireItem[];
 };
 
 export type CreateQuestionnaireInput = {

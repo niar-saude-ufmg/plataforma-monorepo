@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { QUESTIONNAIRE_TEXT_TYPES, QUESTIONNAIRE_CHOICE_TYPES } from "@niar/contracts";
+import { QUESTIONNAIRE_TEXT_TYPES, QUESTIONNAIRE_CHOICE_TYPES, QUESTIONNAIRE_INFORMATION_SEVERITIES } from "@niar/contracts";
 import type { CreateQuestionnaireInput, QuestionnaireDefinition, QuestionnaireQuestion, QuestionnaireSection, UpdateQuestionnaireInput } from "@niar/contracts";
 
 export type { QuestionnaireDefinition, QuestionnaireResponse, QuestionnairesListResponse } from "@niar/contracts";
@@ -12,11 +12,17 @@ const optionSchema = z.object({
   value: z.string().trim().min(1).max(255)
 }).strict();
 
+const informationSchema = z.object({
+  content: z.string().trim().min(1).max(20000),
+  severity: z.enum(QUESTIONNAIRE_INFORMATION_SEVERITIES)
+}).strict();
+
 const questionBase = {
   id: identifierSchema,
   label: z.string().trim().min(1).max(1000),
   required: z.boolean(),
-  description: z.string().trim().max(2000).optional()
+  description: z.string().trim().max(2000).optional(),
+  information: informationSchema.optional()
 };
 
 const questionSchema: z.ZodType<QuestionnaireQuestion> = z.union([
@@ -34,11 +40,25 @@ const questionSchema: z.ZodType<QuestionnaireQuestion> = z.union([
   }
 });
 
+const groupFieldSchema = z.object({
+  id: identifierSchema,
+  label: z.string().trim().min(1).max(1000),
+  type: z.enum(QUESTIONNAIRE_TEXT_TYPES)
+}).strict();
+
+const groupSchema = z.object({
+  id: identifierSchema,
+  type: z.literal("group"),
+  title: z.string().trim().min(1).max(1000).optional(),
+  information: informationSchema.optional(),
+  fields: z.array(groupFieldSchema).min(1)
+}).strict();
+
 const sectionSchema: z.ZodType<QuestionnaireSection> = z.object({
   id: identifierSchema,
   title: z.string().trim().min(1).max(255),
   description: z.string().trim().max(2000).optional(),
-  questions: z.array(questionSchema).min(1)
+  questions: z.array(z.union([questionSchema, groupSchema])).min(1)
 }).strict();
 
 const sectionsSchema = z.array(sectionSchema).min(1).superRefine((sections, context) => {
@@ -46,9 +66,20 @@ const sectionsSchema = z.array(sectionSchema).min(1).superRefine((sections, cont
   if (new Set(sectionIds).size !== sectionIds.length) {
     context.addIssue({ code: z.ZodIssueCode.custom, message: "Os IDs das seções não podem se repetir" });
   }
-  const questionIds = sections.flatMap((section) => section.questions.map((question) => question.id));
-  if (new Set(questionIds).size !== questionIds.length) {
-    context.addIssue({ code: z.ZodIssueCode.custom, message: "Os IDs das questões não podem se repetir no questionário" });
+  const ids = new Set<string>();
+  const checkId = (id: string, path: (string | number)[]) => {
+    if (ids.has(id)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path, message: "Os IDs dos elementos não podem se repetir no questionário" });
+    }
+    ids.add(id);
+  };
+  for (const [sectionIndex, section] of sections.entries()) {
+    for (const [index, item] of section.questions.entries()) {
+      checkId(item.id, [sectionIndex, "questions", index, "id"]);
+      if (item.type === "group") {
+        item.fields.forEach((field, fieldIndex) => checkId(field.id, [sectionIndex, "questions", index, "fields", fieldIndex, "id"]));
+      }
+    }
   }
 });
 

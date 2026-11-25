@@ -194,12 +194,14 @@ describe("projects slice", () => {
         setProjectsFilters({
           search: "oncologia",
           status: "under_review",
+          evaluationStatus: "project_approved",
         }),
       );
 
       expect(store.getState().projects.list.filters).toEqual({
         search: "oncologia",
         status: "under_review",
+        evaluationStatus: "project_approved",
       });
       expect(store.getState().projects.list.page).toBe(1);
     });
@@ -224,10 +226,17 @@ describe("projects slice", () => {
       getProjectsRequest.mockReturnValueOnce(pending);
 
       const store = makeTestStore();
-      store.dispatch(getProjects({}));
+      store.dispatch(
+        getProjects({
+          evaluationStatus: "project_approved",
+        }),
+      );
 
       expect(store.getState().projects.list.status).toBe("pending");
       expect(store.getState().projects.list.error).toBeNull();
+      expect(store.getState().projects.list.filters).toEqual({
+        evaluationStatus: "project_approved",
+      });
 
       resolveRequest!({ items: [], pagination: buildPagination() });
     });

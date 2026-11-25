@@ -1,0 +1,13 @@
+@use '@niar/ui/typography.scss' as typography;
+
+.users-page {
+  width: min(100%, 1008px);
+  margin: var(--niar-spacing-2xl) auto 0;
+}
+
+.users-page__filters h2 {
+  @include typography.typography-subtitle;
+  margin: 0 0 var(--niar-spacing-md);
+  color: var(--niar-colors-text-subtitle);
+}
+

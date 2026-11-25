@@ -46,25 +46,14 @@ export function toDocument(raw: any): ProjectDocument {
   };
 }
 
-export function toEvaluationUser(raw: any) {
-  if (!raw) return null;
-
-  return {
-    userId: raw.user_id,
-    fullName: raw.full_name,
-    email: raw.email,
-    role: raw.role,
-  };
-}
-
 export function toEvaluation(raw: any): ProjectEvaluation {
   return {
     id: raw.id,
     versionNumber: raw.version_number,
     status: raw.status,
-    assignedTo: toEvaluationUser(raw.assigned_to),
-    assignedBy: toEvaluationUser(raw.assigned_by),
     justification: raw.justification,
+    certificationDecision: raw.certification_decision,
+    certificationReason: raw.certification_reason,
     evaluatedAt: raw.evaluated_at,
     updatedAt: raw.updated_at,
   };
@@ -80,12 +69,9 @@ export function toProject(raw: any): Project {
     documents: (raw.documents ?? []).map(toDocument),
   };
 
-  // Só admin/committee/auditor recebem esses campos
+  // Só admin e committee recebem esses campos.
   if (raw.evaluation_status !== undefined) {
     project.evaluationStatus = raw.evaluation_status;
-  }
-  if (raw.evaluation_context !== undefined) {
-    project.evaluationContext = raw.evaluation_context;
   }
   if (raw.evaluations !== undefined) {
     project.evaluations = raw.evaluations.map(toEvaluation);
@@ -116,7 +102,6 @@ export async function getProjectsRequest(
   if (params.pageSize !== undefined) query.set("page_size", String(params.pageSize));
   if (params.status) query.set("status", params.status);
   if (params.evaluationStatus) query.set("evaluation_status", params.evaluationStatus);
-  if (params.evaluationContext) query.set("evaluation_context", params.evaluationContext);
   if (params.submittedFrom) query.set("submitted_from", params.submittedFrom);
   if (params.submittedTo) query.set("submitted_to", params.submittedTo);
   if (params.updatedFrom) query.set("updated_from", params.updatedFrom);

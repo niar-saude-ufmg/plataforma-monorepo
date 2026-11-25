@@ -12,3 +12,7 @@
   color: var(--niar-colors-text-subtitle);
   font-weight: var(--niar-font-weight-semibold);
 }
+
+.committee-profile-form > .MuiFormControl-root {
+  max-width: 280px;
+}

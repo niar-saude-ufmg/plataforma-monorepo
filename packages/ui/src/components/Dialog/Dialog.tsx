@@ -32,6 +32,8 @@ export function Dialog({
   closeLabel = "Fechar",
   "aria-label": ariaLabel = "Dialog",
 }: DialogProps) {
+  const requestedMinWidth = typeof minWidth === "number" ? `${minWidth}px` : minWidth;
+
   return (
     <MuiDialog
       open={open}
@@ -41,10 +43,18 @@ export function Dialog({
         onClose?.();
       }}
       aria-label={ariaLabel}
-      slotProps={{ paper: { sx: { minWidth } } }}
+      slotProps={{
+        paper: {
+          sx: {
+            minWidth: `min(${requestedMinWidth}, calc(100vw - ${niar.spacing["2xl"]}))`,
+            margin: { xs: niar.spacing.md, sm: niar.spacing["2xl"] },
+          },
+        },
+      }}
     >
       {(title || showCloseButton) && (
         <DialogTitle
+          variant="h2"
           sx={{ position: "relative", pr: showCloseButton ? 7 : undefined }}
         >
           {title || <span className="visually-hidden">{ariaLabel}</span>}
@@ -52,7 +62,12 @@ export function Dialog({
             <IconButton
               aria-label={closeLabel}
               onClick={onClose}
-              sx={{ position: "absolute", right: 12, top: 12 }}
+              sx={{
+                position: "absolute",
+                right: niar.spacing.sm,
+                top: "50%",
+                transform: "translateY(-50%)",
+              }}
             >
               <Close />
             </IconButton>

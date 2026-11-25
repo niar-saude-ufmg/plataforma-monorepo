@@ -6,7 +6,7 @@ export const filterRootStyles = {
 
 export const filterFieldsStyles = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, 280px)",
+  gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(auto-fit, 280px)" },
   gap: niar.spacing.md,
 };
 

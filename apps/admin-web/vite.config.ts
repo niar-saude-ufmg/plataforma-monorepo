@@ -45,7 +45,11 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: "jsdom",
-      setupFiles: "./src/test-setup.ts"
+      setupFiles: "./src/test-setup.ts",
+      // Os testes de UI com jsdom/MUI competem por CPU no runner do CI;
+      // limitar os workers evita falsos timeouts sem alterar o timeout dos testes.
+      minWorkers: 2,
+      maxWorkers: 2
     }
   };
 });

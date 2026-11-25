@@ -3,7 +3,7 @@ import { NiarProvider } from '@niar/ui';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SpecialtyListResponse, Specialty } from '../../types/specialty.types';
 import authReducer from '../../store/auth/auth.slice';
@@ -26,6 +26,7 @@ vi.mock('../../services/specialties/specialties.service', () => serviceMocks);
 
 import { Specialties } from './Specialties';
 import { Specialty as SpecialtyPage } from '../Specialty/Specialty';
+import { AdminMemoryRouter } from '../../test-utils/AdminMemoryRouter';
 
 const buildSpecialty = (overrides: Partial<Specialty> = {}): Specialty => ({
   id: 1,
@@ -69,9 +70,9 @@ const renderPage = (store = makeStore()) => {
   render(
     <NiarProvider>
       <Provider store={store}>
-        <MemoryRouter initialEntries={['/admin/administrador/especialidades']}>
+        <AdminMemoryRouter initialEntries={['/admin/administrador/especialidades']}>
           <SpecialtyTestRoutes />
-        </MemoryRouter>
+        </AdminMemoryRouter>
       </Provider>
     </NiarProvider>,
   );
@@ -157,18 +158,29 @@ describe('Specialties', () => {
     const user = userEvent.setup();
     renderPage();
     await user.click(await screen.findByRole('button', { name: 'Cadastrar especialidade' }));
-    await user.type(screen.getByLabelText(/Código/), 'duplicado');
-    await user.type(screen.getByLabelText(/Nome/), 'Epidemiologia');
-    await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
+    const form = within(screen.getByLabelText('Formulário de especialidade'));
+    const codeInput = form.getByLabelText(/Código/);
+    const nameInput = form.getByLabelText(/Nome/);
+    await user.click(codeInput);
+    await user.paste('duplicado');
+    await user.click(nameInput);
+    await user.paste('Epidemiologia');
+    await user.click(form.getByRole('button', { name: 'Cadastrar' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Código já cadastrado.');
-    expect(screen.getByLabelText(/Código/)).toHaveValue('duplicado');
-    expect(screen.getByLabelText(/Nome/)).toHaveValue('Epidemiologia');
+    expect(codeInput).toHaveValue('duplicado');
+    expect(nameInput).toHaveValue('Epidemiologia');
+    expect(serviceMocks.createSpecialty).toHaveBeenNthCalledWith(1, {
+      code: 'duplicado', name: 'Epidemiologia', description: '', guidanceContext: '',
+    });
     expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(1);
-    await user.clear(screen.getByLabelText(/Código/));
-    await user.type(screen.getByLabelText(/Código/), 'epi-001');
-    await user.click(screen.getByRole('button', { name: 'Cadastrar' }));
+    await user.clear(codeInput);
+    await user.paste('epi-001');
+    await user.click(form.getByRole('button', { name: 'Cadastrar' }));
     await waitFor(() => expect(screen.queryByLabelText('Formulário de especialidade')).not.toBeInTheDocument());
     expect(serviceMocks.createSpecialty).toHaveBeenCalledTimes(2);
+    expect(serviceMocks.createSpecialty).toHaveBeenNthCalledWith(2, {
+      code: 'epi-001', name: 'Epidemiologia', description: '', guidanceContext: '',
+    });
     expect(serviceMocks.listSpecialties).toHaveBeenCalledTimes(3);
   });
 

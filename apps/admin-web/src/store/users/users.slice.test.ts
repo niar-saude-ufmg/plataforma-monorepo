@@ -13,12 +13,12 @@ import reducer, {
 import { selectUsersListError } from './users.selectors';
 import {
   createAdministrator,
-  createAuditor,
   createCommitteeMember,
   createResearcher,
   createUser,
   downloadUserCoepDocument,
   getUsers,
+  createUserAuthEvaluation
 } from './users.api';
 import type { UserListItem } from '../../types/user.types';
 
@@ -218,7 +218,6 @@ describe('usersSlice — separação entre list, mutation e download', () => {
     ['createUser', createUser],
     ['createResearcher', createResearcher],
     ['createAdministrator', createAdministrator],
-    ['createAuditor', createAuditor],
     ['createCommitteeMember', createCommitteeMember],
   ])('%s.pending seta mutation.operation = "create"', (_name, thunk) => {
     const state = reducer(undefined, pendingAction(thunk));
@@ -259,5 +258,35 @@ describe('usersSlice — clearUsersListError / clearUsersMutationError', () => {
     expect(after.mutation.status).toBe('idle');
     expect(after.list.error).toEqual(listError);
     expect(after.list.status).toBe('failed');
+  });
+});
+
+describe('usersSlice — createUserAuthEvaluation', () => {
+  it('pending define operation "update" e status "pending"', () => {
+    const state = reducer(undefined, pendingAction(createUserAuthEvaluation, { userId: 1, status: 'active' }));
+
+    expect(state.mutation).toEqual({
+      operation: 'update',
+      status: 'pending',
+      error: null
+    });
+  });
+
+  it('fulfilled define status "succeeded" e limpa o selected', () => {
+    let state = reducer(undefined, setSelectedUser(user));
+
+    state = reducer(state, fulfilledAction(createUserAuthEvaluation, { id: 1 }));
+
+    expect(state.mutation.status).toBe('succeeded');
+    expect(state.mutation.error).toBeNull();
+    expect(state.selected).toBeNull();
+  });
+
+  it('rejected define status "failed" e salva o erro', () => {
+    const error = { message: 'Transição não permitida' };
+    const state = reducer(undefined, rejectedAction(createUserAuthEvaluation, error));
+
+    expect(state.mutation.status).toBe('failed');
+    expect(state.mutation.error).toEqual(error);
   });
 });

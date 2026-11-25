@@ -1,4 +1,4 @@
-import type { EvaluationContext } from "@niar/contracts";
+import type { EvaluationStatus as ContractEvaluationStatus, ProjectStatus as ContractProjectStatus } from "@niar/contracts";
 
 /**
  * Contratos de dados do módulo de projetos.
@@ -8,27 +8,13 @@ import type { EvaluationContext } from "@niar/contracts";
  */
 
 /** Resultado da avaliação da comissão. */
-export type EvaluationStatus =
-  | "waiting"
-  | "to_review"
-  | "sent_to_committee"
-  | "approved_by_committee"
-  | "rejected_by_committee"
-  | "needs_changes_by_committee"
-  | "approved"
-  | "needs_changes"
-  | "rejected";
+export type EvaluationStatus = ContractEvaluationStatus;
 
-export type { EvaluationContext } from "@niar/contracts";
-
-/** Status do fluxo do projeto. Deve acompanhar o contrato da API. */
-export type ProjectStatus =
-  | "submitted_to_committee"
-  | "resubmitted_to_committee"
-  | "under_review"
-  | "needs_changes"
-  | "approved"
-  | "rejected";
+/** Status persistidos no domínio administrativo de projetos. */
+export type ProjectStatus = Exclude<
+  ContractProjectStatus,
+  "draft" | "saved" | "changes_requested"
+>;
 
 /** Pesquisador dono do projeto (resumo exibido na lista). */
 export interface ResearcherSummary {
@@ -39,7 +25,7 @@ export interface ResearcherSummary {
 
 /** Item do histórico de status do projeto. */
 export interface ProjectStatusEntry {
-  code: string;
+  code: ProjectStatus;
   label: string;
   versionNumber: number;
   createdAt: string;
@@ -55,22 +41,14 @@ export interface ProjectDocument {
   createdAt: string;
 }
 
-/** Usuário relacionado à atribuição da avaliação. */
-export interface EvaluationUser {
-  userId: number;
-  fullName: string;
-  email: string;
-  role: string;
-}
-
 /** Avaliação unificada de uma versão. */
 export interface ProjectEvaluation {
   id: number;
   versionNumber: number;
   status: EvaluationStatus;
-  assignedTo: EvaluationUser | null;
-  assignedBy: EvaluationUser | null;
   justification: string | null;
+  certificationDecision: "granted" | "not_granted" | null;
+  certificationReason: string | null;
   evaluatedAt: string | null;
   updatedAt: string;
 }
@@ -78,8 +56,7 @@ export interface ProjectEvaluation {
 /**
  * Projeto como a UI precisa dele.
  *
- * `evaluationStatus`, `evaluationContext` e `evaluations` só vêm para admin,
- * committee e auditor.
+ * `evaluationStatus` e `evaluations` só vêm para admin e committee.
  * Para researcher, ficam `undefined`.
  */
 export interface Project {
@@ -90,7 +67,6 @@ export interface Project {
   status: ProjectStatusEntry[];
   documents: ProjectDocument[];
   evaluationStatus?: EvaluationStatus;
-  evaluationContext?: EvaluationContext | null;
   evaluations?: ProjectEvaluation[];
 }
 
@@ -114,7 +90,6 @@ export interface ProjectListParams {
   pageSize?: number;
   status?: ProjectStatus;
   evaluationStatus?: EvaluationStatus;
-  evaluationContext?: EvaluationContext;
   submittedFrom?: string;
   submittedTo?: string;
   updatedFrom?: string;

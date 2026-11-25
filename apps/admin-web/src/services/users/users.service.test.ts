@@ -3,7 +3,6 @@ import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import type { CreateUserInput } from "../../types/user.types";
 import {
   createAdministratorRequest,
-  createAuditorRequest,
   createCommitteeMemberRequest,
   createResearcherRequest,
   createUserRequest,
@@ -14,6 +13,8 @@ import {
   toUserListItem,
   toCreateUserFormData,
   toUser,
+  createUserAuthEvaluationRequest,
+  updateUserStatusRequest,
 } from "./users.service";
 
 const input: CreateUserInput = {
@@ -269,37 +270,6 @@ describe("user service — cadastros privados", () => {
     });
   });
 
-  it("envia auditor como JSON com auth para /users/auditors", async () => {
-    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
-    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      status: 201,
-      json: async () => ({
-        id: 10,
-        full_name: "Carla Auditora",
-        email: "carla@niar-saude.org",
-        role: "auditor",
-        created_at: "2026-09-04T10:00:00.000Z",
-      }),
-    });
-    vi.stubGlobal("fetch", fetchMock);
-
-    await createAuditorRequest({
-      fullName: "Carla Auditora",
-      email: "carla@niar-saude.org",
-      password: "senhaforte1",
-    });
-    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
-
-    expect(url).toBe("http://localhost:3333/api/admin/users/auditors");
-    expect(JSON.parse(String(request.body))).toEqual({
-      full_name: "Carla Auditora",
-      email: "carla@niar-saude.org",
-      password: "senhaforte1",
-    });
-  });
-
   it("envia comitê como JSON com specialty_id numérico em snake_case", async () => {
     window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
     vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
@@ -382,6 +352,135 @@ describe("user service — cadastros privados", () => {
       status: 400,
       message: "Revise os campos informados.",
       fieldErrors: { specialtyId: "Selecione uma especialidade." },
+    });
+  });
+});
+
+describe("user service — atualiza status", () => {
+  it("envia ativação/desativação pelo endpoint de auth-evaluation", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id: 3,
+        full_name: "Ana Beatriz Souza",
+        email: "ana@example.org",
+        role: "researcher",
+        account_status: "disabled",
+        created_at: "2026-11-06T18:00:00.000Z",
+        profile: null,
+        researcher_profile: null,
+        committee_profile: null,
+        coep: null,
+        latest_auth_evaluation: null,
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await updateUserStatusRequest({ userId: 3, status: "disabled" });
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("http://localhost:3333/api/admin/users/3/auth-evaluation");
+    expect(request.method).toBe("PATCH");
+    expect(JSON.parse(String(request.body))).toEqual({ status: "disabled" });
+  });
+
+  it("mostra conflito de avaliação quando a API retorna 409", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: "Transição de active para rejected não permitida" }),
+    }));
+
+    await expect(createUserAuthEvaluationRequest(3, "rejected", "Parecer inválido"))
+      .rejects.toEqual({
+        status: 409,
+        message: "Não foi possível registrar a avaliação porque o status do cadastro mudou ou a transição não é permitida. Atualize a listagem e tente novamente.",
+      });
+  });
+
+  it("envia a mudança de status com justificativa e normaliza a resposta", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        id: 12,
+        user_id: 3,
+        status: "active",
+        justification: "Cadastro aprovado.",
+        evaluated_by_user_id: 1,
+        evaluated_at: "2026-11-06T18:00:00.000Z",
+        created_at: "2026-11-06T18:00:00.000Z",
+        user_coep_data_id: null,
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await createUserAuthEvaluationRequest(3, "active", "Cadastro aprovado.");
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toBe("http://localhost:3333/api/admin/users/3/auth-evaluation");
+    expect(request.method).toBe("POST");
+    expect(request.headers).toEqual({
+      Authorization: "Bearer fake-token",
+      "Content-Type": "application/json",
+    });
+    expect(JSON.parse(String(request.body))).toEqual({
+      status: "active",
+      justification: "Cadastro aprovado.",
+    });
+
+    // Garante que o toUserAuthEvaluation foi aplicado (camelCase)
+    expect(result).toEqual({
+      id: 12,
+      userId: 3,
+      status: "active",
+      justification: "Cadastro aprovado.",
+      evaluatedByUserId: 1,
+      evaluatedAt: "2026-11-06T18:00:00.000Z",
+      createdAt: "2026-11-06T18:00:00.000Z",
+      userCoepDataId: null,
+    });
+  });
+
+  it("normaliza erro 400 de transição não permitida", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: "Transição de status não permitida" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createUserAuthEvaluationRequest(3, "active")).rejects.toEqual({
+      status: 400,
+      message: "Não foi possível registrar a avaliação do usuário.",
+    });
+  });
+
+  it("normaliza erro 400 de validação do backend (Zod)", async () => {
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, "fake-token");
+    vi.stubEnv("VITE_ADMIN_API_URL", "http://localhost:3333/api/admin");
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        errors: [{ path: ["status"], message: "Invalid enum value" }],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createUserAuthEvaluationRequest(3, "active")).rejects.toEqual({
+      status: 400,
+      message: "Revise os campos informados.",
+      fieldErrors: {},
     });
   });
 });

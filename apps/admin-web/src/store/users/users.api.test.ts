@@ -4,11 +4,11 @@ import type { CreateUserInput } from '../../types/user.types';
 import {
   createUser,
   createAdministrator,
-  createAuditor,
   createCommitteeMember,
   createResearcher,
   downloadUserCoepDocument,
-  getUsers
+  getUsers,
+  createUserAuthEvaluation
 } from './users.api';
 import usersReducer from './users.slice';
 
@@ -242,34 +242,6 @@ describe('users api', () => {
     expect(store.getState().users.list.status).toBe("idle");  // separação
   });
 
-  it("createAuditor envia JSON para /users/auditors", async () => {
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({
-        id: 10,
-        full_name: "Carla Auditora",
-        email: "carla@niar-saude.org",
-        role: "auditor",
-        created_at: "2026-09-04T10:00:00.000Z",
-      }), { status: 201, headers: { "Content-Type": "application/json" } }),
-    );
-    const store = createTestStore();
-
-    await store.dispatch(createAuditor({
-      fullName: "Carla Auditora",
-      email: "carla@niar-saude.org",
-      password: "senhaforte1",
-    }));
-    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
-
-    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({
-      full_name: "Carla Auditora",
-      email: "carla@niar-saude.org",
-      password: "senhaforte1",
-    });
-    expect(url).toContain("/users/auditors");
-    expect(store.getState().users.mutation.status).toBe("succeeded");
-  });
-
   it("createCommitteeMember envia specialty_id numérico em snake_case", async () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify({
@@ -342,5 +314,61 @@ describe('users api', () => {
     // e list permanece intacta
     expect(store.getState().users.list.status).toBe("idle");
     expect(store.getState().users.list.error).toBeNull();
+  });
+
+  it('createUserAuthEvaluation envia POST para /auth-evaluation e atualiza mutation', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({
+        id: 1,
+        user_id: 3,
+        status: 'active',
+        justification: 'Aprovado',
+        evaluated_by_user_id: 1,
+        evaluated_at: '2026-01-01T00:00:00Z',
+        created_at: '2026-01-01T00:00:00Z',
+        user_coep_data_id: null,
+      }), { status: 201, headers: { 'Content-Type': 'application/json' } }),
+    );
+    const store = createTestStore();
+
+    const result = await store.dispatch(createUserAuthEvaluation({
+      userId: 3,
+      status: 'active',
+      justification: 'Aprovado'
+    }));
+
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+    expect(url).toContain('/users/3/auth-evaluation');
+    expect(request.method).toBe('POST');
+    expect(JSON.parse(String(request.body))).toEqual({
+      status: 'active',
+      justification: 'Aprovado'
+    });
+
+    expect(store.getState().users.mutation).toEqual({
+      operation: 'update',
+      status: 'succeeded',
+      error: null,
+    });
+    expect(store.getState().users.selected).toBeNull();
+  });
+
+  it('createUserAuthEvaluation.rejected salva o erro no estado', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Transição não permitida' }), { status: 400 }),
+    );
+    const store = createTestStore();
+
+    await store.dispatch(createUserAuthEvaluation({
+      userId: 3,
+      status: 'active'
+    }));
+
+    expect(store.getState().users.mutation).toMatchObject({
+      operation: 'update',
+      status: 'failed',
+      error: expect.objectContaining({ status: 400 })
+    });
   });
 });

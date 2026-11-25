@@ -7,6 +7,7 @@ export const cardTheme: Components<Theme>["MuiCard"] = {
       borderRadius: niar.radius.medium,
       backgroundColor: niar.colors.surface.white,
       boxShadow: niar.shadow.md,
+      "&.MuiPaper-outlined": { boxShadow: "none" },
       ".MuiCardContent-root": {
         padding: niar.spacing.md,
         "&:last-child": {

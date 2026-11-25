@@ -2,8 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors/app-error.js";
 import {
   listUsersQuerySchema,
+  updateUserStatusSchema,
   createAdministratorSchema,
-  createAuditorSchema,
   createUserAuthEvaluationSchema,
   createCommitteeMemberSchema,
   createResearcherSchema,
@@ -49,6 +49,16 @@ const parseResearcherMultipartRequest = (request: Request) => {
 };
 
 export const usersController = {
+  updateStatus: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      if (!request.user) throw new AppError('Não autenticado', 401);
+      const { user_id } = userAuthEvaluationParamsSchema.parse(request.params);
+      const data = updateUserStatusSchema.parse(request.body);
+      response.json(await usersService.updateStatus(user_id, data, request.user));
+    } catch (error) {
+      next(error);
+    }
+  },
   list: async (request: Request, response: Response, next: NextFunction) => {
     try {
       if (!request.user) {
@@ -120,19 +130,6 @@ export const usersController = {
       }
       const data = createAdministratorSchema.parse(request.body);
       const user = await usersService.createAdministrator(data, request.user!.id);
-      response.status(201).json(user);
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  createAuditor: async (request: Request, response: Response, next: NextFunction) => {
-    try {
-      if (!request.user) {
-        throw new AppError("Não autenticado", 401);
-      }
-      const data = createAuditorSchema.parse(request.body);
-      const user = await usersService.createAuditor(data, request.user.id);
       response.status(201).json(user);
     } catch (error) {
       next(error);

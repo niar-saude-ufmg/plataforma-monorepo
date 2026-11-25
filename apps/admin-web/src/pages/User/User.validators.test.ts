@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   administratorSchema,
-  auditorSchema,
   committeeSchema,
   researcherSchema,
   userSchema,
@@ -88,20 +87,6 @@ describe('administratorSchema', () => {
     expect(errors.passwordConfirmation).toContain('As senhas não conferem.');
   });
 });
-describe('auditorSchema', () => {
-  it('aceita payload válido', () => {
-    expect(auditorSchema.safeParse(validAdmin).success).toBe(true);
-  });
-
-  it('aplica a mesma regra de confirmação de senha', () => {
-    const errors = fieldErrors(auditorSchema.safeParse({
-      ...validAdmin,
-      passwordConfirmation: 'outra',
-    }));
-    expect(errors.passwordConfirmation).toContain('As senhas não conferem.');
-  });
-});
-
 describe('committeeSchema', () => {
   it('aceita specialtyId preenchido', () => {
     expect(committeeSchema.safeParse(validCommittee).success).toBe(true);

@@ -1,27 +1,31 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
   createUserRequest,
+  updateUserStatusRequest,
   createResearcherRequest,
   createAdministratorRequest,
-  createAuditorRequest,
   createCommitteeMemberRequest,
   downloadUserCoepDocumentRequest,
   getUsersRequest,
   normalizeUserApiError,
   normalizeUserDocumentApiError,
   normalizeUserListApiError,
+  createUserAuthEvaluationRequest,
 } from '../../services/users/users.service';
 import { downloadBlob } from '../../utils/download-file';
 import type { ApiError } from '../../types/api.types';
 import type {
   UserApiError,
+  UserListItem,
+  UpdateUserStatusInput,
   CreateUserInput,
   CreateAdministratorInput,
-  CreateAuditorInput,
   CreateCommitteeMemberInput,
   User,
   UserListParams,
   UserListResponse,
+  UserAuthEvaluation,
+  UserAuthEvaluationInput,
 } from '../../types/user.types';
 
 export const getUsers = createAsyncThunk<
@@ -107,28 +111,6 @@ export const createAdministrator = createAsyncThunk<
   }
 });
 
-/** Cadastro privado de Auditor. */
-export const createAuditor = createAsyncThunk<
-  User,
-  CreateAuditorInput,
-  { rejectValue: UserApiError }
->('users/createAuditor', async (input, { rejectWithValue }) => {
-  try {
-    return await createAuditorRequest(input);
-  } catch (error) {
-    if (typeof error === 'object' && error !== null && 'message' in error) {
-      return rejectWithValue(error as UserApiError);
-    }
-    return rejectWithValue(
-      normalizeUserApiError(
-        'UNKNOWN_ERROR',
-        undefined,
-        'Não foi possível cadastrar o auditor.',
-      ),
-    );
-  }
-});
-
 /** Cadastro privado de Membro do Comitê. */
 export const createCommitteeMember = createAsyncThunk<
   User,
@@ -171,5 +153,49 @@ export const downloadUserCoepDocument = createAsyncThunk<
     }
 
     return rejectWithValue(normalizeUserDocumentApiError('UNKNOWN_ERROR'));
+  }
+});
+
+export const updateUserStatus = createAsyncThunk<
+  UserListItem,
+  UpdateUserStatusInput,
+  { rejectValue: ApiError }
+>('users/updateStatus', async (input, { rejectWithValue }) => {
+  try {
+    return await updateUserStatusRequest(input);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
+      return rejectWithValue(error as ApiError);
+    }
+
+    return rejectWithValue({
+      message: 'Não foi possível alterar o status do usuário. Tente novamente.',
+    });
+  }
+});
+
+export const createUserAuthEvaluation = createAsyncThunk<
+  UserAuthEvaluation,
+  { userId: number } & UserAuthEvaluationInput,
+  { rejectValue: ApiError }
+>('users/createUserAuthEvaluation', async ({ userId, status, justification }, { rejectWithValue }) => {
+  try {
+    return await createUserAuthEvaluationRequest(userId, status, justification);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message: unknown }).message === 'string'
+    ) {
+      return rejectWithValue(error as ApiError);
+    }
+
+    return rejectWithValue(normalizeUserApiError('UNKNOWN_ERROR', undefined));
   }
 });

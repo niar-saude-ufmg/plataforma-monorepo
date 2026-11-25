@@ -87,13 +87,6 @@ export interface CreateAdministratorInput {
   password: string;
 }
 
-/** Entrada do cadastro privado de Auditor — só campos básicos. */
-export interface CreateAuditorInput {
-  fullName: string;
-  email: string;
-  password: string;
-}
-
 /** Entrada do cadastro privado de Membro do Comitê — básicos + especialidade. */
 export interface CreateCommitteeMemberInput {
   fullName: string;
@@ -293,3 +286,17 @@ export interface ChangePasswordInput {
   currentPassword: string;
   password: string;
 }
+
+export type UserEvaluationDecision = 'active' | 'rejected';
+
+export type UserAuthEvaluationInput = {
+  status: UserEvaluationDecision;
+  justification?: string;
+};
+
+export type UserAuthEvaluation = UserListEvaluation;
+
+export type UpdateUserStatusInput = {
+  userId: number;
+  status: 'active' | 'disabled';
+};

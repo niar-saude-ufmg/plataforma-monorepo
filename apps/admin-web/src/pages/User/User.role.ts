@@ -10,6 +10,7 @@ export type UserRoleAlert = {
 export type UserRoleConfig = {
   label: string;
   description: string;
+  title?: string;
   profile: UserRoleProfile;
   alert?: UserRoleAlert;
 };
@@ -17,7 +18,8 @@ export type UserRoleConfig = {
 export const USER_ROLE_CONFIG: Record<UserRole, UserRoleConfig> = {
   researcher: {
     label: 'Pesquisador',
-    description: 'Preencha os dados para criar o acesso do pesquisador e registrar o parecer do COEP.',
+    title: 'Cadastro de pesquisador',
+    description: 'Preencha os dados abaixo para criar o acesso e registrar o parecer do COEP.',
     profile: 'researcher',
   },
   admin: {
@@ -29,18 +31,9 @@ export const USER_ROLE_CONFIG: Record<UserRole, UserRoleConfig> = {
       message: 'Este usuário terá acesso administrativo à plataforma.',
     },
   },
-  auditor: {
-    label: 'Auditor',
-    description: 'Adicione um novo usuário auditor do NIAR à plataforma.',
-    profile: 'none',
-    alert: {
-      severity: 'warning',
-      message: 'Este usuário terá acesso às funções de auditoria da plataforma.',
-    },
-  },
   committee: {
-    label: 'Membro do Comitê',
-    description: 'Adicione um novo membro da comissão à plataforma.',
+    label: 'Comitê',
+    description: 'Adicione um novo usuário da comissão à plataforma.',
     profile: 'committee',
     alert: {
       severity: 'warning',

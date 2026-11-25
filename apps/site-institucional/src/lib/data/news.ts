@@ -160,6 +160,55 @@ export function isInternalArticle(item: NewsItem): boolean {
 
 const items: NewsInput[] = [
 	{
+		id: 'leme-webmedia',
+		date: '2026-10-27',
+		category: 'event',
+		title: {
+			pt: 'NIAR-Saúde apresenta o LEME no WebMedia 2026',
+			en: 'NIAR-Saúde presents LEME at WebMedia 2026'
+		},
+		excerpt: {
+			pt: 'No Workshop de Ferramentas e Aplicações do simpósio, em Lavras (MG), o grupo apresentou o LEME, assistente em português que responde perguntas sobre normas de saúde e IA responsável citando as fontes.',
+			en: 'At the symposium’s Tools and Applications Workshop, in Lavras (MG), the group presented LEME, a Portuguese-language assistant that answers questions on health and responsible AI regulations by citing its sources.'
+		},
+		gallery: 'wide',
+		photos: [
+			{
+				alt: {
+					pt: 'Karolina Azevedo apresenta o LEME no WebMedia 2026, com o slide de abertura do trabalho projetado ao fundo',
+					en: 'Karolina Azevedo presents LEME at WebMedia 2026, with the paper’s title slide projected behind her'
+				},
+				caption: {
+					pt: 'Karolina Azevedo apresenta o LEME no Workshop de Ferramentas e Aplicações do WebMedia 2026, em Lavras (MG).',
+					en: 'Karolina Azevedo presents LEME at the WebMedia 2026 Tools and Applications Workshop, in Lavras (MG).'
+				},
+				position: 'center 30%'
+			}
+		],
+		body: [
+			{
+				pt: 'O NIAR-Saúde participou do XXXII Simpósio Brasileiro de Sistemas Multimídia e Web (WebMedia 2026), realizado de 27 a 30 de outubro de 2026 em Lavras (MG), com coorganização da Universidade Federal de Lavras (UFLA). O WebMedia é o principal fórum brasileiro de pesquisa em sistemas multimídia e web.',
+				en: 'NIAR-Saúde took part in the 32nd Brazilian Symposium on Multimedia and Web Systems (WebMedia 2026), held from 27 to 30 October 2026 in Lavras (MG) and co-organized by the Federal University of Lavras (UFLA). WebMedia is Brazil’s main research forum on multimedia and web systems.'
+			},
+			{
+				pt: 'No XXV Workshop de Ferramentas e Aplicações (WFA), o grupo apresentou o trabalho “LEME: assistente RAG em português para normas brasileiras e internacionais sobre saúde e IA Responsável”, publicado nos anais estendidos do simpósio.',
+				en: 'At the 25th Tools and Applications Workshop (WFA), the group presented the paper “LEME: assistente RAG em português para normas brasileiras e internacionais sobre saúde e IA Responsável” (LEME: a Portuguese RAG assistant for Brazilian and international regulations on health and Responsible AI), published in the symposium’s extended proceedings.'
+			},
+			{
+				pt: 'O LEME é um assistente conversacional que responde, em português, a perguntas sobre um acervo bilíngue de 63 normas, resoluções e diretrizes brasileiras e internacionais sobre saúde e inteligência artificial. Construído com geração aumentada por recuperação (RAG), ele cita os documentos que sustentam cada resposta e se recusa a responder quando o acervo não traz base para isso.',
+				en: 'LEME is a conversational assistant that answers, in Portuguese, questions about a bilingual collection of 63 Brazilian and international regulations, resolutions and guidelines on health and artificial intelligence. Built with retrieval-augmented generation (RAG), it cites the documents behind each answer and declines to answer when the collection offers no grounds for one.'
+			},
+			{
+				pt: 'O trabalho também propõe uma avaliação reprodutível, com um conjunto de referência de 100 perguntas. Nos testes, as alucinações graves caíram de 23 para no máximo 4 em cada 100 respostas, e as recusas corretas a perguntas fora do escopo subiram de 18 para 22 em 25. O código, a lista de documentos do acervo, o conjunto de perguntas e os scripts de avaliação são públicos.',
+				en: 'The work also proposes a reproducible evaluation, with a 100-question reference set. In the tests, severe hallucinations fell from 23 to at most 4 per 100 answers, and correct refusals of out-of-scope questions rose from 18 to 22 out of 25. The code, the collection’s document list, the question set and the evaluation scripts are public.'
+			},
+			{
+				pt: 'O artigo é assinado por Karolina Azevedo, Italo Avelar, Matheus Carvalho, Helen Costa Lima, Isadora Cristina, Marisa Vasconcelos, Michele Brandão e Wagner Meira Jr. A versão completa está disponível nos anais estendidos do WebMedia 2026 e pode ser acessada na página de publicações do NIAR-Saúde.',
+				en: 'The paper is authored by Karolina Azevedo, Italo Avelar, Matheus Carvalho, Helen Costa Lima, Isadora Cristina, Marisa Vasconcelos, Michele Brandão and Wagner Meira Jr. The full version is available in the WebMedia 2026 extended proceedings and can be accessed on NIAR-Saúde’s publications page.'
+			}
+		]
+	},
+	{
 		id: 'niar-no-iv-simposio-ci-ia-saude',
 		date: '2026-09-17',
 		category: 'event',

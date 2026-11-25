@@ -14,8 +14,8 @@ import {
 
 import { specialtiesRepository } from "../repositories/specialties-repository.js";
 import {
+  UpdateUserStatusInput,
   CreateAdministratorInput,
-  CreateAuditorInput,
   CreateCommitteeMemberInput,
   CreatePublicUserInput,
   CreateResearcherInput,
@@ -149,16 +149,30 @@ const toConsolidatedUserResponse = (user: ConsolidatedUserRecord): ConsolidatedU
 };
 
 const scopedRoleFor = (requestedRole: UserRole | undefined, currentUser: AuthenticatedUser): UserRole | undefined => {
-  if (currentUser.role !== "committee" && currentUser.role !== "auditor") return requestedRole;
+  if (currentUser.role !== "committee") return requestedRole;
 
   if (requestedRole && requestedRole !== "researcher") {
-    throw new AppError("Comitê e auditor só podem consultar pesquisadores", 403);
+    throw new AppError("Comitê só pode consultar pesquisadores", 403);
   }
 
   return "researcher";
 };
 
 export const usersService = {
+  updateStatus: async (userId: number, data: UpdateUserStatusInput, currentUser: AuthenticatedUser): Promise<ConsolidatedUserResponse> => {
+    if (currentUser.role !== 'admin') throw new AppError('Acesso não permitido', 403);
+    if (data.status === 'disabled' && userId === currentUser.id) {
+      throw new AppError('Você não pode desativar a própria conta', 400);
+    }
+    const target = await usersRepository.findDetailById(userId);
+    if (!target) throw new AppError('Usuário não encontrado', 404);
+    const expectedStatus = data.status === 'active' ? 'disabled' : 'active';
+    if (target.accountStatus !== expectedStatus) {
+      throw new AppError('Esta alteração não é permitida para o status atual do usuário', 409);
+    }
+    const updated = await usersRepository.updateStatus({ userId, expectedStatus, status: data.status, actorUserId: currentUser.id });
+    return toConsolidatedUserResponse(updated);
+  },
   listUsers: async (query: ListUsersQuery, currentUser: AuthenticatedUser): Promise<PaginatedUsersResponse> => {
     const result = await usersRepository.findAll({
       role: scopedRoleFor(query.role, currentUser),
@@ -182,7 +196,7 @@ export const usersService = {
   getUser: async (userId: number, currentUser: AuthenticatedUser): Promise<ConsolidatedUserResponse> => {
     const user = await usersRepository.findDetailById(
       userId,
-      currentUser.role === "committee" || currentUser.role === "auditor" ? "researcher" : undefined
+      currentUser.role === "committee" ? "researcher" : undefined
     );
 
     if (!user) {
@@ -372,26 +386,6 @@ export const usersService = {
     return toUserResponse(user);
   },
 
-  createAuditor: async (
-    data: CreateAuditorInput,
-    adminId: number,
-  ): Promise<UserResponse> => {
-    const { hashedPassword } = await prepareUserData(data.email, data.password);
-
-    const user = await usersRepository.createAuditor(
-      {
-        fullName: data.full_name,
-        email: data.email,
-        hashedPassword,
-        role: "auditor",
-        accountStatus: "active",
-      },
-      { actorUserId: adminId, role: "auditor", email: data.email },
-    );
-
-    return toUserResponse(user);
-  },
-
   createAuthEvaluation: async (
     userId: number,
     data: CreateUserAuthEvaluationInput,
@@ -442,8 +436,7 @@ export const usersService = {
   getCoepDocument: async (userId: number, currentUser: AuthenticatedUser) => {
     const canDownloadAnyResearcherDocument =
       currentUser.role === "admin" ||
-      currentUser.role === "committee" ||
-      currentUser.role === "auditor";
+      currentUser.role === "committee";
     const isOwnDocument = currentUser.role === "researcher" && currentUser.id === userId;
 
     if (!canDownloadAnyResearcherDocument && !isOwnDocument) {

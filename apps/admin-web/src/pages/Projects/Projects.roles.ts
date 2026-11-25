@@ -5,27 +5,23 @@ export type ProjectColumnId =
   | "title"
   | "researcher"
   | "status"
-  | "evaluationContext"
+  | "evaluationStatus"
   | "updatedAt"
-  | "evaluations"
   | "actions";
 
-export type ProjectFilterKey = "search" | "status";
+export type ProjectFilterKey =
+  | "search"
+  | "status"
+  | "evaluationStatus";
 
-export type ProjectActionId = "details";
+export type ProjectActionId = "history" | "documents";
 
 export type ProjectListRoleConfig = RoleListConfig<ProjectColumnId, ProjectFilterKey> & {
   actions: readonly ProjectActionId[];
 };
 
-/**
- * Configuração das colunas e filtros disponíveis por papel na listagem de
- * projetos. Auditor e comitê serão adicionados no card específico desses
- * perfis.
- */
-export const PROJECT_LIST_CONFIG: Partial<
-  Record<UserRole, ProjectListRoleConfig>
-> = {
+/** Configuração declarativa da listagem compartilhada de projetos por papel. */
+export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
   admin: {
     title: "Projetos",
     description: "Gerencie os projetos, documentos e atribuições da comissão.",
@@ -34,13 +30,11 @@ export const PROJECT_LIST_CONFIG: Partial<
       "title",
       "researcher",
       "status",
-      "evaluationContext",
       "updatedAt",
-      "evaluations",
       "actions",
     ],
     filters: ["search", "status"],
-    actions: ["details"],
+    actions: ["history", "documents"],
     columnLabels: { status: "Status do projeto" },
     filterLabels: { status: "Status do projeto" },
   },
@@ -50,7 +44,31 @@ export const PROJECT_LIST_CONFIG: Partial<
     emptyStateDescription: "Você ainda não possui projetos cadastrados.",
     columnIds: ["title", "status", "updatedAt", "actions"],
     filters: ["search", "status"],
-    actions: ["details"],
+    actions: ["history", "documents"],
     columnLabels: { status: "Status" },
+  },
+  committee: {
+    title: "Projetos",
+    description:
+      "Consulte os projetos disponíveis para avaliação, documentos e histórico de avaliações.",
+    emptyStateDescription: "Ainda não existem projetos disponíveis para avaliação.",
+    columnIds: [
+      "title",
+      "researcher",
+      "status",
+      "evaluationStatus",
+      "updatedAt",
+      "actions",
+    ],
+    filters: ["search", "status", "evaluationStatus"],
+    actions: ["history", "documents"],
+    columnLabels: {
+      status: "Status do projeto",
+      evaluationStatus: "Status da avaliação",
+    },
+    filterLabels: {
+      status: "Status do projeto",
+      evaluationStatus: "Status da avaliação",
+    },
   },
 };

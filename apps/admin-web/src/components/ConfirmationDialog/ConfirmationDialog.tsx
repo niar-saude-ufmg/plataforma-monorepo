@@ -1,5 +1,6 @@
 import { Button, Dialog, type ButtonProps } from '@niar/ui';
 import type { ReactNode } from 'react';
+import './ConfirmationDialog.scss';
 
 export type ConfirmationDialogProps = {
   open: boolean;
@@ -11,6 +12,7 @@ export type ConfirmationDialogProps = {
   cancelLabel?: string;
   type?: 'default' | 'danger';
   ariaLabel?: string;
+  loading?: boolean;
 };
 
 export function ConfirmationDialog({
@@ -23,6 +25,7 @@ export function ConfirmationDialog({
   cancelLabel = 'Cancelar',
   type = 'default',
   ariaLabel = 'Confirmar ação',
+  loading = false,
 }: ConfirmationDialogProps) {
   const confirmColor: ButtonProps['color'] = type === 'danger' ? 'danger' : 'primary';
 
@@ -31,19 +34,19 @@ export function ConfirmationDialog({
       open={open}
       title={title}
       aria-label={ariaLabel}
-      onClose={onClose}
+      onClose={loading ? undefined : onClose}
       actions={(
         <>
-          <Button type="button" variant="text" onClick={onClose}>
+          <Button type="button" variant="text" disabled={loading} onClick={onClose}>
             {cancelLabel}
           </Button>
-          <Button type="button" variant="contained" color={confirmColor} onClick={onConfirm}>
+          <Button type="button" variant="contained" color={confirmColor} disabled={loading} onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </>
       )}
     >
-      {children}
+      <div className="confirmation-dialog-description">{children}</div>
     </Dialog>
   );
 }

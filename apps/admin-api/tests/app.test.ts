@@ -30,11 +30,10 @@ describe("admin api", () => {
     expect(response.status).toBe(200);
     expect(response.body.module).toBe("admin");
     expect(response.body.projectStatuses.draft).toBe("Rascunho");
-    expect(response.body.evaluationStatuses.waiting).toBe("Aguardando atribuição");
-    expect(response.body.evaluationStatuses.to_review).toBe("Aguardando avaliação");
-    expect(response.body.evaluationStatuses.approved_by_committee).toBe("Aprovado pelo comitê");
-    expect(response.body.evaluationContexts.pre_safe_room).toBe("Pré-sala segura");
-    expect(response.body.evaluationContexts.post_safe_room).toBe("Pós-sala segura");
+    expect(response.body.evaluationStatuses.project_approved).toBe("Aprovado");
+    expect(response.body.evaluationStatuses.project_changes_requested).toBe("Solicitar alterações");
+    expect(response.body.evaluationStatuses.report_approved).toBe("Aprovado");
+    expect(response.body).not.toHaveProperty("evaluationContexts");
   });
   
   it("expõe os papéis do domínio, com admin rotulado como Gestor", async () => {
@@ -43,7 +42,6 @@ describe("admin api", () => {
     expect(response.body.userRoles).toEqual({
       researcher: "Pesquisador",
       admin: "Gestor",
-      auditor: "Auditor",
       committee: "Comitê"
     });
   });

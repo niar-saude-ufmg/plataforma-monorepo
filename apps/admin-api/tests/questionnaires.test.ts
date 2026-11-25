@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import type { UserRole } from "@niar/contracts";
 import { AppError } from "../src/errors/app-error.js";
 import type { QuestionnaireRecord } from "../src/repositories/questionnaires-repository.js";
-import { questionnaireInput } from "./fixtures/questionnaires.js";
+import { questionnaireInput, questionnaireWithGroupInput } from "./fixtures/questionnaires.js";
 
 process.env.SECRET_KEY = "test-secret";
 
@@ -46,7 +46,7 @@ describe("questionnaire API", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it.each<UserRole>(["researcher", "committee", "auditor"])("impede gestão pelo perfil %s", async (role) => {
+  it.each<UserRole>(["researcher", "committee"])("impede gestão pelo perfil %s", async (role) => {
     findUserById.mockResolvedValue(user(role));
     const requests = [
       request(app).get("/api/admin/questionnaires"),
@@ -77,6 +77,43 @@ describe("questionnaire API", () => {
     const response = await request(app).post("/api/admin/questionnaires").set("Authorization", `Bearer ${token}`).send(input);
     expect(response.status).toBe(201);
     expect(create).toHaveBeenCalledWith(input);
+  });
+
+  it("cria, consulta e edita grupos e informações sem perder o formato do formulário", async () => {
+    const input = questionnaireWithGroupInput;
+    const stored = record({ questionnaireKey: input.key, title: input.title, definitionJson: { ...input, version: 1 } });
+    create.mockResolvedValue(stored);
+    findById.mockResolvedValue(stored);
+    update.mockResolvedValue(stored);
+    const created = await request(app).post("/api/admin/questionnaires")
+      .set("Authorization", `Bearer ${token}`).send(input);
+    expect(created.status).toBe(201);
+    expect(create).toHaveBeenCalledWith(input);
+    expect(created.body.definition_json).toEqual({ ...input, version: 1 });
+    const found = await request(app).get("/api/admin/questionnaires/1").set("Authorization", `Bearer ${token}`);
+    expect(found.status).toBe(200);
+    expect(found.body.definition_json).toEqual(created.body.definition_json);
+    const edited = await request(app).patch("/api/admin/questionnaires/1")
+      .set("Authorization", `Bearer ${token}`).send({ sections: input.sections });
+    expect(edited.status).toBe(200);
+    expect(update).toHaveBeenCalledWith(1, { sections: input.sections });
+    expect(edited.body.definition_json).toEqual(created.body.definition_json);
+  });
+
+  it("impede alternativas dentro de um grupo antes de chamar o repositório", async () => {
+    const invalid = { ...questionnaireInput, sections: [{ id: "dados", title: "Dados", questions: [{
+      id: "grupo", type: "group", fields: [{ id: "campo", type: "radio", label: "Campo", options: [
+        { id: "a", value: "A" }, { id: "b", value: "B" }
+      ] }]
+    }] }] };
+    for (const operation of [
+      request(app).post("/api/admin/questionnaires").send(invalid),
+      request(app).patch("/api/admin/questionnaires/1").send({ sections: invalid.sections })
+    ]) {
+      expect((await operation.set("Authorization", `Bearer ${token}`)).status).toBe(400);
+    }
+    expect(create).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
   });
 
   it("rejeita versão informada pelo cliente", async () => {

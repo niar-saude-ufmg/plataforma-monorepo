@@ -1,6 +1,9 @@
 import { niar } from "../../tokens/index";
 
-export const listTextValueStyles = { fontWeight: niar.fontWeight.semibold };
+export const listTextValueStyles = {
+  fontWeight: niar.fontWeight.semibold,
+  overflowWrap: "anywhere",
+};
 
 export const listTextLayoutStyles = {
   flexDirection: "column",

@@ -1,11 +1,12 @@
 import swaggerJsdoc from 'swagger-jsdoc';
-import { QUESTIONNAIRE_TEXT_TYPES, QUESTIONNAIRE_CHOICE_TYPES } from '@niar/contracts';
+import { QUESTIONNAIRE_TEXT_TYPES, QUESTIONNAIRE_CHOICE_TYPES, QUESTIONNAIRE_INFORMATION_SEVERITIES } from '@niar/contracts';
 
 const questionnaireQuestionProperties = {
   id: { type: 'string', pattern: '^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$' },
   label: { type: 'string', minLength: 1, maxLength: 1000 },
   required: { type: 'boolean' },
   description: { type: 'string', maxLength: 2000 },
+  information: { $ref: '#/components/schemas/QuestionnaireInformation' },
 };
 
 const questionnaireInputProperties = {
@@ -110,7 +111,7 @@ const options = {
             id: { type: 'integer', example: 1 },
             full_name: { type: 'string', example: 'Pesquisador Teste' },
             email: { type: 'string', example: 'teste@niar.local' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'auditor', 'committee'] },
+            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
             created_at: { type: 'string', format: 'date-time' },
           },
         },
@@ -177,7 +178,7 @@ const options = {
             id: { type: 'integer', example: 10 },
             email: { type: 'string', format: 'email', example: 'pesquisador@exemplo.com' },
             full_name: { type: 'string', example: 'Pesquisador Teste' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'auditor', 'committee'] },
+            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
             account_status: {
               type: 'string',
               enum: ['pending', 'active', 'rejected', 'disabled'],
@@ -280,7 +281,7 @@ const options = {
             id: { type: 'integer', example: 1 },
             full_name: { type: 'string', example: 'Pesquisador Teste' },
             email: { type: 'string', format: 'email', example: 'teste@niar.local' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'auditor', 'committee'] },
+            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
             account_status: { type: 'string', enum: ['pending', 'active', 'rejected', 'disabled'], example: 'active' },
             profile: {
               description: 'Presente para pesquisadores quando houver perfil cadastrado.',
@@ -380,8 +381,7 @@ const options = {
             id: { type: 'integer', example: 42 },
             title: { type: 'string', example: 'Projeto de pesquisa' },
             updated_at: { type: 'string', format: 'date-time' },
-            evaluation_status: { type: 'string', enum: ['waiting', 'to_review', 'sent_to_committee', 'approved_by_committee', 'rejected_by_committee', 'needs_changes_by_committee', 'approved', 'needs_changes', 'rejected'], example: 'waiting' },
-            evaluation_context: { type: 'string', nullable: true, enum: ['pre_safe_room', 'post_safe_room'], example: 'pre_safe_room' },
+            evaluation_status: { type: 'string', nullable: true, enum: ['project_approved', 'project_rejected', 'project_changes_requested', 'report_approved', 'report_rejected', 'report_changes_requested'], example: 'project_approved' },
             researcher: {
               type: 'object',
               required: ['id', 'full_name', 'email'],
@@ -407,34 +407,14 @@ const options = {
         },
         ProjectEvaluationResponse: {
           type: 'object',
-          required: ['id', 'version_number', 'status', 'assigned_to', 'assigned_by', 'justification', 'evaluated_at', 'updated_at'],
+          required: ['id', 'version_number', 'status', 'justification', 'evaluated_at', 'updated_at'],
           properties: {
             id: { type: 'integer', example: 8 },
             version_number: { type: 'integer', example: 2 },
-            status: { type: 'string', enum: ['to_review', 'sent_to_committee', 'approved_by_committee', 'rejected_by_committee', 'needs_changes_by_committee', 'approved', 'needs_changes', 'rejected'] },
-            assigned_to: {
-              type: 'object',
-              nullable: true,
-              required: ['user_id', 'full_name', 'email', 'role'],
-              properties: {
-                user_id: { type: 'integer', example: 4 },
-                full_name: { type: 'string', example: 'Avaliador' },
-                email: { type: 'string', format: 'email' },
-                role: { type: 'string', enum: ['admin', 'auditor', 'committee'] },
-              },
-            },
-            assigned_by: {
-              type: 'object',
-              nullable: true,
-              required: ['user_id', 'full_name', 'email', 'role'],
-              properties: {
-                user_id: { type: 'integer', example: 2 },
-                full_name: { type: 'string', example: 'Administrador' },
-                email: { type: 'string', format: 'email' },
-                role: { type: 'string', enum: ['admin', 'auditor', 'committee'] },
-              },
-            },
+            status: { type: 'string', enum: ['project_approved', 'project_rejected', 'project_changes_requested', 'report_approved', 'report_rejected', 'report_changes_requested'] },
             justification: { type: 'string', nullable: true },
+            certification_decision: { type: 'string', nullable: true, enum: ['granted', 'not_granted'] },
+            certification_reason: { type: 'string', nullable: true },
             evaluated_at: { type: 'string', format: 'date-time', nullable: true },
             updated_at: { type: 'string', format: 'date-time' },
           },
@@ -531,6 +511,46 @@ const options = {
             },
           ],
         },
+        QuestionnaireInformation: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['content', 'severity'],
+          description: 'Informação de apoio exibida em Alert, vinculada à questão ou ao grupo. Omitir o objeto quando Adicionar informação estiver desmarcado; quando marcado, texto e tipo são obrigatórios.',
+          properties: {
+            content: { type: 'string', minLength: 1, maxLength: 20000, description: 'Texto informativo em Markdown. Renderizar sem HTML arbitrário.' },
+            severity: { type: 'string', enum: [...QUESTIONNAIRE_INFORMATION_SEVERITIES] },
+          },
+        },
+        QuestionnaireGroupField: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['id', 'label', 'type'],
+          description: 'Campo interno do grupo. Texto longo marcado corresponde a textarea; desmarcado, text. Não aceita alternativas nem grupos aninhados.',
+          properties: {
+            id: { type: 'string', minLength: 1, maxLength: 100, pattern: '^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$' },
+            label: { type: 'string', minLength: 1, maxLength: 1000 },
+            type: { type: 'string', enum: [...QUESTIONNAIRE_TEXT_TYPES] },
+          },
+        },
+        QuestionnaireGroup: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['id', 'type', 'fields'],
+          description: 'Grupo de campos configurados na etapa 3. Título/enunciado geral e informação de apoio são opcionais. Quantidade e ordem derivam de fields; não é um grupo repetível.',
+          properties: {
+            id: { type: 'string', pattern: '^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$', maxLength: 100 },
+            type: { type: 'string', enum: ['group'] },
+            title: { type: 'string', minLength: 1, maxLength: 1000 },
+            information: { $ref: '#/components/schemas/QuestionnaireInformation' },
+            fields: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/QuestionnaireGroupField' } },
+          },
+        },
+        QuestionnaireItem: {
+          oneOf: [
+            { $ref: '#/components/schemas/QuestionnaireQuestion' },
+            { $ref: '#/components/schemas/QuestionnaireGroup' },
+          ],
+        },
         QuestionnaireSection: {
           type: 'object',
           required: ['id', 'title', 'questions'],
@@ -539,8 +559,9 @@ const options = {
             id: { type: 'string', pattern: '^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$', example: 'contexto' },
             title: { type: 'string', minLength: 1, maxLength: 255 },
             description: { type: 'string', maxLength: 2000 },
-            questions: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/QuestionnaireQuestion' } },
+            questions: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/QuestionnaireItem' } },
           },
+          description: 'Questões individuais e grupos na ordem do array questions. IDs de questões, grupos e campos únicos na definição. A informação de apoio pertence à questão ou ao grupo e não é um elemento independente.',
         },
         CreateQuestionnaireInput: {
           type: 'object',
@@ -555,7 +576,21 @@ const options = {
               id: 'contexto',
               title: 'Contexto da pesquisa',
               description: 'Informe os objetivos da pesquisa.',
-              questions: [{ id: 'objetivo', type: 'textarea', label: 'Qual é o objetivo da pesquisa?', required: true }],
+              questions: [
+                {
+                  id: 'fontes_dados', type: 'radio', label: 'Qual será a fonte dos dados?', required: true,
+                  information: { content: 'Informe se os dados são de base própria ou do NIAR.', severity: 'info' },
+                  options: [{ id: 'base_propria', value: 'Base própria' }, { id: 'base_niar', value: 'Base do NIAR' }],
+                },
+                {
+                  id: 'campos_sensiveis', type: 'group', title: 'Campos com dados sensíveis',
+                  fields: [
+                    { id: 'campo', label: 'Campo', type: 'text' },
+                    { id: 'tipo_dado_sensivel', label: 'Tipo de dado sensível', type: 'text' },
+                    { id: 'medida_protecao', label: 'Medida de proteção aplicada', type: 'textarea' },
+                  ],
+                },
+              ],
             }],
           },
         },

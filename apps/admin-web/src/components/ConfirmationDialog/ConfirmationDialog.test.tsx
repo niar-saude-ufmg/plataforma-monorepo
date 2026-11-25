@@ -66,3 +66,15 @@ describe('ConfirmationDialog', () => {
     expect(screen.getByRole('button', { name: 'Excluir' })).toHaveAttribute('data-color', 'danger');
   });
 });
+
+
+it('bloqueia confirmação e cancelamento durante a operação', async () => {
+  const onConfirm = vi.fn();
+  const onClose = vi.fn();
+  render(<ConfirmationDialog open loading title="Ativar usuário" confirmLabel="Ativar" onConfirm={onConfirm} onClose={onClose}>Confirmar?</ConfirmationDialog>);
+  expect(screen.getByRole('button', { name: 'Ativar' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Cancelar' })).toBeDisabled();
+  await userEvent.click(screen.getByRole('button', { name: 'Ativar' }));
+  expect(onConfirm).not.toHaveBeenCalled();
+  expect(onClose).not.toHaveBeenCalled();
+});

@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { Listing } from "./Listing";
 
 const columns = [{ key: "name", label: "Projeto" }] as const;
@@ -10,9 +10,24 @@ const emptyState = {
 } as const;
 
 describe("Listing", () => {
+  afterEach(cleanup);
   it("renders table rows in ready state", () => {
     render(<Listing columns={columns} rows={[{ name: "Projeto A" }]} emptyState={emptyState} />);
     expect(screen.getByText("Projeto A")).toBeTruthy();
+  });
+
+  it("keeps separate filters available when no rows match", () => {
+    const { rerender } = render(
+      <Listing separateFilter filter={<input aria-label="Buscar projeto" />} columns={columns} rows={[{ name: "Projeto A" }]} emptyState={emptyState} />,
+    );
+    const filter = screen.getByRole("textbox", { name: "Buscar projeto" });
+    const filterCard = filter.closest(".MuiCard-root");
+    expect(filterCard).toBeTruthy();
+    expect(filterCard?.contains(screen.getByRole("table"))).toBe(false);
+
+    rerender(<Listing separateFilter filter={<input aria-label="Buscar projeto" />} columns={columns} rows={[]} emptyState={emptyState} />);
+    expect(screen.getByRole("textbox", { name: "Buscar projeto" })).toBeTruthy();
+    expect(screen.getByText("Nenhum projeto cadastrado")).toBeTruthy();
   });
 
   it("renders loading and empty states", () => {

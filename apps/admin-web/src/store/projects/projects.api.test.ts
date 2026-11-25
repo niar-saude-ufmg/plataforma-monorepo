@@ -84,14 +84,14 @@ describe("projects thunks", () => {
       const store = makeTestStore();
 
       await store.dispatch(
-        getProjects({ page: 2, pageSize: 10, evaluationStatus: "waiting" }),
+    getProjects({ page: 2, pageSize: 10, evaluationStatus: "project_approved" }),
       );
 
       expect(getProjectsRequest).toHaveBeenCalledTimes(1);
       expect(getProjectsRequest).toHaveBeenCalledWith({
         page: 2,
         pageSize: 10,
-        evaluationStatus: "waiting",
+        evaluationStatus: "project_approved",
       });
     });
 

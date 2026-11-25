@@ -215,7 +215,20 @@ export function Table<T extends Record<string, unknown>>({
           )}
         </TableBody>
       </MuiTable>
-      {pagination ? <TablePagination component="div" {...pagination} /> : null}
+      {pagination ? (
+        <TablePagination
+          component="div"
+          sx={{
+            '& .MuiTablePagination-spacer': { display: 'none' },
+            '& .MuiTablePagination-displayedRows': { marginLeft: 'auto', marginRight: 'auto' },
+            '& .MuiTablePagination-select': {
+              border: `${niar.borderWidth.default} solid ${niar.colors.border}`,
+              borderRadius: niar.radius.small,
+            },
+          }}
+          {...pagination}
+        />
+      ) : null}
     </TableContainer>
   );
 }

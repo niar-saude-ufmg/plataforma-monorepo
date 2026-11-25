@@ -5,7 +5,7 @@ import { Dialog } from "../../components/Dialog/Dialog";
 import { ListText } from "../../components/ListText/ListText";
 import { Timeline } from "../../components/Timeline/Timeline";
 import { niar } from "../../tokens/index";
-import { detailsMinWidth } from "./Details.styles";
+import { detailsContentStyles, detailsMinWidth, detailsTitleStyles } from "./Details.styles";
 
 export type DetailsListItem = { label: ReactNode; value: ReactNode };
 export type DetailsSection = {
@@ -65,12 +65,16 @@ export function Details({
   return (
     <Dialog
       open={open}
-      title={title}
+      title={title ? (
+        <Typography component="span" variant="h2" sx={detailsTitleStyles}>
+          {title}
+        </Typography>
+      ) : undefined}
       onClose={onClose}
       closeLabel={closeLabel}
       minWidth={detailsMinWidth}
     >
-      <Box sx={{ display: "flex", flexDirection: "column", gap: niar.spacing.lg }}>
+      <Box sx={detailsContentStyles}>
         {description && (
           <Typography component="p" variant="body2" color="text.secondary" sx={{ m: 0 }}>
             {description}

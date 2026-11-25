@@ -11,6 +11,7 @@ export const listingContentStyles = {
 export const listingHeaderStyles = {
   alignItems: "center",
   display: "flex",
+  flexWrap: "wrap",
   justifyContent: "space-between",
   gap: niar.spacing.lg,
 };
