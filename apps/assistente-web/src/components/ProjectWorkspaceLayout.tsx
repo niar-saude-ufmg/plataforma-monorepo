@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { WizardSession } from '../api/client';
+import type { WizardSession } from '../types/assistant.types';
 import { AdvisoryChatPanel } from './AdvisoryChatPanel';
 import { DocumentEditorPanel } from './DocumentEditorPanel';
 

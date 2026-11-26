@@ -1,24 +1,37 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Provider } from 'react-redux';
 
-vi.mock('../api/client', async () => {
-  const actual = await vi.importActual<typeof import('../api/client')>('../api/client');
-  return {
-    ...actual,
-    api: {
-      ...actual.api,
-      submitForReview: vi.fn(),
-      getCleaning: vi.fn(),
-      listDatasets: vi.fn().mockResolvedValue([]),
-      listCleaningVersions: vi.fn().mockResolvedValue([]),
-      getSchema: vi.fn(),
-      updateCleaning: vi.fn(),
-    },
-  };
-});
+const mocks = vi.hoisted(() => ({
+  submitForReviewRequest: vi.fn(),
+  getCleaningRequest: vi.fn(),
+  listDatasetsRequest: vi.fn(),
+  getSchemaRequest: vi.fn(),
+  listCleaningVersionsRequest: vi.fn(),
+  downloadFile: vi.fn(),
+}));
 
-import { api } from '../api/client';
+vi.mock('../services/projects/projects.service', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../services/projects/projects.service')>()),
+  submitForReviewRequest: mocks.submitForReviewRequest,
+}));
+vi.mock('../services/cleaning/cleaning.service', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../services/cleaning/cleaning.service')>()),
+  getCleaningRequest: mocks.getCleaningRequest,
+  listCleaningVersionsRequest: mocks.listCleaningVersionsRequest,
+}));
+vi.mock('../services/datasets/datasets.service', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../services/datasets/datasets.service')>()),
+  listDatasetsRequest: mocks.listDatasetsRequest,
+  getSchemaRequest: mocks.getSchemaRequest,
+}));
+vi.mock('../services/http', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../services/http')>()),
+  downloadFile: mocks.downloadFile,
+}));
+
+import { store } from '../store';
 import { CleaningStepPanel } from './CleaningStepPanel';
 
 function makeSession(overrides: Partial<any> = {}) {
@@ -43,13 +56,15 @@ function renderPanel(props: Partial<React.ComponentProps<typeof CleaningStepPane
   const session = props.session ?? makeSession();
 
   render(
-    <CleaningStepPanel
-      session={session}
-      projectId={props.projectId ?? 42}
-      onSessionChange={onSessionChange}
-      onError={onError}
-      onSaveMessage={onSaveMessage}
-    />
+    <Provider store={store}>
+      <CleaningStepPanel
+        session={session}
+        projectId={props.projectId ?? 42}
+        onSessionChange={onSessionChange}
+        onError={onError}
+        onSaveMessage={onSaveMessage}
+      />
+    </Provider>
   );
 
   return { onSessionChange, onError, onSaveMessage };
@@ -65,19 +80,22 @@ function expectNoRealError(onError: ReturnType<typeof vi.fn>) {
 describe('CleaningStepPanel::submitForReview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.listDatasetsRequest.mockResolvedValue([]);
+    mocks.listCleaningVersionsRequest.mockResolvedValue([]);
+    mocks.getSchemaRequest.mockResolvedValue({ tables: [] });
   });
 
   it('submissão bem-sucedida mostra mensagem de sucesso e atualiza a sessão', async () => {
-    (api.submitForReview as any).mockResolvedValueOnce(undefined);
+    mocks.submitForReviewRequest.mockResolvedValueOnce({ blob: new Blob(), filename: 'projeto.docx' });
     const updatedSession = makeSession({ current_step: 'export' });
-    (api.getCleaning as any).mockResolvedValueOnce(updatedSession);
+    mocks.getCleaningRequest.mockResolvedValueOnce(updatedSession);
 
     const { onSaveMessage, onError, onSessionChange } = renderPanel();
 
     await userEvent.click(screen.getByRole('button', { name: /enviar para avaliação/i }));
 
     await waitFor(() => {
-      expect(api.submitForReview).toHaveBeenCalledWith(42);
+      expect(mocks.submitForReviewRequest).toHaveBeenCalledWith(42);
     });
     await waitFor(() => {
       expect(onSaveMessage).toHaveBeenCalledWith(
@@ -89,8 +107,8 @@ describe('CleaningStepPanel::submitForReview', () => {
   });
 
   it('se getCleaning falhar após submit OK, ainda mostra sucesso', async () => {
-    (api.submitForReview as any).mockResolvedValueOnce(undefined);
-    (api.getCleaning as any).mockRejectedValueOnce(new Error('timeout de rede'));
+    mocks.submitForReviewRequest.mockResolvedValueOnce({ blob: new Blob(), filename: 'projeto.docx' });
+    mocks.getCleaningRequest.mockRejectedValueOnce(new Error('timeout de rede'));
 
     const { onSaveMessage, onError } = renderPanel();
 
@@ -105,7 +123,7 @@ describe('CleaningStepPanel::submitForReview', () => {
   });
 
   it('erro na submissão mostra mensagem de erro e limpa a de sucesso', async () => {
-    (api.submitForReview as any).mockRejectedValueOnce(
+    mocks.submitForReviewRequest.mockRejectedValueOnce(
       new Error('Não foi possível confirmar a submissão. Verifique o status do projeto antes de tentar novamente.')
     );
 
@@ -124,8 +142,8 @@ describe('CleaningStepPanel::submitForReview', () => {
   it('prevenção de duplo envio: cliques rápidos só disparam um fetch', async () => {
     let resolveSubmit: () => void;
     const submitPromise = new Promise<void>((r) => { resolveSubmit = r; });
-    (api.submitForReview as any).mockReturnValueOnce(submitPromise);
-    (api.getCleaning as any).mockResolvedValueOnce(makeSession());
+    mocks.submitForReviewRequest.mockReturnValueOnce(submitPromise);
+    mocks.getCleaningRequest.mockResolvedValueOnce(makeSession());
 
     const { onError } = renderPanel();
     const button = screen.getByRole('button', { name: /enviar para avaliação/i });
@@ -134,7 +152,7 @@ describe('CleaningStepPanel::submitForReview', () => {
     await userEvent.click(button);
     await userEvent.click(button);
 
-    expect(api.submitForReview).toHaveBeenCalledTimes(1);
+    expect(mocks.submitForReviewRequest).toHaveBeenCalledTimes(1);
 
     resolveSubmit!();
     await waitFor(() => {

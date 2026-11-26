@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { DOC_SECTIONS } from '../constants';
+import type { SectionData } from '../types/assistant.types';
 
 interface DocumentEditorPanelProps {
-  sectionData: Record<string, string>;
+  sectionData: SectionData;
   onSectionChange: (key: string, value: string) => void;
   activeSection?: string;
   onActiveSectionChange?: (key: string) => void;
@@ -57,7 +58,7 @@ export function DocumentEditorPanel({
             </h2>
             <textarea
               className="document-section-body"
-              value={sectionData[section.key] || ''}
+              value={typeof sectionData[section.key] === 'string' ? sectionData[section.key] as string : ''}
               onChange={(e) => onSectionChange(section.key, e.target.value)}
               onFocus={() => onActiveSectionChange?.(section.key)}
               placeholder={`Conteúdo da seção ${section.label}…`}

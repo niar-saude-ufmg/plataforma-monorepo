@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { api, WizardSession } from '../api/client';
+import type { WizardSession } from '../types/assistant.types';
 import { CleaningVersionsPanel, CleaningVersion } from './CleaningVersionsPanel';
 import { ChatPanel } from './ChatPanel';
 import { DatasetExplorer } from './DatasetExplorer';
@@ -11,6 +11,18 @@ import {
   EMBEDDED_CLEAN_STEP_KEYS,
   EMBEDDED_CLEAN_STEPS,
 } from '../constants';
+import { errorMessage } from '../services/http';
+import {
+  generateCleaningScript, generateInitialCleaningScript, getCleaning, getCleaningVersions,
+  restoreCleaningVersion, saveCleaningVersion, sendCleaningChat, startCleaningKickoff,
+  startNewCleaningVersion, updateCleaning, validateCleaningScript,
+} from '../store/cleaning/cleaning.api';
+import { selectCleaningVersions } from '../store/cleaning/cleaning.selectors';
+import { getDatasets, getDatasetSchema } from '../store/datasets/datasets.api';
+import { selectDatasets, selectDatasetSchema } from '../store/datasets/datasets.selectors';
+import { clearDatasetSchema } from '../store/datasets/datasets.slice';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { submitProjectForReview } from '../store/projects/projects.api';
 
 const STEP_INDEX: Record<string, number> = {
   select_dataset: 0,
@@ -56,12 +68,13 @@ export function CleaningStepPanel({
   onError,
   onSaveMessage,
 }: CleaningStepPanelProps) {
-  const [datasets, setDatasets] = useState<Array<{ id: number; name: string; description: string }>>([]);
-  const [schema, setSchema] = useState<SchemaData | null>(null);
+  const dispatch = useAppDispatch();
+  const datasets = useAppSelector(selectDatasets);
+  const schema = useAppSelector(selectDatasetSchema) as SchemaData | null;
+  const versions = useAppSelector(selectCleaningVersions) as CleaningVersion[];
   const [generating, setGenerating] = useState(false);
   const [validating, setValidating] = useState(false);
   const [kickoffLoading, setKickoffLoading] = useState(false);
-  const [versions, setVersions] = useState<CleaningVersion[]>([]);
   const [versionSaving, setVersionSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [initialScriptLoading, setInitialScriptLoading] = useState(false);
@@ -70,40 +83,37 @@ export function CleaningStepPanel({
   const stepIndex = STEP_INDEX[session.current_step] ?? 0;
 
   const loadSchema = async (datasetId: number) => {
-    const sch = await api.getSchema(datasetId);
-    setSchema(sch as unknown as SchemaData);
+    await dispatch(getDatasetSchema(datasetId)).unwrap();
   };
 
   const loadVersions = async (sessionId: number) => {
     try {
-      setVersions(await api.listCleaningVersions(sessionId));
-    } catch {
-      setVersions([]);
-    }
+      await dispatch(getCleaningVersions(sessionId)).unwrap();
+    } catch { /* o histórico é complementar */ }
   };
 
   useEffect(() => {
-    api.listDatasets().then(setDatasets).catch(() => {});
-  }, []);
+    dispatch(getDatasets());
+  }, [dispatch]);
 
   useEffect(() => {
     if (session.dataset_id) {
-      loadSchema(session.dataset_id).catch(() => setSchema(null));
+      loadSchema(session.dataset_id).catch(() => dispatch(clearDatasetSchema()));
     } else {
-      setSchema(null);
+      dispatch(clearDatasetSchema());
     }
     loadVersions(session.id);
   }, [session.id, session.dataset_id]);
 
   const refresh = async () => {
-    const s = await api.getCleaning(session.id);
+    const s = await dispatch(getCleaning(session.id)).unwrap();
     onSessionChange(s);
     if (s.dataset_id) await loadSchema(s.dataset_id);
     await loadVersions(s.id);
   };
 
   const goToStep = async (step: string) => {
-    const updated = await api.updateCleaning(session.id, { current_step: step });
+    const updated = await dispatch(updateCleaning({ id: session.id, data: { current_step: step } })).unwrap();
     onSessionChange(updated);
     if (updated.dataset_id) await loadSchema(updated.dataset_id);
   };
@@ -113,10 +123,10 @@ export function CleaningStepPanel({
   };
 
   const selectDataset = async (datasetId: number) => {
-    const updated = await api.updateCleaning(session.id, {
+    const updated = await dispatch(updateCleaning({ id: session.id, data: {
       dataset_id: datasetId,
       current_step: 'schema_explore',
-    });
+    } })).unwrap();
     onSessionChange(updated);
     await loadSchema(datasetId);
   };
@@ -135,16 +145,16 @@ export function CleaningStepPanel({
       setInitialScriptLoading(true);
       onError('');
       try {
-        const result = await api.generateInitialScript(session.id);
+        const result = await dispatch(generateInitialCleaningScript(session.id)).unwrap();
         if (cancelled) return;
-        const updated = await api.getCleaning(session.id);
+        const updated = await dispatch(getCleaning(session.id)).unwrap();
         onSessionChange(updated);
         if (!result.already_exists) {
           onSaveMessage('Rascunho inicial do script gerado com base no plano de análise do projeto.');
         }
       } catch (e) {
         if (!cancelled) {
-          onError(e instanceof Error ? e.message : 'Não foi possível gerar o rascunho inicial do script');
+          onError(errorMessage(e, 'Não foi possível gerar o rascunho inicial do script'));
           initialScriptAttempted.current = false;
         }
       } finally {
@@ -160,11 +170,11 @@ export function CleaningStepPanel({
     (async () => {
       setKickoffLoading(true);
       try {
-        await api.cleaningKickoff(session.id);
+        await dispatch(startCleaningKickoff(session.id)).unwrap();
         if (!cancelled) await refresh();
       } catch (e) {
         if (!cancelled) {
-          onError(e instanceof Error ? e.message : 'Não foi possível iniciar a discussão de planejamento');
+          onError(errorMessage(e, 'Não foi possível iniciar a discussão de planejamento'));
         }
       } finally {
         if (!cancelled) setKickoffLoading(false);
@@ -177,11 +187,11 @@ export function CleaningStepPanel({
     setVersionSaving(true);
     onError('');
     try {
-      await api.saveCleaningVersion(session.id, { label, notes });
+      await dispatch(saveCleaningVersion({ id: session.id, data: { label, notes } })).unwrap();
       await loadVersions(session.id);
       onSaveMessage('Versão salva com sucesso.');
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Falha ao salvar versão');
+      onError(errorMessage(e, 'Falha ao salvar versão'));
     } finally {
       setVersionSaving(false);
     }
@@ -192,11 +202,11 @@ export function CleaningStepPanel({
     onError('');
     setKickoffLoading(false);
     try {
-      const updated = await api.startNewCleaningVersion(session.id, {
+      const updated = await dispatch(startNewCleaningVersion({ id: session.id, data: {
         save_current: saveCurrent,
         current_label: currentLabel,
         notes,
-      });
+      } })).unwrap();
       onSessionChange(updated);
       await loadVersions(session.id);
       onSaveMessage(
@@ -205,7 +215,7 @@ export function CleaningStepPanel({
           : 'Nova versão iniciada a partir da base zerada.'
       );
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Falha ao iniciar nova versão');
+      onError(errorMessage(e, 'Falha ao iniciar nova versão'));
     } finally {
       setVersionSaving(false);
     }
@@ -215,11 +225,11 @@ export function CleaningStepPanel({
     setVersionSaving(true);
     onError('');
     try {
-      const updated = await api.restoreCleaningVersion(session.id, versionId);
+      const updated = await dispatch(restoreCleaningVersion({ id: session.id, versionId })).unwrap();
       onSessionChange(updated);
       onSaveMessage('Versão carregada no rascunho atual.');
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Falha ao abrir versão');
+      onError(errorMessage(e, 'Falha ao abrir versão'));
     } finally {
       setVersionSaving(false);
     }
@@ -231,20 +241,20 @@ export function CleaningStepPanel({
     onError('');
     onSaveMessage('');
     try {
-      await api.submitForReview(projectId);
+      await dispatch(submitProjectForReview(projectId)).unwrap();
       onSaveMessage(
         'Projeto enviado para avaliação. O documento foi baixado no seu computador.'
       );
 
       try {
-        const updated = await api.getCleaning(session.id);
+        const updated = await dispatch(getCleaning(session.id)).unwrap();
         onSessionChange(updated);
       } catch {
         console.warn('Não foi possível atualizar a sessão após a submissão.');
       }
     } catch (e) {
       onSaveMessage('');
-      onError(e instanceof Error ? e.message : 'Falha na submissão para avaliação, por favor verifique o status do projeto e tente novamente.');
+      onError(errorMessage(e, 'Falha na submissão para avaliação, por favor verifique o status do projeto e tente novamente.'));
     } finally {
       setSubmitting(false);
     }
@@ -262,11 +272,11 @@ export function CleaningStepPanel({
       messages: [...session.messages, optimisticUser],
     });
     try {
-      await api.cleaningChat(session.id, content);
+      await dispatch(sendCleaningChat({ id: session.id, content })).unwrap();
       await refresh();
     } catch (e) {
       await refresh();
-      onError(e instanceof Error ? e.message : 'Falha ao enviar mensagem');
+      onError(errorMessage(e, 'Falha ao enviar mensagem'));
     }
   };
 
@@ -277,8 +287,8 @@ export function CleaningStepPanel({
     setGenerating(true);
     onError('');
     try {
-      const result = await api.generateScript(session.id);
-      const updated = await api.getCleaning(session.id);
+      const result = await dispatch(generateCleaningScript(session.id)).unwrap();
+      const updated = await dispatch(getCleaning(session.id)).unwrap();
       onSessionChange({
         ...updated,
         script_content: result.script_content,
@@ -287,7 +297,7 @@ export function CleaningStepPanel({
       });
       onSaveMessage('Script data_clean.py gerado. Revise o rascunho na próxima etapa.');
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Falha na geração do script');
+      onError(errorMessage(e, 'Falha na geração do script'));
     } finally {
       setGenerating(false);
     }
@@ -298,10 +308,10 @@ export function CleaningStepPanel({
     setValidating(true);
     onError('');
     try {
-      const result = await api.validateScript(session.id);
+      const result = await dispatch(validateCleaningScript(session.id)).unwrap();
       onSessionChange({ ...session, validation_result: result, current_step: 'validation' });
     } catch (e) {
-      onError(e instanceof Error ? e.message : 'Falha na validação');
+      onError(errorMessage(e, 'Falha na validação'));
     } finally {
       setValidating(false);
     }
@@ -435,7 +445,7 @@ export function CleaningStepPanel({
             value={session.script_content}
             onChange={(e) => onSessionChange({ ...session, script_content: e.target.value })}
             onBlur={async () => {
-              const updated = await api.updateCleaning(session.id, { script_content: session.script_content });
+              const updated = await dispatch(updateCleaning({ id: session.id, data: { script_content: session.script_content } })).unwrap();
               onSessionChange(updated);
             }}
             rows={20}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { api, WizardSession } from '../api/client';
+import type { SectionData, WizardSession } from '../types/assistant.types';
 import { ChatPanel } from '../components/ChatPanel';
 import { CleaningStepPanel } from '../components/CleaningStepPanel';
 import { LoadingPanel } from '../components/LoadingPanel';
@@ -10,6 +10,25 @@ import { assistantRoute } from '../routes';
 import { SectionProgressBar, countFilledSections } from '../components/SectionProgressBar';
 import { Stepper } from '../components/Stepper';
 import { DOC_SECTIONS, DOC_SECTION_HINTS, DOC_STEP_KEYS, DOC_STEPS } from '../constants';
+import { errorMessage } from '../services/http';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  createProject, createProjectCleaning, exportProject, extractProjectSection, getProject,
+  getProjectCleaning, importProjectDocx, importProjectText, runProjectQualityCheck,
+  saveProjectDraft, sendAdvisoryChat, sendProjectChat, updateProject,
+} from '../store/projects/projects.api';
+import {
+  selectCurrentProject,
+  selectLinkedCleaning,
+  selectProjectCleaningOperation,
+  selectProjectDownloadOperation,
+  selectProjectExtractOperation,
+  selectProjectImportOperation,
+  selectProjectLoadOperation,
+  selectProjectQualityOperation,
+  selectProjectSaveOperation,
+} from '../store/projects/projects.selectors';
+import { setLinkedCleaning, setSelectedProject } from '../store/projects/projects.slice';
 
 const START_TABS = [
   { id: 'blank', label: 'Começar do zero' },
@@ -58,71 +77,78 @@ function sectionHasIntakeChat(session: WizardSession, sectionKey: string) {
 }
 
 export default function DocWizardPage() {
+  const dispatch = useAppDispatch();
   const { id } = useParams();
   const navigate = useNavigate();
   const isNew = id === 'new';
-  const [session, setSession] = useState<WizardSession | null>(null);
+  const session = useAppSelector(selectCurrentProject);
+  const cleaningSession = useAppSelector(selectLinkedCleaning);
+  const loadOperation = useAppSelector(selectProjectLoadOperation);
+  const saveOperation = useAppSelector(selectProjectSaveOperation);
+  const importOperation = useAppSelector(selectProjectImportOperation);
+  const extractOperation = useAppSelector(selectProjectExtractOperation);
+  const qualityOperation = useAppSelector(selectProjectQualityOperation);
+  const cleaningOperation = useAppSelector(selectProjectCleaningOperation);
+  const downloadOperation = useAppSelector(selectProjectDownloadOperation);
   const [title, setTitle] = useState('');
   const [fullText, setFullText] = useState('');
-  const [loading, setLoading] = useState(!isNew);
   const [error, setError] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
-  const [importing, setImporting] = useState(false);
-  const [importingDocx, setImportingDocx] = useState(false);
-  const [extracting, setExtracting] = useState(false);
   const [draftPreview, setDraftPreview] = useState<{
     sectionKey: string;
     content: string;
     complete: boolean;
     missing: string[];
   } | null>(null);
-  const [savingDraft, setSavingDraft] = useState(false);
-  const [checklistLoading, setChecklistLoading] = useState(false);
   const [activeSection, setActiveSection] = useState(DOC_SECTIONS[0].key);
   const [lastExtract, setLastExtract] = useState<{ section: string; at: string; complete?: boolean; missing?: string[] } | null>(null);
-  const [cleaningSession, setCleaningSession] = useState<WizardSession | null>(null);
-  const [cleaningLoading, setCleaningLoading] = useState(false);
   const [docSaveStatus, setDocSaveStatus] = useState('');
-  const [exporting, setExporting] = useState(false);
   const [startTab, setStartTab] = useState<StartTab>('blank');
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingSectionData = useRef<Record<string, string> | null>(null);
+  const pendingSectionData = useRef<SectionData | null>(null);
   const docxInputRef = useRef<HTMLInputElement>(null);
+  const loading = !isNew && !session && loadOperation.status !== 'failed';
+  const importing = importOperation.status === 'pending' && importOperation.operation === importProjectText.pending.type;
+  const importingDocx = importOperation.status === 'pending' && importOperation.operation === importProjectDocx.pending.type;
+  const extracting = extractOperation.status === 'pending' && extractOperation.operation === extractProjectSection.pending.type;
+  const savingDraft = saveOperation.status === 'pending' && saveOperation.operation === updateProject.pending.type;
+  const checklistLoading = qualityOperation.status === 'pending' && qualityOperation.operation === runProjectQualityCheck.pending.type;
+  const cleaningLoading = cleaningOperation.status === 'pending' && [getProjectCleaning.pending.type, createProjectCleaning.pending.type].includes(cleaningOperation.operation ?? '');
+  const exporting = downloadOperation.status === 'pending' && downloadOperation.operation === exportProject.pending.type;
 
   useEffect(() => {
-    if (isNew) return;
-    setCleaningSession(null);
-    api.getProject(Number(id))
+    if (isNew) {
+      dispatch(setSelectedProject(null));
+      dispatch(setLinkedCleaning(null));
+      return;
+    }
+    dispatch(setLinkedCleaning(null));
+    dispatch(getProject(Number(id))).unwrap()
       .then((s) => {
-        setSession(s);
         setTitle(s.title);
         const current = s.section_data._current_section;
         if (typeof current === 'string') setActiveSection(current);
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [id, isNew]);
+      .catch((e) => setError(errorMessage(e, 'Falha ao carregar projeto')));
+  }, [dispatch, id, isNew]);
 
   const stepIndex = session ? stepIndexFor(normalizeStep(session.current_step)) : 0;
 
   const loadCleaningSession = async (projectId: number, createIfMissing = false) => {
-    setCleaningLoading(true);
     setError('');
     try {
       const cleaning = createIfMissing
-        ? await api.createProjectCleaning(projectId)
-        : await api.getProjectCleaning(projectId);
-      setCleaningSession(cleaning);
-      const project = await api.getProject(projectId);
-      setSession(project);
+        ? await dispatch(createProjectCleaning(projectId)).unwrap()
+        : await dispatch(getProjectCleaning(projectId)).unwrap();
+      dispatch(setLinkedCleaning(cleaning));
+      await dispatch(getProject(projectId)).unwrap();
     } catch (e) {
-      if (!createIfMissing && e instanceof Error && e.message.includes('Engenharia de dados não iniciada')) {
-        setCleaningSession(null);
+      const message = errorMessage(e, 'Falha ao carregar engenharia de dados vinculada');
+      if (!createIfMissing && message.includes('Engenharia de dados não iniciada')) {
+        dispatch(setLinkedCleaning(null));
       } else {
-        setError(e instanceof Error ? e.message : 'Falha ao carregar engenharia de dados vinculada');
+        setError(message);
       }
-    } finally {
-      setCleaningLoading(false);
     }
   };
 
@@ -134,17 +160,15 @@ export default function DocWizardPage() {
 
   const ensureSession = async (): Promise<WizardSession> => {
     if (session) return session;
-    const s = await api.createProject(title || 'Projeto sem título');
+    const s = await dispatch(createProject(title || 'Projeto sem título')).unwrap();
     navigate(assistantRoute(`/projects/${s.id}`), { replace: true });
-    setSession(s);
     setTitle(s.title);
     return s;
   };
 
   const refresh = async () => {
     if (!session) return;
-    const s = await api.getProject(session.id);
-    setSession(s);
+    const s = await dispatch(getProject(session.id)).unwrap();
     setTitle(s.title);
   };
 
@@ -155,16 +179,14 @@ export default function DocWizardPage() {
       current_step: session.current_step,
       section_data: session.section_data,
     };
-    const saved = await api.saveProjectDraft(session.id, payload);
-    setSession(saved);
+    const saved = await dispatch(saveProjectDraft({ id: session.id, data: payload })).unwrap();
     setSaveMessage(`Rascunho salvo em ${new Date(saved.updated_at).toLocaleString('pt-BR')}`);
     if (exit) navigate(assistantRoute('/projects'));
   };
 
   const goToStep = async (step: string) => {
     const s = session || (await ensureSession());
-    const updated = await api.updateProject(s.id, { current_step: step });
-    setSession(updated);
+    await dispatch(updateProject({ id: s.id, data: { current_step: step } })).unwrap();
   };
 
   const confirmLeaveProject = (): boolean => {
@@ -196,24 +218,20 @@ export default function DocWizardPage() {
       setError('Cole pelo menos 20 caracteres para importar.');
       return;
     }
-    setImporting(true);
     setError('');
     setSaveMessage('');
     try {
       const s = await ensureSession();
-      const updated = await api.importFullText(s.id, fullText.trim());
+      const updated = await dispatch(importProjectText({ id: s.id, fullText: fullText.trim() })).unwrap();
       const filled = countFilledSections(updated.section_data);
       if (filled === 0) {
         setError('Falha na importação: nenhuma seção foi extraída. Tente novamente ou preencha as seções manualmente.');
         return;
       }
-      setSession(updated);
       setFullText('');
       setSaveMessage(`Importado em ${filled} seção${filled === 1 ? '' : 'ões'}. Revise o documento à direita ou continue no chat guiado.`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha na importação');
-    } finally {
-      setImporting(false);
+      setError(errorMessage(e, 'Falha na importação'));
     }
   };
 
@@ -222,23 +240,20 @@ export default function DocWizardPage() {
       setError('Envie um arquivo .docx');
       return;
     }
-    setImportingDocx(true);
     setError('');
     setSaveMessage('');
     try {
       const s = await ensureSession();
-      const updated = await api.importDocx(s.id, file);
+      const updated = await dispatch(importProjectDocx({ id: s.id, file })).unwrap();
       const filled = countFilledSections(updated.section_data);
       if (filled === 0) {
         setError('Falha na importação: nenhuma seção foi extraída.');
         return;
       }
-      setSession(updated);
       setSaveMessage(`Documento importado em ${filled} seção${filled === 1 ? '' : 'ões'}.`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha na importação do .docx');
+      setError(errorMessage(e, 'Falha na importação do .docx'));
     } finally {
-      setImportingDocx(false);
       if (docxInputRef.current) docxInputRef.current.value = '';
     }
   };
@@ -250,12 +265,11 @@ export default function DocWizardPage() {
     setSaveMessage('Projeto iniciado do zero. Edite o documento à direita ou use o chat guiado no centro.');
   };
 
-  const persistSectionData = useCallback(async (sectionData: Record<string, string>) => {
+  const persistSectionData = useCallback(async (sectionData: SectionData) => {
     if (!session) return;
     setDocSaveStatus('Salvando…');
     try {
-      const updated = await api.updateProject(session.id, { section_data: sectionData });
-      setSession(updated);
+      await dispatch(updateProject({ id: session.id, data: { section_data: sectionData } })).unwrap();
       setDocSaveStatus('Documento salvo');
     } catch {
       setDocSaveStatus('Erro ao salvar documento');
@@ -263,7 +277,7 @@ export default function DocWizardPage() {
   }, [session?.id]);
 
   const scheduleDocumentSave = useCallback(
-    (sectionData: Record<string, string>) => {
+    (sectionData: SectionData) => {
       pendingSectionData.current = sectionData;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
@@ -282,7 +296,7 @@ export default function DocWizardPage() {
   const handleDocumentSectionChange = (key: string, value: string) => {
     if (!session) return;
     const updated = { ...session.section_data, [key]: value };
-    setSession({ ...session, section_data: updated });
+    dispatch(setSelectedProject({ ...session, section_data: updated }));
     scheduleDocumentSave(updated);
   };
 
@@ -297,16 +311,16 @@ export default function DocWizardPage() {
       channel: 'advisory',
       section_key: null,
     };
-    setSession({
+    dispatch(setSelectedProject({
       ...session,
       messages: [...session.messages, optimisticUser],
-    });
+    }));
     try {
-      await api.advisoryChat(session.id, content);
+      await dispatch(sendAdvisoryChat({ id: session.id, content })).unwrap();
       await refresh();
     } catch (e) {
       await refresh();
-      setError(e instanceof Error ? e.message : 'Falha ao enviar mensagem');
+      setError(errorMessage(e, 'Falha ao enviar mensagem'));
     }
   };
 
@@ -314,8 +328,7 @@ export default function DocWizardPage() {
     setActiveSection(sectionKey);
     if (!session) return;
     const updatedData = { ...session.section_data, _current_section: sectionKey };
-    const updated = await api.updateProject(session.id, { section_data: updatedData });
-    setSession(updated);
+    await dispatch(updateProject({ id: session.id, data: { section_data: updatedData } })).unwrap();
   };
 
   const handleChat = async (content: string) => {
@@ -329,25 +342,24 @@ export default function DocWizardPage() {
       channel: 'intake',
       section_key: activeSection,
     };
-    setSession({
+    dispatch(setSelectedProject({
       ...session,
       messages: [...session.messages, optimisticUser],
-    });
+    }));
     try {
-      await api.projectChat(session.id, content);
+      await dispatch(sendProjectChat({ id: session.id, content })).unwrap();
       await refresh();
     } catch (e) {
       await refresh();
-      setError(e instanceof Error ? e.message : 'Falha ao enviar mensagem');
+      setError(errorMessage(e, 'Falha ao enviar mensagem'));
     }
   };
 
   const extractSection = async (sectionKey: string) => {
     if (!session) return;
-    setExtracting(true);
     setError('');
     try {
-      const result = await api.extractSection(session.id, sectionKey);
+      const result = await dispatch(extractProjectSection({ id: session.id, sectionKey })).unwrap();
       const content = String(result.content || '').trim();
       const missing = Array.isArray(result.missing) ? result.missing.map(String) : [];
       if (!content) {
@@ -361,15 +373,12 @@ export default function DocWizardPage() {
         missing,
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha ao gerar texto da seção');
-    } finally {
-      setExtracting(false);
+      setError(errorMessage(e, 'Falha ao gerar texto da seção'));
     }
   };
 
   const saveDraftToDocument = async (content: string) => {
     if (!session || !draftPreview) return;
-    setSavingDraft(true);
     setError('');
     try {
       const sectionData = {
@@ -377,8 +386,7 @@ export default function DocWizardPage() {
         [draftPreview.sectionKey]: content,
         _current_section: draftPreview.sectionKey,
       };
-      const updated = await api.updateProject(session.id, { section_data: sectionData });
-      setSession(updated);
+      await dispatch(updateProject({ id: session.id, data: { section_data: sectionData } })).unwrap();
       setActiveSection(draftPreview.sectionKey);
       const preview = content.length > 120
         ? `${content.slice(0, 120)}…`
@@ -397,23 +405,18 @@ export default function DocWizardPage() {
       setSaveMessage(`Salvo em "${sectionLabel(draftPreview.sectionKey)}": ${preview}${missingNote}`);
       setDraftPreview(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha ao salvar no documento');
-    } finally {
-      setSavingDraft(false);
+      setError(errorMessage(e, 'Falha ao salvar no documento'));
     }
   };
 
   const runQuality = async () => {
     if (!session || checklistLoading) return;
-    setChecklistLoading(true);
     setError('');
     try {
-      await api.qualityCheck(session.id);
+      await dispatch(runProjectQualityCheck(session.id)).unwrap();
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha na revisão do projeto');
-    } finally {
-      setChecklistLoading(false);
+      setError(errorMessage(e, 'Falha na revisão do projeto'));
     }
   };
 
@@ -425,15 +428,12 @@ export default function DocWizardPage() {
 
   const exportDoc = async () => {
     if (!session || exporting) return;
-    setExporting(true);
     setError('');
     try {
-      await api.exportProject(session.id);
+      await dispatch(exportProject(session.id)).unwrap();
       setSaveMessage('project.docx baixado com sucesso.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Falha na exportação');
-    } finally {
-      setExporting(false);
+      setError(errorMessage(e, 'Falha na exportação'));
     }
   };
 
@@ -548,8 +548,7 @@ export default function DocWizardPage() {
               onChange={(e) => setTitle(e.target.value)}
               onBlur={async () => {
                 if (session && title !== session.title) {
-                  const updated = await api.updateProject(session.id, { title });
-                  setSession(updated);
+                  await dispatch(updateProject({ id: session.id, data: { title } })).unwrap();
                 }
               }}
               placeholder="Meu Projeto de Ciência de Dados em Saúde"
@@ -714,7 +713,7 @@ export default function DocWizardPage() {
             <CleaningStepPanel
               session={cleaningSession}
               projectId={session.id}
-              onSessionChange={setCleaningSession}
+              onSessionChange={(value) => dispatch(setLinkedCleaning(value))}
               onError={setError}
               onSaveMessage={setSaveMessage}
             />

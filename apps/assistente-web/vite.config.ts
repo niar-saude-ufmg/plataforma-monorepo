@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
         exposes: {
           "./App": "./src/RemoteApp.tsx",
         },
-        shared: ["react", "react-dom", "react-router-dom"],
+        shared: ["react", "react-dom", "react-router-dom", "react-redux"],
       }),
     ],
     server: {
