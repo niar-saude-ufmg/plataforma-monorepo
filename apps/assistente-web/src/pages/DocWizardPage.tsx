@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import type { WizardSession } from '../types/assistant.types';
+import type { SectionData, WizardSession } from '../types/assistant.types';
 import { ChatPanel } from '../components/ChatPanel';
 import { CleaningStepPanel } from '../components/CleaningStepPanel';
 import { LoadingPanel } from '../components/LoadingPanel';
@@ -17,7 +17,17 @@ import {
   getProjectCleaning, importProjectDocx, importProjectText, runProjectQualityCheck,
   saveProjectDraft, sendAdvisoryChat, sendProjectChat, updateProject,
 } from '../store/projects/projects.api';
-import { selectCurrentProject, selectLinkedCleaning, selectProjectOperation } from '../store/projects/projects.selectors';
+import {
+  selectCurrentProject,
+  selectLinkedCleaning,
+  selectProjectCleaningOperation,
+  selectProjectDownloadOperation,
+  selectProjectExtractOperation,
+  selectProjectImportOperation,
+  selectProjectLoadOperation,
+  selectProjectQualityOperation,
+  selectProjectSaveOperation,
+} from '../store/projects/projects.selectors';
 import { setLinkedCleaning, setSelectedProject } from '../store/projects/projects.slice';
 
 const START_TABS = [
@@ -73,7 +83,13 @@ export default function DocWizardPage() {
   const isNew = id === 'new';
   const session = useAppSelector(selectCurrentProject);
   const cleaningSession = useAppSelector(selectLinkedCleaning);
-  const operation = useAppSelector(selectProjectOperation);
+  const loadOperation = useAppSelector(selectProjectLoadOperation);
+  const saveOperation = useAppSelector(selectProjectSaveOperation);
+  const importOperation = useAppSelector(selectProjectImportOperation);
+  const extractOperation = useAppSelector(selectProjectExtractOperation);
+  const qualityOperation = useAppSelector(selectProjectQualityOperation);
+  const cleaningOperation = useAppSelector(selectProjectCleaningOperation);
+  const downloadOperation = useAppSelector(selectProjectDownloadOperation);
   const [title, setTitle] = useState('');
   const [fullText, setFullText] = useState('');
   const [error, setError] = useState('');
@@ -89,17 +105,16 @@ export default function DocWizardPage() {
   const [docSaveStatus, setDocSaveStatus] = useState('');
   const [startTab, setStartTab] = useState<StartTab>('blank');
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingSectionData = useRef<Record<string, string> | null>(null);
+  const pendingSectionData = useRef<SectionData | null>(null);
   const docxInputRef = useRef<HTMLInputElement>(null);
-  const isPending = operation.status === 'pending';
-  const loading = !isNew && !session && operation.status !== 'failed';
-  const importing = isPending && operation.operation === importProjectText.pending.type;
-  const importingDocx = isPending && operation.operation === importProjectDocx.pending.type;
-  const extracting = isPending && operation.operation === extractProjectSection.pending.type;
-  const savingDraft = isPending && operation.operation === updateProject.pending.type;
-  const checklistLoading = isPending && operation.operation === runProjectQualityCheck.pending.type;
-  const cleaningLoading = isPending && [getProjectCleaning.pending.type, createProjectCleaning.pending.type].includes(operation.operation ?? '');
-  const exporting = isPending && operation.operation === exportProject.pending.type;
+  const loading = !isNew && !session && loadOperation.status !== 'failed';
+  const importing = importOperation.status === 'pending' && importOperation.operation === importProjectText.pending.type;
+  const importingDocx = importOperation.status === 'pending' && importOperation.operation === importProjectDocx.pending.type;
+  const extracting = extractOperation.status === 'pending' && extractOperation.operation === extractProjectSection.pending.type;
+  const savingDraft = saveOperation.status === 'pending' && saveOperation.operation === updateProject.pending.type;
+  const checklistLoading = qualityOperation.status === 'pending' && qualityOperation.operation === runProjectQualityCheck.pending.type;
+  const cleaningLoading = cleaningOperation.status === 'pending' && [getProjectCleaning.pending.type, createProjectCleaning.pending.type].includes(cleaningOperation.operation ?? '');
+  const exporting = downloadOperation.status === 'pending' && downloadOperation.operation === exportProject.pending.type;
 
   useEffect(() => {
     if (isNew) {
@@ -250,7 +265,7 @@ export default function DocWizardPage() {
     setSaveMessage('Projeto iniciado do zero. Edite o documento à direita ou use o chat guiado no centro.');
   };
 
-  const persistSectionData = useCallback(async (sectionData: Record<string, string>) => {
+  const persistSectionData = useCallback(async (sectionData: SectionData) => {
     if (!session) return;
     setDocSaveStatus('Salvando…');
     try {
@@ -262,7 +277,7 @@ export default function DocWizardPage() {
   }, [session?.id]);
 
   const scheduleDocumentSave = useCallback(
-    (sectionData: Record<string, string>) => {
+    (sectionData: SectionData) => {
       pendingSectionData.current = sectionData;
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {

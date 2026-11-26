@@ -10,7 +10,7 @@ import {
   listTablesRequest,
   updateDatasetRequest,
 } from '../../services/datasets/datasets.service';
-import { createApiThunk } from '../create-api-thunk';
+import { createApiThunk } from '../utils/create-api-thunk';
 
 export const getDatasets = createApiThunk('datasets/catalog', listDatasetsRequest, 'Falha ao carregar catálogo');
 export const getDatasetSchema = createApiThunk('datasets/schema', getSchemaRequest, 'Falha ao carregar esquema');

@@ -1,5 +1,5 @@
 import { listSettingsRequest, updateSettingRequest } from '../../services/admin/admin.service';
-import { createApiThunk } from '../create-api-thunk';
+import { createApiThunk } from '../utils/create-api-thunk';
 
 export const getSettings = createApiThunk('settings/list', listSettingsRequest, 'Falha ao carregar configurações');
 export const updateSetting = createApiThunk(

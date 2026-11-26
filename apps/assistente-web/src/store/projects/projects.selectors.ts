@@ -4,4 +4,12 @@ export const selectCurrentProject = (state: RootState) => state.projects.selecte
 export const selectLinkedCleaning = (state: RootState) => state.projects.linkedCleaning;
 export const selectProjectsLoading = (state: RootState) => state.projects.list.status === 'pending';
 export const selectProjectsError = (state: RootState) => state.projects.list.error;
-export const selectProjectOperation = (state: RootState) => state.projects.operation;
+export const selectProjectOperations = (state: RootState) => state.projects.operations;
+export const selectProjectLoadOperation = (state: RootState) => state.projects.operations.load;
+export const selectProjectSaveOperation = (state: RootState) => state.projects.operations.save;
+export const selectProjectImportOperation = (state: RootState) => state.projects.operations.import;
+export const selectProjectChatOperation = (state: RootState) => state.projects.operations.chat;
+export const selectProjectExtractOperation = (state: RootState) => state.projects.operations.extract;
+export const selectProjectQualityOperation = (state: RootState) => state.projects.operations.quality;
+export const selectProjectCleaningOperation = (state: RootState) => state.projects.operations.cleaning;
+export const selectProjectDownloadOperation = (state: RootState) => state.projects.operations.download;

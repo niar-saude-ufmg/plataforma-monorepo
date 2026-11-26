@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { toApiError } from '../services/http';
-import type { ApiError } from '../types/api.types';
+import { toApiError } from '../../services/http';
+import type { ApiError } from '../../types/api.types';
 
 export function createApiThunk<Returned, Argument = void>(
   type: string,

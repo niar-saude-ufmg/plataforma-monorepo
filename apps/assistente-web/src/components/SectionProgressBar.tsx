@@ -1,10 +1,11 @@
 import { DOC_SECTIONS } from '../constants';
+import type { SectionData } from '../types/assistant.types';
 
 export type SectionStatus = 'filled' | 'unsaved' | 'empty';
 
 export function sectionStatus(
   sectionKey: string,
-  sectionData: Record<string, string>,
+  sectionData: SectionData,
   hasIntakeChat: (key: string) => boolean,
 ): SectionStatus {
   if (String(sectionData[sectionKey] || '').trim()) return 'filled';
@@ -12,12 +13,12 @@ export function sectionStatus(
   return 'empty';
 }
 
-export function countFilledSections(sectionData: Record<string, string>) {
+export function countFilledSections(sectionData: SectionData) {
   return DOC_SECTIONS.filter((s) => String(sectionData[s.key] || '').trim()).length;
 }
 
 interface SectionProgressBarProps {
-  sectionData: Record<string, string>;
+  sectionData: SectionData;
   hasIntakeChat: (key: string) => boolean;
   activeSection?: string;
   onSectionClick?: (key: string) => void;

@@ -57,8 +57,8 @@ describe('cleaning slice', () => {
       updateCleaning.rejected(new Error('erro'), 'update', argument, { message: 'Não autorizado', status: 401 }),
     );
 
-    expect(state.operation.status).toBe('failed');
-    expect(state.operation.error).toEqual({ message: 'Não autorizado', status: 401 });
+    expect(state.operations.save.status).toBe('failed');
+    expect(state.operations.save.error).toEqual({ message: 'Não autorizado', status: 401 });
   });
 
   it('permite atualizar e limpar a seleção local', () => {

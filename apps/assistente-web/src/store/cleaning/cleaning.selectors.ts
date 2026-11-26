@@ -4,4 +4,12 @@ export const selectCurrentCleaning = (state: RootState) => state.cleaning.select
 export const selectCleaningVersions = (state: RootState) => state.cleaning.versions;
 export const selectCleaningListLoading = (state: RootState) => state.cleaning.list.status === 'pending';
 export const selectCleaningError = (state: RootState) => state.cleaning.list.error;
-export const selectCleaningOperation = (state: RootState) => state.cleaning.operation;
+export const selectCleaningOperations = (state: RootState) => state.cleaning.operations;
+export const selectCleaningLoadOperation = (state: RootState) => state.cleaning.operations.load;
+export const selectCleaningSaveOperation = (state: RootState) => state.cleaning.operations.save;
+export const selectCleaningChatOperation = (state: RootState) => state.cleaning.operations.chat;
+export const selectCleaningKickoffOperation = (state: RootState) => state.cleaning.operations.kickoff;
+export const selectCleaningScriptOperation = (state: RootState) => state.cleaning.operations.script;
+export const selectCleaningValidationOperation = (state: RootState) => state.cleaning.operations.validation;
+export const selectCleaningVersionsOperation = (state: RootState) => state.cleaning.operations.versions;
+export const selectCleaningDownloadOperation = (state: RootState) => state.cleaning.operations.download;

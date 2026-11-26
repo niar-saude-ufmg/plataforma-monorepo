@@ -16,7 +16,7 @@ import {
   validateScriptRequest,
 } from '../../services/cleaning/cleaning.service';
 import { downloadFile } from '../../services/http';
-import { createApiThunk } from '../create-api-thunk';
+import { createApiThunk } from '../utils/create-api-thunk';
 
 export const getCleaningList = createApiThunk('cleaning/list', listCleaningRequest, 'Falha ao carregar limpezas');
 export const createCleaning = createApiThunk('cleaning/create', createCleaningRequest, 'Falha ao criar limpeza');

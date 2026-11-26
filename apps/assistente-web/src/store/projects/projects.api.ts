@@ -16,7 +16,7 @@ import {
   submitForReviewRequest,
 } from '../../services/projects/projects.service';
 import { downloadFile } from '../../services/http';
-import { createApiThunk } from '../create-api-thunk';
+import { createApiThunk } from '../utils/create-api-thunk';
 
 export const getProjects = createApiThunk('projects/list', listProjectsRequest, 'Falha ao carregar projetos');
 export const createProject = createApiThunk('projects/create', createProjectRequest, 'Falha ao criar projeto');

@@ -7,6 +7,8 @@ export type AssistantMessage = {
   section_key?: string | null;
 };
 
+export type SectionData = Record<string, unknown>;
+
 export interface WizardSession {
   id: number;
   wizard_type: string;
@@ -14,7 +16,7 @@ export interface WizardSession {
   title: string;
   dataset_id: number | null;
   linked_project_id: number | null;
-  section_data: Record<string, string>;
+  section_data: SectionData;
   script_content: string;
   validation_result: Record<string, unknown>;
   quality_checklist: {

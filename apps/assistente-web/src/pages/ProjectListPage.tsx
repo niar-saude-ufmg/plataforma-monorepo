@@ -8,7 +8,7 @@ import { assistantRoute } from '../routes';
 import { DOC_STEP_LABELS } from '../constants';
 
 function sectionCount(session: WizardSession) {
-  return Object.keys(session.section_data).filter((k) => !k.startsWith('_') && session.section_data[k]).length;
+  return Object.keys(session.section_data).filter((k) => !k.startsWith('_') && Boolean(session.section_data[k])).length;
 }
 
 function cleaningStatusLabel(session: WizardSession): string {

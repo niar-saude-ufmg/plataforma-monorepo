@@ -13,7 +13,15 @@ import {
   restoreCleaningVersion, saveCleaningVersion, sendCleaningChat, startCleaningKickoff,
   startNewCleaningVersion, updateCleaning, validateCleaningScript,
 } from '../store/cleaning/cleaning.api';
-import { selectCleaningOperation, selectCleaningVersions, selectCurrentCleaning } from '../store/cleaning/cleaning.selectors';
+import {
+  selectCleaningKickoffOperation,
+  selectCleaningLoadOperation,
+  selectCleaningScriptOperation,
+  selectCleaningValidationOperation,
+  selectCleaningVersions,
+  selectCleaningVersionsOperation,
+  selectCurrentCleaning,
+} from '../store/cleaning/cleaning.selectors';
 import { setSelectedCleaning } from '../store/cleaning/cleaning.slice';
 import { getDatasets, getDatasetSchema } from '../store/datasets/datasets.api';
 import { selectDatasets, selectDatasetSchema } from '../store/datasets/datasets.selectors';
@@ -58,20 +66,23 @@ export default function CleanWizardPage() {
   const datasets = useAppSelector(selectDatasets);
   const schema = useAppSelector(selectDatasetSchema) as SchemaData | null;
   const versions = useAppSelector(selectCleaningVersions) as CleaningVersion[];
-  const operation = useAppSelector(selectCleaningOperation);
+  const loadOperation = useAppSelector(selectCleaningLoadOperation);
+  const kickoffOperation = useAppSelector(selectCleaningKickoffOperation);
+  const scriptOperation = useAppSelector(selectCleaningScriptOperation);
+  const validationOperation = useAppSelector(selectCleaningValidationOperation);
+  const versionsOperation = useAppSelector(selectCleaningVersionsOperation);
   const [title, setTitle] = useState('');
   const [error, setError] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
-  const isPending = operation.status === 'pending';
-  const loading = !isNew && !session && operation.status !== 'failed';
-  const generating = isPending && operation.operation === generateCleaningScript.pending.type;
-  const validating = isPending && operation.operation === validateCleaningScript.pending.type;
-  const kickoffLoading = isPending && operation.operation === startCleaningKickoff.pending.type;
-  const versionSaving = isPending && [
+  const loading = !isNew && !session && loadOperation.status !== 'failed';
+  const generating = scriptOperation.status === 'pending' && scriptOperation.operation === generateCleaningScript.pending.type;
+  const validating = validationOperation.status === 'pending' && validationOperation.operation === validateCleaningScript.pending.type;
+  const kickoffLoading = kickoffOperation.status === 'pending' && kickoffOperation.operation === startCleaningKickoff.pending.type;
+  const versionSaving = versionsOperation.status === 'pending' && [
     saveCleaningVersion.pending.type,
     startNewCleaningVersion.pending.type,
     restoreCleaningVersion.pending.type,
-  ].includes(operation.operation ?? '');
+  ].includes(versionsOperation.operation ?? '');
 
   const loadSchema = async (datasetId: number) => {
     await dispatch(getDatasetSchema(datasetId)).unwrap();

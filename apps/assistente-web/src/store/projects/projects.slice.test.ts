@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { WizardSession } from '../../types/assistant.types';
-import { getProject, getProjectCleaning, getProjects } from './projects.api';
+import { getProject, getProjectCleaning, getProjects, importProjectText, runProjectQualityCheck } from './projects.api';
 import reducer, { setLinkedCleaning, setSelectedProject } from './projects.slice';
 
 function session(id = 1): WizardSession {
@@ -41,6 +41,18 @@ describe('projects slice', () => {
 
     expect(state.list.status).toBe('failed');
     expect(state.list.error).toEqual({ message: 'API indisponível', status: 503 });
+  });
+
+  it('mantém operações concorrentes em estados independentes', () => {
+    let state = reducer(undefined, importProjectText.pending('import', { id: 1, fullText: 'texto' }));
+    state = reducer(state, runProjectQualityCheck.pending('quality', 1));
+
+    expect(state.operations.import.status).toBe('pending');
+    expect(state.operations.quality.status).toBe('pending');
+
+    state = reducer(state, importProjectText.fulfilled(session(), 'import', { id: 1, fullText: 'texto' }));
+    expect(state.operations.import.status).toBe('succeeded');
+    expect(state.operations.quality.status).toBe('pending');
   });
 
   it('armazena o projeto e a engenharia de dados selecionados', () => {

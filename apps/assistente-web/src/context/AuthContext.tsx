@@ -1,10 +1,12 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import {
   ACCESS_TOKEN_STORAGE_KEY,
   clearPlatformSession,
   readPlatformSession,
   SESSION_CHANGED_EVENT,
 } from '@niar/auth';
+import { resetAssistantStore } from '../store/session/session.actions';
+import { store } from '../store';
 
 export type User = {
   id: number;
@@ -57,15 +59,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => readUserFromShellSession());
+  const initialUser = readUserFromShellSession();
+  const [user, setUser] = useState<User | null>(initialUser);
+  const userKeyRef = useRef(initialUser ? `${initialUser.id}:${initialUser.role}` : null);
   const [loading, setLoading] = useState(true);
+
+  const syncUser = (nextUser: User | null) => {
+    const nextKey = nextUser ? `${nextUser.id}:${nextUser.role}` : null;
+    if (userKeyRef.current !== nextKey) store.dispatch(resetAssistantStore());
+    userKeyRef.current = nextKey;
+    setUser(nextUser);
+  };
 
   useEffect(() => {
     isSessionStillValid()
       .then((valid) => {
         if (!valid) {
           clearPlatformSession();
-          setUser(null);
+          syncUser(null);
         }
       })
       .catch(() => {
@@ -78,14 +89,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const refreshSession = () => setUser(readUserFromShellSession());
+    const refreshSession = () => syncUser(readUserFromShellSession());
     window.addEventListener(SESSION_CHANGED_EVENT, refreshSession);
     return () => window.removeEventListener(SESSION_CHANGED_EVENT, refreshSession);
   }, []);
 
   const logout = () => {
     clearPlatformSession();
-    setUser(null);
+    syncUser(null);
   };
 
   return (
