@@ -12,6 +12,7 @@ import { Profile } from "../pages/Profile/Profile";
 import { Projects } from "../pages/Projects/Projects";
 import { RoleHome } from "../pages/RoleHome/RoleHome";
 import { Specialties } from "../pages/Specialties/Specialties";
+import { Settings } from "../pages/Settings/Settings";
 import { Specialty } from "../pages/Specialty/Specialty";
 import { User } from "../pages/User/User";
 import { Users } from "../pages/Users/Users";
@@ -86,6 +87,34 @@ export const ADMIN_ROUTES: RouteObject[] = [
             id: "admin:especialidades:form",
             path: ":mode",
             element: <SpecialtyRoute />,
+          },
+        ],
+      },
+      {
+        id: "admin:configuracoes",
+        path: "configuracoes",
+        element: (
+          <RoleGuard allowedRoles={["admin"]}>
+            <Settings />
+          </RoleGuard>
+        ),
+        children: [
+          { index: true, element: <Navigate replace to="artefatos-fiar" /> },
+          {
+            path: "artefatos-fiar",
+            children: [
+              { index: true, element: null },
+              { path: "novo", element: null },
+              { path: "editar/:id", element: null },
+            ],
+          },
+          {
+            path: "templates-projeto",
+            children: [
+              { index: true, element: null },
+              { path: "novo", element: null },
+              { path: "editar/:id", element: null },
+            ],
           },
         ],
       },

@@ -10,7 +10,8 @@ export type RoleSection =
   | "projetos"
   | "usuarios"
   | "especialidades"
-  | "perfil";
+  | "perfil"
+  | "configuracoes";
 
 export type RoleRouteDefinition = {
   label: string;
@@ -33,6 +34,7 @@ const roleRouteDefinitions: Record<UserRole, readonly RoleRouteDefinition[]> = {
     { label: "Projetos", section: "projetos" },
     { label: "Usuários", section: "usuarios" },
     { label: "Especialidades", section: "especialidades" },
+    { label: "Configurações", section: "configuracoes" },
     { label: "Perfil", section: "perfil" },
   ],
   researcher: [

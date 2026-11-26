@@ -1,0 +1,10 @@
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-xl);
+  min-width: 0;
+
+  &__content {
+    min-width: 0;
+  }
+}
