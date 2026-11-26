@@ -8,9 +8,9 @@ import {
   StatusChip,
   type AutocompleteOption,
 } from "@niar/ui";
-import type { ApiError } from "../../types/api.types";
 import type { ProjectListItem } from "../../types/project.types";
 import type { UserListItem } from "../../types/user.types";
+import { formatDate } from "../../utils/formatters/date";
 import { FixedDialog } from "../FixedDialog";
 import "./ProjectAssignmentDialog.scss";
 
@@ -20,7 +20,6 @@ export type ProjectAssignmentDialogProps = {
   mode: "select-member" | "self";
   members: UserListItem[];
   membersLoading: boolean;
-  membersError: ApiError | null;
   loading: boolean;
   onSearchMembers: (search: string) => void;
   onClose: () => void;
@@ -33,7 +32,6 @@ export function ProjectAssignmentDialog({
   mode,
   members,
   membersLoading,
-  membersError,
   loading,
   onSearchMembers,
   onClose,
@@ -52,7 +50,7 @@ export function ProjectAssignmentDialog({
   const memberOptions = useMemo<AutocompleteOption[]>(
     () => members.map((member) => ({
       value: String(member.id),
-      label: `${member.fullName} — ${member.email}`,
+      label: member.fullName,
     })),
     [members],
   );
@@ -78,13 +76,6 @@ export function ProjectAssignmentDialog({
 
     setValidationError(null);
     onSubmit(mode === "select-member" ? selectedMemberId ?? undefined : undefined);
-  };
-
-  const formatDate = (value: string) => {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime())
-      ? "—"
-      : new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(date);
   };
 
   const title = "Atribuir projeto";
@@ -134,7 +125,7 @@ export function ProjectAssignmentDialog({
                   />
                 ),
               },
-              { label: "Atualizado", value: formatDate(project.updatedAt) },
+              { label: "Atualizado", value: formatDate(project.updatedAt, { fallback: "—" }) },
             ]}
           />
         </div>
@@ -168,11 +159,6 @@ export function ProjectAssignmentDialog({
             {validationError ? (
               <span className="project-assignment-dialog__error" role="alert">
                 {validationError}
-              </span>
-            ) : null}
-            {membersError ? (
-              <span className="project-assignment-dialog__error" role="alert">
-                {membersError.message}
               </span>
             ) : null}
           </div>

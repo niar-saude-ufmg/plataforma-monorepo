@@ -1,5 +1,6 @@
 import { Dialog, IconButton, ListText } from "@niar/ui";
 import type { Project, ProjectDocument } from "../../types/project.types";
+import { formatDate } from "../../utils/formatters/date";
 import "./ProjectDocumentsDialog.scss";
 
 type ProjectDocumentsDialogProps = {
@@ -8,13 +9,6 @@ type ProjectDocumentsDialogProps = {
   downloadLoading: boolean;
   onDownload: (document: ProjectDocument) => void;
   onClose: () => void;
-};
-
-const formatDate = (value: string) => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? "Data não informada"
-    : new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(date);
 };
 
 export function ProjectDocumentsDialog({

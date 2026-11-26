@@ -817,7 +817,7 @@ describe("Projects — atribuição de avaliação", () => {
 
     const row = await screen.findByTestId("project-row-42");
     await user.click(within(row).getByRole("button", { name: "Atribuir" }));
-    await screen.findByRole("option", { name: "Joana Comitê — joana@niar.local" });
+    await screen.findByRole("option", { name: "Joana Comitê" });
     await user.selectOptions(
       screen.getByRole("combobox", { name: /^Selecione membro do comitê$/ }),
       "12",
@@ -857,6 +857,24 @@ describe("Projects — atribuição de avaliação", () => {
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/users"))).toBe(false);
   });
 
+  it("exibe o erro de busca dos membros no Snackbar da página", async () => {
+    fetchMock.mockImplementation((input) => {
+      const url = String(input);
+      if (url.includes("/users")) {
+        return Promise.resolve(jsonResponse({}, 500));
+      }
+      return Promise.resolve(jsonResponse(ASSIGNABLE_PROJECT_RESPONSE));
+    });
+    const user = userEvent.setup();
+    renderProjects("admin");
+
+    const row = await screen.findByTestId("project-row-42");
+    await user.click(within(row).getByRole("button", { name: "Atribuir" }));
+
+    expect(await screen.findByText("Erro no servidor. Tente novamente.")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Atribuir projeto" })).toBeInTheDocument();
+  });
+
   it("não oferece atribuição ao pesquisador", async () => {
     fetchMock.mockResolvedValue(jsonResponse(ASSIGNABLE_PROJECT_RESPONSE));
     renderProjects("researcher");
@@ -894,7 +912,7 @@ describe("Projects — atribuição de avaliação", () => {
 
     const firstRow = await screen.findByTestId("project-row-42");
     await user.click(within(firstRow).getByRole("button", { name: "Atribuir" }));
-    await screen.findByRole("option", { name: "Joana Comitê — joana@niar.local" });
+    await screen.findByRole("option", { name: "Joana Comitê" });
     await user.selectOptions(
       screen.getByRole("combobox", { name: /^Selecione membro do comitê$/ }),
       "12",
@@ -938,7 +956,7 @@ describe("Projects — atribuição de avaliação", () => {
 
     const row = await screen.findByTestId("project-row-42");
     await user.click(within(row).getByRole("button", { name: "Atribuir" }));
-    await screen.findByRole("option", { name: "Joana Comitê — joana@niar.local" });
+    await screen.findByRole("option", { name: "Joana Comitê" });
     const memberSelect = screen.getByRole("combobox", { name: /^Selecione membro do comitê$/ });
     await user.selectOptions(memberSelect, "12");
     await user.click(screen.getByRole("button", { name: "Salvar" }));

@@ -95,7 +95,6 @@ const renderDialog = (
     mode="select-member"
     members={[committeeMember]}
     membersLoading={false}
-    membersError={null}
     loading={false}
     onSearchMembers={vi.fn()}
     onClose={vi.fn()}
@@ -122,14 +121,14 @@ describe("ProjectAssignmentDialog", () => {
     const onSubmit = vi.fn();
     const onSearchMembers = vi.fn();
     const user = userEvent.setup();
-    renderDialog({ onSubmit, onSearchMembers, membersError: { message: "Falha temporária" } });
+    renderDialog({ onSubmit, onSearchMembers });
 
     await user.type(screen.getByLabelText("Buscar Selecione membro do comitê"), "Joana");
     expect(onSearchMembers).toHaveBeenLastCalledWith("Joana");
     const memberSelect = screen.getByRole("combobox", { name: /^Selecione membro do comitê$/ });
+    expect(screen.getByRole("option", { name: "Joana Comitê" })).toBeInTheDocument();
     await user.selectOptions(memberSelect, "12");
     expect(memberSelect).toHaveValue("12");
-    expect(screen.getByText("Falha temporária")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Salvar" }));
 
     expect(onSubmit).toHaveBeenCalledWith(12);
@@ -173,7 +172,6 @@ describe("ProjectAssignmentDialog", () => {
         mode="select-member"
         members={[committeeMember]}
         membersLoading={false}
-        membersError={null}
         loading={false}
         onSearchMembers={vi.fn()}
         onClose={vi.fn()}

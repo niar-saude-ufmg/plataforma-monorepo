@@ -17,9 +17,9 @@ import {
   type ChangeEvent,
   type ReactNode,
 } from "react";
+import { ProjectAssignmentDialog } from "../../components/ProjectAssignmentDialog";
 import { ProjectDocumentsDialog } from "../../components/ProjectDocumentsDialog";
 import { ProjectHistoryDialog } from "../../components/ProjectHistoryDialog";
-import { ProjectAssignmentDialog } from "../../components/ProjectAssignmentDialog";
 import { useApiError } from "../../hooks/use-api-error/use-api-error";
 import { selectAuthSelected } from "../../store/auth/auth.selectors";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -28,7 +28,6 @@ import {
   downloadProjectDocument,
   getProjects,
 } from "../../store/projects/projects.api";
-import { getActiveCommitteeMembers } from "../../store/users/users.api";
 import {
   selectProjectsDownloadError,
   selectProjectsDownloadFilename,
@@ -54,6 +53,7 @@ import {
   setProjectsPageSize,
   setSelectedProject,
 } from "../../store/projects/projects.slice";
+import { getActiveCommitteeMembers } from "../../store/users/users.api";
 import type { ApiError } from "../../types/api.types";
 import type {
   EvaluationStatus,
@@ -63,6 +63,7 @@ import type {
   ProjectStatusEntry,
 } from "../../types/project.types";
 import type { UserListItem } from "../../types/user.types";
+import { formatDate } from "../../utils/formatters/date";
 import {
   PROJECT_LIST_CONFIG,
   type ProjectActionId,
@@ -153,13 +154,6 @@ const canAssignEvaluation = (project: Project) => {
   return project.projectVersionId !== null &&
     project.evaluationStatus === "waiting" &&
     Boolean(status && ASSIGNABLE_PROJECT_STATUSES.has(status));
-};
-
-const formatDate = (value: string) => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? "—"
-    : new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(date);
 };
 
 const toListingColumns = (columns: readonly TableColumn<Project>[]) =>
@@ -476,7 +470,7 @@ export function Projects() {
     updatedAt: {
       key: "updatedAt",
       label: "Atualizado",
-      render: (value) => formatDate(String(value)),
+      render: (value) => formatDate(String(value), { fallback: "—" }),
     },
     actions: {
       variant: "actions",
@@ -545,6 +539,11 @@ export function Projects() {
     () => dispatch(clearProjectsMutation()),
     "Não foi possível atribuir a avaliação. Tente novamente.",
   );
+  const membersErrorSnackbar = useApiError(
+    membersError,
+    () => setMembersError(null),
+    "Não foi possível carregar os membros do Comitê. Tente novamente.",
+  );
   const downloadSuccessOpen = Boolean(
     downloadedFilename && downloadedFilename !== dismissedDownloadFilename,
   );
@@ -579,7 +578,6 @@ export function Projects() {
         mode={user?.role === "committee" ? "self" : "select-member"}
         members={committeeMembers}
         membersLoading={membersLoading}
-        membersError={membersError}
         loading={mutationLoading}
         onSearchMembers={setMembersSearch}
         onClose={closeAssignmentDialog}
@@ -588,6 +586,7 @@ export function Projects() {
       <Snackbar {...errorSnackbar} />
       <Snackbar {...downloadErrorSnackbar} />
       <Snackbar {...mutationErrorSnackbar} />
+      <Snackbar {...membersErrorSnackbar} />
       <Snackbar
         open={Boolean(successMessage)}
         message={successMessage ?? ""}
