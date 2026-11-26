@@ -190,6 +190,29 @@ export async function getUsersRequest(
   };
 }
 
+export async function getActiveCommitteeMembersRequest(
+  search?: string,
+): Promise<UserListItem[]> {
+  const members: UserListItem[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  do {
+    const response = await getUsersRequest({
+      search: search?.trim() || undefined,
+      role: 'committee',
+      accountStatus: 'active',
+      page,
+      pageSize: 100,
+    });
+    members.push(...response.items);
+    totalPages = response.pagination.totalPages;
+    page += 1;
+  } while (page <= totalPages);
+
+  return members;
+}
+
 function translateValidationMessage(field: string | undefined, message: string) {
   if (field === 'fullName' && message === 'Full name is required') {
     return 'Informe o nome completo do pesquisador.';

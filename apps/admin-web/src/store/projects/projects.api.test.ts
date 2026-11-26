@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import type {ApiError } from '../../types/api.types';
 import type { Project, ProjectListResponse } from '../../types/project.types';
-import { downloadProjectDocument, getProject, getProjects } from './projects.api';
+import { assignProjectEvaluation, downloadProjectDocument, getProject, getProjects } from './projects.api';
 import projectsReducer from "./projects.slice";
 
 const {
@@ -11,6 +11,8 @@ const {
   downloadProjectDocumentRequest,
   normalizeProjectApiError,
   normalizeProjectDocumentApiError,
+  assignProjectEvaluationRequest,
+  normalizeProjectAssignmentApiError,
 } =
   vi.hoisted(() => ({
     getProjectsRequest: vi.fn(),
@@ -18,6 +20,8 @@ const {
     downloadProjectDocumentRequest: vi.fn(),
     normalizeProjectApiError: vi.fn(),
     normalizeProjectDocumentApiError: vi.fn(),
+    assignProjectEvaluationRequest: vi.fn(),
+    normalizeProjectAssignmentApiError: vi.fn(),
   }));
 
 vi.mock("../../services/projects/projects.service", () => ({
@@ -26,10 +30,13 @@ vi.mock("../../services/projects/projects.service", () => ({
   downloadProjectDocumentRequest,
   normalizeProjectApiError,
   normalizeProjectDocumentApiError,
+  assignProjectEvaluationRequest,
+  normalizeProjectAssignmentApiError,
 }));
 
 const buildProject = (overrides: Partial<Project> = {}): Project => ({
   id: 42,
+  projectVersionId: 84,
   title: "Pareamento oncológico",
   updatedAt: "2026-09-25T12:00:00.000Z",
   researcher: { id: 10, fullName: "João Silva", email: "joao@niar.local" },
@@ -69,12 +76,17 @@ describe("projects thunks", () => {
     downloadProjectDocumentRequest.mockReset();
     normalizeProjectApiError.mockReset();
     normalizeProjectDocumentApiError.mockReset();
+    assignProjectEvaluationRequest.mockReset();
+    normalizeProjectAssignmentApiError.mockReset();
 
     normalizeProjectApiError.mockReturnValue(
       buildApiError({ message: "Erro inesperado", status: undefined }),
     );
     normalizeProjectDocumentApiError.mockReturnValue(
       buildApiError({ message: "Erro inesperado", status: undefined }),
+    );
+    normalizeProjectAssignmentApiError.mockReturnValue(
+      buildApiError({ message: "Não foi possível atribuir a avaliação.", status: undefined }),
     );
   });
 
@@ -253,6 +265,46 @@ describe("projects thunks", () => {
         status: "failed",
         error: apiError,
         filename: null,
+      });
+    });
+  });
+
+  describe("assignProjectEvaluation", () => {
+    it("encaminha a versão e o membro ao service", async () => {
+      assignProjectEvaluationRequest.mockResolvedValueOnce({
+        id: 50,
+        projectVersion: { id: 84 },
+        status: "to_review",
+      });
+      const store = makeTestStore();
+
+      await store.dispatch(assignProjectEvaluation({
+        projectVersionId: 84,
+        assignedToUserId: 12,
+      }));
+
+      expect(assignProjectEvaluationRequest).toHaveBeenCalledWith({
+        projectVersionId: 84,
+        assignedToUserId: 12,
+      });
+      expect(store.getState().projects.mutation).toEqual({
+        operation: "assign",
+        status: "succeeded",
+        error: null,
+      });
+    });
+
+    it("preserva o ApiError de conflito no estado", async () => {
+      const conflict = { status: 409, message: "Esta avaliação já foi atribuída." };
+      assignProjectEvaluationRequest.mockRejectedValueOnce(conflict);
+      const store = makeTestStore();
+
+      await store.dispatch(assignProjectEvaluation({ projectVersionId: 84 }));
+
+      expect(store.getState().projects.mutation).toEqual({
+        operation: "assign",
+        status: "failed",
+        error: conflict,
       });
     });
   });

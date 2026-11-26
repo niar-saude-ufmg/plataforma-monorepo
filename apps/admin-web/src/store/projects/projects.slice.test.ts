@@ -2,8 +2,9 @@ import { configureStore } from "@reduxjs/toolkit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApiError } from "../../types/api.types";
 import type { ProjectListPagination, Project } from "../../types/project.types";
-import { getProject, getProjects } from "./projects.api";
+import { assignProjectEvaluation, getProject, getProjects } from "./projects.api";
 import projectsReducer, {
+  clearProjectsMutation,
   clearProjectsError,
   clearProjectsFilters,
   clearProjectsState,
@@ -20,24 +21,39 @@ import {
   selectProjectsListLoading,
   selectProjectsListPagination,
   selectProjectsList,
+  selectProjectsMutationError,
+  selectProjectsMutationLoading,
+  selectProjectsMutationOperation,
+  selectProjectsMutationStatus,
   selectProjectsSelected,
 } from "./projects.selectors";
 
-const { getProjectsRequest, getProjectRequest, normalizeProjectApiError } =
+const {
+  assignProjectEvaluationRequest,
+  getProjectsRequest,
+  getProjectRequest,
+  normalizeProjectApiError,
+  normalizeProjectAssignmentApiError,
+} =
   vi.hoisted(() => ({
+    assignProjectEvaluationRequest: vi.fn(),
     getProjectsRequest: vi.fn(),
     getProjectRequest: vi.fn(),
     normalizeProjectApiError: vi.fn(),
+    normalizeProjectAssignmentApiError: vi.fn(),
   }));
 
 vi.mock("../../services/projects/projects.service", () => ({
   getProjectsRequest,
   getProjectRequest,
   normalizeProjectApiError,
+  assignProjectEvaluationRequest,
+  normalizeProjectAssignmentApiError,
 }));
 
 const buildProject = (overrides: Partial<Project> = {}): Project => ({
   id: 42,
+  projectVersionId: 84,
   title: "Pareamento oncológico",
   updatedAt: "2026-09-25T12:00:00.000Z",
   researcher: { id: 10, fullName: "João Silva", email: "joao@niar.local" },
@@ -76,6 +92,7 @@ function buildSliceState(overrides: Partial<ProjectsState> = {}): ProjectsState 
       error: null,
     },
     selected: null,
+    mutation: { operation: null, status: "idle", error: null },
     download: { status: "idle", error: null, filename: null },
     ...overrides,
   };
@@ -85,7 +102,9 @@ describe("projects slice", () => {
   beforeEach(() => {
     getProjectsRequest.mockReset();
     getProjectRequest.mockReset();
+    assignProjectEvaluationRequest.mockReset();
     normalizeProjectApiError.mockReset();
+    normalizeProjectAssignmentApiError.mockReset();
     normalizeProjectApiError.mockReturnValue(buildApiError());
   });
 
@@ -296,6 +315,51 @@ describe("projects slice", () => {
     });
   });
 
+  describe("mutation de atribuição", () => {
+    it("controla pending, fulfilled e limpeza sem alterar o projeto selecionado", async () => {
+      let resolveAssignment!: (value: unknown) => void;
+      assignProjectEvaluationRequest.mockReturnValueOnce(new Promise((resolve) => {
+        resolveAssignment = resolve;
+      }));
+      const store = makeTestStore();
+      const project = buildProject();
+      store.dispatch(setSelectedProject(project));
+
+      const pending = store.dispatch(assignProjectEvaluation({ projectVersionId: 84 }));
+      expect(store.getState().projects.mutation).toEqual({
+        operation: "assign",
+        status: "pending",
+        error: null,
+      });
+
+      resolveAssignment({ id: 50 });
+      await pending;
+      expect(store.getState().projects.mutation.status).toBe("succeeded");
+      expect(store.getState().projects.selected).toEqual(project);
+
+      store.dispatch(clearProjectsMutation());
+      expect(store.getState().projects.mutation).toEqual({
+        operation: null,
+        status: "idle",
+        error: null,
+      });
+    });
+
+    it("guarda o erro rejeitado na mutation", async () => {
+      const error = { status: 409, message: "Já atribuída" };
+      assignProjectEvaluationRequest.mockRejectedValueOnce(error);
+      const store = makeTestStore();
+
+      await store.dispatch(assignProjectEvaluation({ projectVersionId: 84 }));
+
+      expect(store.getState().projects.mutation).toEqual({
+        operation: "assign",
+        status: "failed",
+        error,
+      });
+    });
+  });
+
   describe("selectors", () => {
     it("selectProjectsList retorna a lista", () => {
       const items = [buildProject()];
@@ -339,6 +403,20 @@ describe("projects slice", () => {
 
       expect(selectProjectsListHasItems(empty)).toBe(false);
       expect(selectProjectsListHasItems(filled)).toBe(true);
+    });
+
+    it("expõe status, operação, loading e erro da mutation", () => {
+      const error = buildApiError({ status: 409 });
+      const state = {
+        projects: buildSliceState({
+          mutation: { operation: "assign", status: "failed", error },
+        }),
+      };
+
+      expect(selectProjectsMutationStatus(state)).toBe("failed");
+      expect(selectProjectsMutationOperation(state)).toBe("assign");
+      expect(selectProjectsMutationLoading(state)).toBe(false);
+      expect(selectProjectsMutationError(state)).toEqual(error);
     });
   });
 });

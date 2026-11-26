@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, RadioGroup, Textarea } from '@niar/ui';
 import { FixedDialog } from '../FixedDialog';
 import type { UserListItem } from '../../types/user.types';
+import { formatDate } from '../../utils/formatters/date';
 import './UserEvaluationDialog.scss';
 
 export type UserEvaluationDecision = 'active' | 'rejected';
@@ -56,13 +57,6 @@ export function UserEvaluationDialog({
 
   const handleDownload = () => {
     onDownloadCoep();
-  };
-
-  // Formata data de YYYY-MM-DD para DD/MM/YYYY
-  const formatDate = (date?: string) => {
-    if (!date) return '';
-    const [year, month, day] = date.split('-');
-    return `${day}/${month}/${year}`;
   };
 
   return (

@@ -12,16 +12,19 @@ import {
 import {
   Fragment,
   useEffect,
+  useRef,
   useState,
   type ChangeEvent,
   type ReactNode,
 } from "react";
+import { ProjectAssignmentDialog } from "../../components/ProjectAssignmentDialog";
 import { ProjectDocumentsDialog } from "../../components/ProjectDocumentsDialog";
 import { ProjectHistoryDialog } from "../../components/ProjectHistoryDialog";
 import { useApiError } from "../../hooks/use-api-error/use-api-error";
 import { selectAuthSelected } from "../../store/auth/auth.selectors";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
+  assignProjectEvaluation,
   downloadProjectDocument,
   getProjects,
 } from "../../store/projects/projects.api";
@@ -36,17 +39,22 @@ import {
   selectProjectsListPage,
   selectProjectsListPageSize,
   selectProjectsListPagination,
+  selectProjectsMutationError,
+  selectProjectsMutationLoading,
   selectProjectsSelected,
 } from "../../store/projects/projects.selectors";
 import {
   clearProjectsError,
   clearProjectsFilters,
+  clearProjectsMutation,
   clearSelectedProject,
   setProjectsFilters,
   setProjectsPage,
   setProjectsPageSize,
   setSelectedProject,
 } from "../../store/projects/projects.slice";
+import { getActiveCommitteeMembers } from "../../store/users/users.api";
+import type { ApiError } from "../../types/api.types";
 import type {
   EvaluationStatus,
   Project,
@@ -54,6 +62,8 @@ import type {
   ProjectStatus,
   ProjectStatusEntry,
 } from "../../types/project.types";
+import type { UserListItem } from "../../types/user.types";
+import { formatDate } from "../../utils/formatters/date";
 import {
   PROJECT_LIST_CONFIG,
   type ProjectActionId,
@@ -132,11 +142,18 @@ const statusColor = (entry: ProjectStatusEntry | undefined): StatusChipStatus =>
 
 const evaluationStatus = (project: Project): EvaluationStatus | undefined => project.evaluationStatus;
 
-const formatDate = (value: string) => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? "—"
-    : new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(date);
+const ASSIGNABLE_PROJECT_STATUSES = new Set<ProjectStatus>([
+  "submitted_for_review",
+  "submitted_to_committee",
+  "resubmitted_for_review",
+  "resubmitted_to_committee",
+]);
+
+const canAssignEvaluation = (project: Project) => {
+  const status = latestStatus(project)?.code;
+  return project.projectVersionId !== null &&
+    project.evaluationStatus === "waiting" &&
+    Boolean(status && ASSIGNABLE_PROJECT_STATUSES.has(status));
 };
 
 const toListingColumns = (columns: readonly TableColumn<Project>[]) =>
@@ -148,20 +165,30 @@ const toListingRows = (projects: readonly Project[]) =>
 export function Projects() {
   const dispatch = useAppDispatch();
   const [activeDialog, setActiveDialog] = useState<
-    "history" | "documents" | null
+    "history" | "documents" | "assignment" | null
   >(null);
+  const [committeeMembers, setCommitteeMembers] = useState<UserListItem[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState<ApiError | null>(null);
+  const [membersSearch, setMembersSearch] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const assignmentTargetRef = useRef<number | null>(null);
+  const selectedProjectRef = useRef<Project | null>(null);
   const [dismissedDownloadFilename, setDismissedDownloadFilename] = useState<
     string | null
   >(null);
   const user = useAppSelector(selectAuthSelected);
   const projects = useAppSelector(selectProjectsList);
   const selectedProject = useAppSelector(selectProjectsSelected);
+  selectedProjectRef.current = selectedProject;
   const filters = useAppSelector(selectProjectsListFilters);
   const pagination = useAppSelector(selectProjectsListPagination);
   const page = useAppSelector(selectProjectsListPage);
   const pageSize = useAppSelector(selectProjectsListPageSize);
   const loading = useAppSelector(selectProjectsListLoading);
   const error = useAppSelector(selectProjectsListError);
+  const mutationLoading = useAppSelector(selectProjectsMutationLoading);
+  const mutationError = useAppSelector(selectProjectsMutationError);
   const downloadLoading = useAppSelector(selectProjectsDownloadLoading);
   const downloadError = useAppSelector(selectProjectsDownloadError);
   const downloadedFilename = useAppSelector(selectProjectsDownloadFilename);
@@ -187,6 +214,40 @@ export function Projects() {
     pageSize,
   ]);
 
+  useEffect(() => {
+    if (activeDialog !== "assignment" || user?.role !== "admin") {
+      return;
+    }
+
+    let cancelled = false;
+    const timeout = window.setTimeout(async () => {
+      setMembersLoading(true);
+      setMembersError(null);
+      try {
+        const members = await dispatch(
+          getActiveCommitteeMembers({ search: membersSearch || undefined }),
+        ).unwrap();
+        if (!cancelled) setCommitteeMembers(members);
+      } catch (memberError) {
+        if (!cancelled) {
+          setCommitteeMembers([]);
+          setMembersError(
+            memberError && typeof memberError === "object" && "message" in memberError
+              ? memberError as ApiError
+              : { message: "Não foi possível carregar os membros do Comitê." },
+          );
+        }
+      } finally {
+        if (!cancelled) setMembersLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [activeDialog, dispatch, membersSearch, user?.role]);
+
   const handleFiltersChange = (values: Readonly<Record<string, unknown>>) => {
     dispatch(
       setProjectsFilters({
@@ -205,6 +266,7 @@ export function Projects() {
     dialog: "history" | "documents",
     project: Project,
   ) => {
+    assignmentTargetRef.current = null;
     dispatch(setSelectedProject(project));
     setActiveDialog(dialog);
   };
@@ -212,6 +274,71 @@ export function Projects() {
   const closeProjectDialog = () => {
     setActiveDialog(null);
     dispatch(clearSelectedProject());
+  };
+
+  const refreshProjects = () => dispatch(getProjects({
+    page,
+    pageSize,
+    search: filters.search || undefined,
+    status: filters.status || undefined,
+    evaluationStatus: filters.evaluationStatus || undefined,
+  }));
+
+  const openAssignmentDialog = (project: Project) => {
+    if (!canAssignEvaluation(project) || mutationLoading) return;
+    dispatch(clearProjectsMutation());
+    dispatch(setSelectedProject(project));
+    assignmentTargetRef.current = project.projectVersionId;
+    setMembersSearch("");
+    setCommitteeMembers([]);
+    setMembersError(null);
+    setActiveDialog("assignment");
+  };
+
+  const closeAssignmentDialog = () => {
+    if (mutationLoading) return;
+    assignmentTargetRef.current = null;
+    setActiveDialog(null);
+    setMembersSearch("");
+    setCommitteeMembers([]);
+    setMembersError(null);
+    dispatch(clearSelectedProject());
+    dispatch(clearProjectsMutation());
+  };
+
+  const submitAssignment = async (assignedToUserId?: number) => {
+    const projectVersionId = selectedProject?.projectVersionId;
+    if (!projectVersionId || mutationLoading) return;
+
+    const result = await dispatch(assignProjectEvaluation({
+      projectVersionId,
+      ...(assignedToUserId !== undefined ? { assignedToUserId } : {}),
+    }));
+
+    if (assignProjectEvaluation.fulfilled.match(result)) {
+      setSuccessMessage(
+        user?.role === "committee"
+          ? "Avaliação assumida com sucesso."
+          : "Avaliação atribuída com sucesso.",
+      );
+      void refreshProjects();
+
+      if (
+        assignmentTargetRef.current === projectVersionId &&
+        selectedProjectRef.current?.projectVersionId === projectVersionId
+      ) {
+        assignmentTargetRef.current = null;
+        setActiveDialog(null);
+        setCommitteeMembers([]);
+        dispatch(clearSelectedProject());
+      }
+      dispatch(clearProjectsMutation());
+      return;
+    }
+
+    if (result.payload?.status === 409) {
+      void refreshProjects();
+    }
   };
 
   const handleDownloadDocument = (document: ProjectDocument) => {
@@ -276,6 +403,17 @@ export function Projects() {
     ProjectActionId,
     (project: Project) => ReactNode
   > = {
+    assign: (project) => canAssignEvaluation(project) ? (
+      <Button
+        type="button"
+        size="small"
+        variant="outlined"
+        disabled={mutationLoading}
+        onClick={() => openAssignmentDialog(project)}
+      >
+        {user?.role === "committee" ? "Assumir avaliação" : "Atribuir"}
+      </Button>
+    ) : null,
     history: (project) => (
       <Button
         type="button"
@@ -332,7 +470,7 @@ export function Projects() {
     updatedAt: {
       key: "updatedAt",
       label: "Atualizado",
-      render: (value) => formatDate(String(value)),
+      render: (value) => formatDate(String(value), { fallback: "—" }),
     },
     actions: {
       variant: "actions",
@@ -396,6 +534,16 @@ export function Projects() {
     () => dispatch(clearProjectsError()),
     "Não foi possível baixar o documento. Tente novamente.",
   );
+  const mutationErrorSnackbar = useApiError(
+    mutationError,
+    () => dispatch(clearProjectsMutation()),
+    "Não foi possível atribuir a avaliação. Tente novamente.",
+  );
+  const membersErrorSnackbar = useApiError(
+    membersError,
+    () => setMembersError(null),
+    "Não foi possível carregar os membros do Comitê. Tente novamente.",
+  );
   const downloadSuccessOpen = Boolean(
     downloadedFilename && downloadedFilename !== dismissedDownloadFilename,
   );
@@ -424,8 +572,28 @@ export function Projects() {
         onDownload={handleDownloadDocument}
         onClose={closeProjectDialog}
       />
+      <ProjectAssignmentDialog
+        open={activeDialog === "assignment"}
+        project={selectedProject}
+        mode={user?.role === "committee" ? "self" : "select-member"}
+        members={committeeMembers}
+        membersLoading={membersLoading}
+        loading={mutationLoading}
+        onSearchMembers={setMembersSearch}
+        onClose={closeAssignmentDialog}
+        onSubmit={(assignedToUserId) => { void submitAssignment(assignedToUserId); }}
+      />
       <Snackbar {...errorSnackbar} />
       <Snackbar {...downloadErrorSnackbar} />
+      <Snackbar {...mutationErrorSnackbar} />
+      <Snackbar {...membersErrorSnackbar} />
+      <Snackbar
+        open={Boolean(successMessage)}
+        message={successMessage ?? ""}
+        severity="success"
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={() => setSuccessMessage(null)}
+      />
       <Snackbar
         open={downloadSuccessOpen}
         message={

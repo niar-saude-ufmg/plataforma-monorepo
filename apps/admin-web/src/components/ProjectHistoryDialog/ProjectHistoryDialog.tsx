@@ -1,22 +1,12 @@
 import { PROJECT_STATUS_LABELS } from "@niar/contracts";
 import { Details, type DetailsTimelineItem } from "@niar/ui";
 import type { Project } from "../../types/project.types";
+import { formatDateTime } from "../../utils/formatters/date";
 
 type ProjectHistoryDialogProps = {
   open: boolean;
   project: Project | null;
   onClose: () => void;
-};
-
-const formatDateTime = (value: string) => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? "Data não informada"
-    : new Intl.DateTimeFormat("pt-BR", {
-        dateStyle: "short",
-        timeStyle: "short",
-        timeZone: "UTC",
-      }).format(date);
 };
 
 const toTimelineItem = (

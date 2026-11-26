@@ -1,5 +1,7 @@
 import type { ApiError } from "../../types/api.types";
 import type {
+  AssignedProjectEvaluation,
+  AssignProjectEvaluationInput,
   EvaluationStatus,
   ProjectListPagination,
   Project,
@@ -62,6 +64,7 @@ export function toEvaluation(raw: any): ProjectEvaluation {
 export function toProject(raw: any): Project {
   const project: Project = {
     id: raw.id,
+    projectVersionId: raw.project_version_id ?? null,
     title: raw.title,
     updatedAt: raw.updated_at,
     researcher: toResearcher(raw.researcher),
@@ -78,6 +81,45 @@ export function toProject(raw: any): Project {
   }
 
   return project;
+}
+
+const toEvaluationUser = (raw: any): AssignedProjectEvaluation["assignedTo"] =>
+  raw
+    ? {
+        userId: raw.user_id,
+        fullName: raw.full_name,
+        email: raw.email,
+        role: raw.role,
+      }
+    : null;
+
+export function toAssignedProjectEvaluation(raw: any): AssignedProjectEvaluation {
+  return {
+    id: raw.id,
+    projectVersion: {
+      id: raw.project_version.id,
+      projectId: raw.project_version.project_id,
+      versionNumber: raw.project_version.version_number,
+      status: raw.project_version.status,
+      submittedAt: raw.project_version.submitted_at,
+      createdAt: raw.project_version.created_at,
+    },
+    project: {
+      id: raw.project.id,
+      ownerUserId: raw.project.owner_user_id,
+      title: raw.project.title,
+    },
+    assignedTo: toEvaluationUser(raw.assigned_to),
+    assignedBy: toEvaluationUser(raw.assigned_by),
+    evaluatedBy: toEvaluationUser(raw.evaluated_by),
+    status: raw.status,
+    justification: raw.justification,
+    certificationDecision: raw.certification_decision,
+    certificationReason: raw.certification_reason,
+    evaluatedAt: raw.evaluated_at,
+    createdAt: raw.created_at,
+    updatedAt: raw.updated_at,
+  };
 }
 
 export function toProjectListPagination(raw: any): ProjectListPagination {
@@ -173,6 +215,73 @@ export async function downloadProjectDocumentRequest(
       `documento-projeto-${projectId}-${documentId}`,
     ),
   };
+}
+
+const apiErrorMessage = (body: unknown): string | undefined =>
+  typeof body === "object" && body !== null && "error" in body && typeof body.error === "string"
+    ? body.error
+    : undefined;
+
+export function normalizeProjectAssignmentApiError(
+  status: number | string,
+  body?: unknown,
+): ApiError {
+  const numericStatus = typeof status === "number" ? status : undefined;
+  const message = apiErrorMessage(body);
+
+  if (numericStatus === 400) {
+    return { status: 400, message: message ?? "Selecione um membro ativo do Comitê." };
+  }
+  if (numericStatus === 401) {
+    return { status: 401, message: "Sessão expirada. Faça login novamente." };
+  }
+  if (numericStatus === 403) {
+    return { status: 403, message: message ?? "Você não tem permissão para atribuir esta avaliação." };
+  }
+  if (numericStatus === 404) {
+    return { status: 404, message: message ?? "Versão do projeto não encontrada." };
+  }
+  if (numericStatus === 409) {
+    return {
+      status: 409,
+      message: "Esta avaliação já foi atribuída. A lista foi atualizada.",
+    };
+  }
+
+  return {
+    status: numericStatus,
+    message: "Não foi possível atribuir a avaliação. Tente novamente.",
+  };
+}
+
+export async function assignProjectEvaluationRequest(
+  input: AssignProjectEvaluationInput,
+): Promise<AssignedProjectEvaluation> {
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${getAdminApiBaseUrl()}/project-versions/${input.projectVersionId}/evaluation`,
+      {
+        method: "POST",
+        headers: { ...authHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify(
+          input.assignedToUserId === undefined
+            ? {}
+            : { assigned_to_user_id: input.assignedToUserId },
+        ),
+      },
+    );
+  } catch {
+    throw normalizeProjectAssignmentApiError("FETCH_ERROR");
+  }
+
+  const body = await response.json().catch(() => undefined);
+  if (!response.ok) {
+    throw normalizeProjectAssignmentApiError(response.status, body);
+  }
+
+  return toAssignedProjectEvaluation(body);
 }
 
 export function normalizeProjectDocumentApiError(

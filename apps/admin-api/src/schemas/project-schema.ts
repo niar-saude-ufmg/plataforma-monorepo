@@ -119,6 +119,7 @@ export type ProjectEvaluationResponse = {
 
 export type ProjectResponse = {
   id: number;
+  project_version_id: number | null;
   title: string;
   updated_at: string;
   researcher: ProjectResearcherResponse;

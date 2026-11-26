@@ -1,0 +1,56 @@
+.project-assignment-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--niar-spacing-md);
+
+  &__description {
+    margin: 0;
+    color: var(--niar-colors-text-subtitle);
+    font-size: var(--niar-font-size-body);
+  }
+
+  &__summary {
+    padding: var(--niar-spacing-sm);
+    border: var(--niar-border-width-default) solid var(--niar-colors-border);
+    border-radius: var(--niar-radius-medium);
+
+    ul {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: var(--niar-spacing-lg);
+      row-gap: var(--niar-spacing-xs);
+    }
+
+    li:last-child {
+      grid-column: 1;
+    }
+  }
+
+  &__section-title {
+    margin: 0 0 var(--niar-spacing-xs);
+    color: var(--niar-colors-text-subtitle);
+    font-size: var(--niar-font-size-body);
+    font-weight: var(--niar-font-weight-medium);
+  }
+
+  &__member-field,
+  &__self-assignment {
+    display: flex;
+    flex-direction: column;
+    gap: var(--niar-spacing-2xs);
+  }
+
+  &__member-field .MuiAutocomplete-root {
+    width: 260px;
+    max-width: 100%;
+  }
+
+  &__self-assignment {
+    align-items: flex-start;
+  }
+
+  &__error {
+    color: var(--niar-colors-feedback-error);
+    font-size: var(--niar-font-size-caption);
+  }
+}

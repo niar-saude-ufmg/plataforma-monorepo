@@ -1,4 +1,8 @@
-import type { EvaluationStatus as ContractEvaluationStatus, ProjectStatus as ContractProjectStatus } from "@niar/contracts";
+import type {
+  EvaluationStatus as ContractEvaluationStatus,
+  ProjectStatus as ContractProjectStatus,
+  UserRole,
+} from "@niar/contracts";
 
 /**
  * Contratos de dados do módulo de projetos.
@@ -53,6 +57,45 @@ export interface ProjectEvaluation {
   updatedAt: string;
 }
 
+export interface ProjectEvaluationUser {
+  userId: number;
+  fullName: string;
+  email: string;
+  role: UserRole;
+}
+
+export interface AssignedProjectEvaluation {
+  id: number;
+  projectVersion: {
+    id: number;
+    projectId: number;
+    versionNumber: number;
+    status: ProjectStatus;
+    submittedAt: string | null;
+    createdAt: string;
+  };
+  project: {
+    id: number;
+    ownerUserId: number;
+    title: string;
+  };
+  assignedTo: ProjectEvaluationUser | null;
+  assignedBy: ProjectEvaluationUser | null;
+  evaluatedBy: ProjectEvaluationUser | null;
+  status: EvaluationStatus;
+  justification: string | null;
+  certificationDecision: "granted" | "not_granted" | null;
+  certificationReason: string | null;
+  evaluatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AssignProjectEvaluationInput = {
+  projectVersionId: number;
+  assignedToUserId?: number;
+};
+
 /**
  * Projeto como a UI precisa dele.
  *
@@ -61,6 +104,7 @@ export interface ProjectEvaluation {
  */
 export interface Project {
   id: number;
+  projectVersionId: number | null;
   title: string;
   updatedAt: string;
   researcher: ResearcherSummary;

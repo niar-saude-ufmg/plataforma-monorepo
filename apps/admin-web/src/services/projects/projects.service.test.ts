@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ACCESS_TOKEN_STORAGE_KEY } from "@niar/auth";
 import {
+  assignProjectEvaluationRequest,
   getProjectRequest,
   getProjectsRequest,
   downloadProjectDocumentRequest,
   normalizeProjectDocumentApiError,
+  normalizeProjectAssignmentApiError,
   normalizeProjectApiError,
   toProjectListPagination,
   toProject,
@@ -12,6 +14,7 @@ import {
 
 const rawProjectFromApi = {
   id: 42,
+  project_version_id: 84,
   title: "Pareamento oncológico",
   updated_at: "2026-09-25T12:00:00.000Z",
   researcher: {
@@ -75,6 +78,39 @@ const rawListResponse = {
   },
 };
 
+const rawAssignmentResponse = {
+  id: 50,
+  project_version: {
+    id: 84,
+    project_id: 42,
+    version_number: 2,
+    status: "under_review",
+    submitted_at: "2026-10-01T12:00:00.000Z",
+    created_at: "2026-09-30T12:00:00.000Z",
+  },
+  project: { id: 42, owner_user_id: 7, title: "Projeto de pesquisa" },
+  assigned_to: {
+    user_id: 12,
+    full_name: "Joana Comitê",
+    email: "joana@niar.local",
+    role: "committee",
+  },
+  assigned_by: {
+    user_id: 1,
+    full_name: "Administrador",
+    email: "admin@niar.local",
+    role: "admin",
+  },
+  evaluated_by: null,
+  status: "to_review",
+  justification: null,
+  certification_decision: null,
+  certification_reason: null,
+  evaluated_at: null,
+  created_at: "2026-10-02T10:00:00.000Z",
+  updated_at: "2026-10-02T10:00:00.000Z",
+};
+
 function mockFetchOnce(response: {
   ok: boolean;
   status: number;
@@ -108,6 +144,7 @@ describe("projects service", () => {
 
       expect(project).toEqual({
         id: 42,
+        projectVersionId: 84,
         title: "Pareamento oncológico",
         updatedAt: "2026-09-25T12:00:00.000Z",
         researcher: {
@@ -411,6 +448,84 @@ describe("projects service", () => {
         status: 404,
         message: "Documento do projeto não encontrado.",
       });
+    });
+  });
+
+  describe("assignProjectEvaluationRequest", () => {
+    it("envia o ID da versão e o membro selecionado e normaliza a resposta", async () => {
+      const fetchMock = mockFetchOnce({
+        ok: true,
+        status: 201,
+        json: async () => rawAssignmentResponse,
+      });
+
+      const result = await assignProjectEvaluationRequest({
+        projectVersionId: 84,
+        assignedToUserId: 12,
+      });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:3333/api/admin/project-versions/84/evaluation",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ assigned_to_user_id: 12 }),
+        }),
+      );
+      expect(result).toMatchObject({
+        id: 50,
+        projectVersion: { id: 84, projectId: 42, versionNumber: 2 },
+        assignedTo: { userId: 12, fullName: "Joana Comitê" },
+        status: "to_review",
+      });
+    });
+
+    it("envia objeto vazio na autoatribuição", async () => {
+      const fetchMock = mockFetchOnce({
+        ok: true,
+        status: 201,
+        json: async () => rawAssignmentResponse,
+      });
+
+      await assignProjectEvaluationRequest({ projectVersionId: 84 });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/project-versions/84/evaluation"),
+        expect.objectContaining({ body: "{}" }),
+      );
+    });
+
+    it("normaliza conflito e falha de rede", async () => {
+      mockFetchOnce({
+        ok: false,
+        status: 409,
+        json: async () => ({ error: "Esta versão já possui uma avaliação atribuída" }),
+      });
+
+      await expect(assignProjectEvaluationRequest({ projectVersionId: 84 }))
+        .rejects.toEqual({
+          status: 409,
+          message: "Esta avaliação já foi atribuída. A lista foi atualizada.",
+        });
+
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValueOnce(new TypeError("Failed to fetch")));
+      await expect(assignProjectEvaluationRequest({ projectVersionId: 84 }))
+        .rejects.toEqual(normalizeProjectAssignmentApiError("FETCH_ERROR"));
+    });
+
+    it.each([
+      [400, "Selecione um membro ativo do Comitê."],
+      [401, "Sessão expirada. Faça login novamente."],
+      [403, "Você não tem permissão para atribuir esta avaliação."],
+      [404, "Versão do projeto não encontrada."],
+    ])("normaliza o erro HTTP %d", async (status, message) => {
+      mockFetchOnce({
+        ok: false,
+        status,
+        json: async () => ({}),
+      });
+
+      await expect(assignProjectEvaluationRequest({ projectVersionId: 84 }))
+        .rejects.toEqual({ status, message });
     });
   });
 

@@ -376,9 +376,10 @@ const options = {
         },
         ProjectResponse: {
           type: 'object',
-          required: ['id', 'title', 'updated_at', 'researcher', 'status', 'documents'],
+          required: ['id', 'project_version_id', 'title', 'updated_at', 'researcher', 'status', 'documents'],
           properties: {
             id: { type: 'integer', example: 42 },
+            project_version_id: { type: 'integer', nullable: true, example: 84 },
             title: { type: 'string', example: 'Projeto de pesquisa' },
             updated_at: { type: 'string', format: 'date-time' },
             evaluation_status: { type: 'string', nullable: true, enum: ['project_approved', 'project_rejected', 'project_changes_requested', 'report_approved', 'report_rejected', 'report_changes_requested'], example: 'project_approved' },

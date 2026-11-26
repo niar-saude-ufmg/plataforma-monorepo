@@ -7,6 +7,7 @@ import {
   createCommitteeMember,
   createResearcher,
   downloadUserCoepDocument,
+  getActiveCommitteeMembers,
   getUsers,
   createUserAuthEvaluation
 } from './users.api';
@@ -155,6 +156,47 @@ describe('users api', () => {
       expect.stringContaining('/api/admin/users?search=Bruno&role=admin&account_status=active&page=2&page_size=10'),
       expect.anything(),
     );
+  });
+
+  it('busca todos os membros ativos do Comitê sem alterar a listagem geral', async () => {
+    const committeeMember = (id: number) => ({
+      id,
+      full_name: `Membro ${id}`,
+      email: `membro${id}@niar.local`,
+      role: 'committee',
+      account_status: 'active',
+      created_at: '2026-09-04T10:00:00.000Z',
+      profile: null,
+      researcher_profile: null,
+      committee_profile: null,
+      coep: null,
+      latest_auth_evaluation: null,
+    });
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        items: [committeeMember(12)],
+        pagination: { page: 1, page_size: 100, total_items: 2, total_pages: 2 },
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        items: [committeeMember(13)],
+        pagination: { page: 2, page_size: 100, total_items: 2, total_pages: 2 },
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    const store = createTestStore();
+
+    const result = await store.dispatch(getActiveCommitteeMembers({ search: 'Membro' })).unwrap();
+
+    expect(result.map((member) => member.id)).toEqual([12, 13]);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('search=Membro&role=committee&account_status=active&page=1&page_size=100'),
+      expect.anything(),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('page=2&page_size=100'),
+      expect.anything(),
+    );
+    expect(store.getState().users.list.items).toEqual([]);
   });
 
   it('baixa o parecer do COEP e registra o nome no estado', async () => {

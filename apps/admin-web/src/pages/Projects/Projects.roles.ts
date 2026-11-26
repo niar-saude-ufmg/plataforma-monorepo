@@ -14,7 +14,7 @@ export type ProjectFilterKey =
   | "status"
   | "evaluationStatus";
 
-export type ProjectActionId = "history" | "documents";
+export type ProjectActionId = "assign" | "history" | "documents";
 
 export type ProjectListRoleConfig = RoleListConfig<ProjectColumnId, ProjectFilterKey> & {
   actions: readonly ProjectActionId[];
@@ -34,7 +34,7 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
       "actions",
     ],
     filters: ["search", "status"],
-    actions: ["history", "documents"],
+    actions: ["assign", "history", "documents"],
     columnLabels: { status: "Status do projeto" },
     filterLabels: { status: "Status do projeto" },
   },
@@ -61,7 +61,7 @@ export const PROJECT_LIST_CONFIG: Record<UserRole, ProjectListRoleConfig> = {
       "actions",
     ],
     filters: ["search", "status", "evaluationStatus"],
-    actions: ["history", "documents"],
+    actions: ["assign", "history", "documents"],
     columnLabels: {
       status: "Status do projeto",
       evaluationStatus: "Status da avaliação",

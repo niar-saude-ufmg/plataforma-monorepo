@@ -5,17 +5,30 @@ import type {
   ProjectListPagination,
 } from "../../types/project.types";
 import type { ApiError } from "../../types/api.types";
-import type { AsyncStatus, FileState, ResourceState } from "../../types/resource.types";
-import { downloadProjectDocument, getProjects, getProject } from "./projects.api";
+import type { AsyncStatus, FileState, MutationState, ResourceState } from "../../types/resource.types";
+import {
+  assignProjectEvaluation,
+  downloadProjectDocument,
+  getProjects,
+  getProject,
+} from "./projects.api";
 
 export type ProjectsStatus = AsyncStatus;
+export type ProjectMutationOperation = "assign" | "evaluate";
 
 export const DEFAULT_PROJECTS_PAGE_SIZE = 20;
 
 const createDefaultProjectsFilters = (): ProjectListFilters => ({});
 
-export type ProjectsState = ResourceState<ProjectListItem, ProjectListFilters, ProjectListPagination, ApiError> & {
+export type ProjectsState = ResourceState<
+  ProjectListItem,
+  ProjectListFilters,
+  ProjectListPagination,
+  ApiError,
+  ProjectMutationOperation
+> & {
   selected: ProjectListItem | null;
+  mutation: MutationState<ApiError, ProjectMutationOperation>;
   download: FileState<ApiError>;
 };
 
@@ -30,6 +43,7 @@ const initialState: ProjectsState = {
     error: null,
   },
   selected: null,
+  mutation: { operation: null, status: "idle", error: null },
   download: { status: "idle", error: null, filename: null },
 };
 
@@ -54,6 +68,7 @@ const projectsSlice = createSlice({
         error: null,
       };
       state.selected = null;
+      state.mutation = { operation: null, status: "idle", error: null };
       state.download = { status: "idle", error: null, filename: null };
     },
     setProjectsFilters(state, action: PayloadAction<ProjectListFilters>) {
@@ -80,6 +95,9 @@ const projectsSlice = createSlice({
       if (state.download.status === "failed") {
         state.download.status = "idle";
       }
+    },
+    clearProjectsMutation(state) {
+      state.mutation = { operation: null, status: "idle", error: null };
     },
   },
   extraReducers: (builder) => {
@@ -125,6 +143,22 @@ const projectsSlice = createSlice({
       };
     });
 
+    builder.addCase(assignProjectEvaluation.pending, (state) => {
+      state.mutation = { operation: "assign", status: "pending", error: null };
+    });
+    builder.addCase(assignProjectEvaluation.fulfilled, (state) => {
+      state.mutation = { operation: "assign", status: "succeeded", error: null };
+    });
+    builder.addCase(assignProjectEvaluation.rejected, (state, action) => {
+      state.mutation = {
+        operation: "assign",
+        status: "failed",
+        error: action.payload ?? {
+          message: "Não foi possível atribuir a avaliação. Tente novamente.",
+        },
+      };
+    });
+
     builder.addCase(downloadProjectDocument.pending, (state) => {
       state.download = { status: "pending", error: null, filename: null };
     });
@@ -148,6 +182,7 @@ export const {
   clearSelectedProject,
   clearProjectsState,
   clearProjectsError,
+  clearProjectsMutation,
   setProjectsFilters,
   clearProjectsFilters,
   setProjectsPage,
