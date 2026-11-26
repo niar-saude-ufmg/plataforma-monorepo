@@ -22,6 +22,10 @@ const iconNames: IconName[] = [
   "download",
   "visibility",
   "visibilityOff",
+  "minimize",
+  "openInFull",
+  "closeFullscreen",
+  "expandLess",
 ];
 const colors = [
   "inherit",

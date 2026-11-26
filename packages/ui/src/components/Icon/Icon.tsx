@@ -22,6 +22,10 @@ import Download from "@mui/icons-material/Download";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import HelpOutline from "@mui/icons-material/HelpOutline";
+import Minimize from "@mui/icons-material/Minimize";
+import OpenInFull from "@mui/icons-material/OpenInFull";
+import CloseFullscreen from "@mui/icons-material/CloseFullscreen";
+import ExpandLess from "@mui/icons-material/ExpandLess";
 export type IconName =
   | "arrowBack"
   | "menu"
@@ -43,7 +47,11 @@ export type IconName =
   | "uploadFile"
   | "download"
   | "visibility"
-  | "visibilityOff";
+  | "visibilityOff"
+  | "minimize"
+  | "openInFull"
+  | "closeFullscreen"
+  | "expandLess";
 export type IconProps = Omit<SvgIconProps, "children"> & { name: IconName };
 const icons = {
   arrowBack: ArrowBack,
@@ -67,6 +75,10 @@ const icons = {
   download: Download,
   visibility: Visibility,
   visibilityOff: VisibilityOff,
+  minimize: Minimize,
+  openInFull: OpenInFull,
+  closeFullscreen: CloseFullscreen,
+  expandLess: ExpandLess,
 };
 export const Icon = forwardRef<SVGSVGElement, IconProps>(function Icon(
   { name, ...props },

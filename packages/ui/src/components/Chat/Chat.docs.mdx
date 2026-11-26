@@ -1,0 +1,150 @@
+import { Canvas, Controls, Description, Meta, Source } from "@storybook/addon-docs/blocks";
+import * as Stories from "./Chat.stories";
+
+<Meta of={Stories} />
+
+# Chat
+
+Conversa reutilizável do assistente. A apresentação fixa integra o layout; a flutuante permite minimizar, maximizar e restaurar sem perder o histórico ou o texto digitado.
+
+<Description of={Stories.Playground} />
+<Canvas of={Stories.Playground} />
+
+### Props
+
+<Controls of={Stories.Playground} sort="alpha" />
+
+Estrutura de uma mensagem, compatível com a API do assistente:
+
+<Source dark language="tsx" code={`type ChatMessage = {
+  id: number | string;
+  role: string;
+  content: string;
+  created_at?: string;
+  channel?: string;
+  section_key?: string | null;
+};`} />
+
+O evento `onSend` recebe o texto e deve retornar a mensagem de resposta completa. A conversão para o protocolo interno é feita pelo componente. `onMessagesChange` informa o histórico visual, que pode conter IDs temporários antes da persistência.
+
+As mensagens são exibidas sem avatar. Os nomes dos participantes podem ser personalizados em `roleDisplayNames`, sem alterar os valores de `role`.
+
+Estrutura de `roleDisplayNames`:
+
+<Source dark language="tsx" code={`type RoleDisplayNames = {
+  user?: string;
+  assistant?: string;
+  system?: string;
+};`} />
+
+Estrutura de `localeText`. Todas as propriedades são opcionais: os valores omitidos mantêm o texto em português. Os textos de recursos não habilitados, como anexos, não adicionam controles à interface.
+
+<Source dark language="tsx" code={`type ChatLocaleText = {
+  minimizeChatLabel?: string;
+  maximizeChatLabel?: string;
+  restoreChatLabel?: string;
+  restoreChatSizeLabel?: string;
+  composerInputPlaceholder?: string;
+  composerInputAriaLabel?: string;
+  composerSendButtonLabel?: string;
+  composerAttachButtonLabel?: string;
+  composerAttachInputLabel?: string;
+  composerAttachmentFallbackLabel?: string;
+  composerRemoveAttachmentLabel?: (name: string) => string;
+  composerLandmarkLabel?: string;
+  threadNoMessagesLabel?: string;
+  threadNoMessagesHelperText?: string;
+  genericErrorLabel?: string;
+  retryButtonLabel?: string;
+  reconnectButtonLabel?: string;
+  loadingLabel?: string;
+  scrollToBottomLabel?: string;
+  scrollToBottomWithCountLabel?: (count: number) => string;
+  messageListLabel?: string;
+  messageLabel?: string;
+  messageActionsLabel?: string;
+  messageAuthorUserLabel?: string;
+  messageAuthorAssistantLabel?: string;
+  messageAuthorSystemLabel?: string;
+  threadLandmarkLabel?: string;
+  conversationListLandmarkLabel?: string;
+  conversationListNoConversationsLabel?: string;
+  conversationListSearchPlaceholder?: string;
+  conversationHeaderMenuLabel?: string;
+  conversationHeaderBackLabel?: string;
+  conversationHeaderCloseLabel?: string;
+  conversationHeaderNewChatLabel?: string;
+  conversationHeaderSettingsLabel?: string;
+  suggestionsLabel?: string;
+  unreadMarkerLabel?: string;
+  messageCopyButtonLabel?: string;
+  messageCopyCodeButtonLabel?: string;
+  messageCopiedCodeButtonLabel?: string;
+  messageEditedLabel?: string;
+  messageDeletedLabel?: string;
+  messageReasoningLabel?: string;
+  messageReasoningStreamingLabel?: string;
+  messageToolInputLabel?: string;
+  messageToolOutputLabel?: string;
+  messageToolApproveButtonLabel?: string;
+  messageToolDenyButtonLabel?: string;
+  responseStreamingStartedAnnouncement?: string;
+  responseStreamingCompletedAnnouncement?: string;
+};`} />
+
+Exemplo de tradução dos controles e nomes acessíveis:
+
+<Source dark language="tsx" code={`<Chat
+  messages={messages}
+  onSend={sendMessage}
+  title="Research assistant"
+  aria-label="Research conversation"
+  roleDisplayNames={{ user: "You", assistant: "Assistant", system: "System" }}
+  localeText={{
+    composerInputPlaceholder: "Type a message…",
+    composerInputAriaLabel: "Message",
+    composerSendButtonLabel: "Send message",
+    minimizeChatLabel: "Minimize chat",
+    maximizeChatLabel: "Maximize chat",
+    restoreChatLabel: "Restore chat",
+    restoreChatSizeLabel: "Restore chat size",
+    genericErrorLabel: "Unable to get a response. Try again.",
+    retryButtonLabel: "Try again",
+  }}
+/>`} />
+
+### Fixed
+
+<Description of={Stories.Fixed} />
+<Canvas of={Stories.Fixed} />
+
+### Floating
+
+<Description of={Stories.Floating} />
+<Canvas of={Stories.Floating} />
+
+Os eventos `onMinimize`, `onMaximize` e `onRestore` notificam ações da janela, sem exigir que a aplicação controle seu estado. Restaurar uma janela minimizada retorna ao tamanho que ela tinha anteriormente.
+
+### Exemplo de aplicação
+
+<Source dark language="tsx" code={`import { Chat } from "@niar/ui";
+
+<Chat
+  key={session.id + ":" + activeSection}
+  variant="fixed"
+  title="Assistente do projeto"
+  subtitle="Seção: Contexto"
+  messages={sectionMessages}
+  onSend={(content) => api.projectChat(session.id, content)}
+  onError={(error) => reportError(error)}
+/>`} />
+
+A aplicação seleciona as mensagens por conversa e seção antes de passá-las ao componente. Ao trocar de conversa, use uma `key` diferente para reiniciar o histórico local e o rascunho. O componente não seleciona endpoints nem persiste mensagens por conta própria.
+
+### Falhas de envio
+
+Quando `onSend` rejeita a Promise, o chat exibe uma mensagem de falha e a ação **Tentar novamente**. O texto enviado retorna ao campo caso o usuário ainda não tenha iniciado outro rascunho. `onError` permite registrar a falha na aplicação. No Playground, envie **erro** para testar esse estado.
+
+### Acessibilidade
+
+A região utiliza o título como nome acessível, ou `aria-label` quando informado. Os controles têm nomes traduzíveis em `localeText`. Minimizar transfere o foco para restaurar; reabrir transfere o foco para o campo de mensagem. `disabled` impede compor e enviar mensagens.

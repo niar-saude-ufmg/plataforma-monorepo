@@ -1,5 +1,6 @@
 export {
   Button,
+  Chat,
   Link,
   Input,
   DatePicker,
@@ -19,6 +20,10 @@ export {
 } from "./components/index";
 export type {
   ButtonProps,
+  ChatProps,
+  ChatVariant,
+  ChatMessage,
+  ChatLocaleText,
   LinkProps,
   InputProps,
   DatePickerProps,

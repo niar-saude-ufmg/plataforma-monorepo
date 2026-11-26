@@ -1,4 +1,6 @@
 export { Button } from "./Button/Button";
+export { Chat } from "./Chat/Chat";
+export type { ChatProps, ChatVariant, ChatMessage, ChatLocaleText } from "./Chat/Chat";
 export type { ButtonProps } from "./Button/Button";
 export { Link } from "./Link/Link";
 export type { LinkProps } from "./Link/Link";

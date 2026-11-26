@@ -24,6 +24,7 @@ import { menuTheme } from "../components/Menu/Menu.theme";
 import { tableTheme } from "../components/Table/Table.theme";
 import { paginationTheme } from "../components/Pagination/Pagination.theme";
 import { autocompleteTheme } from "../components/Autocomplete/Autocomplete.theme";
+import { chatTheme } from "../components/Chat/Chat.theme";
 
 const niarThemeOptions: ThemeOptions = {
   palette: {
@@ -82,6 +83,7 @@ const niarThemeOptions: ThemeOptions = {
   spacing: Number.parseFloat(niar.spacing.xs),
   shape: { borderRadius: Number.parseFloat(niar.radius.small) },
   components: {
+    ...chatTheme,
     MuiInputBase: {
       styleOverrides: {
         root: {

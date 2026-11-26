@@ -1,0 +1,61 @@
+import type { ChatBoxProps } from "@mui/x-chat";
+
+export type ChatLocaleText = NonNullable<ChatBoxProps["localeText"]> & {
+  minimizeChatLabel?: string;
+  maximizeChatLabel?: string;
+  restoreChatLabel?: string;
+  restoreChatSizeLabel?: string;
+};
+
+export const chatLocaleText: ChatLocaleText = {
+  minimizeChatLabel: "Minimizar chat",
+  maximizeChatLabel: "Maximizar chat",
+  restoreChatLabel: "Restaurar chat",
+  restoreChatSizeLabel: "Restaurar tamanho do chat",
+  composerInputPlaceholder: "Digite sua mensagem…",
+  composerInputAriaLabel: "Mensagem",
+  composerSendButtonLabel: "Enviar mensagem",
+  composerAttachButtonLabel: "Anexar arquivo",
+  composerAttachInputLabel: "Selecionar arquivo",
+  composerAttachmentFallbackLabel: "Anexo",
+  composerRemoveAttachmentLabel: (name) => `Remover ${name}`,
+  composerLandmarkLabel: "Escrever mensagem",
+  threadNoMessagesLabel: "Comece uma conversa",
+  threadNoMessagesHelperText: "Escreva uma mensagem para conversar com o assistente.",
+  genericErrorLabel: "Não foi possível obter uma resposta. Tente novamente.",
+  retryButtonLabel: "Tentar novamente",
+  reconnectButtonLabel: "Reconectar",
+  loadingLabel: "Preparando resposta…",
+  scrollToBottomLabel: "Ir para a mensagem mais recente",
+  scrollToBottomWithCountLabel: (count) => `Ver ${count} novas mensagens`,
+  messageListLabel: "Histórico da conversa",
+  messageLabel: "Mensagem",
+  messageActionsLabel: "Ações da mensagem",
+  messageAuthorUserLabel: "Você",
+  messageAuthorAssistantLabel: "Assistente",
+  messageAuthorSystemLabel: "Sistema",
+  threadLandmarkLabel: "Conversa",
+  conversationListLandmarkLabel: "Conversas",
+  conversationListNoConversationsLabel: "Nenhuma conversa",
+  conversationListSearchPlaceholder: "Buscar conversa",
+  conversationHeaderMenuLabel: "Opções da conversa",
+  conversationHeaderBackLabel: "Voltar",
+  conversationHeaderCloseLabel: "Fechar conversa",
+  conversationHeaderNewChatLabel: "Nova conversa",
+  conversationHeaderSettingsLabel: "Configurações da conversa",
+  suggestionsLabel: "Sugestões de mensagem",
+  unreadMarkerLabel: "Novas mensagens",
+  messageCopyButtonLabel: "Copiar mensagem",
+  messageCopyCodeButtonLabel: "Copiar código",
+  messageCopiedCodeButtonLabel: "Código copiado",
+  messageEditedLabel: "Editada",
+  messageDeletedLabel: "Mensagem excluída",
+  messageReasoningLabel: "Raciocínio",
+  messageReasoningStreamingLabel: "Pensando…",
+  messageToolInputLabel: "Entrada",
+  messageToolOutputLabel: "Resultado",
+  messageToolApproveButtonLabel: "Permitir",
+  messageToolDenyButtonLabel: "Recusar",
+  responseStreamingStartedAnnouncement: "O assistente está respondendo.",
+  responseStreamingCompletedAnnouncement: "Resposta do assistente concluída.",
+};
