@@ -38,7 +38,7 @@ type UserListApiResponse = {
   id: number;
   full_name: string;
   email: string;
-  role: UserRole;
+  role: UserListItem["role"];
   account_status: UserListItem['accountStatus'];
   created_at: string;
   profile: {

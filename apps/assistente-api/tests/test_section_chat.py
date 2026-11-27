@@ -70,6 +70,7 @@ async def test_run_doc_intake_only_includes_current_section_messages():
 @pytest.mark.asyncio
 async def test_extract_section_content_only_uses_section_thread():
     session = SimpleNamespace(
+        section_data="{}",
         messages=[
             _msg("user", "conteúdo contexto", section_key="background"),
             _msg("user", "conteúdo métodos", section_key="methods_analysis"),
@@ -78,7 +79,7 @@ async def test_extract_section_content_only_uses_section_thread():
     )
     captured: list[list[dict]] = []
 
-    async def fake_complete_json(messages):
+    async def fake_complete_json(messages, **kwargs):
         captured.append(messages)
         return {"content": "extraído", "complete": True, "missing": []}, None, None, None
 

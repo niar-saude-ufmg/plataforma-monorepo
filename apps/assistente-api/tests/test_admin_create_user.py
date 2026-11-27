@@ -54,3 +54,16 @@ def test_admin_create_user_duplicate_email():
     with pytest.raises(HTTPException) as exc:
         asyncio.run(admin_module.create_user(body, admin, db))
     assert exc.value.status_code == 400
+
+
+def test_legacy_auditor_token_is_rejected():
+    from app.core import deps
+    from app.models import UserAccountStatus
+    db = MagicMock()
+    result = MagicMock()
+    result.scalar_one_or_none.return_value = SimpleNamespace(role=UserRole.auditor, account_status=UserAccountStatus.active)
+    db.execute = AsyncMock(return_value=result)
+    with patch.object(deps, "decode_access_token", return_value={"sub": "1"}):
+        with pytest.raises(HTTPException) as error:
+            asyncio.run(deps.get_current_user("token-antigo", db))
+    assert error.value.status_code == 401

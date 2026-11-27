@@ -23,6 +23,13 @@ export const projectStatusSchema = z.enum([
 ]);
 
 export const projectEvaluationStatusSchema = z.enum([
+  "sent_to_committee",
+  "approved_by_committee",
+  "rejected_by_committee",
+  "needs_changes_by_committee",
+  "needs_changes",
+  "approved",
+  "rejected",
   "waiting",
   "to_review",
   "project_approved",
@@ -84,16 +91,21 @@ export type ProjectEvaluationStatusCode = z.infer<typeof projectEvaluationStatus
 export type ListProjectsQuery = z.infer<typeof listProjectsQuerySchema>;
 
 export type ProjectStatusResponse = {
+  evaluation_id: number | null;
   code: ProjectStatusCode;
   label: string;
   version_number: number;
+  project_version_id: number;
   created_at: string;
   notes: string | null;
 };
 
 export type ProjectDocumentResponse = {
+  delivery_number: number;
+  questionnaire_id: number | null;
   id: number;
   version_number: number;
+  project_version_id: number;
   document_type: string;
   original_filename: string;
   created_at: string;
@@ -107,8 +119,11 @@ export type ProjectResearcherResponse = {
 };
 
 export type ProjectEvaluationResponse = {
+  round_number: number;
+  delivery_number: number;
   id: number;
   version_number: number;
+  project_version_id: number;
   status: ProjectEvaluationStatusCode;
   justification: string | null;
   certification_decision: "granted" | "not_granted" | null;
@@ -123,6 +138,16 @@ export type ProjectResponse = {
   title: string;
   updated_at: string;
   researcher: ProjectResearcherResponse;
+  versions: {
+    id: number;
+    version_number: number;
+    source_wizard_session_id: number;
+    status: ProjectStatusCode;
+    revision_evaluation_id: number | null;
+    characterization_snapshot: unknown;
+    submitted_at: string | null;
+  }[];
+  current_version: { id: number; version_number: number; status: ProjectStatusCode; revision_evaluation_id: number | null } | null;
   evaluation_status?: ProjectEvaluationStatusCode;
   status: ProjectStatusResponse[];
   documents: ProjectDocumentResponse[];

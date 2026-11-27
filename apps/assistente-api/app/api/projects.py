@@ -5,10 +5,11 @@ import os
 from datetime import datetime, timezone
 from io import BytesIO
 from typing import Optional
+from uuid import uuid4
 
 from docx import Document
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -22,6 +23,8 @@ from app.schemas import (
     ChatMessageCreate,
     ChatMessageOut,
     ImportTextRequest,
+    ProjectRevisionRequestOut,
+    ProjectSubmissionOut,
     SectionMetaOut,
     SectionTemplateMetaOut,
     WizardSessionCreate,
@@ -29,11 +32,15 @@ from app.schemas import (
     WizardSessionUpdate,
 )
 from app.services.docgen.builder import build_project_doc
-from app.services.llm.json_utils import coerce_section_value
 from app.services.llm.prompts import PROJECT_DOC_SECTIONS
 from app.services.scriptgen.validator import validate_script
 from app.services.submission.bundle import build_submission_zip
-from app.services.submission.materializer import materialize_project
+from app.services.submission.materializer import (
+    assert_submission_allowed,
+    materialize_project,
+    pending_revision,
+    submission_state,
+)
 from app.services.wizards.orchestrator import (
     extract_section_content,
     run_advisory_chat,
@@ -114,8 +121,35 @@ def _session_out(session: WizardSession, *, linked_cleaning_step: Optional[str] 
     )
 
 
+async def _session_with_submission(
+    db: AsyncSession, session: WizardSession, *, linked_cleaning_step: Optional[str] = None
+) -> WizardSessionOut:
+    response = _session_out(session, linked_cleaning_step=linked_cleaning_step)
+    project, version, evaluation = await submission_state(db, session)
+    if version is not None:
+        revision_request = None
+        if version.source_wizard_session_id == session.id:
+            revision = pending_revision(version, evaluation)
+            if revision is not None:
+                revision_request = ProjectRevisionRequestOut(
+                    evaluation_id=revision.id,
+                    justification=revision.justification,
+                    requested_at=revision.evaluated_at.isoformat() if revision.evaluated_at else None,
+                )
+        response.submission = ProjectSubmissionOut(
+            project_id=project.id,
+            project_version_id=version.id,
+            version_number=version.version_number,
+            source_wizard_session_id=version.source_wizard_session_id,
+            status=version.status.value,
+            snapshot=version.characterization_snapshot,
+            revision_request=revision_request,
+        )
+    return response
+
+
 async def _get_project_doc_session(
-    db: AsyncSession, session_id: int, user_id: int, *, load_messages: bool = False
+    db: AsyncSession, session_id: int, user_id: int, *, load_messages: bool = False, lock: bool = False
 ) -> WizardSession:
     query = select(WizardSession).where(
         WizardSession.id == session_id,
@@ -124,6 +158,8 @@ async def _get_project_doc_session(
     )
     if load_messages:
         query = query.options(selectinload(WizardSession.messages))
+    if lock:
+        query = query.with_for_update().execution_options(populate_existing=True)
     result = await db.execute(query)
     session = result.scalar_one_or_none()
     if not session:
@@ -194,7 +230,7 @@ async def list_projects(
         await db.commit()
     cleaning_steps = await _linked_cleaning_steps(db, current_user.id, [p.id for p in projects])
     return [
-        _session_out(p, linked_cleaning_step=cleaning_steps.get(p.id))
+        await _session_with_submission(db, p, linked_cleaning_step=cleaning_steps.get(p.id))
         for p in projects
     ]
 
@@ -257,7 +293,7 @@ async def get_project(
             .options(selectinload(WizardSession.messages))
         )
         session = result.scalar_one()
-    return _session_out(session)
+    return await _session_with_submission(db, session)
 
 
 @router.patch("/{session_id}", response_model=WizardSessionOut)
@@ -271,6 +307,8 @@ async def update_project(
         select(WizardSession)
         .where(WizardSession.id == session_id, WizardSession.user_id == current_user.id)
         .options(selectinload(WizardSession.messages))
+        .with_for_update()
+        .execution_options(populate_existing=True)
     )
     session = result.scalar_one_or_none()
     if not session:
@@ -288,7 +326,7 @@ async def update_project(
         .where(WizardSession.id == session_id)
         .options(selectinload(WizardSession.messages))
     )
-    return _session_out(result.scalar_one())
+    return await _session_with_submission(db, result.scalar_one())
 
 
 @router.post("/{session_id}/save-draft", response_model=WizardSessionOut)
@@ -303,6 +341,8 @@ async def save_draft(
         select(WizardSession)
         .where(WizardSession.id == session_id, WizardSession.user_id == current_user.id)
         .options(selectinload(WizardSession.messages))
+        .with_for_update()
+        .execution_options(populate_existing=True)
     )
     session = result.scalar_one_or_none()
     if not session:
@@ -328,7 +368,7 @@ async def save_draft(
         .where(WizardSession.id == session_id)
         .options(selectinload(WizardSession.messages))
     )
-    return _session_out(result.scalar_one())
+    return await _session_with_submission(db, result.scalar_one())
 
 
 @router.post("/{session_id}/import-text", response_model=WizardSessionOut)
@@ -630,7 +670,8 @@ async def export_project(
         session_id=session.id,
         model_used=session.llm_model_used or settings.llm_model,
     )
-    filename = f"project_{session.id}.docx"
+    export_id = uuid4().hex
+    filename = f"project_{session.id}_export_{export_id}.docx"
     filepath = os.path.join(exports_dir, filename)
     doc.save(filepath)
 
@@ -657,7 +698,15 @@ async def export_project(
     )
 
 
-@router.post("/{session_id}/submit-for-review")
+@router.post("/{session_id}/submit-for-review", response_class=FileResponse, responses={
+    200: {"description": "DOCX submetido; DOCX e ZIP preservados na versão", "content": {
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {"schema": {"type": "string", "format": "binary"}}
+    }},
+    400: {"description": "Engenharia de dados ou script ausente ou inválido"},
+    409: {"description": "Reenvio sem solicitação vigente, versão antiga ou solicitação já atendida"},
+    503: {"description": "Diretório de exports indisponível; submissão não registrada"},
+    404: {"description": "Sessão não encontrada ou sem propriedade"},
+})
 async def submit_for_review(
     session_id: int,
     request: Request,
@@ -665,14 +714,9 @@ async def submit_for_review(
     db: AsyncSession = Depends(get_db),
 ):
     settings = get_settings()
-    exports_dir = get_exports_dir()
 
-    project = await _get_project_doc_session(db, session_id, current_user.id)
-    await db.execute(
-        select(WizardSession.id)
-        .where(WizardSession.id == project.id)
-        .with_for_update()
-    )
+    project = await _get_project_doc_session(db, session_id, current_user.id, lock=True)
+    _, current_version, revision_request = await assert_submission_allowed(db, project, current_user.id)
 
     cleaning = await _get_linked_cleaning_session(db, session_id, current_user.id)
     if not cleaning:
@@ -698,6 +742,10 @@ async def submit_for_review(
             },
         )
 
+    try:
+        exports_dir = get_exports_dir()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     section_data = migrate_section_data(json.loads(project.section_data or "{}"))
     doc = build_project_doc(
         title=project.title,
@@ -709,27 +757,11 @@ async def submit_for_review(
     doc_buffer = BytesIO()
     doc.save(doc_buffer)
     docx_bytes = doc_buffer.getvalue()
-    submitted_at = datetime.now(timezone.utc)
-    docx_filename = f"project_{project.id}_submission_{submitted_at:%Y%m%dT%H%M%S%fZ}.docx"
+    submission_id = uuid4().hex
+    docx_filename = f"project_{project.id}_submission_{submission_id}.docx"
+    zip_filename = f"submissao_projeto_{project.id}_{submission_id}.zip"
     docx_path = os.path.join(exports_dir, docx_filename)
-    with open(docx_path, "wb") as f:
-        f.write(docx_bytes)
-
-    docx_artifact = ExportArtifact(
-        session_id=project.id,
-        filename=docx_filename,
-        file_path=docx_path,
-        artifact_type="project_docx",
-    )
-    db.add(docx_artifact)
-    await db.flush()
-    await materialize_project(
-        db_session=db,
-        session=project,
-        user_id=current_user.id,
-        docx_artifact=docx_artifact,
-    )
-
+    zip_path = os.path.join(exports_dir, zip_filename)
     zip_bytes = build_submission_zip(
         project_title=project.title,
         project_id=project.id,
@@ -739,45 +771,49 @@ async def submit_for_review(
         script_content=cleaning.script_content,
         model_used=cleaning.llm_model_used or settings.llm_model,
     )
-
-    zip_filename = f"submissao_projeto_{project.id}.zip"
-    zip_path = os.path.join(exports_dir, zip_filename)
-    with open(zip_path, "wb") as f:
-        f.write(zip_bytes)
-
-    db.add(
-        ExportArtifact(
-            session_id=project.id,
-            filename=zip_filename,
-            file_path=zip_path,
-            artifact_type="submission_bundle",
+    written_paths = []
+    try:
+        for path, content in ((docx_path, docx_bytes), (zip_path, zip_bytes)):
+            with open(path, "xb") as output:
+                written_paths.append(path)
+                output.write(content)
+        docx_artifact = ExportArtifact(
+            session_id=project.id, filename=docx_filename, file_path=docx_path, artifact_type="project_docx"
         )
-    )
-    cleaning.current_step = "export"
-    project.updated_at = datetime.now(timezone.utc)
-    cleaning.updated_at = datetime.now(timezone.utc)
-    await log_audit(
-        db,
-        user_id=current_user.id,
-        action="submit_project_for_review",
-        resource_type="wizard_session",
-        resource_id=str(project.id),
-        ip_address=request.client.host if request.client else "",
-    )
-    await db.commit()
+        bundle_artifact = ExportArtifact(
+            session_id=project.id, filename=zip_filename, file_path=zip_path, artifact_type="submission_bundle"
+        )
+        db.add_all([docx_artifact, bundle_artifact])
+        await materialize_project(
+            db_session=db, session=project, user_id=current_user.id,
+            docx_artifact=docx_artifact, bundle_artifact=bundle_artifact,
+        )
+        cleaning.current_step = "export"
+        project.updated_at = datetime.now(timezone.utc)
+        cleaning.updated_at = datetime.now(timezone.utc)
+        await log_audit(
+            db, user_id=current_user.id, action="submit_project_for_review",
+            resource_type="wizard_session", resource_id=str(project.id),
+            details=json.dumps({
+                "version_number": current_version.version_number + 1 if current_version else 1,
+                "revision_evaluation_id": revision_request.id if revision_request else None,
+                "docx_filename": docx_filename, "bundle_filename": zip_filename,
+            }),
+            ip_address=request.client.host if request.client else "",
+        )
+        await db.commit()
+    except BaseException:
+        try:
+            await db.rollback()
+        finally:
+            for path in written_paths:
+                os.unlink(path)
+        raise
 
     return FileResponse(
-        docx_path,
-        filename=docx_filename,
+        docx_path, filename=docx_filename,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
-
-    # trecho de código não removido caso seja reutilizado para o envio de um zip bundle ao admin
-    # return Response(
-    #     content=zip_bytes,
-    #     media_type="application/zip",
-    #     headers={"Content-Disposition": f'attachment; filename="{zip_filename}"'},
-    # )
 
 
 @router.get("/{session_id}/cleaning", response_model=WizardSessionOut)

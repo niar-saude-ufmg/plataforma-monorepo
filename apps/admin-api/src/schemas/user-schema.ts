@@ -1,4 +1,4 @@
-import type { UserRole } from "@niar/contracts";
+import type { StoredUserRole, UserRole } from "@niar/contracts";
 import { user_account_status } from "@niar/database";
 import { z } from "zod";
 
@@ -110,7 +110,7 @@ export type UserResponse = {
   id: number;
   email: string;
   full_name: string;
-  role: UserRole;
+  role: StoredUserRole;
   created_at: string;
 };
 

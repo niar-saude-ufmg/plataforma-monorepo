@@ -1,4 +1,6 @@
 import swaggerJsdoc from 'swagger-jsdoc';
+import { projectEvaluationStatusSchema, projectStatusSchema } from './schemas/project-schema.js';
+import { updateEvaluationSchema } from './schemas/evaluation-schema.js';
 import { QUESTIONNAIRE_TEXT_TYPES, QUESTIONNAIRE_CHOICE_TYPES, QUESTIONNAIRE_INFORMATION_SEVERITIES } from '@niar/contracts';
 
 const questionnaireQuestionProperties = {
@@ -14,6 +16,38 @@ const questionnaireInputProperties = {
   title: { type: 'string', minLength: 1, maxLength: 255 },
   sections: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/QuestionnaireSection' } },
 };
+
+const decisionProperties = {
+  status: { type: 'string', enum: [...updateEvaluationSchema.innerType().shape.status.options] },
+  evaluation_id: { type: 'integer', minimum: 1 },
+  justification: { type: 'string' },
+  certification_decision: { type: 'string', enum: ['granted', 'not_granted'] },
+  certification_reason: { type: 'string' },
+};
+
+const decisionVariants = updateEvaluationSchema.innerType().shape.status.options.map((status) => {
+  const isReport = status.startsWith('report_');
+  const needsJustification = status.endsWith('rejected') || status.endsWith('changes_requested');
+  const required = ['status', ...(isReport ? ['evaluation_id'] : []), ...(needsJustification ? ['justification'] : [])];
+  const properties = {
+    status: { type: 'string', enum: [status] },
+    ...(needsJustification ? { justification: { type: 'string', pattern: '\\S' } } : {}),
+  };
+  if (status === 'report_approved') {
+    return {
+      required: [...required, 'certification_decision'], properties,
+      oneOf: [
+        { properties: { certification_decision: { enum: ['granted'] } } },
+        { required: ['certification_reason'], properties: {
+          certification_decision: { enum: ['not_granted'] }, certification_reason: { type: 'string', pattern: '\\S' },
+        } },
+      ],
+    };
+  }
+  return { required, properties: {
+    ...properties, certification_decision: { not: {} }, certification_reason: { type: 'string', pattern: '^\\s*$' },
+  } };
+});
 
 const options = {
   definition: {
@@ -111,7 +145,7 @@ const options = {
             id: { type: 'integer', example: 1 },
             full_name: { type: 'string', example: 'Pesquisador Teste' },
             email: { type: 'string', example: 'teste@niar.local' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
+            role: { type: 'string', enum: ['researcher', 'admin', 'committee', 'auditor'], description: 'auditor identifica somente contas históricas' },
             created_at: { type: 'string', format: 'date-time' },
           },
         },
@@ -178,7 +212,7 @@ const options = {
             id: { type: 'integer', example: 10 },
             email: { type: 'string', format: 'email', example: 'pesquisador@exemplo.com' },
             full_name: { type: 'string', example: 'Pesquisador Teste' },
-            role: { type: 'string', enum: ['researcher', 'admin', 'committee'] },
+            role: { type: 'string', enum: ['researcher', 'admin', 'committee', 'auditor'], description: 'auditor identifica somente contas históricas' },
             account_status: {
               type: 'string',
               enum: ['pending', 'active', 'rejected', 'disabled'],
@@ -348,14 +382,44 @@ const options = {
             },
           ],
         },
+        UpdateEvaluationInput: { type: 'object', properties: decisionProperties, oneOf: decisionVariants },
+        ProjectEvaluationStatus: { type: 'string', enum: [...projectEvaluationStatusSchema.options] },
+        EvaluationStatus: { type: 'string', enum: projectEvaluationStatusSchema.options.filter((status) => status !== 'waiting') },
+        EvaluationResponse: {
+          type: 'object',
+          required: ['id', 'round_number', 'delivery_number', 'status', 'project_version'],
+          properties: {
+            id: { type: 'integer' },
+            round_number: { type: 'integer', minimum: 1, description: 'Rodada imutável de atribuição, encaminhamento ou parecer' },
+            delivery_number: { type: 'integer', minimum: 0, description: '0 identifica a submissão escrita; 1 ou mais identifica a entrega de relatório. Documentos da entrega estão no GET do projeto.' },
+            committee_member_user_id: { type: 'integer', nullable: true },
+            status: { $ref: '#/components/schemas/EvaluationStatus' },
+            certification_decision: { type: 'string', nullable: true, enum: ['granted', 'not_granted'] },
+            certification_reason: { type: 'string', nullable: true },
+            justification: { type: 'string', nullable: true },
+            project_version: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer' }, project_id: { type: 'integer' }, version_number: { type: 'integer' },
+                status: { type: 'string' }, submitted_at: { type: 'string', format: 'date-time', nullable: true }, created_at: { type: 'string', format: 'date-time' }
+              }
+            },
+            project: { type: 'object', properties: { id: { type: 'integer' }, owner_user_id: { type: 'integer' }, title: { type: 'string' } } },
+            assigned_to: { type: 'object', nullable: true, additionalProperties: true },
+            assigned_by: { type: 'object', nullable: true, additionalProperties: true },
+            evaluated_by: { type: 'object', nullable: true, additionalProperties: true },
+            evaluated_at: { type: 'string', format: 'date-time', nullable: true },
+            created_at: { type: 'string', format: 'date-time' }, updated_at: { type: 'string', format: 'date-time' }
+          }
+        },
+        ProjectStatus: { type: 'string', enum: [...projectStatusSchema.options] },
         ProjectStatusResponse: {
           type: 'object',
           required: ['code', 'label', 'version_number', 'created_at', 'notes'],
           properties: {
-            code: {
-              type: 'string',
-              enum: ['submitted_to_committee', 'resubmitted_to_committee', 'under_review', 'needs_changes', 'approved', 'rejected'],
-            },
+            code: { $ref: '#/components/schemas/ProjectStatus' },
+            evaluation_id: { type: 'integer', nullable: true },
+            project_version_id: { type: 'integer' },
             label: { type: 'string', example: 'Em avaliação' },
             version_number: { type: 'integer', example: 1 },
             created_at: { type: 'string', format: 'date-time' },
@@ -368,6 +432,9 @@ const options = {
           properties: {
             id: { type: 'integer', example: 101 },
             version_number: { type: 'integer', example: 1 },
+            project_version_id: { type: 'integer' },
+            delivery_number: { type: 'integer', minimum: 0 },
+            questionnaire_id: { type: 'integer', nullable: true },
             document_type: { type: 'string', example: 'project_docx' },
             original_filename: { type: 'string', example: 'projeto-v1.docx' },
             created_at: { type: 'string', format: 'date-time' },
@@ -382,7 +449,21 @@ const options = {
             project_version_id: { type: 'integer', nullable: true, example: 84 },
             title: { type: 'string', example: 'Projeto de pesquisa' },
             updated_at: { type: 'string', format: 'date-time' },
-            evaluation_status: { type: 'string', nullable: true, enum: ['project_approved', 'project_rejected', 'project_changes_requested', 'report_approved', 'report_rejected', 'report_changes_requested'], example: 'project_approved' },
+            evaluation_status: { $ref: '#/components/schemas/ProjectEvaluationStatus' },
+            current_version: {
+              type: 'object', nullable: true, properties: {
+                id: { type: 'integer' }, version_number: { type: 'integer' }, status: { type: 'string' }, revision_evaluation_id: { type: 'integer', nullable: true }
+              }
+            },
+            versions: {
+              type: 'array', items: {
+                type: 'object', properties: {
+                  id: { type: 'integer' }, version_number: { type: 'integer' }, status: { type: 'string' }, source_wizard_session_id: { type: 'integer' },
+                  revision_evaluation_id: { type: 'integer', nullable: true }, characterization_snapshot: { type: 'object', additionalProperties: true },
+                  submitted_at: { type: 'string', format: 'date-time', nullable: true }
+                }
+              }
+            },
             researcher: {
               type: 'object',
               required: ['id', 'full_name', 'email'],
@@ -411,8 +492,11 @@ const options = {
           required: ['id', 'version_number', 'status', 'justification', 'evaluated_at', 'updated_at'],
           properties: {
             id: { type: 'integer', example: 8 },
+            project_version_id: { type: 'integer' },
+            round_number: { type: 'integer', minimum: 1 },
+            delivery_number: { type: 'integer', minimum: 0 },
             version_number: { type: 'integer', example: 2 },
-            status: { type: 'string', enum: ['project_approved', 'project_rejected', 'project_changes_requested', 'report_approved', 'report_rejected', 'report_changes_requested'] },
+            status: { $ref: '#/components/schemas/EvaluationStatus' },
             justification: { type: 'string', nullable: true },
             certification_decision: { type: 'string', nullable: true, enum: ['granted', 'not_granted'] },
             certification_reason: { type: 'string', nullable: true },

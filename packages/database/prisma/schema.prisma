@@ -27,6 +27,7 @@ model User {
   wizardSessions        WizardSession[]
   auditLogs             AuditLog[]
   statusChanges         ProjectStatusHistory[]  @relation("StatusActor")
+  committeeEvaluations  Evaluation[]            @relation("EvaluationCommitteeMember")
   evaluationsMade       UserAuthEvaluation[]    @relation("AuthEvaluationEvaluator")
   authEvaluations       UserAuthEvaluation[]    @relation("AuthEvaluationUser")
   profile               UserProfile?
@@ -221,14 +222,16 @@ model ChatMessage {
 }
 
 model ExportArtifact {
-  id           Int               @id @default(autoincrement())
-  sessionId    Int               @map("session_id")
-  filename     String            @db.VarChar(255)
-  filePath     String            @map("file_path") @db.VarChar(500)
-  artifactType String            @map("artifact_type") @db.VarChar(50)
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  documents    ProjectDocument[]
-  session      WizardSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id              Int               @id @default(autoincrement())
+  sessionId       Int               @map("session_id")
+  filename        String            @db.VarChar(255)
+  filePath        String            @map("file_path") @db.VarChar(500)
+  artifactType    String            @map("artifact_type") @db.VarChar(50)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  questionnaireId Int?              @map("questionnaire_id")
+  questionnaire   Questionnaire?    @relation(fields: [questionnaireId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  documents       ProjectDocument[]
+  session         WizardSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("export_artifacts")
   @@schema("assistant")
@@ -275,10 +278,14 @@ model ProjectDocument {
   createdAt              DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
   projectVersionId       Int             @map("project_version_id")
   projectVersion         ProjectVersion  @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_admin_project_documents_project_version")
+  deliveryNumber         Int             @default(0) @map("delivery_number")
+  questionnaireId        Int?            @map("questionnaire_id")
+  questionnaire          Questionnaire?  @relation(fields: [questionnaireId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   sourceExportArtifact   ExportArtifact? @relation(fields: [sourceExportArtifactId], references: [id], onUpdate: NoAction)
 
   @@index([projectVersionId], map: "idx_admin_project_documents_project_version_id")
   @@index([sourceExportArtifactId], map: "idx_admin_project_documents_source_export_artifact_id")
+  @@index([projectVersionId, deliveryNumber], map: "idx_admin_project_documents_delivery")
   @@map("project_documents")
   @@schema("admin")
 }
@@ -295,6 +302,8 @@ model ProjectVersion {
   createdAt                DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
   questionnaireId          Int?                   @map("questionnaire_id")
   projectSectionTemplateId Int?                   @map("project_section_template_id")
+  revisionEvaluationId     Int?                   @unique @map("revision_evaluation_id")
+  revisionEvaluation       Evaluation?            @relation("RevisionRequest", fields: [revisionEvaluationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   evaluations              Evaluation[]
   documents                ProjectDocument[]
   questionnaire            Questionnaire?         @relation(fields: [questionnaireId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_questionnaire")
@@ -315,16 +324,18 @@ model ProjectVersion {
 }
 
 model Questionnaire {
-  id               Int              @id @default(autoincrement())
-  questionnaireKey String           @map("questionnaire_key") @db.VarChar(100)
+  id               Int               @id @default(autoincrement())
+  questionnaireKey String            @map("questionnaire_key") @db.VarChar(100)
   version          Int
-  title            String           @db.VarChar(255)
-  definitionJson   Json             @default("{}") @map("definition_json")
-  isActive         Boolean          @default(false) @map("is_active")
-  publishedAt      DateTime?        @map("published_at") @db.Timestamptz(6)
-  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  title            String            @db.VarChar(255)
+  definitionJson   Json              @default("{}") @map("definition_json")
+  isActive         Boolean           @default(false) @map("is_active")
+  publishedAt      DateTime?         @map("published_at") @db.Timestamptz(6)
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
   projectVersions  ProjectVersion[]
+  documents        ProjectDocument[]
+  exports          ExportArtifact[]
 
   @@unique([questionnaireKey, version], map: "uq_admin_questionnaires_key_version")
   @@index([isActive], map: "idx_admin_questionnaires_active")
@@ -393,6 +404,11 @@ model UserCoepData {
 }
 
 model Evaluation {
+  roundNumber Int @default(1) @map("round_number")
+  deliveryNumber Int @default(0) @map("delivery_number")
+  committeeMemberUserId Int? @map("committee_member_user_id")
+  committeeMember User? @relation("EvaluationCommitteeMember", fields: [committeeMemberUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  revisionVersion ProjectVersion? @relation("RevisionRequest")
   id                Int                    @id @default(autoincrement())
   projectVersionId  Int                    @map("project_version_id")
   assignedToUserId  Int?                   @map("assigned_to_user_id")
@@ -414,6 +430,7 @@ model Evaluation {
   @@index([projectVersionId], map: "idx_admin_evaluations_project_version_id")
   @@index([assignedToUserId], map: "idx_admin_evaluations_assigned_to_user_id")
   @@index([status], map: "idx_admin_evaluations_status")
+  @@unique([projectVersionId, roundNumber], map: "uq_admin_evaluations_version_round")
   @@map("evaluations")
   @@schema("admin")
 }
@@ -445,6 +462,8 @@ enum wizard_type {
 }
 
 enum user_role {
+  // Leitura de usuários referenciados pelo histórico anterior.
+  auditor
   researcher
   admin
   committee
@@ -469,6 +488,15 @@ enum evaluation_status {
   report_approved
   report_rejected
   report_changes_requested
+
+  // Somente leitura de pareceres emitidos pelo fluxo anterior.
+  sent_to_committee
+  approved_by_committee
+  rejected_by_committee
+  needs_changes_by_committee
+  needs_changes
+  approved
+  rejected
 
   @@schema("admin")
 }

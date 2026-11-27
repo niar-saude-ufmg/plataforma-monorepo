@@ -59,7 +59,8 @@ export const USER_LIST_CONFIG: Partial<
   },
 };
 
-const roleLabels: Record<UserRole, string> = {
+const roleLabels: Record<UserListItem["role"], string> = {
+  auditor: "Auditor (legado)",
   admin: 'Administrador',
   researcher: 'Pesquisador',
   committee: 'Comitê gestor',
@@ -87,7 +88,8 @@ const accountSection: RoleDetailsSection<UserListItem> = {
   ],
 };
 
-export const USER_DETAILS_CONFIG: Partial<Record<UserRole, RoleDetailsConfig<UserListItem>>> = {
+export const USER_DETAILS_CONFIG: Partial<Record<UserListItem["role"], RoleDetailsConfig<UserListItem>>> = {
+  auditor: { title: detailsTitle, sections: [accountSection] },
   admin: {
     title: detailsTitle,
     sections: [accountSection],

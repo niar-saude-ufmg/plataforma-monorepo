@@ -1,9 +1,7 @@
-from pathlib import Path
 
 from app.services.wizards.text_import import count_filled_sections, split_by_headings
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-STRUCTURED_MD = REPO_ROOT / "docs" / "demo" / "projeto_oncologico_estruturado.md"
+from scripts.bootstrap_onco_scenario import STRUCTURED_MD_PATH as STRUCTURED_MD
 
 
 def test_structured_md_exists():

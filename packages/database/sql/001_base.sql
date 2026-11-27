@@ -12,7 +12,7 @@ BEGIN
     JOIN pg_namespace n ON n.oid = t.typnamespace
     WHERE t.typname = 'user_role' AND n.nspname = 'shared'
   ) THEN
-    CREATE TYPE shared.user_role AS ENUM ('researcher', 'admin', 'committee');
+    CREATE TYPE shared.user_role AS ENUM ('researcher', 'admin', 'committee', 'auditor');
   END IF;
 END $$;
 
@@ -34,6 +34,8 @@ BEGIN
 END $$;
 
 ALTER TYPE shared.user_role ADD VALUE IF NOT EXISTS 'committee';
+-- Compatibilidade de leitura; auditor não recebe acesso ao fluxo atual.
+ALTER TYPE shared.user_role ADD VALUE IF NOT EXISTS 'auditor';
 
 DO $$
 BEGIN
@@ -269,7 +271,14 @@ BEGIN
       'project_changes_requested',
       'report_approved',
       'report_rejected',
-      'report_changes_requested'
+      'report_changes_requested',
+      'sent_to_committee',
+      'approved_by_committee',
+      'rejected_by_committee',
+      'needs_changes_by_committee',
+      'needs_changes',
+      'approved',
+      'rejected'
     );
   END IF;
 END $$;
@@ -293,6 +302,15 @@ ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'project_changes_requ
 ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'report_approved';
 ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'report_rejected';
 ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'report_changes_requested';
+
+-- Mantém os pareceres históricos legíveis, sem alterar as decisões originais.
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'sent_to_committee';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'approved_by_committee';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'rejected_by_committee';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'needs_changes_by_committee';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'needs_changes';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'approved';
+ALTER TYPE admin.evaluation_status ADD VALUE IF NOT EXISTS 'rejected';
 
 CREATE TABLE IF NOT EXISTS admin.projects (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -882,6 +900,90 @@ ALTER TABLE shared.project_status_history
 ALTER TABLE shared.project_status_history
   DROP COLUMN IF EXISTS committee_evaluation_id;
 DROP TABLE IF EXISTS admin.committee_evaluations;
-DROP TYPE IF EXISTS admin.committee_evaluation_result;
+-- Instalações antigas podem ainda ter tabelas no schema assistant dependentes
+-- deste tipo. Mantemos o tipo órfão para reaplicar o SQL sem apagar histórico.
+
+-- Delivery 0 is the written submission; report deliveries start at 1.
+-- Evaluation rounds append decisions without replacing previous opinions.
+ALTER TABLE admin.evaluations
+  ADD COLUMN IF NOT EXISTS round_number INTEGER,
+  ADD COLUMN IF NOT EXISTS delivery_number INTEGER NOT NULL DEFAULT 0 CHECK (delivery_number >= 0),
+  ADD COLUMN IF NOT EXISTS committee_member_user_id INTEGER REFERENCES shared.users(id) ON DELETE SET NULL;
+
+WITH numbered AS (
+  SELECT id, ROW_NUMBER() OVER (PARTITION BY project_version_id ORDER BY id) AS number
+  FROM admin.evaluations
+)
+UPDATE admin.evaluations e SET round_number = n.number
+FROM numbered n WHERE e.id = n.id AND e.round_number IS NULL;
+ALTER TABLE admin.evaluations ALTER COLUMN round_number SET DEFAULT 1;
+ALTER TABLE admin.evaluations ALTER COLUMN round_number SET NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_evaluations_version_round
+  ON admin.evaluations(project_version_id, round_number);
+
+-- Recover the committee member retained by the legacy handoff when possible.
+UPDATE admin.evaluations e SET committee_member_user_id = COALESCE(
+  (SELECT id FROM shared.users WHERE id = e.assigned_to_user_id AND role::text = 'committee'),
+  (SELECT id FROM shared.users WHERE id = e.evaluated_by_user_id AND role::text = 'committee'),
+  (SELECT id FROM shared.users WHERE id = e.assigned_by_user_id AND role::text = 'committee')
+) WHERE e.committee_member_user_id IS NULL;
+
+ALTER TABLE admin.project_versions
+  ADD COLUMN IF NOT EXISTS revision_evaluation_id INTEGER REFERENCES admin.evaluations(id) ON DELETE RESTRICT;
+CREATE UNIQUE INDEX IF NOT EXISTS project_versions_revision_evaluation_id_key
+  ON admin.project_versions(revision_evaluation_id);
+
+ALTER TABLE admin.project_documents
+  ADD COLUMN IF NOT EXISTS delivery_number INTEGER NOT NULL DEFAULT 0 CHECK (delivery_number >= 0),
+  ADD COLUMN IF NOT EXISTS questionnaire_id INTEGER REFERENCES admin.questionnaires(id) ON DELETE RESTRICT;
+CREATE INDEX IF NOT EXISTS idx_admin_project_documents_delivery
+  ON admin.project_documents(project_version_id, delivery_number);
+
+ALTER TABLE assistant.export_artifacts
+  ADD COLUMN IF NOT EXISTS questionnaire_id INTEGER REFERENCES admin.questionnaires(id) ON DELETE RESTRICT;
+
+-- Avaliações pós-sala segura anteriores à numeração pertencem à entrega de relatório.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'admin' AND table_name = 'evaluations' AND column_name = 'evaluation_context'
+  ) THEN
+    UPDATE admin.evaluations
+    SET delivery_number = 1
+    WHERE evaluation_context::text = 'post_safe_room' AND delivery_number = 0;
+
+    UPDATE admin.project_documents d
+    SET delivery_number = 1
+    WHERE d.delivery_number = 0
+      AND d.document_type IN ('report', 'report_artifact', 'filled_questionnaire')
+      AND EXISTS (
+        SELECT 1 FROM admin.evaluations e
+        WHERE e.project_version_id = d.project_version_id AND e.evaluation_context::text = 'post_safe_room'
+      );
+
+    UPDATE admin.project_versions v
+    SET status = 'report_under_review'
+    WHERE v.status::text = 'under_review' AND EXISTS (
+      SELECT 1 FROM admin.evaluations e
+      WHERE e.project_version_id = v.id AND e.evaluation_context::text = 'post_safe_room'
+        AND e.status::text = 'to_review' AND NOT EXISTS (
+          SELECT 1 FROM admin.evaluations newer
+          WHERE newer.project_version_id = v.id AND newer.round_number > e.round_number
+        )
+    );
+
+    UPDATE admin.project_versions v
+    SET status = 'safe_room_reuse_requested'
+    WHERE v.status::text IN ('needs_changes', 'under_review') AND EXISTS (
+      SELECT 1 FROM admin.evaluations e
+      WHERE e.project_version_id = v.id AND e.evaluation_context::text = 'post_safe_room'
+        AND e.status::text IN ('needs_changes', 'needs_changes_by_committee') AND NOT EXISTS (
+          SELECT 1 FROM admin.evaluations newer
+          WHERE newer.project_version_id = v.id AND newer.round_number > e.round_number
+        )
+    );
+  END IF;
+END $$;
 
 COMMIT;

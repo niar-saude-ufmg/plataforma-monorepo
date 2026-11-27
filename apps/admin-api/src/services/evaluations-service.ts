@@ -1,13 +1,17 @@
 import { AppError } from "../errors/app-error.js";
+import type { ReportDeliveryResponse } from "@niar/contracts";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
 import { evaluationsRepository, type EvaluationDetails } from "../repositories/evaluations-repository.js";
-import type { AssignEvaluationInput, UpdateEvaluationInput } from "../schemas/evaluation-schema.js";
+import type { AssignEvaluationInput, ReceiveReportInput, UpdateEvaluationInput } from "../schemas/evaluation-schema.js";
 
 const toUser = (user: { id: number; fullName: string; email: string; role: string } | null) =>
   user ? { user_id: user.id, full_name: user.fullName, email: user.email, role: user.role } : null;
 
 const toResponse = (evaluation: EvaluationDetails) => ({
   id: evaluation.id,
+  round_number: evaluation.roundNumber,
+  delivery_number: evaluation.deliveryNumber,
+  committee_member_user_id: evaluation.committeeMemberUserId,
   project_version: {
     id: evaluation.projectVersion.id,
     project_id: evaluation.projectVersion.projectId,
@@ -48,12 +52,28 @@ export const evaluationsService = {
     }
     return toResponse(await evaluationsRepository.findByProjectVersionId(projectVersionId));
   },
+  receiveReport: async (projectVersionId: number, data: ReceiveReportInput, currentUser: AuthenticatedUser, ipAddress: string): Promise<ReportDeliveryResponse> => {
+    const evaluation = await evaluationsRepository.receiveReport({
+      projectVersionId,
+      actorUserId: currentUser.id,
+      actorRole: currentUser.role,
+      ipAddress,
+      deliveryNumber: data.delivery_number,
+      documents: data.documents.map((document) => ({
+        sourceExportArtifactId: document.source_export_artifact_id,
+        questionnaireId: document.questionnaire_id
+      }))
+    });
+    return { project_version_id: projectVersionId, delivery_number: evaluation.deliveryNumber };
+  },
+
   update: async (projectVersionId: number, data: UpdateEvaluationInput, currentUser: AuthenticatedUser, ipAddress: string) => {
     if (currentUser.role !== "committee") throw new AppError("Somente o comitê pode registrar parecer", 403);
     return toResponse(await evaluationsRepository.decide({
       projectVersionId,
       actorUserId: currentUser.id,
       status: data.status,
+      evaluationId: data.evaluation_id,
       justification: data.justification?.trim() ?? "",
       certificationDecision: data.certification_decision,
       certificationReason: data.certification_reason?.trim(),

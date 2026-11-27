@@ -88,6 +88,11 @@ def test_bootstrap_preloaded_skip_cleaning():
     db.flush = AsyncMock()
     db.commit = AsyncMock()
 
-    project, cleaning = asyncio.run(bootstrap_preloaded(db, user, skip_cleaning=True))
+    with patch(
+        "scripts.bootstrap_onco_scenario._get_onco_dataset",
+        new_callable=AsyncMock,
+        return_value=MagicMock(id=2),
+    ):
+        project, cleaning = asyncio.run(bootstrap_preloaded(db, user, skip_cleaning=True))
     assert project.current_step == "review"
     assert cleaning is None

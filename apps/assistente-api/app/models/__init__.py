@@ -18,6 +18,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from app.core.database import Base
 class UserRole(str, enum.Enum):
+    auditor = "auditor"
     researcher = "researcher"
     admin = "admin"
     committee = "committee"
@@ -305,7 +306,7 @@ class CatalogColumn(Base):
     valid_values: Mapped[str] = mapped_column(Text, default="")
     coding_notes: Mapped[str] = mapped_column(Text, default="")
     is_phi: Mapped[bool] = mapped_column(Boolean, default=False)
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
 
     table: Mapped["CatalogTable"] = relationship(back_populates="columns")
 
@@ -396,6 +397,9 @@ class ExportArtifact(Base):
     filename: Mapped[str] = mapped_column(String(255))
     file_path: Mapped[str] = mapped_column(String(500))
     artifact_type: Mapped[str] = mapped_column(String(50))
+    questionnaire_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("questionnaires.id", ondelete="RESTRICT"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
@@ -595,9 +599,14 @@ class ProjectVersion(Base):
         back_populates="project_versions"
     )
     status_history: Mapped[list["ProjectStatusHistory"]] = relationship(back_populates="version")
-    evaluations: Mapped[list["Evaluation"]] = relationship(back_populates="project_version")
     section_template: Mapped[Optional["ProjectSectionTemplate"]] = relationship(
         back_populates="project_versions"
+    )
+    revision_evaluation_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("evaluations.id", ondelete="RESTRICT"), nullable=True, unique=True
+    )
+    evaluations: Mapped[list["Evaluation"]] = relationship(
+        back_populates="project_version", foreign_keys="Evaluation.project_version_id"
     )
 
 
@@ -610,6 +619,10 @@ class ProjectDocument(Base):
     )
     project_version_id: Mapped[int] = mapped_column(
         ForeignKey("project_versions.id", ondelete="CASCADE"), nullable=False
+    )
+    delivery_number: Mapped[int] = mapped_column(Integer, default=0)
+    questionnaire_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("questionnaires.id", ondelete="RESTRICT"), nullable=True
     )
     document_type: Mapped[str] = mapped_column(String(100))
     original_filename: Mapped[str] = mapped_column(String(255))
@@ -651,6 +664,14 @@ class ProjectStatusHistory(Base):
 
 
 class EvaluationStatus(str, enum.Enum):
+    # Preserva os valores dos pareceres emitidos pelo fluxo anterior.
+    sent_to_committee = "sent_to_committee"
+    approved_by_committee = "approved_by_committee"
+    rejected_by_committee = "rejected_by_committee"
+    needs_changes_by_committee = "needs_changes_by_committee"
+    needs_changes = "needs_changes"
+    approved = "approved"
+    rejected = "rejected"
     to_review = "to_review"
     project_approved = "project_approved"
     project_rejected = "project_rejected"
@@ -683,6 +704,13 @@ CERTIFICATION_DECISION_ENUM = Enum(
 
 class Evaluation(Base):
     __tablename__ = "evaluations"
+    __table_args__ = (UniqueConstraint("project_version_id", "round_number", name="uq_admin_evaluations_version_round"),)
+
+    round_number: Mapped[int] = mapped_column(Integer, default=1)
+    delivery_number: Mapped[int] = mapped_column(Integer, default=0)
+    committee_member_user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     project_version_id: Mapped[int] = mapped_column(
@@ -714,7 +742,7 @@ class Evaluation(Base):
     )
 
     project_version: Mapped["ProjectVersion"] = relationship(
-        back_populates="evaluations"
+        back_populates="evaluations", foreign_keys=[project_version_id]
     )
     assigned_to: Mapped[Optional["User"]] = relationship(
         back_populates="evaluations_assigned", foreign_keys=[assigned_to_user_id]

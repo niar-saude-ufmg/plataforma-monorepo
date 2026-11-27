@@ -21,14 +21,12 @@ export const projectsRouter = Router();
  *       - in: query
  *         name: status
  *         schema:
- *           type: string
- *           enum: [submitted_for_review, approved_to_schedule, rejected_to_safe_room, resubmitted_for_review, under_review, scheduled_for_safe_room, approved_for_safe_room, under_safe_room, report_submitted, report_under_review, safe_room_reuse_requested, rescheduled_for_safe_room, reapproved_for_safe_room, report_resubmitted, needs_changes, approved, rejected]
+ *           $ref: '#/components/schemas/ProjectStatus'
  *       - in: query
  *         name: evaluation_status
  *         description: Resultado do parecer mais recente do comitê.
  *         schema:
- *           type: string
- *           enum: [project_approved, project_rejected, project_changes_requested, report_approved, report_rejected, report_changes_requested]
+ *           $ref: '#/components/schemas/ProjectEvaluationStatus'
  *       - in: query
  *         name: submitted_from
  *         schema: { type: string, format: date-time }
@@ -84,7 +82,7 @@ export const projectsRouter = Router();
  *                     total_pages: { type: integer, example: 2 }
  *       401: { description: Não autenticado }
  *       403: { description: Filtro fora do escopo do pesquisador }
- *       422: { description: Filtros inválidos }
+ *       400: { description: Filtros inválidos }
  */
 projectsRouter.get("/", authenticate, restrictTo("researcher", "admin", "committee"), projectsController.list);
 

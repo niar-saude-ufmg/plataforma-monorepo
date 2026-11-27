@@ -4,6 +4,8 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.models import UserAccountStatus
+
 
 class Token(BaseModel):
     access_token: str
@@ -211,7 +213,25 @@ class SectionMetaOut(BaseModel):
     # prompt omitido intencionalmente
     #
 
+
+class ProjectRevisionRequestOut(BaseModel):
+    evaluation_id: int
+    justification: Optional[str]
+    requested_at: Optional[str]
+
+
+class ProjectSubmissionOut(BaseModel):
+    project_id: int
+    project_version_id: int
+    version_number: int
+    source_wizard_session_id: int
+    status: str
+    snapshot: dict[str, Any]
+    revision_request: Optional[ProjectRevisionRequestOut] = None
+
+
 class WizardSessionOut(BaseModel):
+    submission: Optional[ProjectSubmissionOut] = None
     id: int
     wizard_type: str
     current_step: str

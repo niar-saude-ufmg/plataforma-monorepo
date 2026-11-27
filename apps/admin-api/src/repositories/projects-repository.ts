@@ -1,4 +1,9 @@
-import { Prisma, type evaluation_status as EvaluationStatus, type project_status as ProjectStatus, prisma } from "@niar/database";
+import {
+  Prisma,
+  type evaluation_status as EvaluationStatus,
+  type project_status as ProjectStatus,
+  prisma
+} from "@niar/database";
 import type { UserRole } from "@niar/contracts";
 
 const projectInclude = {
@@ -12,10 +17,10 @@ const projectInclude = {
   versions: {
     orderBy: { versionNumber: "asc" as const },
     include: {
-      statusHistory: { orderBy: { createdAt: "asc" as const } },
-      documents: { orderBy: { createdAt: "asc" as const } },
+      statusHistory: { orderBy: [{ createdAt: "asc" as const }, { id: "asc" as const }] },
+      documents: { orderBy: [{ createdAt: "asc" as const }, { id: "asc" as const }] },
       evaluations: {
-        orderBy: [{ updatedAt: "desc" as const }, { id: "desc" as const }],
+        orderBy: [{ roundNumber: "desc" as const }, { id: "desc" as const }],
         include: {
           evaluatedBy: { select: { id: true, fullName: true, email: true, role: true } }
         }
@@ -38,7 +43,7 @@ export type ProjectListFilter = {
   currentUserRole?: UserRole;
   ownerUserId?: number;
   status?: ProjectStatus;
-  evaluationStatus?: EvaluationStatus | "waiting";
+  evaluationStatus?: "waiting" | EvaluationStatus;
   submittedFrom?: Date;
   submittedTo?: Date;
   updatedFrom?: Date;
@@ -51,118 +56,97 @@ export type ProjectListFilter = {
   orderDirection: "asc" | "desc";
 };
 
-const visibilityVersionWhere = (
-  role: UserRole | undefined,
-  userId: number | undefined
-): Prisma.ProjectVersionWhereInput | undefined => {
-  if (!userId || role === "admin" || role === "researcher") return undefined;
+const buildWhere = (filter: ProjectListFilter): Prisma.Sql => {
+  const conditions: Prisma.Sql[] = [];
+  const versionConditions: Prisma.Sql[] = [];
 
-  if (role === "committee") {
-    return { submittedAt: { not: null } };
+  if (filter.ownerUserId) conditions.push(Prisma.sql`p.owner_user_id = ${filter.ownerUserId}`);
+  if (filter.updatedFrom) conditions.push(Prisma.sql`p.updated_at >= ${filter.updatedFrom}`);
+  if (filter.updatedTo) conditions.push(Prisma.sql`p.updated_at <= ${filter.updatedTo}`);
+
+  if (filter.status || filter.evaluationStatus) {
+    versionConditions.push(Prisma.sql`NOT EXISTS (
+      SELECT 1 FROM admin.project_versions newer
+      WHERE newer.project_id = p.id AND newer.version_number > v.version_number
+    )`);
   }
-
-  return undefined;
-};
-
-const buildWhere = (filter: Omit<ProjectListFilter, "page" | "pageSize" | "orderBy" | "orderDirection">) => {
-  const versionWhere: Prisma.ProjectVersionWhereInput = {};
-
-  if (filter.status) versionWhere.status = filter.status;
+  if (filter.status) versionConditions.push(Prisma.sql`v.status::text = ${filter.status}`);
   if (filter.evaluationStatus === "waiting") {
-    versionWhere.evaluations = { none: {} };
+    versionConditions.push(Prisma.sql`NOT EXISTS (
+      SELECT 1 FROM admin.evaluations e WHERE e.project_version_id = v.id
+    )`);
   } else if (filter.evaluationStatus) {
-    versionWhere.evaluations = {
-      some: {
-        status: filter.evaluationStatus
-      }
-    };
+    versionConditions.push(Prisma.sql`(
+      SELECT e.status::text FROM admin.evaluations e
+      WHERE e.project_version_id = v.id ORDER BY e.round_number DESC LIMIT 1
+    ) = ${filter.evaluationStatus}`);
   }
-  if (filter.versionNumber) versionWhere.versionNumber = filter.versionNumber;
-  if (filter.submittedFrom || filter.submittedTo) {
-    versionWhere.submittedAt = {
-      ...(filter.submittedFrom ? { gte: filter.submittedFrom } : {}),
-      ...(filter.submittedTo ? { lte: filter.submittedTo } : {})
-    };
+  if (filter.versionNumber) versionConditions.push(Prisma.sql`v.version_number = ${filter.versionNumber}`);
+  if (filter.submittedFrom) versionConditions.push(Prisma.sql`v.submitted_at >= ${filter.submittedFrom}`);
+  if (filter.submittedTo) versionConditions.push(Prisma.sql`v.submitted_at <= ${filter.submittedTo}`);
+  if (filter.currentUserId && filter.currentUserRole === "committee") {
+    versionConditions.push(Prisma.sql`v.submitted_at IS NOT NULL`);
   }
-  if (filter.hasDocument === false) {
-    versionWhere.documents = {
-      none: filter.documentType ? { documentType: filter.documentType } : {}
-    };
-  } else if (filter.documentType || filter.hasDocument === true) {
-    versionWhere.documents = {
-      some: filter.documentType ? { documentType: filter.documentType } : {}
-    };
+  if (filter.documentType || filter.hasDocument !== undefined) {
+    const documents = Prisma.sql`SELECT 1 FROM admin.project_documents d
+      WHERE d.project_version_id = v.id
+      ${filter.documentType ? Prisma.sql`AND d.document_type = ${filter.documentType}` : Prisma.empty}`;
+    versionConditions.push(filter.hasDocument === false
+      ? Prisma.sql`NOT EXISTS (${documents})`
+      : Prisma.sql`EXISTS (${documents})`);
   }
-
-  const visibilityWhere = visibilityVersionWhere(filter.currentUserRole, filter.currentUserId);
-  if (visibilityWhere) {
-    const existingAnd = versionWhere.AND;
-    versionWhere.AND = [
-      ...(Array.isArray(existingAnd) ? existingAnd : existingAnd ? [existingAnd] : []),
-      visibilityWhere
-    ];
+  if (versionConditions.length) {
+    conditions.push(Prisma.sql`EXISTS (
+      SELECT 1 FROM admin.project_versions v
+      WHERE v.project_id = p.id AND ${Prisma.join(versionConditions, " AND ")}
+    )`);
   }
-
-  const where: Prisma.ProjectWhereInput = {
-    ...(filter.ownerUserId ? { ownerUserId: filter.ownerUserId } : {}),
-    ...(filter.updatedFrom || filter.updatedTo
-      ? {
-          updatedAt: {
-            ...(filter.updatedFrom ? { gte: filter.updatedFrom } : {}),
-            ...(filter.updatedTo ? { lte: filter.updatedTo } : {})
-          }
-        }
-      : {}),
-    ...(Object.keys(versionWhere).length > 0 ? { versions: { some: versionWhere } } : {})
-  };
 
   if (filter.search) {
     const numericSearch = Number(filter.search);
-    where.OR = [
-      { title: { contains: filter.search, mode: "insensitive" } },
-      ...(Number.isSafeInteger(numericSearch) && numericSearch > 0
-        ? [
-            { id: numericSearch },
-            { versions: { some: { id: numericSearch } } },
-            { versions: { some: { sourceWizardSessionId: numericSearch } } }
-          ]
-        : [])
-    ];
+    const textSearch = Prisma.sql`p.title ILIKE ${`%${filter.search}%`}`;
+    conditions.push(Number.isSafeInteger(numericSearch) && numericSearch > 0
+      ? Prisma.sql`(${textSearch} OR p.id = ${numericSearch} OR EXISTS (
+          SELECT 1 FROM admin.project_versions searched
+          WHERE searched.project_id = p.id
+            AND (searched.id = ${numericSearch} OR searched.source_wizard_session_id = ${numericSearch})
+        ))`
+      : textSearch);
   }
-
-  return where;
-};
-
-const buildOrderBy = (
-  field: ProjectListFilter["orderBy"],
-  direction: ProjectListFilter["orderDirection"]
-): Prisma.ProjectOrderByWithRelationInput => {
-  const prismaField = {
-    updated_at: "updatedAt",
-    submitted_at: "submittedAt",
-    title: "title",
-    id: "id"
-  }[field] as "updatedAt" | "submittedAt" | "title" | "id";
-
-  return { [prismaField]: direction };
+  return conditions.length ? Prisma.sql`WHERE ${Prisma.join(conditions, " AND ")}` : Prisma.empty;
 };
 
 export const projectsRepository = {
-  findAll: async (filter: ProjectListFilter): Promise<ProjectListResult> => {
+  findAll: async (filter: ProjectListFilter): Promise<ProjectListResult> => prisma.$transaction(async (transaction) => {
     const where = buildWhere(filter);
-    const [items, total] = await prisma.$transaction([
-      prisma.project.findMany({
-        where,
-        include: projectInclude,
-        orderBy: [buildOrderBy(filter.orderBy, filter.orderDirection), { id: "asc" }],
-        skip: (filter.page - 1) * filter.pageSize,
-        take: filter.pageSize
-      }),
-      prisma.project.count({ where })
+    const orderColumn = {
+      updated_at: Prisma.sql`p.updated_at`,
+      submitted_at: Prisma.sql`p.submitted_at`,
+      title: Prisma.sql`p.title`,
+      id: Prisma.sql`p.id`
+    }[filter.orderBy];
+    const direction = filter.orderDirection === "desc" ? Prisma.sql`DESC` : Prisma.sql`ASC`;
+    const [page, counts] = await Promise.all([
+      transaction.$queryRaw<{ id: number }[]>(Prisma.sql`
+        SELECT p.id FROM admin.projects p ${where}
+        ORDER BY ${orderColumn} ${direction}, p.id ASC
+        LIMIT ${filter.pageSize} OFFSET ${(filter.page - 1) * filter.pageSize}
+      `),
+      transaction.$queryRaw<{ total: bigint }[]>(Prisma.sql`
+        SELECT COUNT(*) AS total FROM admin.projects p ${where}
+      `)
     ]);
+    const total = Number(counts[0].total);
+    if (page.length === 0) return { items: [], total };
 
-    return { items, total };
-  },
+    const records = await transaction.project.findMany({
+      where: { id: { in: page.map((project) => project.id) } },
+      include: projectInclude
+    });
+    // Os IDs e os registros foram lidos no mesmo snapshot da transação.
+    const recordsById = new Map(records.map((record) => [record.id, record]));
+    return { items: page.map(({ id }) => recordsById.get(id)!), total };
+  }, { isolationLevel: "RepeatableRead" }),
 
   findById: (projectId: number, ownerUserId?: number): Promise<ProjectRecord | null> =>
     prisma.project.findFirst({
