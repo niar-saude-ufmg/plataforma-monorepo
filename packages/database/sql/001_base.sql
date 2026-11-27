@@ -900,7 +900,8 @@ ALTER TABLE shared.project_status_history
 ALTER TABLE shared.project_status_history
   DROP COLUMN IF EXISTS committee_evaluation_id;
 DROP TABLE IF EXISTS admin.committee_evaluations;
-DROP TYPE IF EXISTS admin.committee_evaluation_result;
+-- Instalações antigas podem ainda ter tabelas no schema assistant dependentes
+-- deste tipo. Mantemos o tipo órfão para reaplicar o SQL sem apagar histórico.
 
 -- Delivery 0 is the written submission; report deliveries start at 1.
 -- Evaluation rounds append decisions without replacing previous opinions.

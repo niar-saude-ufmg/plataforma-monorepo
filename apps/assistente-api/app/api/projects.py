@@ -670,7 +670,8 @@ async def export_project(
         session_id=session.id,
         model_used=session.llm_model_used or settings.llm_model,
     )
-    filename = f"project_{session.id}.docx"
+    export_id = uuid4().hex
+    filename = f"project_{session.id}_export_{export_id}.docx"
     filepath = os.path.join(exports_dir, filename)
     doc.save(filepath)
 
