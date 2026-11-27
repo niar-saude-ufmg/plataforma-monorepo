@@ -1,4 +1,5 @@
 export * from "./questionnaires.js";
+export * from "./project-section-templates.js";
 
 export const USER_ROLE_VALUES = [
   "researcher",

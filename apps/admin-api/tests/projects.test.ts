@@ -79,6 +79,7 @@ const projectRecord = (): ProjectRecord =>
         versionNumber: 1,
         sourceWizardSessionId: 7,
         questionnaireId: null,
+        projectSectionTemplateId: null,
         userCoepDataId: null,
         characterizationSnapshot: {},
         status: "needs_changes",

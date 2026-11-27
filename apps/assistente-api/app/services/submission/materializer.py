@@ -59,6 +59,7 @@ async def materialize_project(
     project = existing.scalar_one_or_none()
     submitted_at = datetime.now(timezone.utc)
     snapshot = build_characterization_snapshot(session)
+    template_id = session.project_section_template_id
 
     if project:
         project.title = session.title
@@ -95,6 +96,7 @@ async def materialize_project(
             version_number=next_version_number,
             source_wizard_session_id=session.id,
             characterization_snapshot=snapshot,
+            project_section_template_id=template_id,
             status=status,
             submitted_at=submitted_at,
         )
@@ -115,6 +117,7 @@ async def materialize_project(
             version_number=1,
             source_wizard_session_id=session.id,
             characterization_snapshot=snapshot,
+            project_section_template_id=template_id,
             status=ProjectStatus.submitted_for_review,
             submitted_at=submitted_at,
         )

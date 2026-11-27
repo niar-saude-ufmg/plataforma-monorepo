@@ -190,15 +190,18 @@ model WizardSession {
   llmModelUsed     String            @default("") @map("llm_model_used") @db.VarChar(100)
   createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
+  projectSectionTemplateId    Int?   @map("project_section_template_id")
   projectVersions  ProjectVersion[]
   messages         ChatMessage[]
   cleaningVersions CleaningVersion[]
   exports          ExportArtifact[]
+  sectionTemplate ProjectSectionTemplate? @relation(fields: [projectSectionTemplateId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_assistant_wizard_sessions_section_template")
   dataset          Dataset?          @relation(fields: [datasetId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   linkedProject    WizardSession?    @relation("LinkedWizardSession", fields: [linkedProjectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   linkedSessions   WizardSession[]   @relation("LinkedWizardSession")
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  @@index([projectSectionTemplateId], map: "idx_assistant_wizard_sessions_section_template_id")
   @@map("wizard_sessions")
   @@schema("assistant")
 }
@@ -291,9 +294,11 @@ model ProjectVersion {
   submittedAt              DateTime?              @map("submitted_at") @db.Timestamptz(6)
   createdAt                DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
   questionnaireId          Int?                   @map("questionnaire_id")
+  projectSectionTemplateId Int?                   @map("project_section_template_id")
   evaluations              Evaluation[]
   documents                ProjectDocument[]
   questionnaire            Questionnaire?         @relation(fields: [questionnaireId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_questionnaire")
+  projectSectionTemplate   ProjectSectionTemplate? @relation(fields: [projectSectionTemplateId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_section_template")
   userCoepData             UserCoepData?          @relation(fields: [userCoepDataId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_user_coep")
   project                  Project                @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   sourceWizardSession      WizardSession          @relation(fields: [sourceWizardSessionId], references: [id], onUpdate: NoAction)
@@ -304,6 +309,7 @@ model ProjectVersion {
   @@index([sourceWizardSessionId], map: "idx_admin_project_versions_source_wizard_session_id")
   @@index([userCoepDataId], map: "idx_admin_project_versions_user_coep_data_id")
   @@index([questionnaireId], map: "idx_admin_project_versions_questionnaire_id")
+  @@index([projectSectionTemplateId], map: "idx_admin_project_versions_section_template_id")
   @@map("project_versions")
   @@schema("admin")
 }
@@ -409,6 +415,25 @@ model Evaluation {
   @@index([assignedToUserId], map: "idx_admin_evaluations_assigned_to_user_id")
   @@index([status], map: "idx_admin_evaluations_status")
   @@map("evaluations")
+  @@schema("admin")
+}
+
+model ProjectSectionTemplate {
+  id              Int              @id @default(autoincrement())
+  templateKey     String           @map("template_key") @db.VarChar(100)
+  name            String           @db.VarChar(255)
+  version         Int
+  definitionJson  Json             @default("{}") @map("definition_json")
+  isActive        Boolean          @default(false) @map("is_active")
+  publishedAt     DateTime?        @map("published_at") @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  projectVersions ProjectVersion[]
+  wizardSessions  WizardSession[]
+
+  @@unique([templateKey, version], map: "uq_admin_project_section_templates_key_version")
+  @@index([isActive], map: "idx_admin_project_section_templates_active")
+  @@map("project_section_templates")
   @@schema("admin")
 }
 

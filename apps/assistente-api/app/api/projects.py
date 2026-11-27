@@ -17,11 +17,13 @@ from app.audit.service import log_audit
 from app.core.config import get_exports_dir, get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models import ChatMessage, ExportArtifact, User, WizardSession, WizardType
+from app.models import ChatMessage, ExportArtifact, ProjectSectionTemplate, User, WizardSession, WizardType
 from app.schemas import (
     ChatMessageCreate,
     ChatMessageOut,
     ImportTextRequest,
+    SectionMetaOut,
+    SectionTemplateMetaOut,
     WizardSessionCreate,
     WizardSessionOut,
     WizardSessionUpdate,
@@ -65,6 +67,23 @@ def _session_out(session: WizardSession, *, linked_cleaning_step: Optional[str] 
     step = session.current_step
     if section_data.get("_wizard_flow_version", 0) < 2:
         step = migrate_current_step(step, section_data)
+    section_template_out = None
+    if session.section_template is not None:
+        definition = session.section_template.definition_json or {}
+        section_template_out = SectionTemplateMetaOut(
+            id=session.section_template.id,
+            template_key=session.section_template.template_key,
+            version=session.section_template.version,
+            sections=[
+                SectionMetaOut(
+                    key=section["key"],
+                    label=section["label"],
+                    guidance=section["guidance"],
+                    required=section["required"],
+                )
+                for section in definition.get("sections", [])
+            ],
+        )
     return WizardSessionOut(
         id=session.id,
         wizard_type=session.wizard_type.value,
@@ -91,6 +110,7 @@ def _session_out(session: WizardSession, *, linked_cleaning_step: Optional[str] 
             for m in sorted(session.messages, key=lambda msg: msg.id)
         ],
         linked_cleaning_step=linked_cleaning_step,
+        section_template=section_template_out,
     )
 
 
@@ -186,12 +206,23 @@ async def create_project(
     db: AsyncSession = Depends(get_db),
 ):
     section_data = {"_current_section": PROJECT_DOC_SECTIONS[0], "_wizard_flow_version": 2}
+
+    template_result = await db.execute(
+        select(ProjectSectionTemplate)
+        .where(ProjectSectionTemplate.is_active == True)
+        .limit(1)
+    )
+    template = template_result.scalar_one_or_none()
+    if template is None:
+        raise HTTPException(status_code=409, detail="Nenhum modelo de seções ativo encontrado")
+
     session = WizardSession(
         user_id=current_user.id,
         wizard_type=WizardType.project_doc,
         current_step="start",
         title=body.title,
         section_data=json.dumps(section_data),
+        project_section_template_id=template.id,
     )
     db.add(session)
     await db.commit()

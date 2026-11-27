@@ -343,6 +343,9 @@ class WizardSession(Base):
     validation_result: Mapped[str] = mapped_column(Text, default="{}")
     quality_checklist: Mapped[str] = mapped_column(Text, default="{}")
     llm_model_used: Mapped[str] = mapped_column(String(100), default="")
+    project_section_template_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("project_section_templates.id", ondelete="RESTRICT"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
@@ -362,6 +365,10 @@ class WizardSession(Base):
     )
     project_versions: Mapped[list["ProjectVersion"]] = relationship(
         back_populates="source_session"
+    )
+    section_template: Mapped[Optional["ProjectSectionTemplate"]] = relationship(
+        back_populates="wizard_sessions",
+        lazy="selectin",
     )
 
 
@@ -514,6 +521,40 @@ class Questionnaire(Base):
     )
 
 
+class ProjectSectionTemplate(Base):
+    __tablename__ = "project_section_templates"
+    __table_args__ = (
+        UniqueConstraint(
+            "template_key",
+            "version",
+            name="uq_admin_project_section_templates_key_version",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    template_key: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(255))
+    version: Mapped[int] = mapped_column(Integer)
+    definition_json: Mapped[dict] = mapped_column(JSONB, default=dict)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    published_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    wizard_sessions: Mapped[list["WizardSession"]] = relationship(
+        back_populates="section_template"
+    )
+    project_versions: Mapped[list["ProjectVersion"]] = relationship(
+        back_populates="section_template"
+    )
+
+
 class ProjectVersion(Base):
     __tablename__ = "project_versions"
     __table_args__ = (
@@ -527,6 +568,9 @@ class ProjectVersion(Base):
     )
     questionnaire_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("questionnaires.id", ondelete="RESTRICT"), nullable=True
+    )
+    project_section_template_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("project_section_templates.id", ondelete="RESTRICT"), nullable=True
     )
     user_coep_data_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("user_coep_data.id", ondelete="RESTRICT"), nullable=True
@@ -552,6 +596,9 @@ class ProjectVersion(Base):
     )
     status_history: Mapped[list["ProjectStatusHistory"]] = relationship(back_populates="version")
     evaluations: Mapped[list["Evaluation"]] = relationship(back_populates="project_version")
+    section_template: Mapped[Optional["ProjectSectionTemplate"]] = relationship(
+        back_populates="project_versions"
+    )
 
 
 class ProjectDocument(Base):

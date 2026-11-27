@@ -324,6 +324,160 @@ CREATE INDEX IF NOT EXISTS idx_admin_questionnaires_active
 CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_questionnaires_active_key
   ON admin.questionnaires (questionnaire_key) WHERE is_active;
 
+CREATE TABLE IF NOT EXISTS admin.project_section_templates (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  template_key VARCHAR(100) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  version INTEGER NOT NULL CHECK (version > 0),
+  definition_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+  is_active BOOLEAN NOT NULL DEFAULT FALSE,
+  published_at TIMESTAMPTZ NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT uq_admin_project_section_templates_key_version
+    UNIQUE (template_key, version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_project_section_templates_active
+  ON admin.project_section_templates (is_active);
+
+DROP INDEX IF EXISTS admin.uq_admin_project_section_templates_active_key;
+
+-- Deve existir somente uma versão ativa em toda a plataforma, sem relação com template_key.
+WITH active_templates AS (
+  SELECT id,
+         ROW_NUMBER() OVER (
+           ORDER BY published_at DESC NULLS LAST, id DESC
+         ) AS position
+  FROM admin.project_section_templates
+  WHERE is_active
+)
+UPDATE admin.project_section_templates AS template
+SET is_active = FALSE,
+    updated_at = NOW()
+FROM active_templates
+WHERE template.id = active_templates.id
+  AND active_templates.position > 1;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_project_section_templates_single_active
+  ON admin.project_section_templates ((is_active)) WHERE is_active;
+
+-- Seed: primeiro template
+
+INSERT INTO admin.project_section_templates
+  (template_key, name, version, definition_json, is_active, published_at)
+SELECT
+  'project_doc_sections', 'Secoes do projeto escrito', 1,
+  $seed${
+  "schema_version": 1,
+  "sections": [
+    {
+      "key": "background",
+      "label": "Contexto",
+      "guidance": [
+        "Contexto clínico/científico e por que este estudo é relevante."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "research_questions",
+      "label": "Perguntas de Pesquisa / Hipóteses",
+      "guidance": [
+        "Perguntas ou hipóteses específicas e testáveis."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "objectives",
+      "label": "Objetivos",
+      "guidance": [
+        "Objetivos primários e secundários alinhados às perguntas."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "data_sources",
+      "label": "Fontes de Dados",
+      "guidance": [
+        "Conjuntos de dados, tabelas, vínculos, periodicidade de atualização, acesso e governança."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "study_population",
+      "label": "População do Estudo",
+      "guidance": [
+        "Critérios de inclusão/exclusão, definição da coorte e datas de índice."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "variables_endpoints",
+      "label": "Variáveis e Desfechos",
+      "guidance": [
+        "Preditoras, desfechos, covariáveis, campos derivados e definições de endpoints. Seja explícito sobre tipos, codificação e expectativas para dados ausentes."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "methods_analysis",
+      "label": "Métodos, Plano e Fluxo de Análise",
+      "guidance": [
+        "Métodos estatísticos/ML, famílias de modelos, estratégia de validação, análises de sensibilidade, reprodutibilidade e como a análise será executada na prática (entradas, etapas, parâmetros e saídas)."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "responsible_ai",
+      "label": "IA Responsável: Viés, Justiça e Explicabilidade",
+      "guidance": [
+        "Riscos de viés nos dados e no modelo, estratégias de equidade e justiça (subgrupos, métricas justas), exigências de explicabilidade e interpretabilidade, e planos de mitigação."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "expected_artifacts",
+      "label": "Artefatos e Entregáveis Esperados",
+      "guidance": [
+        "Entregáveis concretos que a análise deve produzir: tabelas resumo, gráficos, modelos ajustados, saídas de pontuação, formatos de exportação (CSV, PDF) e relatórios. Nomeie cada artefato e qual decisão ele apoia."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "risks_limitations",
+      "label": "Riscos e Limitações",
+      "guidance": [
+        "Riscos científicos, de qualidade de dados e operacionais."
+      ],
+      "prompt": "",
+      "required": true
+    },
+    {
+      "key": "references",
+      "label": "Referências",
+      "guidance": [
+        "Trabalhos anteriores, protocolos e literatura relevante."
+      ],
+      "prompt": "",
+      "required": true
+    }
+  ]
+}$seed$::jsonb,
+  TRUE, NOW()
+WHERE NOT EXISTS (
+  SELECT 1 FROM admin.project_section_templates
+  WHERE template_key = 'project_doc_sections'
+);
+
 CREATE TABLE IF NOT EXISTS admin.project_versions (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   project_id INTEGER NOT NULL
@@ -397,6 +551,51 @@ CREATE TABLE IF NOT EXISTS admin.evaluations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE assistant.wizard_sessions
+  ADD COLUMN IF NOT EXISTS project_section_template_id INTEGER;
+ALTER TABLE admin.project_versions
+  ADD COLUMN IF NOT EXISTS project_section_template_id INTEGER;
+
+CREATE INDEX IF NOT EXISTS idx_assistant_wizard_sessions_section_template_id
+  ON assistant.wizard_sessions (project_section_template_id);
+CREATE INDEX IF NOT EXISTS idx_admin_project_versions_section_template_id
+  ON admin.project_versions (project_section_template_id);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                 WHERE conname = 'fk_assistant_wizard_sessions_section_template') THEN
+    ALTER TABLE assistant.wizard_sessions
+      ADD CONSTRAINT fk_assistant_wizard_sessions_section_template
+      FOREIGN KEY (project_section_template_id)
+      REFERENCES admin.project_section_templates(id) ON DELETE RESTRICT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                 WHERE conname = 'fk_admin_project_versions_section_template') THEN
+    ALTER TABLE admin.project_versions
+      ADD CONSTRAINT fk_admin_project_versions_section_template
+      FOREIGN KEY (project_section_template_id)
+      REFERENCES admin.project_section_templates(id) ON DELETE RESTRICT;
+  END IF;
+END $$;
+
+-- Backfill: sessões de escrita existentes passam a apontar para o modelo inicial.
+UPDATE assistant.wizard_sessions s
+SET project_section_template_id = t.id
+FROM admin.project_section_templates t
+WHERE t.template_key = 'project_doc_sections'
+  AND t.version = 1
+  AND s.wizard_type = 'project_doc'
+  AND s.project_section_template_id IS NULL;
+
+-- Versões submetidas herdam o modelo da sessão de origem.
+UPDATE admin.project_versions v
+SET project_section_template_id = s.project_section_template_id
+FROM assistant.wizard_sessions s
+WHERE v.source_wizard_session_id = s.id
+  AND s.project_section_template_id IS NOT NULL
+  AND v.project_section_template_id IS NULL;
 
 ALTER TABLE admin.evaluations
   ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER NULL
