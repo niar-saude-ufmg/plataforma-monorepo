@@ -13,6 +13,7 @@ import { projectsRouter } from "./routes/projects.js";
 import { questionnairesRouter } from "./routes/questionnaires.js";
 import { specialtiesRouter } from "./routes/specialties.js";
 import { usersRouter } from "./routes/users.js";
+import { projectSectionTemplatesRouter } from "./routes/project-section-templates.js";
 
 export const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/admin/auth", authRouter);
 app.use("/api/admin/specialties", specialtiesRouter);
 app.use("/api/admin/questionnaires", questionnairesRouter);
 app.use("/api/admin/projects", projectsRouter);
+app.use("/api/admin/project-section-templates", projectSectionTemplatesRouter)
 
 // Handler central de erro: decide o status HTTP a partir do tipo do erro,
 // nunca do texto da mensagem. Fica depois de todas as rotas de propósito
