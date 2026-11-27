@@ -18,9 +18,9 @@ model User {
   createdAt             DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
   accountStatus         user_account_status     @default(pending) @map("account_status")
   committeeProfile      CommitteeMemberProfile?
-  evaluationsPerformed  Evaluation[]            @relation("EvaluationEvaluator")
-  evaluationsAssigned   Evaluation[]            @relation("EvaluationAssignee")
   evaluationsAssignedBy Evaluation[]            @relation("EvaluationAssigner")
+  evaluationsAssigned   Evaluation[]            @relation("EvaluationAssignee")
+  evaluationsPerformed  Evaluation[]            @relation("EvaluationEvaluator")
   projects              Project[]               @relation("ProjectOwner")
   researcherProfile     ResearcherProfile?
   coepData              UserCoepData[]
@@ -157,16 +157,16 @@ model AuditLog {
 }
 
 model ProjectStatusHistory {
-  id                    Int                  @id @default(autoincrement())
-  status                project_status
-  notes                 String?
-  actorUserId           Int?                 @map("actor_user_id")
-  createdAt             DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  projectVersionId      Int                  @map("project_version_id")
-  evaluationId          Int?                 @map("evaluation_id")
-  projectVersion        ProjectVersion       @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_shared_project_status_history_project_version")
-  evaluation            Evaluation?          @relation(fields: [evaluationId], references: [id], onUpdate: NoAction, map: "fk_shared_status_history_evaluation")
-  actorUser             User?                @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
+  id               Int            @id @default(autoincrement())
+  status           project_status
+  notes            String?
+  actorUserId      Int?           @map("actor_user_id")
+  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  projectVersionId Int            @map("project_version_id")
+  evaluationId     Int?           @map("evaluation_id")
+  projectVersion   ProjectVersion @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_shared_project_status_history_project_version")
+  evaluation       Evaluation?    @relation(fields: [evaluationId], references: [id], onUpdate: NoAction, map: "fk_shared_status_history_evaluation")
+  actorUser        User?          @relation("StatusActor", fields: [actorUserId], references: [id], onUpdate: NoAction)
 
   @@index([actorUserId], map: "idx_shared_project_status_history_actor_user_id")
   @@index([projectVersionId], map: "idx_shared_project_status_history_project_version_id")
@@ -176,29 +176,32 @@ model ProjectStatusHistory {
 }
 
 model WizardSession {
-  id               Int               @id @default(autoincrement())
-  userId           Int               @map("user_id")
-  wizardType       wizard_type       @map("wizard_type")
-  currentStep      String            @map("current_step") @db.VarChar(50)
-  title            String            @default("Untitled") @db.VarChar(255)
-  datasetId        Int?              @map("dataset_id")
-  linkedProjectId  Int?              @map("linked_project_id")
-  sectionData      String            @default("{}") @map("section_data")
-  scriptContent    String            @default("") @map("script_content")
-  validationResult String            @default("{}") @map("validation_result")
-  qualityChecklist String            @default("{}") @map("quality_checklist")
-  llmModelUsed     String            @default("") @map("llm_model_used") @db.VarChar(100)
-  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime          @default(now()) @map("updated_at") @db.Timestamptz(6)
-  projectVersions  ProjectVersion[]
-  messages         ChatMessage[]
-  cleaningVersions CleaningVersion[]
-  exports          ExportArtifact[]
-  dataset          Dataset?          @relation(fields: [datasetId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  linkedProject    WizardSession?    @relation("LinkedWizardSession", fields: [linkedProjectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  linkedSessions   WizardSession[]   @relation("LinkedWizardSession")
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                          Int                        @id @default(autoincrement())
+  userId                      Int                        @map("user_id")
+  wizardType                  wizard_type                @map("wizard_type")
+  currentStep                 String                     @map("current_step") @db.VarChar(50)
+  title                       String                     @default("Untitled") @db.VarChar(255)
+  datasetId                   Int?                       @map("dataset_id")
+  linkedProjectId             Int?                       @map("linked_project_id")
+  sectionData                 String                     @default("{}") @map("section_data")
+  scriptContent               String                     @default("") @map("script_content")
+  validationResult            String                     @default("{}") @map("validation_result")
+  qualityChecklist            String                     @default("{}") @map("quality_checklist")
+  llmModelUsed                String                     @default("") @map("llm_model_used") @db.VarChar(100)
+  createdAt                   DateTime                   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                   DateTime                   @default(now()) @map("updated_at") @db.Timestamptz(6)
+  projectSectionTemplateId    Int?                       @map("project_section_template_id")
+  projectVersions             ProjectVersion[]
+  messages                    ChatMessage[]
+  cleaningVersions            CleaningVersion[]
+  exports                     ExportArtifact[]
+  projectSectionTemplates   ProjectSectionTemplate? @relation(fields: [projectSectionTemplateId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_assistant_wizard_sessions_section_template")
+  dataset                     Dataset?                   @relation(fields: [datasetId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  linkedProject               WizardSession?             @relation("LinkedWizardSession", fields: [linkedProjectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  linkedSessions              WizardSession[]            @relation("LinkedWizardSession")
+  user                        User                       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  @@index([projectSectionTemplateId], map: "idx_assistant_wizard_sessions_section_template_id")
   @@map("wizard_sessions")
   @@schema("assistant")
 }
@@ -249,14 +252,14 @@ model CleaningVersion {
 }
 
 model Project {
-  id                            Int              @id @default(autoincrement())
-  ownerUserId                   Int              @map("owner_user_id")
-  title                         String           @db.VarChar(255)
-  submittedAt                   DateTime?        @map("submitted_at") @db.Timestamptz(6)
-  createdAt                     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt                     DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
-  versions                      ProjectVersion[]
-  owner                         User             @relation("ProjectOwner", fields: [ownerUserId], references: [id], onUpdate: NoAction)
+  id          Int              @id @default(autoincrement())
+  ownerUserId Int              @map("owner_user_id")
+  title       String           @db.VarChar(255)
+  submittedAt DateTime?        @map("submitted_at") @db.Timestamptz(6)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  versions    ProjectVersion[]
+  owner       User             @relation("ProjectOwner", fields: [ownerUserId], references: [id], onUpdate: NoAction)
 
   @@index([ownerUserId], map: "idx_admin_projects_owner_user_id")
   @@map("projects")
@@ -281,29 +284,32 @@ model ProjectDocument {
 }
 
 model ProjectVersion {
-  id                       Int                    @id @default(autoincrement())
-  projectId                Int                    @map("project_id")
-  versionNumber            Int                    @map("version_number")
-  sourceWizardSessionId    Int                    @map("source_wizard_session_id")
-  userCoepDataId           Int?                   @map("user_coep_data_id")
-  characterizationSnapshot Json                   @default("{}") @map("characterization_snapshot")
-  status                   project_status
-  submittedAt              DateTime?              @map("submitted_at") @db.Timestamptz(6)
-  createdAt                DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
-  questionnaireId          Int?                   @map("questionnaire_id")
-  evaluations              Evaluation[]
-  documents                ProjectDocument[]
-  questionnaire            Questionnaire?         @relation(fields: [questionnaireId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_questionnaire")
-  userCoepData             UserCoepData?          @relation(fields: [userCoepDataId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_user_coep")
-  project                  Project                @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  sourceWizardSession      WizardSession          @relation(fields: [sourceWizardSessionId], references: [id], onUpdate: NoAction)
-  statusHistory            ProjectStatusHistory[]
+  id                          Int                        @id @default(autoincrement())
+  projectId                   Int                        @map("project_id")
+  versionNumber               Int                        @map("version_number")
+  sourceWizardSessionId       Int                        @map("source_wizard_session_id")
+  characterizationSnapshot    Json                       @default("{}") @map("characterization_snapshot")
+  status                      project_status
+  submittedAt                 DateTime?                  @map("submitted_at") @db.Timestamptz(6)
+  createdAt                   DateTime                   @default(now()) @map("created_at") @db.Timestamptz(6)
+  userCoepDataId              Int?                       @map("user_coep_data_id")
+  questionnaireId             Int?                       @map("questionnaire_id")
+  projectSectionTemplateId    Int?                       @map("project_section_template_id")
+  evaluations                 Evaluation[]
+  documents                   ProjectDocument[]
+  questionnaire               Questionnaire?             @relation(fields: [questionnaireId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_questionnaire")
+  projectSectionTemplate      ProjectSectionTemplate?    @relation(fields: [projectSectionTemplateId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_section_template")
+  userCoepData                UserCoepData?              @relation(fields: [userCoepDataId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_admin_project_versions_user_coep")
+  project                     Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sourceWizardSession         WizardSession              @relation(fields: [sourceWizardSessionId], references: [id], onUpdate: NoAction)
+  statusHistory               ProjectStatusHistory[]
 
   @@unique([projectId, versionNumber], map: "uq_admin_project_versions_project_number")
   @@index([projectId], map: "idx_admin_project_versions_project_id")
   @@index([sourceWizardSessionId], map: "idx_admin_project_versions_source_wizard_session_id")
   @@index([userCoepDataId], map: "idx_admin_project_versions_user_coep_data_id")
   @@index([questionnaireId], map: "idx_admin_project_versions_questionnaire_id")
+  @@index([projectSectionTemplateId], map: "idx_admin_project_versions_section_template_id")
   @@map("project_versions")
   @@schema("admin")
 }
@@ -311,7 +317,7 @@ model ProjectVersion {
 model Questionnaire {
   id               Int              @id @default(autoincrement())
   questionnaireKey String           @map("questionnaire_key") @db.VarChar(100)
-  version          Int
+  version          String           @db.VarChar(50)
   title            String           @db.VarChar(255)
   definitionJson   Json             @default("{}") @map("definition_json")
   isActive         Boolean          @default(false) @map("is_active")
@@ -356,12 +362,12 @@ model ResearcherProfile {
 }
 
 model CommitteeMemberProfile {
-  userId      Int                   @id @map("user_id")
-  specialtyId Int                   @map("specialty_id")
-  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime              @default(now()) @map("updated_at") @db.Timestamptz(6)
-  specialty   Specialty             @relation(fields: [specialtyId], references: [id], onUpdate: NoAction)
-  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  userId      Int       @id @map("user_id")
+  specialtyId Int       @map("specialty_id")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  specialty   Specialty @relation(fields: [specialtyId], references: [id], onUpdate: NoAction)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("committee_member_profiles")
   @@schema("admin")
@@ -387,28 +393,48 @@ model UserCoepData {
 }
 
 model Evaluation {
-  id                Int                    @id @default(autoincrement())
-  projectVersionId  Int                    @map("project_version_id")
-  assignedToUserId  Int?                   @map("assigned_to_user_id")
-  assignedByUserId  Int?                   @map("assigned_by_user_id")
-  evaluatedByUserId Int?                   @map("evaluated_by_user_id")
-  status            evaluation_status
-  justification     String?
+  id                    Int                     @id @default(autoincrement())
+  projectVersionId      Int                     @map("project_version_id")
+  evaluation_context    evaluation_context      @default(pre_safe_room)
+  assignedToUserId      Int?                    @map("assigned_to_user_id")
+  assignedByUserId      Int?                    @map("assigned_by_user_id")
+  evaluatedByUserId     Int?                    @map("evaluated_by_user_id")
+  status                evaluation_status
+  justification         String?
+  evaluatedAt           DateTime?               @map("evaluated_at") @db.Timestamptz(6)
+  createdAt             DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime                @default(now()) @map("updated_at") @db.Timestamptz(6)
   certificationDecision certification_decision? @map("certification_decision")
-  certificationReason String?              @map("certification_reason")
-  evaluatedAt       DateTime?              @map("evaluated_at") @db.Timestamptz(6)
-  createdAt         DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime               @default(now()) @map("updated_at") @db.Timestamptz(6)
-  assignedTo        User?                  @relation("EvaluationAssignee", fields: [assignedToUserId], references: [id], onUpdate: NoAction)
-  assignedBy        User?                  @relation("EvaluationAssigner", fields: [assignedByUserId], references: [id], onUpdate: NoAction)
-  evaluatedBy       User?                  @relation("EvaluationEvaluator", fields: [evaluatedByUserId], references: [id], onUpdate: NoAction)
-  projectVersion    ProjectVersion         @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  statusHistory     ProjectStatusHistory[]
+  certificationReason   String?                 @map("certification_reason")
+  assignedBy            User?                   @relation("EvaluationAssigner", fields: [assignedByUserId], references: [id], onUpdate: NoAction)
+  assignedTo            User?                   @relation("EvaluationAssignee", fields: [assignedToUserId], references: [id], onUpdate: NoAction)
+  evaluatedBy           User?                   @relation("EvaluationEvaluator", fields: [evaluatedByUserId], references: [id], onUpdate: NoAction)
+  projectVersion        ProjectVersion          @relation(fields: [projectVersionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  statusHistory         ProjectStatusHistory[]
 
   @@index([projectVersionId], map: "idx_admin_evaluations_project_version_id")
   @@index([assignedToUserId], map: "idx_admin_evaluations_assigned_to_user_id")
   @@index([status], map: "idx_admin_evaluations_status")
   @@map("evaluations")
+  @@schema("admin")
+}
+
+model ProjectSectionTemplate {
+  id              Int              @id @default(autoincrement())
+  templateKey     String           @map("template_key") @db.VarChar(100)
+  name            String           @db.VarChar(255)
+  version         Int
+  definitionJson  Json             @default("{}") @map("definition_json")
+  isActive        Boolean          @default(false) @map("is_active")
+  publishedAt     DateTime?        @map("published_at") @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @default(now()) @map("updated_at") @db.Timestamptz(6)
+  projectVersions ProjectVersion[]
+  wizardSessions  WizardSession[]
+
+  @@unique([templateKey, version], map: "uq_admin_project_section_templates_key_version")
+  @@index([isActive], map: "idx_admin_project_section_templates_active")
+  @@map("project_section_templates")
   @@schema("admin")
 }
 
@@ -423,6 +449,7 @@ enum user_role {
   researcher
   admin
   committee
+  auditor
 
   @@schema("shared")
 }
@@ -438,6 +465,13 @@ enum user_account_status {
 
 enum evaluation_status {
   to_review
+  sent_to_committee
+  approved_by_committee
+  rejected_by_committee
+  needs_changes_by_committee
+  needs_changes
+  approved
+  rejected
   project_approved
   project_rejected
   project_changes_requested
@@ -457,11 +491,11 @@ enum certification_decision {
 
 enum project_status {
   submitted_to_committee
-  resubmitted_to_committee
   under_review
   needs_changes
   approved
   rejected
+  resubmitted_to_committee
   submitted_for_review
   approved_to_schedule
   rejected_to_safe_room
@@ -477,4 +511,11 @@ enum project_status {
   report_resubmitted
 
   @@schema("shared")
+}
+
+enum evaluation_context {
+  pre_safe_room
+  post_safe_room
+
+  @@schema("admin")
 }

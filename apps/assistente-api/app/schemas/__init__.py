@@ -196,6 +196,21 @@ class CleaningVersionOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class SectionTemplateMetaOut(BaseModel):
+    id: int
+    template_key: str
+    version: int
+    sections: list[SectionMetaOut]
+
+
+class SectionMetaOut(BaseModel):
+    key: str
+    label: str
+    guidance: list[str]
+    required: bool
+    # prompt omitido intencionalmente
+    #
+
 class WizardSessionOut(BaseModel):
     id: int
     wizard_type: str
@@ -212,6 +227,7 @@ class WizardSessionOut(BaseModel):
     updated_at: str
     messages: list[ChatMessageOut] = []
     linked_cleaning_step: Optional[str] = None
+    section_template: Optional[SectionTemplateMetaOut] = None
 
 
 class QualityCheckItem(BaseModel):
