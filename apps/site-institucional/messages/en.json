@@ -161,6 +161,7 @@
 	"secure_room_meta_desc": "Submit your research project to NIAR-Saúde's Secure Room: researcher registration, project structuring with the assistant, and review tracking.",
 	"secure_room_subtitle": "A physical space at UFMG's Medical School where sensitive health data is analyzed without ever leaving it. Here you learn how to request access; the work itself happens on the platform.",
 	"secure_room_signup_cta": "Register as a researcher",
+	"secure_room_platform_cta": "Access the platform",
 	"secure_room_access_cta": "Open the assistant",
 	"secure_room_steps_heading": "From registration to review",
 	"secure_room_step_signup_title": "Registration",

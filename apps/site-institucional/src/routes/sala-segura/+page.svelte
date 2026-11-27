@@ -62,20 +62,20 @@
 				</ul>
 			</div>
 
-			<!-- Cartão de acesso. O assistente vem primeiro e cheio porque é a ação de quem
-			     volta, a mais frequente; o cadastro fica em contorno, com a dica de primeiro
-			     acesso logo embaixo.
-
-			     Os dois levam para fora do site: o formulário é do admin-web e o assistente
-			     exige login, ambos servidos pela shell. Por isso `rel="external"`: em produção
-			     os links são relativos (mesma origem), e sem ele o prerender tentaria gerar
-			     /cadastro/pesquisador e /assistente como páginas do site — o build quebra com
-			     404. Ele também faz o roteador do SvelteKit trocar a página inteira em vez de
-			     tentar uma navegação interna. -->
+			<!-- Os acessos à plataforma pertencem à shell. rel="external" evita que o
+                 SvelteKit trate essas rotas como páginas do institucional no prerender. -->
 			<div class="secure-card self-start rounded-2xl p-7">
 				<h2 class="text-sm font-medium text-secondary">{m.secure_room_access_panel()}</h2>
 				<div class="mt-4 grid gap-3">
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
+					<a
+						href={platformHref('/admin')}
+						rel="external"
+						class="flex items-center justify-between gap-4 rounded-xl bg-white px-6 py-4 text-base font-bold text-primary transition-transform duration-200 hover:-translate-y-0.5"
+					>
+						{m.secure_room_platform_cta()}
+						<ArrowRight class="h-4 w-4 shrink-0" aria-hidden="true" />
+					</a>
 					<a
 						href={platformHref('/assistente')}
 						rel="external"

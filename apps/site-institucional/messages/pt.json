@@ -161,6 +161,7 @@
 	"secure_room_meta_desc": "Submeta seu projeto de pesquisa à Sala Segura do NIAR-Saúde: cadastro de pesquisador, estruturação do projeto com o assistente e acompanhamento da avaliação.",
 	"secure_room_subtitle": "Um espaço físico na Faculdade de Medicina da UFMG onde dados sensíveis de saúde são analisados sem sair de lá. Aqui você entende como pedir acesso; o trabalho acontece na plataforma.",
 	"secure_room_signup_cta": "Cadastrar-se como pesquisador",
+	"secure_room_platform_cta": "Acessar a plataforma",
 	"secure_room_access_cta": "Acessar o assistente",
 	"secure_room_steps_heading": "Do cadastro à avaliação",
 	"secure_room_step_signup_title": "Cadastro",
