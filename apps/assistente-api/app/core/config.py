@@ -1,13 +1,16 @@
-import os
-import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
+from uuid import uuid4
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _ASSISTENTE_ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_EXPORTS_DIR = _ASSISTENTE_ROOT / ".local" / "exports"
+_WORKSPACE_ROOT = next(
+    (parent for parent in _ASSISTENTE_ROOT.parents if (parent / "pnpm-workspace.yaml").is_file()),
+    _ASSISTENTE_ROOT,
+)
 
 
 def _discover_env_file() -> Optional[Path]:
@@ -67,27 +70,14 @@ def get_settings() -> Settings:
 def get_exports_dir() -> Path:
     settings = get_settings()
     configured = Path(settings.exports_dir).expanduser()
-    candidates = [configured]
-
-    if configured != _DEFAULT_EXPORTS_DIR:
-        candidates.append(_DEFAULT_EXPORTS_DIR)
-
-    fallback = Path(tempfile.gettempdir()) / "niar-assistente-exports"
-    if fallback not in candidates:
-        candidates.append(fallback)
-
-    last_error = None
-
-    for candidate in candidates:
-        try:
-            candidate.mkdir(parents=True, exist_ok=True)
-            probe = candidate / ".write-test"
-            probe.touch(exist_ok=True)
-            probe.unlink(missing_ok=True)
-            return candidate
-        except OSError as exc:
-            last_error = exc
-
-    raise RuntimeError(
-        f"Nao foi possivel preparar um diretorio gravavel para exports. Ultimo erro: {last_error}"
-    )
+    if not configured.is_absolute():
+        configured = _WORKSPACE_ROOT / configured
+    configured = configured.resolve()
+    probe = configured / f".write-test-{uuid4().hex}"
+    try:
+        configured.mkdir(parents=True, exist_ok=True)
+        probe.touch(exist_ok=False)
+        probe.unlink()
+        return configured
+    except OSError as exc:
+        raise RuntimeError("O diretório de exports configurado não está disponível para escrita") from exc

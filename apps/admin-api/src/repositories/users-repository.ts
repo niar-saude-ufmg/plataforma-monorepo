@@ -1,5 +1,5 @@
 import { Prisma, prisma, user_account_status } from "@niar/database";
-import type { UserRole } from "@niar/contracts";
+import type { StoredUserRole, UserRole } from "@niar/contracts";
 import { AppError } from "../errors/app-error.js";
 import { auditRepository } from "./audit-repository.js";
 
@@ -135,7 +135,7 @@ const buildUserWhere = (
 
 export type UserAuthEvaluationTarget = {
   id: number;
-  role: UserRole;
+  role: StoredUserRole;
   accountStatus: user_account_status;
   researcherProfile: { userId: number } | null;
 };
@@ -152,7 +152,7 @@ export type UserAuthEvaluationRecord = {
 };
 
 export type CoepDocumentRecord = {
-  role: UserRole;
+  role: StoredUserRole;
   researcherProfile: { userId: number } | null;
   coepData: Array<{
     documentFilename: string;
@@ -225,7 +225,7 @@ export type CreatedResearcherRecord = {
     id: number;
     email: string;
     fullName: string;
-    role: UserRole;
+    role: StoredUserRole;
     accountStatus: "pending" | "active" | "rejected" | "disabled";
     createdAt: Date;
   };

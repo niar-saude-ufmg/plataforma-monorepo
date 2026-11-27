@@ -1,20 +1,28 @@
-import os
+import pytest
 
+from app.core.config import get_settings
 from app.services.llm.gateway import LLMGateway
 
 
-def test_model_uses_gemini_by_default(monkeypatch):
-    monkeypatch.setenv("LOCAL_MODEL_ENABLED", "false")
-    from app.core.config import get_settings
+@pytest.fixture(autouse=True)
+def reset_settings():
     get_settings.cache_clear()
-    gateway = LLMGateway()
-    assert "gemini" in gateway.model or gateway.settings.llm_model == gateway.model
+    yield
+    get_settings.cache_clear()
+
+
+def test_model_uses_configured_remote_model(monkeypatch):
+    monkeypatch.setenv("LOCAL_MODEL_ENABLED", "false")
+    monkeypatch.setenv("LLM_MODEL", "gemini/modelo-teste")
+    assert LLMGateway().model == "gemini/modelo-teste"
 
 
 def test_model_switches_to_local_when_enabled(monkeypatch):
     monkeypatch.setenv("LOCAL_MODEL_ENABLED", "true")
     monkeypatch.setenv("LLM_MODEL_LOCAL", "ollama/llama3")
-    from app.core.config import get_settings
-    get_settings.cache_clear()
     gateway = LLMGateway()
-    assert gateway.model == gateway.settings.llm_model_local
+    assert gateway.model == "ollama/llama3"
+    monkeypatch.setenv("LOCAL_MODEL_ENABLED", "false")
+    monkeypatch.setenv("LLM_MODEL", "gemini/modelo-remoto")
+    get_settings.cache_clear()
+    assert gateway.model == "gemini/modelo-remoto"

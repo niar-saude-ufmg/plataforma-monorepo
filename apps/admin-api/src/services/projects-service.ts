@@ -1,49 +1,16 @@
-import { constants } from "node:fs";
-import { access, realpath } from "node:fs/promises";
-import { basename, isAbsolute, relative, resolve, sep } from "node:path";
+import { basename } from "node:path";
+import { resolveProjectDocumentPath } from "../storage/project-document-storage.js";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
 import { PROJECT_STATUS_LABELS } from "@niar/contracts";
 import { projectsRepository, type ProjectListFilter, type ProjectRecord } from "../repositories/projects-repository.js";
 import type {
   ListProjectsQuery,
-  ProjectEvaluationStatusCode,
   ProjectListResponse,
   ProjectResponse
 } from "../schemas/project-schema.js";
 
-const evaluationStatusFor = (project: ProjectRecord): ProjectEvaluationStatusCode => {
-  const latestVersion = project.versions.at(-1);
-  return latestVersion?.evaluations?.[0]?.status ?? "waiting";
-};
-
-const DEFAULT_EXPORTS_DIR = resolve(process.cwd(), "../assistente-api/.local/exports");
-
-const exportsDirectory = () => resolve(process.env.EXPORTS_DIR ?? DEFAULT_EXPORTS_DIR);
-
-const isWithinDirectory = (directory: string, candidate: string) => {
-  const relativePath = relative(directory, candidate);
-  return relativePath !== "" && relativePath !== ".." && !relativePath.startsWith(`..${sep}`) && !isAbsolute(relativePath);
-};
-
-const safeDocumentPath = async (storagePath: string) => {
-  try {
-    const rootPath = await realpath(exportsDirectory());
-    const requestedPath = isAbsolute(storagePath)
-      ? resolve(storagePath)
-      : resolve(rootPath, storagePath);
-    const filePath = await realpath(requestedPath);
-
-    if (!isWithinDirectory(rootPath, filePath)) {
-      throw new Error("Documento fora do diretório de exports");
-    }
-
-    await access(filePath, constants.R_OK);
-    return filePath;
-  } catch {
-    throw new AppError("Arquivo do documento não encontrado", 404);
-  }
-};
+const AVAILABLE_DOCUMENT_TYPES = ["project_docx", "submission_bundle", "report", "report_artifact", "filled_questionnaire"];
 
 const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUser): ProjectResponse => {
   const latestVersion = project.versions.at(-1);
@@ -51,6 +18,21 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
     id: project.id,
     project_version_id: latestVersion?.id ?? null,
     title: project.title,
+    current_version: latestVersion ? {
+      id: latestVersion.id,
+      version_number: latestVersion.versionNumber,
+      status: latestVersion.status,
+      revision_evaluation_id: latestVersion.revisionEvaluationId ?? null
+    } : null,
+    versions: project.versions.map((version) => ({
+      id: version.id,
+      version_number: version.versionNumber,
+      source_wizard_session_id: version.sourceWizardSessionId,
+      status: version.status,
+      revision_evaluation_id: version.revisionEvaluationId,
+      characterization_snapshot: version.characterizationSnapshot,
+      submitted_at: version.submittedAt?.toISOString() ?? null
+    })),
     updated_at: project.updatedAt.toISOString(),
     researcher: {
       id: project.owner.id,
@@ -62,15 +44,20 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
         code: history.status,
         label: PROJECT_STATUS_LABELS[history.status],
         version_number: version.versionNumber,
+        project_version_id: version.id,
+        evaluation_id: history.evaluationId ?? null,
         created_at: history.createdAt.toISOString(),
         notes: history.notes
       }))
     ),
     documents: project.versions.flatMap((version) =>
       version.documents
-        .filter((document) => currentUser.role === "admin" || document.documentType === "project_docx")
+        .filter((document) => currentUser.role === "admin" || AVAILABLE_DOCUMENT_TYPES.includes(document.documentType))
         .map((document) => ({
           id: document.id,
+          project_version_id: version.id,
+          delivery_number: document.deliveryNumber ?? 0,
+          questionnaire_id: document.questionnaireId ?? null,
           version_number: version.versionNumber,
           document_type: document.documentType,
           original_filename: basename(document.originalFilename),
@@ -81,22 +68,22 @@ const toProjectResponse = (project: ProjectRecord, currentUser: AuthenticatedUse
   };
 
   if (currentUser.role !== "researcher") {
-    response.evaluation_status = evaluationStatusFor(project);
-    response.evaluations = project.versions.flatMap((version) => {
-      const evaluation = version.evaluations[0];
-      if (!evaluation) return [];
-
-      return [{
+    response.evaluation_status = latestVersion?.evaluations[0]?.status ?? "waiting";
+    response.evaluations = project.versions.flatMap((version) =>
+      [...version.evaluations].reverse().map((evaluation) => ({
         id: evaluation.id,
+        project_version_id: version.id,
+        round_number: evaluation.roundNumber,
+        delivery_number: evaluation.deliveryNumber,
+        certification_decision: evaluation.certificationDecision,
+        certification_reason: evaluation.certificationReason,
         version_number: version.versionNumber,
         status: evaluation.status,
         justification: evaluation.justification,
-        certification_decision: evaluation.certificationDecision,
-        certification_reason: evaluation.certificationReason,
         evaluated_at: evaluation.evaluatedAt?.toISOString() ?? null,
         updated_at: evaluation.updatedAt.toISOString()
-      }];
-    });
+      }))
+    );
   }
 
   return response;
@@ -111,12 +98,12 @@ const assertResearcherFilterAllowed = (researcherId: number | undefined, current
 const toRepositoryFilter = (query: ListProjectsQuery, currentUser: AuthenticatedUser): ProjectListFilter => {
   assertResearcherFilterAllowed(query.researcher_id, currentUser);
 
-  if (currentUser.role !== "admin" && query.document_type && query.document_type !== "project_docx") {
+  if (currentUser.role !== "admin" && query.document_type && !AVAILABLE_DOCUMENT_TYPES.includes(query.document_type)) {
     throw new AppError("Este tipo de documento não está disponível para o perfil autenticado", 403);
   }
 
   const documentType =
-    currentUser.role !== "admin" && query.has_document !== undefined
+    currentUser.role !== "admin" && query.has_document !== undefined && !query.document_type
       ? "project_docx"
       : query.document_type;
 
@@ -172,11 +159,11 @@ export const projectsService = {
     );
     if (!document) throw new AppError("Documento não encontrado", 404);
 
-    if (currentUser.role !== "admin" && document.documentType !== "project_docx") {
+    if (currentUser.role !== "admin" && !AVAILABLE_DOCUMENT_TYPES.includes(document.documentType)) {
       throw new AppError("Este tipo de documento não está disponível para o perfil autenticado", 403);
     }
 
-    const filePath = await safeDocumentPath(document.storagePath);
+    const filePath = await resolveProjectDocumentPath(document.storagePath);
 
     return {
       filePath,

@@ -63,6 +63,7 @@ async def test_run_advisory_chat_uses_advisory_prompt_not_section_guidance():
 @pytest.mark.asyncio
 async def test_extract_section_content_ignores_advisory_messages():
     session = SimpleNamespace(
+        section_data="{}",
         messages=[
             _msg("user", "conteúdo da coleta", "intake"),
             _msg("assistant", "ok intake", "intake"),
@@ -72,7 +73,7 @@ async def test_extract_section_content_ignores_advisory_messages():
     )
     captured: list[list[dict]] = []
 
-    async def fake_complete_json(messages):
+    async def fake_complete_json(messages, **kwargs):
         captured.append(messages)
         return {"content": "extraído", "complete": True, "missing": []}, None, None, None
 

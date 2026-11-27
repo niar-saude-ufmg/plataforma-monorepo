@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import {
   assignEvaluationSchema,
+  receiveReportSchema,
   projectVersionIdParamSchema,
   updateEvaluationSchema
 } from "../schemas/evaluation-schema.js";
@@ -23,6 +24,17 @@ export const evaluationsController = {
       const { project_version_id } = projectVersionIdParamSchema.parse(request.params);
       const evaluation = await evaluationsService.get(project_version_id, request.user!);
       response.status(200).json(evaluation);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  receiveReport: async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      const { project_version_id } = projectVersionIdParamSchema.parse(request.params);
+      const data = receiveReportSchema.parse(request.body);
+      const delivery = await evaluationsService.receiveReport(project_version_id, data, request.user!, request.ip ?? "");
+      response.status(201).json(delivery);
     } catch (error) {
       next(error);
     }

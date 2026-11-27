@@ -38,8 +38,7 @@ from app.services.wizards.section_migration import migrate_section_data
 from app.services.wizards.text_import import split_by_headings
 
 PROJECT_TITLE = "Trajetória Oncológica BH (demo)"
-REPO_ROOT = Path(__file__).resolve().parents[2]
-STRUCTURED_MD_PATH = REPO_ROOT / "docs" / "demo" / "projeto_oncologico_estruturado.md"
+STRUCTURED_MD_PATH = Path(__file__).resolve().parents[1] / "examples" / "projeto_oncologico_estruturado.md"
 DEMO_USER_EMAIL = "researcher@hra.local"
 FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", "http://localhost:5173")
 
@@ -484,7 +483,7 @@ def print_summary(project: WizardSession, cleaning: WizardSession | None) -> Non
     print("1. Login researcher@hra.local / research12345")
     print("2. Abrir projeto → revisar seções importadas")
     if empty:
-        print(f"3. Completar seção(ões) vazia(s) via chat + Extrair seção")
+        print("3. Completar seção(ões) vazia(s) via chat + Extrair seção")
     print("4. Revisar Projeto → checklist → avançar engenharia")
     print("5. Engenharia → explorar esquema Oncologia BH → validar script → submeter bundle")
 

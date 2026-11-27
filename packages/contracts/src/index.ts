@@ -9,6 +9,8 @@ export const USER_ROLE_VALUES = [
 
 export type UserRole = (typeof USER_ROLE_VALUES)[number];
 
+export type StoredUserRole = UserRole | "auditor";
+
 export type UserAccountStatus = "pending" | "active" | "rejected" | "disabled";
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
@@ -74,9 +76,24 @@ export type EvaluationStatus =
   | "project_changes_requested"
   | "report_approved"
   | "report_rejected"
-  | "report_changes_requested";
+  | "report_changes_requested"
+  // Valores históricos; não são aceitos para novas decisões.
+  | "sent_to_committee"
+  | "approved_by_committee"
+  | "rejected_by_committee"
+  | "needs_changes_by_committee"
+  | "needs_changes"
+  | "approved"
+  | "rejected";
 
 export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
+  sent_to_committee: "Encaminhado ao Comitê (legado)",
+  approved_by_committee: "Aprovado pelo Comitê (legado)",
+  rejected_by_committee: "Rejeitado pelo Comitê (legado)",
+  needs_changes_by_committee: "Alterações solicitadas pelo Comitê (legado)",
+  needs_changes: "Alterações solicitadas (legado)",
+  approved: "Aprovado (legado)",
+  rejected: "Rejeitado (legado)",
   waiting: "Aguardando atribuição",
   to_review: "Aguardando avaliação",
   project_approved: "Aprovado",
@@ -86,3 +103,10 @@ export const EVALUATION_STATUS_LABELS: Record<EvaluationStatus, string> = {
   report_rejected: "Rejeitado",
   report_changes_requested: "Solicitar alterações"
 };
+
+export type ReportDeliveryInput = {
+  delivery_number: number;
+  documents: { source_export_artifact_id: number; questionnaire_id?: number }[];
+};
+
+export type ReportDeliveryResponse = { project_version_id: number; delivery_number: number };

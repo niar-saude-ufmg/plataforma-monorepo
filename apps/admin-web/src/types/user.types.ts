@@ -1,5 +1,5 @@
 import type { ChangeEvent, ReactNode } from 'react';
-import type { UserAccountStatus, UserRole as ContractUserRole } from '@niar/contracts';
+import type { StoredUserRole, UserAccountStatus, UserRole as ContractUserRole } from '@niar/contracts';
 import type { ApiError } from "./api.types";
 
 /**
@@ -144,7 +144,8 @@ export interface UserListEvaluation {
 }
 
 /** Usuário consolidado usado nas listagens administrativas. */
-export interface UserListItem extends User {
+export interface UserListItem extends Omit<User, "role"> {
+  role: StoredUserRole;
   accountStatus: UserAccountStatus;
   profile: UserListProfile | null;
   researcherProfile: UserListResearcherProfile | null;

@@ -119,7 +119,7 @@ O workspace ja deixa aprovados os builds necessarios de `prisma` e `esbuild`. Em
 cp .env.example .env
 ```
 
-O `EXPORTS_DIR` local ja aponta para `apps/assistente-api/.local/exports`. Se vier um `.env` antigo apontando para `/app`, o assistente agora tenta cair para um diretorio gravavel automaticamente.
+O `EXPORTS_DIR` local aponta para `apps/assistente-api/.local/exports`. Caminhos relativos são resolvidos a partir da raiz do monorepo pelas duas APIs; os artefatos são persistidos com caminho absoluto. Use um diretório compartilhado e gravável. Se ele estiver indisponível, a submissão retorna 503 sem registrar a entrega.
 Para o Postgres local sem SSL, use `sslmode=disable` na `DATABASE_URL`, como no `.env.example`.
 
 ### Aplicar o SQL versionado da plataforma

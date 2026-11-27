@@ -76,7 +76,7 @@ export const authenticate = async (request: Request, _response: Response, next: 
 
   try {
     const user = await usersRepository.findById(userId);
-    if (!user || user.accountStatus !== "active") {
+    if (!user || user.accountStatus !== "active" || user.role === "auditor") {
       throw new AppError("Usuário não encontrado", 401);
     }
 

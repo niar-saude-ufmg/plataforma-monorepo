@@ -10,6 +10,7 @@ const PASSWORD_HASH_ROUNDS = 10;
 
 // Único lugar que monta a resposta da sessão: GET e PATCH /auth/me usam este formato.
 const toSessionUser = (user: SessionUserRecord): SessionUserResponse => {
+  if (user.role === "auditor") throw new AppError("Papel legado sem acesso à plataforma", 403);
   const response: SessionUserResponse = {
     id: user.id,
     email: user.email,
@@ -75,7 +76,7 @@ export const authService = {
       throw new AppError("Credenciais incorretas", 401);
     }
 
-    if (user.accountStatus !== "active") {
+    if (user.accountStatus !== "active" || user.role === "auditor") {
       throw new AppError("Conta desativada", 403);
     }
 

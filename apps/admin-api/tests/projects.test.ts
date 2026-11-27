@@ -80,6 +80,8 @@ const projectRecord = (): ProjectRecord =>
         sourceWizardSessionId: 7,
         questionnaireId: null,
         projectSectionTemplateId: null,
+
+        revisionEvaluationId: null,
         userCoepDataId: null,
         characterizationSnapshot: {},
         status: "needs_changes",
@@ -111,6 +113,8 @@ const projectRecord = (): ProjectRecord =>
             id: 101,
             projectVersionId: 51,
             sourceExportArtifactId: 88,
+            deliveryNumber: 0,
+            questionnaireId: null,
             documentType: "project_docx",
             originalFilename: "projeto-v1.docx",
             storagePath: "/segredo/interno/projeto-v1.docx",
@@ -227,6 +231,8 @@ describe("GET /api/admin/projects", () => {
         project_version_id: 51,
         title: "Projeto de pesquisa",
         updated_at: "2026-09-25T12:00:00.000Z",
+        current_version: { id: 51, version_number: 1, status: "needs_changes", revision_evaluation_id: null },
+        versions: [{ id: 51, version_number: 1, source_wizard_session_id: 7, status: "needs_changes", revision_evaluation_id: null, characterization_snapshot: {}, submitted_at: "2026-09-20T10:00:00.000Z" }],
         evaluation_status: "waiting",
         researcher: {
           id: 10,
@@ -238,6 +244,7 @@ describe("GET /api/admin/projects", () => {
             code: "submitted_to_committee",
             label: "Enviado ao comitê",
             version_number: 1,
+            project_version_id: 51, evaluation_id: null,
             created_at: "2026-09-20T10:00:00.000Z",
             notes: null
           },
@@ -245,6 +252,7 @@ describe("GET /api/admin/projects", () => {
             code: "needs_changes",
             label: "Precisa de alterações",
             version_number: 1,
+            project_version_id: 51, evaluation_id: null,
             created_at: "2026-09-21T14:00:00.000Z",
             notes: "Complementar metodologia"
           }
@@ -252,6 +260,7 @@ describe("GET /api/admin/projects", () => {
         documents: [
           {
             id: 101,
+            project_version_id: 51, delivery_number: 0, questionnaire_id: null,
             version_number: 1,
             document_type: "project_docx",
             original_filename: "projeto-v1.docx",
@@ -277,6 +286,7 @@ describe("GET /api/admin/projects", () => {
     const record = projectRecord();
     record.versions[0].evaluations = [{
       id: 88,
+      roundNumber: 1, deliveryNumber: 0, committeeMemberUserId: null,
       projectVersionId: 51,
       assignedToUserId: 31,
       assignedByUserId: 20,
@@ -300,6 +310,7 @@ describe("GET /api/admin/projects", () => {
 
     expect(adminResponse.body.items[0].evaluations).toEqual([{
       id: 88,
+      project_version_id: 51, round_number: 1, delivery_number: 0,
       version_number: 1,
       status: "project_approved",
       justification: null,

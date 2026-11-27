@@ -94,6 +94,13 @@ const PROJECT_STATUS_CHIP: Record<ProjectStatus, StatusChipStatus> = {
 };
 
 const EVALUATION_STATUS_CHIP: Record<EvaluationStatus, StatusChipStatus> = {
+  sent_to_committee: "info",
+  approved_by_committee: "success",
+  rejected_by_committee: "error",
+  needs_changes_by_committee: "warning",
+  needs_changes: "warning",
+  approved: "success",
+  rejected: "error",
   waiting: "default",
   to_review: "warning",
   project_approved: "success",

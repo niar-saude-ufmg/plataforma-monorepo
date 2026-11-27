@@ -1,6 +1,6 @@
 import { hash } from "bcryptjs";
 import { basename } from "node:path";
-import type { UserRole } from "@niar/contracts";
+import type { StoredUserRole, UserRole } from "@niar/contracts";
 import type { user_account_status } from "@niar/database";
 import { AppError } from "../errors/app-error.js";
 import type { AuthenticatedUser } from "../middlewares/auth.js";
@@ -80,7 +80,7 @@ const toUserResponse = (user: {
   id: number;
   email: string;
   fullName: string;
-  role: UserRole;
+  role: StoredUserRole;
   accountStatus: "pending" | "active" | "rejected" | "disabled";
   createdAt: Date;
 }): UserResponse => ({
