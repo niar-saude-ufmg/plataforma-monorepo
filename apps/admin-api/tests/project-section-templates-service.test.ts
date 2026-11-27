@@ -8,6 +8,7 @@ type TemplateRecord = {
   name: string;
   definitionJson: unknown;
   isActive: boolean;
+  publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -34,6 +35,7 @@ const record = (overrides: Partial<TemplateRecord> = {}): TemplateRecord => ({
   name: projectSectionTemplateInput.name,
   definitionJson: projectSectionTemplateInput.definition_json,
   isActive: false,
+  publishedAt: null,
   createdAt,
   updatedAt,
   ...overrides
@@ -103,6 +105,17 @@ describe("projectSectionTemplatesService", () => {
       await expect(projectSectionTemplatesService.getProjectSectionTemplate(99))
         .rejects.toMatchObject({ statusCode: 404 });
     });
+
+    it("preserva a data de publicação de uma versão histórica inativa", async () => {
+      findById.mockResolvedValue(record({
+        isActive: false,
+        publishedAt: new Date("2026-10-22T12:30:00.000Z")
+      }));
+
+      const result = await projectSectionTemplatesService.getProjectSectionTemplate(1);
+
+      expect(result.published_at).toBe("2026-10-22T12:30:00.000Z");
+    });
   });
 
   describe("createProjectSectionTemplate", () => {
@@ -131,13 +144,17 @@ describe("projectSectionTemplatesService", () => {
 
   describe("publishProjectSectionTemplate", () => {
     it("expõe a data de publicação a partir da atualização do registro", async () => {
-      publish.mockResolvedValue(record({ isActive: true, updatedAt: new Date("2026-10-22T13:00:00.000Z") }));
+      publish.mockResolvedValue(record({
+        isActive: true,
+        publishedAt: new Date("2026-10-22T12:30:00.000Z"),
+        updatedAt: new Date("2026-10-22T13:00:00.000Z")
+      }));
 
       const result = await projectSectionTemplatesService.publishProjectSectionTemplate(1);
 
       expect(publish).toHaveBeenCalledWith(1);
       expect(result.is_active).toBe(true);
-      expect(result.published_at).toBe("2026-10-22T13:00:00.000Z");
+      expect(result.published_at).toBe("2026-10-22T12:30:00.000Z");
     });
   });
 });

@@ -195,7 +195,7 @@ model WizardSession {
   messages         ChatMessage[]
   cleaningVersions CleaningVersion[]
   exports          ExportArtifact[]
-  projectSectionTemplates   ProjectSectionTemplate? @relation(fields: [projectSectionTemplateId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_assistant_wizard_sessions_section_template")
+  sectionTemplate ProjectSectionTemplate? @relation(fields: [projectSectionTemplateId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_assistant_wizard_sessions_section_template")
   dataset          Dataset?          @relation(fields: [datasetId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   linkedProject    WizardSession?    @relation("LinkedWizardSession", fields: [linkedProjectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   linkedSessions   WizardSession[]   @relation("LinkedWizardSession")

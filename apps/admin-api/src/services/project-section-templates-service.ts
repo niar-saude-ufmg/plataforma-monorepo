@@ -15,7 +15,7 @@ const toResponse = (item: ProjectSectionTemplateRecord) : ProjectSectionTemplate
   version: item.version,
   definition_json: definitionSchema.parse(item.definitionJson),
   is_active: item.isActive,
-  published_at: item.isActive ? item.updatedAt.toISOString() : null,
+  published_at: item.publishedAt?.toISOString() ?? null,
   created_at: item.createdAt.toISOString(),
   updated_at: item.updatedAt.toISOString()
 });

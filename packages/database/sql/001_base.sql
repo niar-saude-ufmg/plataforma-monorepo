@@ -341,8 +341,26 @@ CREATE TABLE IF NOT EXISTS admin.project_section_templates (
 CREATE INDEX IF NOT EXISTS idx_admin_project_section_templates_active
   ON admin.project_section_templates (is_active);
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_project_section_templates_active_key
-  ON admin.project_section_templates (template_key) WHERE is_active;
+DROP INDEX IF EXISTS admin.uq_admin_project_section_templates_active_key;
+
+-- Deve existir somente uma versão ativa em toda a plataforma, sem relação com template_key.
+WITH active_templates AS (
+  SELECT id,
+         ROW_NUMBER() OVER (
+           ORDER BY published_at DESC NULLS LAST, id DESC
+         ) AS position
+  FROM admin.project_section_templates
+  WHERE is_active
+)
+UPDATE admin.project_section_templates AS template
+SET is_active = FALSE,
+    updated_at = NOW()
+FROM active_templates
+WHERE template.id = active_templates.id
+  AND active_templates.position > 1;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_project_section_templates_single_active
+  ON admin.project_section_templates ((is_active)) WHERE is_active;
 
 -- Seed: primeiro template
 

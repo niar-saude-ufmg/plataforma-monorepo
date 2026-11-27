@@ -367,7 +367,8 @@ class WizardSession(Base):
         back_populates="source_session"
     )
     section_template: Mapped[Optional["ProjectSectionTemplate"]] = relationship(
-        back_populates="wizard_sessions"
+        back_populates="wizard_sessions",
+        lazy="selectin",
     )
 
 

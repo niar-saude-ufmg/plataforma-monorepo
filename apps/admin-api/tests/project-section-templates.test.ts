@@ -30,7 +30,7 @@ const user = (role: UserRole = "admin"): StoredUser => ({
 });
 const record = (overrides: Partial<ProjectSectionTemplateRecord> = {}): ProjectSectionTemplateRecord => ({
   id: 1, templateKey: projectSectionTemplateInput.template_key, version: 1, name: projectSectionTemplateInput.name,
-  definitionJson: projectSectionTemplateDefinition, isActive: false,
+  definitionJson: projectSectionTemplateDefinition, isActive: false, publishedAt: null,
   createdAt: new Date("2026-10-22T12:00:00.000Z"), updatedAt: new Date("2026-10-22T12:00:00.000Z"),
   ...overrides
 });
@@ -153,7 +153,11 @@ describe("project section template API", () => {
   });
 
   it("publica e retorna a data de publicação", async () => {
-    publish.mockResolvedValue(record({ isActive: true, updatedAt: new Date("2026-10-22T13:00:00.000Z") }));
+    publish.mockResolvedValue(record({
+      isActive: true,
+      publishedAt: new Date("2026-10-22T13:00:00.000Z"),
+      updatedAt: new Date("2026-10-22T13:00:00.000Z")
+    }));
     const response = await request(app).post("/api/admin/project-section-templates/1/publish")
       .set("Authorization", `Bearer ${token}`);
 

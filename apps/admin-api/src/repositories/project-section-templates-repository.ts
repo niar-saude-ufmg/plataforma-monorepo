@@ -17,6 +17,7 @@ export type ProjectSectionTemplateRecord = {
   name: string;
   definitionJson: unknown;
   isActive: boolean;
+  publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -105,7 +106,7 @@ export const projectSectionTemplatesRepository = {
     definitionSchema.parse(item.definitionJson);
 
     await client.projectSectionTemplate.updateMany({
-      where: { templateKey: item.templateKey, isActive: true, id: { not: id } },
+      where: { isActive: true, id: { not: id } },
       data: { isActive: false, updatedAt: new Date() }
     });
     return client.projectSectionTemplate.update({

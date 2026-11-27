@@ -22,6 +22,8 @@ from app.schemas import (
     ChatMessageCreate,
     ChatMessageOut,
     ImportTextRequest,
+    SectionMetaOut,
+    SectionTemplateMetaOut,
     WizardSessionCreate,
     WizardSessionOut,
     WizardSessionUpdate,
@@ -65,6 +67,23 @@ def _session_out(session: WizardSession, *, linked_cleaning_step: Optional[str] 
     step = session.current_step
     if section_data.get("_wizard_flow_version", 0) < 2:
         step = migrate_current_step(step, section_data)
+    section_template_out = None
+    if session.section_template is not None:
+        definition = session.section_template.definition_json or {}
+        section_template_out = SectionTemplateMetaOut(
+            id=session.section_template.id,
+            template_key=session.section_template.template_key,
+            version=session.section_template.version,
+            sections=[
+                SectionMetaOut(
+                    key=section["key"],
+                    label=section["label"],
+                    guidance=section["guidance"],
+                    required=section["required"],
+                )
+                for section in definition.get("sections", [])
+            ],
+        )
     return WizardSessionOut(
         id=session.id,
         wizard_type=session.wizard_type.value,
@@ -91,6 +110,7 @@ def _session_out(session: WizardSession, *, linked_cleaning_step: Optional[str] 
             for m in sorted(session.messages, key=lambda msg: msg.id)
         ],
         linked_cleaning_step=linked_cleaning_step,
+        section_template=section_template_out,
     )
 
 

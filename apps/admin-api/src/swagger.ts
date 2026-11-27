@@ -643,6 +643,78 @@ const options = {
             },
           },
         },
+        ProjectSection: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['key', 'label', 'guidance', 'required'],
+          properties: {
+            key: { type: 'string', pattern: '^[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*$', example: 'background' },
+            label: { type: 'string', example: 'Contexto' },
+            guidance: { type: 'array', items: { type: 'string' }, example: ['Contexto clínico/científico e por que este estudo é relevante.'] },
+            prompt: { type: 'string', description: 'Prompt específico opcional, aceito na entrada e omitido nas respostas públicas da sessão.' },
+            required: { type: 'boolean', example: true },
+          },
+        },
+        ProjectSectionTemplateDefinition: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['schema_version', 'sections'],
+          properties: {
+            schema_version: { type: 'integer', minimum: 1, example: 1 },
+            sections: { type: 'array', minItems: 1, items: { $ref: '#/components/schemas/ProjectSection' } },
+          },
+        },
+        CreateProjectSectionTemplateInput: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['template_key', 'name', 'definition_json'],
+          properties: {
+            template_key: { type: 'string', example: 'project_doc_sections' },
+            name: { type: 'string', example: 'Seções do projeto escrito' },
+            definition_json: { $ref: '#/components/schemas/ProjectSectionTemplateDefinition' },
+          },
+        },
+        UpdateProjectSectionTemplateInput: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['name', 'definition_json'],
+          properties: {
+            name: { type: 'string', example: 'Seções do projeto escrito' },
+            definition_json: { $ref: '#/components/schemas/ProjectSectionTemplateDefinition' },
+          },
+        },
+        ProjectSectionTemplateResponse: {
+          type: 'object',
+          required: ['id', 'template_key', 'name', 'version', 'definition_json', 'is_active', 'published_at', 'created_at', 'updated_at'],
+          properties: {
+            id: { type: 'integer', example: 1 },
+            template_key: { type: 'string', example: 'project_doc_sections' },
+            name: { type: 'string', example: 'Seções do projeto escrito' },
+            version: { type: 'integer', minimum: 1, example: 1 },
+            definition_json: { $ref: '#/components/schemas/ProjectSectionTemplateDefinition' },
+            is_active: { type: 'boolean', example: true },
+            published_at: { type: 'string', format: 'date-time', nullable: true },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' },
+          },
+        },
+        ProjectSectionTemplatesListResponse: {
+          type: 'object',
+          required: ['items', 'pagination'],
+          properties: {
+            items: { type: 'array', items: { $ref: '#/components/schemas/ProjectSectionTemplateResponse' } },
+            pagination: {
+              type: 'object',
+              required: ['page', 'page_size', 'total_items', 'total_pages'],
+              properties: {
+                page: { type: 'integer', example: 1 },
+                page_size: { type: 'integer', example: 20 },
+                total_items: { type: 'integer', example: 1 },
+                total_pages: { type: 'integer', example: 1 },
+              },
+            },
+          },
+        },
         ErrorResponse: {
           type: 'object',
           properties: {

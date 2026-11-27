@@ -167,13 +167,13 @@ describe("projectSectionTemplatesRepository", () => {
   });
 
   describe("publish", () => {
-    it("publica desativando somente a versão ativa da mesma templateKey", async () => {
+    it("publica desativando qualquer outra versão ativa globalmente", async () => {
       findUnique.mockResolvedValue(record());
 
       await projectSectionTemplatesRepository.publish(1);
 
       expect(updateMany).toHaveBeenCalledWith({
-        where: { templateKey: projectSectionTemplateInput.template_key, isActive: true, id: { not: 1 } },
+        where: { isActive: true, id: { not: 1 } },
         data: { isActive: false, updatedAt: expect.any(Date) }
       });
       expect(update).toHaveBeenCalledWith({
