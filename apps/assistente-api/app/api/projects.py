@@ -17,7 +17,7 @@ from app.audit.service import log_audit
 from app.core.config import get_exports_dir, get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models import ChatMessage, ExportArtifact, User, WizardSession, WizardType
+from app.models import ChatMessage, ExportArtifact, ProjectSectionTemplate, User, WizardSession, WizardType
 from app.schemas import (
     ChatMessageCreate,
     ChatMessageOut,
@@ -186,12 +186,23 @@ async def create_project(
     db: AsyncSession = Depends(get_db),
 ):
     section_data = {"_current_section": PROJECT_DOC_SECTIONS[0], "_wizard_flow_version": 2}
+
+    template_result = await db.execute(
+        select(ProjectSectionTemplate)
+        .where(ProjectSectionTemplate.is_active == True)
+        .limit(1)
+    )
+    template = template_result.scalar_one_or_none()
+    if template is None:
+        raise HTTPException(status_code=409, detail="Nenhum modelo de seções ativo encontrado")
+
     session = WizardSession(
         user_id=current_user.id,
         wizard_type=WizardType.project_doc,
         current_step="start",
         title=body.title,
         section_data=json.dumps(section_data),
+        project_section_template_id=template.id,
     )
     db.add(session)
     await db.commit()
